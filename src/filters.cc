@@ -73,7 +73,14 @@ void post_splitter::print_title(const value_t& val) {
  * invoked (typically to print a title), then all postings in the group are
  * forwarded through the post_chain, which is flushed and optionally cleared
  * (unless --group-by-cumulative is active, which preserves running totals
- * across groups).
+ * across groups).  In that mode the chain is flushed once per group without
+ * a clear(), so each filter's flush() must leave the filter ready for another
+ * stream, holding no posting it has already reported and no count of the
+ * transactions it has seen; running totals and temporaries are what carries
+ * over.  The postings keep their xdata too, and with --related a later group
+ * can be handed a posting an earlier group reported: a stage that marks a
+ * posting once per stream drops the mark when the stream ends or sets it
+ * afresh on every visit, as calc_posts does a posting's value.
  *
  * The postflush callback runs before post_chain->clear() so that an
  * accounts-report flusher can walk the account tree while any temporary
@@ -134,6 +141,14 @@ void post_splitter::operator()(post_t& post) {
  * the selection (e.g., head_count=-2 skips the first 2 transactions).
  */
 void truncate_xacts::flush() {
+  // A flush ends the stream being truncated.  The next one (the next
+  // group under --group-by-cumulative, which no clear() precedes)
+  // counts its transactions from zero.  operator() sets `completed`
+  // again right after its early flush.
+  completed = false;
+  xacts_seen = 0;
+  last_xact = nullptr;
+
   if (!posts.size())
     return;
 
@@ -156,20 +171,8 @@ void truncate_xacts::flush() {
       i++;
     }
 
-    bool print = false;
-    if (head_count) {
-      if (head_count > 0 && i < head_count)
-        print = true; // NOLINT(bugprone-branch-clone)
-      else if (head_count < 0 && i >= -head_count)
-        print = true;
-    }
-
-    if (!print && tail_count) {
-      if (tail_count > 0 && l - i <= tail_count)
-        print = true; // NOLINT(bugprone-branch-clone)
-      else if (tail_count < 0 && l - i > -tail_count)
-        print = true;
-    }
+    bool print = (head_count > 0 && i < head_count) || (head_count < 0 && i >= -head_count) ||
+                 (tail_count > 0 && l - i <= tail_count) || (tail_count < 0 && l - i > -tail_count);
 
     if (print)
       item_handler<post_t>::operator()(*post);
@@ -229,44 +232,76 @@ void sort_posts::post_accumulated_posts() {
 /*--- Helper utilities ---*/
 
 namespace {
-/// Split a string by a delimiter character into a list of substrings.
-void split_string(const string& str, const char ch, std::list<string>& strings) {
-  const char* b = str.c_str();
-  for (const char* p = b; *p; p++) {
-    if (*p == ch) {
-      strings.push_back(string(b, static_cast<std::string::size_type>(p - b)));
-      b = p + 1;
-    }
-  }
-  strings.push_back(string(b));
+/// The child @p name of @p parent, for postings a report moves there: the
+/// journal's own account when it has one, otherwise created in @p accounts
+/// (the journal's report-account pool, report_t::temp_accounts()), so the
+/// paths built here never add an account to the journal.  An empty @p name
+/// is an error (find_account throws).
+account_t* report_child_account(account_t* parent, string_view name, temporaries_t& accounts) {
+  // Below a temporary account, find_account creates the child itself: it
+  // inherits ACCOUNT_TEMP and is freed with its parent (~account_t), so it
+  // must not also be owned by @p accounts.  A temporary account found at this
+  // level may have been made by another live report; the pool they share
+  // keeps it until the last of them ends.
+  account_t* child = parent->find_account(name, parent->has_flags(ACCOUNT_TEMP));
+  return child ? child : &accounts.create_account(string(name), parent);
 }
 
-/// Create or find a temporary account from a list of path components.
-account_t* create_temp_account_from_path(std::list<string>& account_names, temporaries_t& temps,
-                                         account_t* master) {
-  account_t* new_account = nullptr;
-  for (const string& name : account_names) {
-    if (new_account) {
-      new_account = new_account->find_account(name);
-    } else {
-      new_account = master->find_account(name, false);
-      if (!new_account)
-        new_account = &temps.create_account(name, master);
-    }
-  }
+/// The account at the path @p account_names (one name per component) under
+/// @p master, each component found or created by report_child_account.
+account_t* create_temp_account_from_path(const std::list<string>& account_names,
+                                         temporaries_t& accounts, account_t* master) {
+  account_t* account = master;
+  for (const string& name : account_names)
+    account = report_child_account(account, name, accounts);
+  return account;
+}
 
-  assert(new_account != nullptr);
-  return new_account;
+/// The account at the ':'-separated @p path under @p master, as the
+/// list overload gives it for the path's components (an empty component,
+/// including a leading or trailing ':', is an error).  The components are
+/// looked up in place: this runs once per posting --account, --pivot and
+/// account rewrites move, and copying them into a list of strings first
+/// (boost::split) costs several times the lookups themselves.
+account_t* create_temp_account_from_path(string_view path, temporaries_t& accounts,
+                                         account_t* master) {
+  account_t* account = master;
+  for (;;) {
+    const string_view::size_type sep = path.find(':');
+    account = report_child_account(account, path.substr(0, sep), accounts);
+    if (sep == string_view::npos)
+      return account;
+    path.remove_prefix(sep + 1);
+  }
 }
 
 /// Give @p account, which a posting has been moved onto while reporting, the
 /// flags of the @p original account it came from.  ACCOUNT_KNOWN stays
 /// behind: the copy was never declared, and --empty lists declared accounts
 /// even when no posting reaches them, so it would show the copy too (#3281).
+/// ACCOUNT_TEMP stays behind as well: @p account is temporary already when
+/// the report made it, and an account the journal has must not become one
+/// (temporaries_t::clear() would no longer unlink the pool's accounts beneath
+/// it, and lookups would skip it).
 void transfer_account_flags(account_t& account, account_t& original) {
-  account.add_flags(original.flags() & ~ACCOUNT_KNOWN);
+  account.add_flags(original.flags() & ~(ACCOUNT_KNOWN | ACCOUNT_TEMP));
   if (original.has_xdata())
     account.xdata().add_flags(original.xdata().flags());
+}
+
+/// Move the report-time copy @p temp from its account to the account at
+/// @p path under @p master (created in @p accounts, the journal's
+/// report-account pool, where the journal lacks it), which takes the old
+/// account's flags as transfer_account_flags gives them.
+void retarget_temp_post(post_t& temp, const string& path, temporaries_t& accounts,
+                        account_t* master) {
+  account_t* prev_account = temp.account;
+  prev_account->remove_post(&temp);
+
+  temp.account = create_temp_account_from_path(path, accounts, master);
+  temp.account->add_post(&temp);
+
+  transfer_account_flags(*temp.account, *prev_account);
 }
 } // namespace
 
@@ -320,9 +355,11 @@ void anonymize_posts::render_commodity(amount_t& amt) {
  * symbols with hashed/sequential substitutes.
  *
  * A new temporary transaction is created for each distinct xact, with the
- * payee replaced by a SHA1 hash.  Account names at each level are similarly
- * hashed.  Amounts retain their numeric value but receive relabeled
- * commodities.  Notes, codes, and tags are stripped entirely.
+ * payee replaced by a SHA1 hash salted afresh for that xact.  Each account
+ * level is hashed once per run and reused through acct_hashes.  Amounts
+ * retain their numeric value but receive relabeled commodities.  The code,
+ * the notes and a lot annotation's tag are cleared; the metadata tags that
+ * copy_xact() and copy_post() carry over are kept.
  */
 void anonymize_posts::operator()(post_t& post) {
   bool copy_xact_details = false;
@@ -342,7 +379,7 @@ void anonymize_posts::operator()(post_t& post) {
     buf << reinterpret_cast<boost::uintmax_t>(post.xact->payee.c_str()) << integer_gen()
         << post.xact->payee.c_str();
     xact.payee = sha1sum(buf.str(), 8);
-    xact.note = none;
+    xact.note = std::nullopt;
   } else {
     xact.journal = post.xact->journal;
   }
@@ -363,9 +400,9 @@ void anonymize_posts::operator()(post_t& post) {
   }
 
   account_t* new_account =
-      create_temp_account_from_path(account_names, temps, xact.journal->master);
+      create_temp_account_from_path(account_names, accounts, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
-  temp.note = none;
+  temp.note = std::nullopt;
   temp.add_flags(POST_ANONYMIZED);
 
   render_commodity(temp.amount);
@@ -383,9 +420,13 @@ void anonymize_posts::operator()(post_t& post) {
     temp.amount.set_commodity(*commodity_pool_t::current_pool->find_or_create(
         temp.amount.commodity().base_symbol(), anonymized));
   }
+  if (temp.given_lot_total)
+    render_commodity(*temp.given_lot_total);
 
   if (temp.cost)
     render_commodity(*temp.cost);
+  if (temp.given_cost)
+    render_commodity(*temp.given_cost);
   if (temp.assigned_amount)
     render_commodity(*temp.assigned_amount);
 
@@ -403,38 +444,46 @@ void anonymize_posts::operator()(post_t& post) {
  * 3. Marks the posting and its account as visited.
  * 4. If calc_running_total is true, adds the visited_value to the running total.
  * 5. If maintain_stripped_total is true, incrementally maintains a pre-stripped
- *    display total (O(1) per posting) for downstream display_filter_posts.
+ *    display total (O(1) per posting) for display_filter_posts and
+ *    scrubbed_display_total.
  */
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
 
-  // When --average is active with an interval report (e.g. --monthly),
-  // interval_posts emits one ITEM_GENERATED posting per account per period,
-  // all sharing the same synthetic xact.  Two adjustments are needed:
+  // A grouping filter (subtotal_posts and its subclasses, including
+  // posts_as_equity, and collapse_posts) emits one row per account per
+  // group, flagged POST_EXT_SUBTOTAL_ROW, all sharing the same synthetic
+  // xact.  Two adjustments are needed for those rows:
   //
-  // 1. Count stability: keep the period counter the same for all accounts
-  //    within the same period group, so --average divides by the number of
-  //    elapsed intervals rather than the number of account rows.
+  // 1. Count stability: keep the counter the same for all accounts within
+  //    the same group, so --average divides by the number of groups (for
+  //    example, elapsed intervals) rather than the number of account rows.
   //
   // 2. Per-account total (only when period_average_ is enabled): seed each
   //    account's running total from its own accumulator rather than from the
   //    global running total.  Without this, the second and later accounts in
-  //    a period inherit the blended total of all preceding accounts, making
+  //    a group inherit the blended total of all preceding accounts, making
   //    each account's average wrong.
-  bool same_generated_group = false;
+  //
+  // Budget, forecast, automated-transaction and balance-split postings are
+  // ITEM_GENERATED too, but they are ordinary register rows and continue the
+  // global running total and count.
+  const bool subtotal_row = xdata.has_flags(POST_EXT_SUBTOTAL_ROW);
+  bool same_subtotal_group = false;
   if (last_post) {
     assert(last_post->has_xdata());
-    same_generated_group = (post.has_flags(ITEM_GENERATED) &&
-                            last_post->has_flags(ITEM_GENERATED) && post.xact == last_post->xact);
-    if (same_generated_group)
+    same_subtotal_group = (subtotal_row && last_post->xdata().has_flags(POST_EXT_SUBTOTAL_ROW) &&
+                           post.xact == last_post->xact);
+    if (same_subtotal_group)
       xdata.count = last_post->xdata().count;
     else
       xdata.count = last_post->xdata().count + 1;
     if (calc_running_total) {
-      if (period_average_ && post.has_flags(ITEM_GENERATED)) {
+      if (period_average_ && subtotal_row) {
         // Seed each account's running total from its own per-account
-        // accumulator so that multi-account period groups (from
-        // interval_posts) each show their own independent average.
+        // accumulator so that multi-account groups (rows flagged
+        // POST_EXT_SUBTOTAL_ROW by a grouping filter) each show their own
+        // independent average.
         // When the account has no prior history (first appearance), leave
         // xdata.total unset so add_or_set_value() below initialises it
         // to just this post's value, giving the account a clean running
@@ -450,7 +499,29 @@ void calc_posts::operator()(post_t& post) {
     xdata.count = 1;
   }
 
-  post.add_to_value(xdata.visited_value, amount_expr);
+  // The stripped display total this visit continues from, read before this
+  // posting's own is reset below: under --group-by-cumulative -r the posting
+  // can be last_post itself (see the next comment).
+  value_t carried_display_total;
+  const bool carry_display_total = maintain_stripped_total && calc_running_total && last_post &&
+                                   last_post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
+  if (carry_display_total)
+    carried_display_total = last_post->xdata().display_total;
+
+  // The value, and the stripped display total cached from it (here, or by
+  // display_filter_posts when no stripped total is kept here: -V, -X,
+  // --lots), are this visit's.  Under --group-by-cumulative, which keeps
+  // the postings' xdata between groups, --related can hand on to a later
+  // group a posting an earlier group already reported; what it holds from
+  // that visit is not a part of this one.  Nor is the mark of its account
+  // totals having counted it: this visit is one of the later group's own
+  // postings, so the group's account totals count it again, as its
+  // running total does.
+  xdata.visited_value = value_t();
+  xdata.display_total = value_t();
+  xdata.drop_flags(POST_EXT_DISPLAY_TOTAL_CACHED | POST_EXT_CONSIDERED);
+
+  post.add_to_value(xdata.visited_value, &amount_expr);
   xdata.add_flags(POST_EXT_VISITED);
 
   account_t* acct = post.reported_account();
@@ -458,9 +529,10 @@ void calc_posts::operator()(post_t& post) {
 
   if (calc_running_total) {
     add_or_set_value(xdata.total, xdata.visited_value);
-    // Update the per-account accumulator for ITEM_GENERATED postings so that
-    // subsequent periods for the same account carry the correct baseline.
-    if (period_average_ && post.has_flags(ITEM_GENERATED))
+    // Update the per-account accumulator for rows flagged
+    // POST_EXT_SUBTOTAL_ROW by a grouping filter so that subsequent groups
+    // for the same account carry the correct baseline.
+    if (period_average_ && subtotal_row)
       account_period_totals_[post.account] = xdata.total;
 
     // Incrementally maintain a stripped display total alongside the
@@ -470,8 +542,8 @@ void calc_posts::operator()(post_t& post) {
     // previous stripped total.  This relies on strip_annotations
     // being distributive over balance addition.
     if (maintain_stripped_total) {
-      if (last_post && last_post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
-        xdata.display_total = last_post->xdata().display_total;
+      if (carry_display_total)
+        xdata.display_total = std::move(carried_display_total);
 
       value_t stripped_value = xdata.visited_value.strip_annotations(what_to_keep);
       add_or_set_value(xdata.display_total, stripped_value);
@@ -487,6 +559,20 @@ void calc_posts::operator()(post_t& post) {
 /*--- Synthetic posting generation helper ---*/
 
 namespace {
+/// Optional settings for a posting that handle_value() generates.
+struct handle_value_options_t {
+  date_t date;                     ///< Date override; ignored when not valid.
+  bool act_date_p = true;          ///< date is the posting date (true) or its value date.
+  value_t total;                   ///< Running total stored in xdata, if not null.
+  bool direct_amount = false;      ///< Mark the posting POST_EXT_DIRECT_AMT.
+  bool mark_visited = false;       ///< Mark posting and account visited after handling.
+  bool bidir_link = true;          ///< Link the posting into its xact both ways.
+  post_t* source_post = nullptr;   ///< Copy tags/metadata from this posting.
+  bool force_virtual = false;      ///< Make the posting virtual regardless of account flags.
+  bool force_must_balance = false; ///< With force_virtual, make it a [balanced] posting.
+  bool subtotal_row = false;       ///< Mark it POST_EXT_SUBTOTAL_ROW (one row of a group).
+};
+
 /**
  * Create a synthetic (generated) posting and forward it through the handler.
  *
@@ -502,37 +588,26 @@ namespace {
  * @param xact             The transaction to attach the posting to.
  * @param temps            Temporary storage owning the posting's lifetime.
  * @param handler          The downstream handler to receive the posting.
- * @param date             Optional date override for the posting.
- * @param act_date_p       If true, date is an actual date; if false, a value date.
- * @param total            Optional total to store in xdata.
- * @param direct_amount    If true, mark as POST_EXT_DIRECT_AMT.
- * @param mark_visited     If true, mark posting and account as visited.
- * @param bidir_link       If true, create bidirectional xact/post links.
- * @param source_post      Optional source posting to copy metadata from.
- * @param force_virtual    If true, force the posting to be virtual.
- * @param force_must_balance If true, force virtual posting to require balance.
+ * @param opts             Date, total, flags and source posting for the generated posting.
  */
 void handle_value(const value_t& value, account_t* account, xact_t* xact, temporaries_t& temps,
-                  const post_handler_ptr& handler, const date_t& date = date_t(),
-                  const bool act_date_p = true, const value_t& total = value_t(),
-                  const bool direct_amount = false, const bool mark_visited = false,
-                  const bool bidir_link = true, post_t* source_post = nullptr,
-                  const bool force_virtual = false, const bool force_must_balance = false) {
-  post_t& post = temps.create_post(*xact, account, bidir_link);
+                  const post_handler_ptr& handler,
+                  const handle_value_options_t& opts = handle_value_options_t()) {
+  post_t& post = temps.create_post(*xact, account, opts.bidir_link);
   post.add_flags(ITEM_GENERATED);
 
   // Copy tags/metadata from the source posting so that revaluation posts
   // inherit tags and can be properly filtered by predicates like --limit
-  if (source_post && source_post->metadata)
-    post.metadata = source_post->metadata;
+  if (opts.source_post && opts.source_post->metadata)
+    post.metadata = opts.source_post->metadata;
 
   // If the caller explicitly specifies that this posting is virtual (e.g.,
   // when subtotal_posts accumulates virtual and non-virtual postings for the
   // same account as separate entries), use that flag directly.  Otherwise,
-  // infer virtual status from account xdata flags as before.
-  if (force_virtual) {
+  // infer virtual status from account xdata flags.
+  if (opts.force_virtual) {
     post.add_flags(POST_VIRTUAL);
-    if (force_must_balance)
+    if (opts.force_must_balance)
       post.add_flags(POST_MUST_BALANCE);
   } else if (account && account->has_xdata() &&
              account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
@@ -545,11 +620,11 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 
   post_t::xdata_t& xdata(post.xdata());
 
-  if (is_valid(date)) {
-    if (act_date_p)
-      xdata.date = date;
+  if (is_valid(opts.date)) {
+    if (opts.act_date_p)
+      xdata.date = opts.date;
     else
-      xdata.value_date = date;
+      xdata.value_date = opts.date;
   }
 
   value_t temp(value);
@@ -577,17 +652,19 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
     break;
   }
 
-  if (!total.is_null())
-    xdata.total = total;
+  if (!opts.total.is_null())
+    xdata.total = opts.total;
 
-  if (direct_amount)
+  if (opts.direct_amount)
     xdata.add_flags(POST_EXT_DIRECT_AMT);
+  if (opts.subtotal_row)
+    xdata.add_flags(POST_EXT_SUBTOTAL_ROW);
 
   DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
   (*handler)(post);
 
-  if (mark_visited) {
+  if (opts.mark_visited) {
     post.xdata().add_flags(POST_EXT_VISITED);
     post.account->xdata().add_flags(ACCOUNT_EXT_VISITED);
   }
@@ -650,21 +727,26 @@ void collapse_posts::report_subtotal() {
       // When using --depth with --effective, group posts by both the
       // depth-truncated account and effective date, so that postings with
       // different effective dates are not incorrectly collapsed together.
-      typedef std::pair<date_t, account_t*> date_acct_key;
-      typedef std::map<date_acct_key, value_t> grouped_totals_map;
-      grouped_totals_map grouped;
+      // Rows go out by date, and within a date in the order each account's
+      // first posting arrives.
+      std::vector<std::pair<std::pair<date_t, account_t*>, value_t>> grouped;
 
       for (post_t* post : component_posts) {
         account_t* acct = post->account;
         while (acct->depth > collapse_depth && acct->parent)
           acct = acct->parent;
 
-        date_t d = post->date();
-        date_acct_key key(d, acct);
-        post->add_to_value(grouped[key], amount_expr);
+        std::pair<date_t, account_t*> key(post->date(), acct);
+        auto i = std::find_if(grouped.begin(), grouped.end(),
+                              [&](const auto& entry) { return entry.first == key; });
+        if (i == grouped.end())
+          i = grouped.emplace(grouped.end(), key, value_t());
+        post->add_to_value(i->second, &amount_expr);
       }
+      std::stable_sort(grouped.begin(), grouped.end(),
+                       [](const auto& a, const auto& b) { return a.first.first < b.first.first; });
 
-      for (const grouped_totals_map::value_type& entry : grouped) {
+      for (const auto& entry : grouped) {
         date_t d = entry.first.first;
         account_t* acct = entry.first.second;
 
@@ -672,13 +754,10 @@ void collapse_posts::report_subtotal() {
         xact.payee = last_xact->payee;
         xact._date = d;
 
-        handle_value(/* value=      */ entry.second,
-                     /* account=    */ acct,
-                     /* xact=       */ &xact,
-                     /* temps=      */ temps,
-                     /* handler=    */ handler,
-                     /* date=       */ d,
-                     /* act_date_p= */ true);
+        handle_value_options_t opts;
+        opts.date = d;
+        opts.subtotal_row = true;
+        handle_value(entry.second, acct, &xact, temps, handler, opts);
       }
     } else {
       date_t earliest_date;
@@ -701,15 +780,12 @@ void collapse_posts::report_subtotal() {
       DEBUG("filters.collapse", "earliest date    = " << earliest_date);
       DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-      for (totals_map::value_type& pat : totals) {
-        handle_value(/* value=      */ pat.second,
-                     /* account=    */ pat.first,
-                     /* xact=       */ &xact,
-                     /* temps=      */ temps,
-                     /* handler=    */ handler,
-                     /* date=       */ latest_date,
-                     /* act_date_p= */ false);
-      }
+      handle_value_options_t opts;
+      opts.date = latest_date;
+      opts.act_date_p = false;
+      opts.subtotal_row = true;
+      for (totals_map::value_type& pat : totals)
+        handle_value(pat.second, pat.first, &xact, temps, handler, opts);
     }
   }
   // NOLINTEND(bugprone-branch-clone)
@@ -728,13 +804,15 @@ void collapse_posts::report_subtotal() {
 /// Find the totals bucket for an account, walking up to collapse_depth.
 value_t& collapse_posts::find_totals(account_t* account) {
   if (collapse_depth == 0)
-    return totals[global_totals_account];
+    account = global_totals_account;
+  else
+    while (account->depth > collapse_depth)
+      account = account->parent;
 
-  if (account->depth <= collapse_depth)
-    return totals[account];
-
-  // else recurse
-  return find_totals(account->parent);
+  for (totals_map::value_type& pat : totals)
+    if (pat.first == account)
+      return pat.second;
+  return totals.emplace_back(account, value_t()).second;
 }
 
 /**
@@ -750,8 +828,8 @@ void collapse_posts::operator()(post_t& post) {
   if (last_xact != post.xact && count > 0)
     report_subtotal();
 
-  post.add_to_value(subtotal, amount_expr);
-  post.add_to_value(find_totals(post.account), amount_expr);
+  post.add_to_value(subtotal, &amount_expr);
+  post.add_to_value(find_totals(post.account), &amount_expr);
 
   component_posts.push_back(&post);
 
@@ -788,6 +866,24 @@ void related_posts::flush() {
   }
 
   item_handler<post_t>::flush();
+
+  // The stream is reported.  The next one (the next group under
+  // --group-by-cumulative, which no clear() precedes and which keeps the
+  // postings' xdata) relates its own postings afresh and may hand on a
+  // sibling this one already handed on.  Forget this stream's postings,
+  // and drop the marks that hold only for one stream from them and their
+  // siblings: received and handled here, displayed by the report at the
+  // end of the chain, and sort_posts' cached sort keys, to which the next
+  // sort would otherwise append a second set.
+  for (post_t* post : posts)
+    for (post_t* r_post : post->xact->posts)
+      if (r_post->has_xdata()) {
+        post_t::xdata_t& xdata(r_post->xdata());
+        xdata.drop_flags(POST_EXT_RECEIVED | POST_EXT_HANDLED | POST_EXT_DISPLAYED |
+                         POST_EXT_SORT_CALC);
+        xdata.sort_values.clear();
+      }
+  posts.clear();
 }
 
 /*--- Display filtering and rounding ---*/
@@ -797,17 +893,7 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
     : item_handler<post_t>(std::move(handler)), report(_report),
       display_amount_expr(report.HANDLER(display_amount_).expr),
       display_total_expr(report.HANDLER(display_total_).expr), show_rounding(_show_rounding),
-      has_stripped_cache(false), what_to_keep(report.what_to_keep()) {
-  // The incremental stripped total optimization is only safe when the
-  // display_total expression is the simple running total accumulation
-  // (i.e., display_total_ = total_expr, total_ = total).  Options like
-  // --market, --exchange, --average, etc. modify these expressions,
-  // breaking the distributive property: strip(f(total)) != f(strip(total)).
-  incremental_strip_eligible = report.HANDLER(display_total_).expr.exprs.empty() &&
-                               report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                               report.HANDLER(total_).expr.exprs.empty() &&
-                               report.HANDLER(total_).expr.base_expr == "total" &&
-                               !what_to_keep.keep_all();
+      what_to_keep(report.what_to_keep()) {
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
@@ -818,42 +904,25 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
  * Compares the new display total (after this posting) with the previous one.
  * If they differ due to display rounding, emits a synthetic <Adjustment>
  * posting to compensate.  Returns true if the posting should be displayed
- * (non-zero display amount or --empty), false otherwise.
+ * (a <Revalued> posting, a non-zero display amount, or --empty), false otherwise.
  *
- * Uses an incremental optimization when possible: instead of stripping the
- * full running total (O(K) GMP ops), strips only this posting's contribution
- * and adds it to the cached stripped total from the previous posting.
+ * The new display total is the stripped running total calc_posts cached for
+ * the posting; when calc_posts kept none (non-default total expressions,
+ * --lots, generated <Revalued> postings) it is computed and cached here.
  */
 bool display_filter_posts::output_rounding(post_t& post) {
   bind_scope_t bound_scope(report, post);
   value_t new_display_total;
 
   if (show_rounding) {
-    // Optimization: use incremental stripped total computation when
-    // possible.  Instead of stripping the full running total (O(K) GMP
-    // operations where K = number of annotated commodities), we strip
-    // only the posting's contribution and add it to the cached stripped
-    // total from the previous posting (O(1) GMP operations).
-    //
-    // strip_annotations is distributive over balance addition:
-    //   strip(total[n]) = strip(total[n-1]) + strip(visited_value[n])
-    //
-    // We fall back to full stripping when:
-    //   - This is the first posting (no cache yet)
-    //   - The display_total_expr is non-default (--market, --exchange, etc.)
-    //   - The posting is a revalued/generated posting
-    //   - The posting doesn't have visited_value set by calc_posts
-    if (has_stripped_cache && incremental_strip_eligible && post.account != revalued_account &&
-        post.has_xdata() && post.xdata().has_flags(POST_EXT_VISITED) &&
-        !post.xdata().visited_value.is_null()) {
-      // Incremental path: strip just the posting's contribution
-      value_t stripped_delta = post.xdata().visited_value.strip_annotations(what_to_keep);
-      new_display_total = last_stripped_display_total;
-      add_or_set_value(new_display_total, stripped_delta);
-    } else {
-      // Full path: strip the entire display total from scratch
-      new_display_total = (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
+    // calc_posts caches the stripped running total when the total
+    // expressions are the defaults; otherwise compute and cache it here.
+    post_t::xdata_t& xdata(post.xdata());
+    if (!xdata.has_flags(POST_EXT_DISPLAY_TOTAL_CACHED)) {
+      xdata.display_total = display_total_expr.calc(bound_scope).strip_annotations(what_to_keep);
+      xdata.add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
     }
+    new_display_total = xdata.display_total;
 
     DEBUG("filters.changed_value.rounding",
           "rounding.new_display_total     = " << new_display_total);
@@ -862,16 +931,11 @@ bool display_filter_posts::output_rounding(post_t& post) {
   // Allow the posting to be displayed if:
   //  1. Its display_amount would display as non-zero, or
   //  2. The --empty option was specified, or
-  //  3. a) The account of the posting is <Revalued>, and
-  //     b) the revalued option is specified, and
-  //     c) the --no-rounding option is not specified.
+  //  3. Its account is <Revalued> (the account changed_value_posts posts to).
 
   if (post.account == revalued_account) {
     if (show_rounding)
       last_display_total = new_display_total;
-    // Revalued postings break the incremental chain since they
-    // modify the total in non-standard ways.
-    has_stripped_cache = false;
     return true;
   }
 
@@ -892,30 +956,15 @@ bool display_filter_posts::output_rounding(post_t& post) {
       if (value_t diff = precise_display_total - last_display_total) {
         DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
 
-        handle_value(/* value=         */ diff,
-                     /* account=       */ rounding_account,
-                     /* xact=          */ post.xact,
-                     /* temps=         */ temps,
-                     /* handler=       */ handler,
-                     /* date=          */ date_t(),
-                     /* act_date_p=    */ true,
-                     /* total=         */ precise_display_total,
-                     /* direct_amount= */ true,
-                     /* mark_visited=  */ false,
-                     /* bidir_link=    */ false);
+        handle_value_options_t opts;
+        opts.total = precise_display_total;
+        opts.direct_amount = true;
+        opts.bidir_link = false;
+        handle_value(diff, rounding_account, post.xact, temps, handler, opts);
       }
     }
-    if (show_rounding) {
+    if (show_rounding)
       last_display_total = new_display_total;
-      // Update the incremental cache and store in xdata for the
-      // format's scrub(display_total) to reuse.
-      last_stripped_display_total = new_display_total;
-      has_stripped_cache = true;
-      if (post.has_xdata()) {
-        post.xdata().display_total = new_display_total;
-        post.xdata().add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
-      }
-    }
     return true;
   } else {
     return report.HANDLED(empty);
@@ -943,8 +992,8 @@ namespace {
  * or of --dc, and each piece appended to it is one that --round or --unround
  * appends, the valuation at today that --round appends under -V, or the pair
  * of an amount and its cleared part that the cleared command appends.  The
- * test compares the expressions as strings, as chain_post_handlers does to
- * decide whether display_filter_posts may add rounding postings.
+ * test compares the expressions as strings, as report_t::default_amount_exprs()
+ * does for the rounding decision in chain_post_handlers.
  */
 bool amount_expr_reads_cost(const report_t& report) {
   // The base expression that the --dc handler in report.h installs.
@@ -1002,34 +1051,36 @@ bool exchange_names_one_commodity(const report_t& report) {
  * - --percent shows each account's share of its parent, not a running total,
  *   and never values a holding; valuing one here could evaluate a lot's value
  *   expression that fails (regress/cov9-annotate-value-expr).
- * - --average shows a running average, and calc_posts seeds the total of a
- *   generated posting (an automated transaction's, for instance) from a
- *   per-account accumulator, so the running total is not the sum over the
- *   postings seen here.  --deviation shows each amount less the total.
+ * - --average shows a running average: it sets the display total to
+ *   display_total/count, and the revaluation prices that display total, so
+ *   the total revalued is not the sum over the postings seen here.
+ *   --deviation shows each amount less the total.
  * - --period (and -M and the rest), --dow and --by-payee pass on subtotals
  *   that carry no cost; valuing them books the gain that regress/1821_2
  *   realizes a second time under -M.
- * - Budget reports receive generated budget postings whose amount
- *   budget_posts negates while their cost keeps its sign, and the budget
+ * - Budget reports add generated budget postings to the running total,
+ *   which is then no sum over the journal's postings, and the budget
  *   command pairs each amount with its budget.
- * - Under --forecast the forecast-while filter sits downstream of this
- *   handler (chain_post_handlers), so the forecast posting that ends the
- *   forecast enters the running total but is never displayed.
+ * - Under --forecast the forecast posting that ends the forecast passes this
+ *   handler and enters the running total, but forecast_posts::flush then
+ *   withholds it from the account totals (it drops POST_EXT_VISITED), so it
+ *   is never displayed.
  * - Under --anon, anonymize_posts relabels a posting's cost and the price in
  *   its lot annotation separately and can give one commodity two labels (in
  *   regress/1190 the cost is in B and the fixated price in C), so the cost is
  *   not in the terms in which the lot is valued.
- * - --pivot, --pivot-only, --account, --payee and --date (transfer_details),
- *   the account-rewrite and payee-rewrite directives (rewrite_posts, which
- *   chain_post_handlers adds under the same condition) and --inject
- *   (inject_posts) copy a posting into a transaction of its own, dated by
- *   the posting.  A posting that carries its own date then no longer shares
- *   the date on which cost_baseline values the costs of the rest of its
- *   transaction, so under -X the two sides of a balanced transaction are
- *   converted at different rates (regress/unrealized-footing-posting-date,
- *   regress/unrealized-account-rewrite and regress/unrealized-payee-rewrite).
- *   --inject also leaves on the posting it generates the cost of the posting
- *   it copies (regress/unrealized-excluded-reports).
+ * - --pivot, --pivot-only, --account, --payee and --date (transfer_details)
+ *   and --inject (inject_posts) copy a posting into a transaction of its
+ *   own, dated by the posting.  A posting that carries its own date then no
+ *   longer shares the date on which cost_baseline values the costs of the
+ *   rest of its transaction, so under -X the two sides of a balanced
+ *   transaction are converted at different rates
+ *   (regress/unrealized-footing-posting-date).
+ *   regress/unrealized-excluded-reports runs the --inject report.  A rewrite
+ *   rule is no such case: rewrite_posts copies a rewritten transaction
+ *   whole, under the transaction's own date
+ *   (regress/unrealized-account-rewrite, regress/unrealized-payee-rewrite
+ *   and regress/unrealized-rewrite-option).
  * - An amount expression of the user's own (--amount or -t, or the collect
  *   clause of select), and any other than those that amount_expr_reads_cost
  *   accepts: cost_baseline reads the cost in place of the amount, which gives
@@ -1054,7 +1105,6 @@ bool report_revalues_between_postings(const report_t& report) {
   // note above.  A balance report in one of these shapes keeps the
   // revaluation between postings (and books no whole-report unrealized gain),
   // as every non-accounts report does.
-  const journal_t& journal(*report.session.journal);
   return !report.HANDLED(historical) && !report.HANDLED(immediate) &&
          !report.HANDLED(revalued_total_) && !report.HANDLED(plopen) && !report.HANDLED(percent) &&
          !report.HANDLED(average) && !report.HANDLED(deviation) && !report.HANDLED(period_) &&
@@ -1062,19 +1112,17 @@ bool report_revalues_between_postings(const report_t& report) {
          report.budget_flags == BUDGET_NO_BUDGET && !report.HANDLED(forecast_while_) &&
          !report.HANDLED(anon) && !report.HANDLED(pivot_) && !report.HANDLED(pivot_only_) &&
          !report.HANDLED(account_) && !report.HANDLED(payee_) && !report.HANDLED(date_) &&
-         !report.HANDLED(inject_) && journal.payee_rewrite_mappings.empty() &&
-         journal.account_rewrite_mappings.empty();
+         !report.HANDLED(inject_);
 }
 
-bool uses_cost_baseline(const report_t& report, bool for_accounts_report, bool show_unrealized) {
-  return for_accounts_report && show_unrealized && report.HANDLED(market) &&
-         amount_expr_reads_cost(report) && exchange_names_one_commodity(report) &&
-         report_revalues_between_postings(report);
+bool uses_cost_baseline(const report_t& report, bool for_accounts_report) {
+  return for_accounts_report && report.HANDLED(market) && amount_expr_reads_cost(report) &&
+         exchange_names_one_commodity(report) && report_revalues_between_postings(report);
 }
 } // namespace
 
 changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _report,
-                                         bool _for_accounts_report, bool _show_unrealized,
+                                         bool _for_accounts_report,
                                          display_filter_posts* _display_filter)
     : item_handler<post_t>(std::move(handler)), report(_report),
       total_expr(report.HANDLED(revalued_total_) ? report.HANDLER(revalued_total_).expr
@@ -1082,8 +1130,9 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
       display_total_expr(report.HANDLER(display_total_).expr), cost_expr("cost"),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
-      show_unrealized(_show_unrealized),
-      value_from_cost(uses_cost_baseline(_report, _for_accounts_report, _show_unrealized)),
+      suppress_for_plot(report.HANDLED(period_) &&
+                        (report.HANDLED(amount_data) || report.HANDLED(total_data))),
+      value_from_cost(uses_cost_baseline(_report, _for_accounts_report)),
       amount_expr(report.HANDLER(amount_).expr),
       held_value_expr("market(amount, value_date, exchange)"),
       baseline_expr("market(amount_expr, value_date, exchange)"), last_post(nullptr),
@@ -1106,8 +1155,7 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
 
   create_accounts();
 
-  TRACE_CTOR(changed_value_posts,
-             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
+  TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool, display_filter_posts *");
 }
 
 /**
@@ -1176,8 +1224,6 @@ void changed_value_posts::flush() {
     // every holding at the terminus regardless of when it was acquired,
     // and the equity rows must cover that whole change.
     if (!historical_prices_only) {
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       last_total =
@@ -1195,8 +1241,6 @@ void changed_value_posts::flush() {
       // the correct market value at its end date, and extra intra-period
       // revaluations would create unwanted extra data points for gnuplot
       // (issue #984).
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       output_revaluation(*last_post, report.terminus.date());
@@ -1266,34 +1310,17 @@ void changed_value_posts::output_value_change(post_t& post, const date_t& date,
   xact.payee = _("Commodities revalued");
   xact._date = is_valid(date) ? date : post.value_date();
 
+  handle_value_options_t opts;
+  opts.date = *xact._date;
+  opts.source_post = &post;
   // NOLINTBEGIN(bugprone-branch-clone)
   if (!for_accounts_report) {
-    handle_value(/* value=         */ diff,
-                 /* account=       */ revalued_account,
-                 /* xact=          */ &xact,
-                 /* temps=         */ temps,
-                 /* handler=       */ handler,
-                 /* date=          */ *xact._date,
-                 /* act_date_p=    */ true,
-                 /* total=         */ repriced_total,
-                 /* direct_amount= */ false,
-                 /* mark_visited=  */ false,
-                 /* bidir_link=    */ true,
-                 /* source_post=   */ &post);
-  } else if (show_unrealized) {
-    handle_value(
-        /* value=         */ -diff,
-        /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
-        /* xact=          */ &xact,
-        /* temps=         */ temps,
-        /* handler=       */ handler,
-        /* date=          */ *xact._date,
-        /* act_date_p=    */ true,
-        /* total=         */ value_t(),
-        /* direct_amount= */ false,
-        /* mark_visited=  */ true,
-        /* bidir_link=    */ true,
-        /* source_post=   */ &post);
+    opts.total = repriced_total;
+    handle_value(diff, revalued_account, &xact, temps, handler, opts);
+  } else {
+    opts.mark_visited = true;
+    handle_value(-diff, (diff < 0L ? losses_equity_account : gains_equity_account), &xact, temps,
+                 handler, opts);
   }
   // NOLINTEND(bugprone-branch-clone)
 }
@@ -1322,7 +1349,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
  * A balance report does, unless it uses historical prices, or its total has
  * several columns, such as the market value and cost pairs of --gain or the
  * totals of cleared and budget reports, which leave no basis to compare.
- * Those are revalued by output_revaluation() alone, as they were before.
+ * Those are revalued by output_revaluation() alone.
  */
 bool changed_value_posts::books_from_basis() const {
   // Under -V or -X with --unrealized, a balance report whose running total
@@ -1335,7 +1362,7 @@ bool changed_value_posts::books_from_basis() const {
   // of the holding as a gain under the basis footing
   // (regress/unrealized-excluded-reports,
   // regress/unrealized-unconvertible-cost).
-  if (show_unrealized && report.HANDLED(market) &&
+  if (report.HANDLED(market) &&
       (!amount_expr_reads_cost(report) || !exchange_names_one_commodity(report) ||
        !report_revalues_between_postings(report)))
     return false;
@@ -1449,18 +1476,6 @@ value_t changed_value_posts::basis_gain(post_t& post, const amount_t& amount, va
   return gain;
 }
 
-namespace {
-struct insert_prices_in_map {
-  price_map_t& all_prices;
-
-  insert_prices_in_map(price_map_t& _all_prices) : all_prices(_all_prices) {}
-
-  void operator()(const datetime_t& date, const amount_t& price) {
-    all_prices.insert(price_map_t::value_type(date, price));
-  }
-};
-} // namespace
-
 /**
  * Scan for commodity price changes between the last posting and the current one,
  * generating a revaluation for each distinct pricing date.
@@ -1480,12 +1495,13 @@ struct insert_prices_in_map {
  * valuation date enters the baseline.  Valuing every posting of a
  * transaction on one date converts them all at the same rates, so a
  * transaction that balances at cost contributes zero even when a posting
- * carries its own date.  That holds because every posting seen here still
- * belongs to its journal transaction: uses_cost_baseline excludes the reports
+ * carries its own date.  That holds because every posting seen here belongs
+ * to its journal transaction, or to the copy rewrite_posts makes of the whole
+ * transaction under the same date: uses_cost_baseline excludes the reports
  * whose handlers copy a posting into a transaction of its own, dated by the
- * posting.  Evaluating the amount expression gives the
- * contribution the shape of the posting's own contribution to the running
- * total: a debit and credit pair under --dc, a plain amount otherwise.
+ * posting.  Evaluating the amount expression gives the contribution the shape
+ * of the posting's own contribution to the running total: a debit and credit
+ * pair under --dc, a plain amount otherwise.
  *
  * Where the report cannot compare the posting's own contribution with its
  * cost at the terminus (incomparable_at_terminus), because it leaves the
@@ -1626,28 +1642,8 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
     DEBUG("filters.revalued", "intermediate last_total = " << last_total);
 
-    switch (last_total.type()) {
-    case value_t::BOOLEAN:
-    case value_t::INTEGER:
-      last_total.in_place_cast(value_t::AMOUNT);
-      [[fallthrough]];
-
-    case value_t::AMOUNT:
-      temp.amount = last_total.as_amount();
-      break;
-
-    case value_t::BALANCE:
-    case value_t::SEQUENCE:
-      xdata.compound_value = last_total;
-      xdata.add_flags(POST_EXT_COMPOUND);
-      break;
-
-    case value_t::DATETIME:
-    case value_t::DATE:
-    default:
-      assert(false);
-      break;
-    }
+    xdata.compound_value = last_total;
+    xdata.add_flags(POST_EXT_COMPOUND);
 
     bind_scope_t inner_scope(report, temp);
     display_total = display_total_expr.calc(inner_scope);
@@ -1666,28 +1662,19 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
     [[fallthrough]];
 
   case value_t::BALANCE: {
-    price_map_t all_prices;
-
+    // One revaluation per distinct pricing date between the two postings;
+    // output_revaluation() values the total as of that date.
+    std::set<date_t> pricing_dates;
     for (const balance_t::amounts_map::value_type& amt_comm : display_total.as_balance().amounts)
-      amt_comm.first->map_prices(insert_prices_in_map(all_prices), datetime_t(current),
-                                 datetime_t(post.value_date()), true);
+      amt_comm.first->map_prices(
+          [&pricing_dates](datetime_t when, const amount_t&) {
+            DEBUG("filters.revalued", "pricing date " << when.date());
+            pricing_dates.insert(when.date());
+          },
+          datetime_t(current), datetime_t(post.value_date()), true);
 
-    // Choose the last price from each day as the price to use
-    typedef std::map<const date_t, bool> date_map;
-    date_map pricing_dates;
-
-    for (auto it = all_prices.rbegin(); it != all_prices.rend(); ++it) {
-      const auto& price = *it;
-      // This insert will fail if a later price has already been inserted
-      // for that date.
-      DEBUG("filters.revalued", "re-inserting " << price.second << " at " << price.first.date());
-      pricing_dates.insert(date_map::value_type(price.first.date(), true));
-    }
-
-    // Go through the time-sorted prices list, outputting a revaluation for
-    // each price difference.
-    for (const date_map::value_type& price : pricing_dates) {
-      output_revaluation(post, price.first);
+    for (const date_t& date : pricing_dates) {
+      output_revaluation(post, date);
       last_total = repriced_total;
     }
     break;
@@ -1748,8 +1735,6 @@ void changed_value_posts::operator()(post_t& post) {
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries between periods so that each
       // period produces exactly one data point for gnuplot (issue #984).
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !historical_prices_only && !suppress_for_plot)
         output_intermediate_prices(*last_post, post.value_date());
 
@@ -1779,6 +1764,26 @@ void changed_value_posts::operator()(post_t& post) {
 /*--- Subtotaling ---*/
 
 /**
+ * operator() marks each component posting compound, with its amount as the
+ * value.  That mark is of this subtotal only: under --group-by-cumulative,
+ * which keeps the postings' xdata between groups, --related can hand one of
+ * them on to a later group, whose amount expression would otherwise read the
+ * stale amount instead of evaluating the posting (with `cleared`, a bare
+ * amount added to a sequence).  Restored in reverse, so a posting handed in
+ * twice gets back what it came with the first time.
+ */
+void subtotal_posts::forget_component_posts() {
+  for (auto i = saved_compounds.rbegin(); i != saved_compounds.rend(); ++i) {
+    post_t::xdata_t& xdata(i->post->xdata());
+    xdata.compound_value = i->value;
+    if (!i->compound)
+      xdata.drop_flags(POST_EXT_COMPOUND);
+  }
+  saved_compounds.clear();
+  component_posts.clear();
+}
+
+/**
  * Emit a synthetic transaction containing one posting per accumulated
  * account/commodity pair.
  *
@@ -1788,64 +1793,51 @@ void changed_value_posts::operator()(post_t& post) {
  *
  * @param spec_fmt  Optional strftime format string for the payee date.
  * @param interval  Optional interval providing start/finish dates.
+ * @param payee     Optional payee, used verbatim instead of the date (by_payee_posts).
  */
 void subtotal_posts::report_subtotal(const char* spec_fmt,
-                                     const optional<date_interval_t>& interval) {
+                                     const optional<date_interval_t>& interval,
+                                     const optional<string>& payee) {
   if (component_posts.empty())
     return;
 
-  optional<date_t> range_start = interval ? interval->start : none;
-  optional<date_t> range_finish = interval ? interval->inclusive_end() : none;
+  optional<date_t> range_start = interval ? interval->start : std::nullopt;
+  optional<date_t> range_finish = interval ? interval->inclusive_end() : std::nullopt;
 
   if (!range_start || !range_finish) {
     for (post_t* post : component_posts) {
       date_t date = post->date();
       date_t value_date = post->value_date();
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
       if (!range_start || date < *range_start)
         range_start = date;
       if (!range_finish || value_date > *range_finish)
         range_finish = value_date;
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic pop
-#endif
     }
   }
-  component_posts.clear();
+  forget_component_posts();
 
   std::ostringstream out_date;
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (spec_fmt) {
-    out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
-  } else if (date_format) {
-    out_date << "- " << format_date(*range_finish, FMT_CUSTOM, date_format->c_str());
-  } else {
-    out_date << "- " << format_date(*range_finish);
+  if (!payee) {
+    if (spec_fmt) {
+      out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
+    } else {
+      out_date << "- " << format_date(*range_finish);
+    }
   }
-  // NOLINTEND(bugprone-branch-clone)
 
   xact_t& xact = temps.create_xact();
-  xact.payee = out_date.str();
+  xact.payee = payee ? *payee : out_date.str();
   xact._date = *range_start;
 
-  for (values_map::value_type& pair : values)
-    handle_value(/* value=              */ pair.second.value,
-                 /* account=            */ pair.second.account,
-                 /* xact=               */ &xact,
-                 /* temps=              */ temps,
-                 /* handler=            */ handler,
-                 /* date=               */ *range_finish,
-                 /* act_date_p=         */ false,
-                 /* total=              */ value_t(),
-                 /* direct_amount=      */ false,
-                 /* mark_visited=       */ false,
-                 /* bidir_link=         */ true,
-                 /* source_post=        */ nullptr,
-                 /* force_virtual=      */ pair.second.is_virtual,
-                 /* force_must_balance= */ pair.second.must_balance);
+  handle_value_options_t opts;
+  opts.date = *range_finish;
+  opts.act_date_p = false;
+  opts.subtotal_row = true;
+  for (values_map::value_type& pair : values) {
+    opts.force_virtual = pair.second.is_virtual;
+    opts.force_must_balance = pair.second.must_balance;
+    handle_value(pair.second.value, pair.second.account, &xact, temps, handler, opts);
+  }
 
   values.clear();
 }
@@ -1855,8 +1847,9 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
  *
  * The posting's amount is evaluated via amount_expr and added to the
  * values_map entry for its account.  Virtual and non-virtual postings to the
- * same account are tracked separately (using a sentinel suffix in the key)
- * so they can be emitted with correct virtual flags in report_subtotal.
+ * same account are tracked separately (the key carries the posting's
+ * virtual and must-balance flags) so they can be emitted with correct
+ * virtual flags in report_subtotal.
  */
 void subtotal_posts::operator()(post_t& post) {
   component_posts.push_back(&post);
@@ -1871,30 +1864,20 @@ void subtotal_posts::operator()(post_t& post) {
   // posts then bypass expression evaluation in calc_posts, which leads to
   // mismatched sequence lengths in the running total (issue #965).
   value_t amount;
-  post.add_to_value(amount, amount_expr);
+  post.add_to_value(amount, &amount_expr);
 
-  post.xdata().compound_value = value_t(post.amount);
-  post.xdata().add_flags(POST_EXT_COMPOUND);
+  post_t::xdata_t& xdata(post.xdata());
+  saved_compounds.push_back({&post, xdata.has_flags(POST_EXT_COMPOUND), xdata.compound_value});
+  xdata.compound_value = value_t(post.amount);
+  xdata.add_flags(POST_EXT_COMPOUND);
 
-  // Use a composite key to distinguish virtual from non-virtual postings to
-  // the same account.  A sentinel suffix '\x01' is appended for virtual
-  // postings so they accumulate separately and do not trigger the error that
-  // previously fired when the same account appeared with both virtual and
-  // non-virtual postings within a single reporting period (issue #2051).
-  string key = acct->fullname();
-  if (post.has_flags(POST_VIRTUAL))
-    key += '\x01';
+  const bool is_virtual = post.has_flags(POST_VIRTUAL);
+  const bool must_balance = is_virtual && post.has_flags(POST_MUST_BALANCE);
+  const values_key key(acct->fullname(), is_virtual, must_balance);
 
   values_map::iterator i = values.find(key);
   if (i == values.end()) {
-#if DEBUG_ON
-    std::pair<values_map::iterator, bool> result =
-#endif
-        values.insert(values_pair(key, acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
-                                                    post.has_flags(POST_MUST_BALANCE))));
-#if DEBUG_ON
-    assert(result.second);
-#endif
+    values.emplace(key, acct_value_t(acct, amount, is_virtual, must_balance));
   } else {
     add_or_set_value((*i).second.value, amount);
   }
@@ -1974,8 +1957,8 @@ void interval_posts::flush() {
     // Determine the beginning interval.  When --empty is active and a report
     // begin date was supplied that precedes the first posting, start from that
     // date so that empty leading periods are counted (important for --average,
-    // which uses the period count as its denominator).  Otherwise fall back to
-    // the earliest posting date as before.
+    // which uses the period count as its denominator).  Otherwise start from
+    // the earliest posting date.
     date_t anchor;
     if (generate_empty_posts && begin_of_report_ && !all_posts.empty() &&
         *begin_of_report_ < all_posts.front()->date())
@@ -2016,15 +1999,7 @@ void interval_posts::flush() {
         // Generate a null posting, so the intervening periods can be
         // seen when -E is used, or if the calculated amount ends up
         // being non-zero
-        xact_t& null_xact = temps.create_xact();
-        null_xact._date = interval.inclusive_end();
-
-        post_t& null_post = temps.create_post(null_xact, empty_account);
-        null_post.add_flags(POST_CALCULATED);
-        null_post.amount = 0L;
-
-        subtotal_posts::operator()(null_post);
-        report_subtotal(interval);
+        report_empty_period();
       }
 
       DEBUG("filters.interval", "Advancing interval");
@@ -2045,54 +2020,35 @@ void interval_posts::flush() {
     ++interval;
     while (interval.start && *interval.start < *end_of_report_) {
       DEBUG("filters.interval", "Generating trailing empty post for " << *interval.start);
-
-      xact_t& null_xact = temps.create_xact();
-      null_xact._date = interval.inclusive_end();
-
-      post_t& null_post = temps.create_post(null_xact, empty_account);
-      null_post.add_flags(POST_CALCULATED);
-      null_post.amount = 0L;
-
-      subtotal_posts::operator()(null_post);
-      report_subtotal(interval);
-
+      report_empty_period();
       ++interval;
     }
   }
 
   // Tell our parent class to flush
   subtotal_posts::flush();
+
+  // Everything seen so far is reported.  Under --group-by-cumulative
+  // the splitter flushes this filter again for the next group without
+  // a clear(), so start that group from the original period with no
+  // postings, as clear() would, but keep temps: the postings reported
+  // above must outlive the report.
+  all_posts.clear();
+  interval = start_interval;
 }
 
-namespace {
-struct create_post_from_amount {
-  post_handler_ptr handler;
-  xact_t& xact;
-  account_t& balance_account;
-  temporaries_t& temps;
+/// Subtotal one <None> posting of 0 for the current interval (--empty).
+void interval_posts::report_empty_period() {
+  xact_t& null_xact = temps.create_xact();
+  null_xact._date = interval.inclusive_end();
 
-  explicit create_post_from_amount(post_handler_ptr _handler, xact_t& _xact,
-                                   account_t& _balance_account, temporaries_t& _temps)
-      : handler(std::move(_handler)), xact(_xact), balance_account(_balance_account),
-        temps(_temps) {
-    TRACE_CTOR(create_post_from_amount, "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
-  }
-  create_post_from_amount(const create_post_from_amount& other)
-      : handler(other.handler), xact(other.xact), balance_account(other.balance_account),
-        temps(other.temps) {
-    TRACE_CTOR(create_post_from_amount, "copy");
-  }
-  ~create_post_from_amount() noexcept { TRACE_DTOR(create_post_from_amount); }
+  post_t& null_post = temps.create_post(null_xact, empty_account);
+  null_post.add_flags(POST_CALCULATED);
+  null_post.amount = 0L;
 
-  void operator()(const amount_t& amount) {
-    if (amount.is_zero())
-      return;
-    post_t& balance_post = temps.create_post(xact, &balance_account);
-    balance_post.amount = -amount;
-    (*handler)(balance_post);
-  }
-};
-} // namespace
+  subtotal_posts::operator()(null_post);
+  report_subtotal(interval);
+}
 
 /*--- Equity conversion ---*/
 
@@ -2111,7 +2067,7 @@ void posts_as_equity::report_subtotal() {
     if (!is_valid(finish) || date > finish)
       finish = date;
   }
-  component_posts.clear();
+  forget_component_posts();
 
   xact_t& xact = temps.create_xact();
   xact.payee = _("Opening Balances");
@@ -2120,47 +2076,27 @@ void posts_as_equity::report_subtotal() {
   const bool invert = report.HANDLED(invert);
 
   value_t total = 0L;
+  handle_value_options_t opts;
+  opts.date = finish;
+  opts.act_date_p = false;
+  opts.subtotal_row = true;
   for (values_map::value_type& pair : values) {
     value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
     if (unround)
       value.in_place_unround();
     if (invert)
       value.in_place_negate();
+    opts.force_virtual = pair.second.is_virtual;
+    opts.force_must_balance = pair.second.must_balance;
+    auto emit = [&](const amount_t& amt) {
+      if (!amt.is_zero())
+        handle_value(amt, pair.second.account, &xact, temps, handler, opts);
+    };
     if (!value.is_zero()) {
-      if (value.is_balance()) {
-        value.as_balance_lval().map_sorted_amounts([&](const amount_t& amt) {
-          if (!amt.is_zero())
-            handle_value(/* value=              */ amt,
-                         /* account=            */ pair.second.account,
-                         /* xact=               */ &xact,
-                         /* temps=              */ temps,
-                         /* handler=            */ handler,
-                         /* date=               */ finish,
-                         /* act_date_p=         */ false,
-                         /* total=              */ value_t(),
-                         /* direct_amount=      */ false,
-                         /* mark_visited=       */ false,
-                         /* bidir_link=         */ true,
-                         /* source_post=        */ nullptr,
-                         /* force_virtual=      */ pair.second.is_virtual,
-                         /* force_must_balance= */ pair.second.must_balance);
-        });
-      } else {
-        handle_value(/* value=              */ value.to_amount(),
-                     /* account=            */ pair.second.account,
-                     /* xact=               */ &xact,
-                     /* temps=              */ temps,
-                     /* handler=            */ handler,
-                     /* date=               */ finish,
-                     /* act_date_p=         */ false,
-                     /* total=              */ value_t(),
-                     /* direct_amount=      */ false,
-                     /* mark_visited=       */ false,
-                     /* bidir_link=         */ true,
-                     /* source_post=        */ nullptr,
-                     /* force_virtual=      */ pair.second.is_virtual,
-                     /* force_must_balance= */ pair.second.must_balance);
-      }
+      if (value.is_balance())
+        value.as_balance_lval().map_sorted_amounts(emit);
+      else
+        emit(value.to_amount());
     }
 
     if (!pair.second.is_virtual || pair.second.must_balance)
@@ -2173,11 +2109,17 @@ void posts_as_equity::report_subtotal() {
   // all the other postings generated.  But it does make the full
   // balancing amount clearer to the user.
   if (!total.is_zero()) {
-    create_post_from_amount post_creator(handler, xact, *balance_account, temps);
+    auto balance = [&](const amount_t& amount) {
+      if (amount.is_zero())
+        return;
+      post_t& balance_post = temps.create_post(xact, balance_account);
+      balance_post.amount = -amount;
+      (*handler)(balance_post);
+    };
     if (total.is_balance())
-      total.as_balance_lval().map_sorted_amounts(post_creator);
+      total.as_balance_lval().map_sorted_amounts(balance);
     else
-      post_creator(total.to_amount());
+      balance(total.to_amount());
   }
 }
 
@@ -2186,28 +2128,28 @@ void posts_as_equity::report_subtotal() {
 /// Flush each payee's subtotal_posts instance and forward results downstream.
 void by_payee_posts::flush() {
   for (payee_subtotals_map::value_type& pair : payee_subtotals)
-    pair.second->report_subtotal(pair.first.c_str());
+    pair.second->report_subtotal(nullptr, std::nullopt, pair.first);
 
   item_handler<post_t>::flush();
 
+  // The next stream (the next group under --group-by-cumulative, which no
+  // clear() precedes) starts with no payees.  The flushed subtotals stay
+  // alive until clear(): they own the postings just reported, which the
+  // handlers downstream (calc_posts' last posting, an accounts report's
+  // account totals, a Journal.query result) still point at.
+  for (payee_subtotals_map::value_type& pair : payee_subtotals)
+    reported_subtotals.push_back(std::move(pair.second));
   payee_subtotals.clear();
 }
 
 /// Route each posting to the subtotal_posts instance for its payee.
 void by_payee_posts::operator()(post_t& post) {
   payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
-  if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(
-        post.payee(), std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
-    auto [iter, inserted] = payee_subtotals.insert(temp);
-
-    assert(inserted);
-    if (!inserted)
-      return;
-    i = iter;
-  }
-
-  (*(*i).second)(post);
+  if (i == payee_subtotals.end())
+    i = payee_subtotals
+            .emplace(post.payee(), std::make_shared<subtotal_posts>(handler, amount_expr))
+            .first;
+  (*i->second)(post);
 }
 
 /*--- Detail transfer ---*/
@@ -2223,7 +2165,7 @@ void by_payee_posts::operator()(post_t& post) {
  * - SET_ACCOUNT_REPLACE: the expression result replaces the account entirely.
  * - SET_PAYEE: the transaction payee is replaced.
  */
-void transfer_details::operator()(post_t& post) {
+post_t& transfer_details::transfer(post_t& post) {
   xact_t& xact = temps.copy_xact(*post.xact);
   xact._date = post.date();
 
@@ -2243,44 +2185,15 @@ void transfer_details::operator()(post_t& post) {
     case SET_ACCOUNT_REPLACE: {
       string account_name = substitute.to_string();
 
-      // When the expression result ends with ':', the tag was not found.
-      // Try evaluating the prefix as a built-in property (e.g., payee,
-      // commodity) so that --pivot works with properties, not just tags.
-      if (!account_name.empty() && account_name.back() == ':') {
-        string prop_name = account_name.substr(0, account_name.length() - 1);
-        try {
-          expr_t prop_expr(prop_name);
-          value_t prop_val = prop_expr.calc(bound_scope);
-          if (!prop_val.is_null()) {
-            string prop_str = prop_val.to_string();
-            if (!prop_str.empty())
-              account_name = prop_name + ":" + prop_str;
-          }
-        } catch (...) {
-          // Not a built-in property; leave account_name as-is so the
-          // posting passes through unchanged.
-          discard_error_context();
-        }
-      }
-
       if (!account_name.empty() && account_name[account_name.length() - 1] != ':') {
-        account_t* prev_account = temp.account;
-        temp.account->remove_post(&temp);
-
         // SET_ACCOUNT prepends the expression result to the original account
         // hierarchy, while SET_ACCOUNT_REPLACE drops the original account
         // entirely (for --pivot-only, issue #1153).
         if (which_element == SET_ACCOUNT) {
           account_name += ':';
-          account_name += prev_account->fullname();
+          account_name += temp.account->fullname();
         }
-
-        std::list<string> account_names;
-        split_string(account_name, ':', account_names);
-        temp.account = create_temp_account_from_path(account_names, temps, xact.journal->master);
-        temp.account->add_post(&temp);
-
-        transfer_account_flags(*temp.account, *prev_account);
+        retarget_temp_post(temp, account_name, accounts, xact.journal->master);
       }
       break;
     }
@@ -2291,14 +2204,26 @@ void transfer_details::operator()(post_t& post) {
     }
   }
 
-  item_handler<post_t>::operator()(temp);
+  return temp;
+}
+
+void transfer_details::operator()(post_t& post) {
+  item_handler<post_t>::operator()(transfer(post));
+}
+
+/// Evaluate the predicate on the posting, or on its view->transfer() copy
+/// when a view is set, and forward the original posting when it matches.
+void filter_posts::operator()(post_t& post) {
+  bind_scope_t bound_scope(context, view ? view->transfer(post) : post);
+  if (pred(bound_scope))
+    (*handler)(post);
 }
 
 /*--- Day-of-week subtotaling ---*/
 
 /**
- * Subtotal each day's accumulated postings and emit them with the
- * abbreviated day name as the payee (format "%As").
+ * Subtotal each day's accumulated postings and emit them with the full day
+ * name pluralized as the payee ("Mondays"; format "%As").
  */
 void day_of_week_posts::flush() {
   for (int i = 0; i < 7; i++) {
@@ -2413,7 +2338,7 @@ void budget_posts::report_budget_items(const date_t& date) {
 
         post_t& temp = temps.copy_post(post, xact);
         temp.add_flags(ITEM_GENERATED);
-        temp.amount.in_place_negate();
+        temp.in_place_negate();
 
         if (flags & BUDGET_WRAP_VALUES) {
           value_t seq;
@@ -2542,11 +2467,11 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * downstream, so that calc_posts has updated the running total.  This
  * supports both date-based predicates (e.g., 'd<[2024/09/01]') and
  * value-based predicates (e.g., 'T>={0}') that depend on the accumulated
- * total.  The downstream filter_posts(forecast_while) in chain.cc provides
- * additional filtering at the output level.
+ * total.  In posting reports, the downstream filter_posts(forecast_while) in
+ * chain.cc provides additional filtering at the output level.
  *
  * A periodic posting is removed from consideration when:
- * - Its start date exceeds forecast_years beyond the last generated date, or
+ * - Its start date is more than 365 * forecast_years days after CURRENT_DATE, or
  * - Its group's last matching posting fails the continuation predicate, or
  * - Its interval has no more occurrences.
  */
@@ -2555,12 +2480,13 @@ void forecast_posts::flush() {
 
   // If there are period transactions to apply in a continuing series until
   // the forecast condition is met, generate those transactions now.  Note
-  // that no matter what, we abandon forecasting beyond the next 5 years.
+  // that no matter what, we abandon forecasting more than forecast_years
+  // (--forecast-years, default 5) years after the current date.
   //
   // It works like this:
   //
-  // Earlier, in forecast_posts::add_period_xacts, we cut up all the periodic
-  // transactions into their components postings, so that we have N "periodic
+  // Earlier, in generate_posts::add_period_xacts, we cut up all the periodic
+  // transactions into their component postings, so that we have N "periodic
   // postings".  For example, if the user had this:
   //
   // ~ daily
@@ -2572,9 +2498,9 @@ void forecast_posts::flush() {
   //
   // We now have 4 periodic postings in `pending_posts'.
   //
-  // Each periodic postings gets its own copy of its parent transaction's
-  // period, which is modified as we go.  This is found in the second member
-  // of the pending_posts_list for each posting.
+  // Each periodic posting gets its own copy of its parent transaction's
+  // period, which is modified as we go.  This is found in the first member
+  // of the posting's pending_posts_list entry.
   //
   // The algorithm below works by iterating through the N periodic postings
   // over and over, until each of them meets the termination criteria for the
@@ -2600,7 +2526,7 @@ void forecast_posts::flush() {
         same_date.push_back(i);
     }
 
-    // Check the 5-year safety limit.  Only applies when the earliest
+    // Check the forecast_years safety limit.  Only applies when the earliest
     // date is beyond last (CURRENT_DATE); when including the current
     // period, start may precede CURRENT_DATE, which is not a concern.
     if (earliest_date > last && static_cast<std::size_t>((earliest_date - last).days()) >
@@ -2626,9 +2552,10 @@ void forecast_posts::flush() {
     // date-based predicates (e.g. "d<[2024/09/01]"), dates are always
     // available so evaluation is straightforward.
     //
-    // The downstream filter_posts(forecast_while) in chain.cc provides
-    // additional filtering at the output level, preventing any individual
-    // postings that fail the predicate from reaching the output.
+    // In posting reports, the downstream filter_posts(forecast_while) in
+    // chain.cc provides additional filtering at the output level, preventing
+    // any individual postings that fail the predicate from reaching the
+    // output.
     std::vector<post_t*> generated;
     for (auto& it : same_date) {
       post_t& post = *(*it).second;
@@ -2706,12 +2633,14 @@ void forecast_posts::flush() {
 /**
  * Construct the inject_posts handler by parsing the comma-separated tag list.
  *
- * Each tag name is split by ':' to form an account path, and a temporary
- * account is created for it.  The tags_list stores each tag name paired with
- * its target account and a set tracking which transactions have already been
- * injected (to avoid duplicates).
+ * Each tag name is split by ':' to form an account path, and its account is
+ * found, or created in @p accounts (the journal's report-account pool).  The
+ * tags_list stores each tag name paired with its target account and a set
+ * tracking which transactions have already been injected (to avoid
+ * duplicates).
  */
-inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
+inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master,
+                           temporaries_t& accounts)
     : item_handler<post_t>(std::move(handler)) {
   std::vector<string> tags;
   boost::split(tags, tag_list, boost::is_any_of(","));
@@ -2719,16 +2648,13 @@ inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, acc
   for (const string& tag : tags) {
     if (tag.empty())
       continue;
-    std::list<string> account_names;
-    split_string(tag, ':', account_names);
-
-    account_t* account = create_temp_account_from_path(account_names, temps, master);
+    account_t* account = create_temp_account_from_path(tag, accounts, master);
     account->add_flags(ACCOUNT_GENERATED);
 
     tags_list.push_back(tags_list_pair(tag, tag_mapping_pair(account, tag_injected_set())));
   }
 
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *, temporaries_t&");
 }
 
 /**
@@ -2753,6 +2679,10 @@ void inject_posts::operator()(post_t& post) {
 
       temp.account = pair.second.first;
       temp.amount = tag_value->to_amount();
+      temp.given_lot_total = std::nullopt;
+      // The injected amount is the tag's value; the source posting's cost does not apply to it.
+      temp.cost = std::nullopt;
+      temp.given_cost = std::nullopt;
       temp.add_flags(ITEM_GENERATED);
 
       item_handler<post_t>::operator()(temp);
@@ -2764,63 +2694,84 @@ void inject_posts::operator()(post_t& post) {
 
 /*--- Payee/account rewriting ---*/
 
-/**
- * Apply payee and account rewrite rules from the journal to each posting.
- *
- * Checks the posting against all payee_rewrite_mappings (matching on the
- * transaction payee) and account_rewrite_mappings (matching on the account
- * fullname).  If either matches, a temporary copy is created with the
- * rewritten payee and/or account.  Non-matching postings pass through
- * unchanged.
- */
+namespace {
+/// The replacement given by the first rule, in @p first and then in
+/// @p second, whose pattern matches @p text; empty if none matches.
+string rewrite_of(const string& text, const std::list<std::pair<mask_t, string>>& first,
+                  const std::list<std::pair<mask_t, string>>& second) {
+  for (const auto* rules : {&first, &second})
+    for (const auto& rule : *rules)
+      if (rule.first.match(text))
+        return rule.second;
+  return string();
+}
+} // namespace
+
+bool rewrite_posts::has_rules(const report_t& report) {
+  return !report.payee_rewrite_mappings.empty() || !report.account_rewrite_mappings.empty() ||
+         !report.session.journal->payee_rewrite_mappings.empty() ||
+         !report.session.journal->account_rewrite_mappings.empty();
+}
+
+/// Forward @p post, or its copy when a rule matched its transaction.
 void rewrite_posts::operator()(post_t& post) {
+  xact_t& xact = *post.xact;
+  xact_state_t& state = xacts[&xact];
+  if (xact.posts.size() > state.seen)
+    rewrite_xact(xact, state);
+
+  auto copy = copies.find(&post);
+  item_handler<post_t>::operator()(copy == copies.end() ? post : *copy->second);
+}
+
+/// Examine the postings added to @p xact since the last call; once its payee
+/// or any posting's account matches a rule, copy every posting of it,
+/// rewritten, into one copy.
+void rewrite_posts::rewrite_xact(xact_t& xact, xact_state_t& state) {
   journal_t* journal = report.session.journal.get();
+  auto new_account_of = [&](const post_t& post) {
+    return rewrite_of(post.account->fullname(), report.account_rewrite_mappings,
+                      journal->account_rewrite_mappings);
+  };
 
-  // Check whether any payee or account rewrite rule matches this posting.
-  string new_payee;
-  for (const payee_rewrite_mapping_t& pair : journal->payee_rewrite_mappings) {
-    if (pair.first.match(post.xact->payee)) {
-      new_payee = pair.second;
-      break;
+  // The postings added since the last call: all of them the first time,
+  // then those an upstream filter (--anon) appended since.
+  auto first_new =
+      std::prev(xact.posts.end(), static_cast<std::ptrdiff_t>(xact.posts.size() - state.seen));
+  if (!state.copy) {
+    string new_payee;
+    if (state.seen == 0)
+      new_payee =
+          rewrite_of(xact.payee, report.payee_rewrite_mappings, journal->payee_rewrite_mappings);
+    bool matched = !new_payee.empty();
+    for (auto i = first_new; !matched && i != xact.posts.end(); ++i)
+      matched = !new_account_of(**i).empty();
+    if (!matched) {
+      state.seen = xact.posts.size();
+      return;
     }
+    // One copy of the whole transaction, as anonymize_posts makes, so that
+    // print shows it once with all its postings and register shows its
+    // payee once.
+    state.copy = &temps.copy_xact(xact);
+    if (!new_payee.empty())
+      state.copy->payee = new_payee;
+    first_new = xact.posts.begin();
   }
 
-  string new_account;
-  for (const account_rewrite_mapping_t& pair : journal->account_rewrite_mappings) {
-    if (pair.first.match(post.account->fullname())) {
-      new_account = pair.second;
-      break;
-    }
+  for (auto i = first_new; i != xact.posts.end(); ++i) {
+    post_t& temp = temps.copy_post(**i, *state.copy);
+    // Retarget the copy at once, while it is the last posting of its account.
+    string new_account = new_account_of(**i);
+    if (!new_account.empty())
+      retarget_temp_post(temp, new_account, accounts, journal->master);
+    // A copy of a journal posting stands in for it in print; a copy of one
+    // ledger made up (temporary or generated) keeps that posting's flags.
+    if (!(*i)->has_flags(ITEM_TEMP | ITEM_GENERATED))
+      temp.add_flags(POST_ANONYMIZED);
+    copies.emplace(*i, &temp);
   }
-
-  // If neither rule matched, forward the original posting unchanged.
-  if (new_payee.empty() && new_account.empty()) {
-    item_handler<post_t>::operator()(post);
-    return;
-  }
-
-  // At least one rule matched: create a temporary copy and apply rewrites.
-  xact_t& xact = temps.copy_xact(*post.xact);
-  xact._date = post.date();
-  post_t& temp = temps.copy_post(post, xact);
-  temp.set_state(post.state());
-
-  if (!new_payee.empty())
-    xact.payee = new_payee;
-
-  if (!new_account.empty()) {
-    account_t* prev_account = temp.account;
-    temp.account->remove_post(&temp);
-
-    std::list<string> account_names;
-    split_string(new_account, ':', account_names);
-    temp.account = create_temp_account_from_path(account_names, temps, journal->master);
-    temp.account->add_post(&temp);
-
-    transfer_account_flags(*temp.account, *prev_account);
-  }
-
-  item_handler<post_t>::operator()(temp);
+  state.seen = xact.posts.size();
 }
 
 } // namespace ledger

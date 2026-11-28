@@ -63,19 +63,7 @@ void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name,
   if (!symbols)
     symbols = symbol_map();
 
-  // Attempt to insert; if a symbol with the same (kind, name) already
-  // exists, erase the old entry and re-insert with the new definition.
-  auto [iter, inserted] = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
-  if (!inserted) {
-    auto i = symbols->find(symbol_t(kind, name));
-    assert(i != symbols->end());
-    symbols->erase(i);
-
-    auto [iter2, inserted2] =
-        symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
-    if (!inserted2)
-      throw_(compile_error, _f("Redefinition of '%1%' in the same scope") % name);
-  }
+  symbols->insert_or_assign(symbol_t(kind, name), def);
 }
 
 /// Look up a symbol: check the local table first, then delegate to parent.

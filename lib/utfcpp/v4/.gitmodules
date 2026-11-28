@@ -1,3 +1,0 @@
-[submodule "extern/ftest"]
-	path = extern/ftest
-	url = https://github.com/nemtrif/ftest

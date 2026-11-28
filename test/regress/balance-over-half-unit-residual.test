@@ -1,0 +1,25 @@
+; A residual above half a unit at its commodity's display precision does
+; not balance: 0.00000006 XAU at seven decimals is more than half of
+; 0.0000001 XAU.  regress/balance-half-unit-residual.test pins the exact
+; half, which balances.
+
+commodity XAU
+    format 1.0000000 XAU
+
+2024/01/01 over half unit p7
+    A    1.0000000 XAU
+    B    -0.99999994 XAU
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 9-11:
+> 2024/01/01 over half unit p7
+>     A    1.0000000 XAU
+>     B    -0.99999994 XAU
+Unbalanced remainder is:
+       0.0000001 XAU
+Amount to balance against:
+       1.0000000 XAU
+Error: Transaction does not balance
+end test

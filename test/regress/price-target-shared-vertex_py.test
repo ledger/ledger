@@ -1,0 +1,7 @@
+test python test/regress/price-target-shared-vertex.py
+Yen False
+10
+300
+300
+10
+end test

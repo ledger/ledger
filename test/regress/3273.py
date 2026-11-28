@@ -2,12 +2,15 @@
 """Check that a failed REPL report cannot contaminate the next report (#3273)."""
 
 import argparse
-import os
 from pathlib import Path
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from LedgerHarness import sanitized_env  # noqa: E402
 
 
 JOURNAL = """2026-01-01 First
@@ -38,15 +41,8 @@ class ReportRecovery(unittest.TestCase):
         self.journal = self.root / "journal.dat"
         self.journal.write_text(JOURNAL, encoding="utf-8")
         self.outputs = []
-        # Match LedgerHarness's environment isolation, including sanitiser settings.
-        allowed = {
-            "PATH", "HOME", "TZ", "TZDIR", "LANG", "LC_ALL", "LC_CTYPE", "TERM",
-            "TMPDIR", "TEMP", "TMP", "SYSTEMROOT", "COMSPEC", "MSYSTEM", "MINGW_PREFIX",
-            "ASAN_OPTIONS", "LSAN_OPTIONS", "UBSAN_OPTIONS", "MSAN_OPTIONS", "TSAN_OPTIONS",
-        }
-        self.env = {key: os.environ[key] for key in os.environ
-                    if key in allowed or key.startswith(("LLVM_PROFILE_", "GCOV_"))}
-        self.env.update(TZ="America/Chicago", LC_ALL="C")
+        self.env = sanitized_env()
+        self.env["LC_ALL"] = "C"
 
     def command(self, kind, format=None, options=(), output=True):
         args = [kind, "--no-titles", "--format", format or FORMATS[kind], *options]

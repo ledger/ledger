@@ -1,0 +1,167 @@
+; The listing commands (accounts, payees, tags, commodities, stats) honor
+; the options that rename, select or add postings: --payee-rewrite,
+; --account-rewrite, --account, --payee, --date, --related, --inject,
+; --head, --tail, --display and --only.  They still list raw journal
+; names under period grouping, --depth and --collapse, which collapse
+; postings only in register and balance.
+
+2024/01/05 Grocer
+    ; :food:
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/02/10 Landlord
+    ; :rent:
+    ; Budget: $50.00
+    Expenses:Rent             100.00 EUR
+    Assets:Checking
+
+test payees --payee-rewrite Grocer=Supermarket
+Landlord
+Supermarket
+end test
+
+test accounts --account-rewrite Expenses:Food=Expenses:Groceries
+Assets:Cash
+Assets:Checking
+Expenses:Groceries
+Expenses:Rent
+end test
+
+test accounts --account '"Moved"'
+Moved:Assets:Cash
+Moved:Assets:Checking
+Moved:Expenses:Food
+Moved:Expenses:Rent
+end test
+
+test payees --payee '"P-" + payee'
+P-Grocer
+P-Landlord
+end test
+
+test stats --now 2030/06/15 --date '[2025/03/01]'
+Time period: 25-Mar-01 to 25-Mar-01 (1 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               2
+  Unique accounts:             4
+
+  Number of postings:          4 (4 per day)
+  Uncleared postings:          4
+
+  Days since last post:     1932
+  Posts in last 7 days:        0
+  Posts in last 30 days:       0
+  Posts seen this month:       0
+end test
+
+test accounts --related Expenses:Food
+Assets:Cash
+end test
+
+test accounts --inject Budget
+Assets:Cash
+Assets:Checking
+Budget
+Expenses:Food
+Expenses:Rent
+end test
+
+test accounts --head 1
+Assets:Cash
+Expenses:Food
+end test
+
+test accounts --tail 1
+Assets:Checking
+Expenses:Rent
+end test
+
+test payees --head 1
+Grocer
+end test
+
+test tags --head 1
+food
+end test
+
+test commodities --tail 1
+EUR
+end test
+
+test accounts --display 'account =~ /Food/'
+Expenses:Food
+end test
+
+test accounts --only 'account =~ /Food/'
+Expenses:Food
+end test
+
+test accounts --display 'total > 0'
+Expenses:Food
+Expenses:Rent
+end test
+
+test stats --now 2030/06/15 --head 1
+Time period: 24-Jan-05 to 24-Jan-05 (1 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               1
+  Unique accounts:             2
+
+  Number of postings:          2 (2 per day)
+  Uncleared postings:          2
+
+  Days since last post:     2353
+  Posts in last 7 days:        0
+  Posts in last 30 days:       0
+  Posts seen this month:       0
+end test
+
+test payees -M
+Grocer
+Landlord
+end test
+
+test accounts --depth 1
+Assets:Cash
+Assets:Checking
+Expenses:Food
+Expenses:Rent
+end test
+
+test accounts --depth 1 --display 'account =~ /Food/'
+Expenses:Food
+end test
+
+test accounts -n
+Assets:Cash
+Assets:Checking
+Expenses:Food
+Expenses:Rent
+end test
+
+test accounts --related-all Expenses:Food
+Assets:Cash
+Expenses:Food
+end test
+
+test reg --collapse-if-zero --depth 1 Expenses
+end test
+
+test reg --collapse-if-zero --depth 2 Expenses
+24-Jan-05 Grocer                Expenses:Food                $10.00       $10.00
+24-Feb-10 Landlord              Expenses:Rent            100.00 EUR       $10.00
+                                                                      100.00 EUR
+end test
+
+test reg --depth 1 Expenses
+24-Jan-05 Grocer                Expenses                     $10.00       $10.00
+24-Feb-10 Landlord              Expenses                 100.00 EUR       $10.00
+                                                                      100.00 EUR
+end test

@@ -18,11 +18,11 @@ END_REACHED: <EOF>
 
 --- After stabilization ---
    range: in wday Wed
-   start: 24-Jan-01
-  finish: 24-Jan-02
+   start: 24-Jun-12
+  finish: 24-Jun-13
 
 --- Sample dates in range (max. 20) ---
- 1: 24-Jan-01
+ 1: 24-Jun-12
 end test
 
 test period --now 2024/06/15 "friday"
@@ -35,11 +35,11 @@ END_REACHED: <EOF>
 
 --- After stabilization ---
    range: in wday Fri
-   start: 24-Jan-01
-  finish: 24-Jan-02
+   start: 24-Jun-14
+  finish: 24-Jun-15
 
 --- Sample dates in range (max. 20) ---
- 1: 24-Jan-01
+ 1: 24-Jun-14
 end test
 
 test period --now 2024/06/15 "january"

@@ -14,6 +14,8 @@
 #include "error.h"
 #include "pool.h"
 #include "utils.h"
+#include "token.h"
+#include "times.h"
 
 using namespace ledger;
 
@@ -506,6 +508,35 @@ BOOST_AUTO_TEST_CASE(testYearDirective)
   BOOST_CHECK_EQUAL(date_t(2023, 6, 15), xact->date());
 }
 
+BOOST_AUTO_TEST_CASE(testYearDirectiveDatesTodayWithoutNow)
+{
+  // Without --now (as when ledger is embedded), a year directive dates
+  // "today" to December 31 of its year.  It must do so without writing
+  // the --now clock (epoch), which xact and template leave alone while
+  // they hide the directive, and the latest directive decides.
+  const std::optional<datetime_t> saved_epoch = epoch;
+  const std::optional<int> saved_year = year_directive_year;
+  epoch = std::nullopt;
+  year_directive_year = std::nullopt;
+
+  parse_text("year 2020\n");
+  BOOST_CHECK(!epoch);
+  BOOST_CHECK_EQUAL(date_t(2020, 12, 31), CURRENT_DATE());
+  BOOST_CHECK_EQUAL(datetime_t(date_t(2020, 12, 31)), CURRENT_TIME());
+  BOOST_CHECK_EQUAL(date_t(2020, 12, 31), *date_interval_t("today").begin());
+
+  parse_text("year 2021\n");
+  BOOST_CHECK(!epoch);
+  BOOST_CHECK_EQUAL(date_t(2021, 12, 31), CURRENT_DATE());
+
+  // A --now clock wins over the directive.
+  epoch = datetime_t(date_t(2019, 6, 1));
+  BOOST_CHECK_EQUAL(date_t(2019, 6, 1), CURRENT_DATE());
+
+  epoch = saved_epoch;
+  year_directive_year = saved_year;
+}
+
 // ---------------------------------------------------------------------------
 // 4. Edge Cases
 // ---------------------------------------------------------------------------
@@ -744,6 +775,158 @@ BOOST_AUTO_TEST_CASE(testParsePeriodTransaction)
 
   parse_text(input);
   BOOST_CHECK(!session.journal->period_xacts.empty());
+}
+
+BOOST_AUTO_TEST_CASE(testDeclaredPrecisionUsesCommodityCheckingFallback)
+{
+  // The declared-precision check reads the same commodity checking level
+  // as register_commodity(): commodity_checking_style when set, else
+  // checking_style.  Only the checking levels differ between the reads.
+  std::string input =
+    "commodity XPR\n"
+    "    format 1,000.00 XPR\n"
+    "account Assets:Portfolio\n"
+    "account Assets:Cash\n"
+    "2024/01/01 Purchase\n"
+    "    Assets:Portfolio    1.12345 XPR\n"
+    "    Assets:Cash        -1.12345 XPR\n";
+
+  auto read_with = [&](journal_t::checking_style_t general,
+                       journal_t::checking_style_t commodity) {
+    session.journal.reset(new journal_t);
+    session.journal->checking_style = general;
+    session.journal->commodity_checking_style = commodity;
+
+    std::shared_ptr<std::istream> stream(new std::istringstream(input));
+    session.parsing_context.push(stream);
+    parse_context_t& ctx = session.parsing_context.get_current();
+    ctx.journal = session.journal.get();
+    ctx.master  = session.journal->master;
+    try {
+      session.journal->read(session.parsing_context, NO_HASHES);
+    } catch (...) {
+      session.parsing_context.pop();
+      throw;
+    }
+    session.parsing_context.pop();
+  };
+
+  // No checking: the excess precision is accepted.
+  BOOST_CHECK_NO_THROW(read_with(journal_t::CHECK_NORMAL, journal_t::CHECK_NORMAL));
+  // checking_style alone (commodity level left at CHECK_NORMAL) applies.
+  BOOST_CHECK_THROW(read_with(journal_t::CHECK_ERROR, journal_t::CHECK_NORMAL), error_count);
+  // The commodity level alone applies without account checking.
+  BOOST_CHECK_THROW(read_with(journal_t::CHECK_NORMAL, journal_t::CHECK_ERROR), error_count);
+}
+
+BOOST_AUTO_TEST_CASE(testSessionHeaderLeavesTokenCommaIntact) {
+  // session.h is included above; it must not define macros that collide
+  // with names elsewhere in the expression engine, such as token_t::COMMA.
+  std::ostringstream out;
+  out << expr_t::token_t::COMMA;
+  BOOST_CHECK_EQUAL(out.str(), ",");
+}
+
+BOOST_AUTO_TEST_CASE(testAccountCheckIsNotAnAutomatedTransaction)
+{
+  // `check`/`assert` under an account directive are owned by the
+  // journal's per-account index, not listed among its `=` automated
+  // transactions.
+  std::string input =
+    "account Assets:Cash\n"
+    "    check amount < 1000\n"
+    "    assert amount > -1000\n"
+    "\n"
+    "2024/01/15 Grocery Store\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Cash\n";
+
+  BOOST_CHECK_EQUAL(1u, parse_text(input));
+  BOOST_CHECK(session.journal->auto_xacts.empty());
+
+  account_t* cash = session.journal->master->find_account("Assets:Cash", false);
+  BOOST_REQUIRE(cash);
+  auto it = session.journal->account_check_xacts.find(cash);
+  BOOST_REQUIRE(it != session.journal->account_check_xacts.end());
+  BOOST_REQUIRE_EQUAL(1u, it->second.size());
+  BOOST_REQUIRE(it->second.front()->check_exprs);
+  BOOST_CHECK_EQUAL(2u, it->second.front()->check_exprs->size());
+}
+
+BOOST_AUTO_TEST_CASE(testParseContextCopiesAndMovesEveryMember)
+{
+  // A parse_context_t copy carries every member (the hand-written copy
+  // constructor used to drop `last`), a fresh context has no journal, and
+  // the type is nothrow-movable (a user-declared copy constructor used to
+  // suppress the move constructor).
+  parse_context_t ctx(path("/"));
+  BOOST_CHECK(ctx.journal == nullptr);
+  BOOST_CHECK(ctx.master == nullptr);
+  BOOST_CHECK(ctx.scope == nullptr);
+  BOOST_CHECK_EQUAL(ctx.sequence, 1U);
+
+  ctx.last = "boom";
+  ctx.linenum = 7;
+  parse_context_t copy(ctx);
+  BOOST_CHECK_EQUAL(copy.last, "boom");
+  BOOST_CHECK_EQUAL(copy.linenum, 7U);
+
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<parse_context_t>);
+}
+
+BOOST_AUTO_TEST_CASE(testParseContextPathnameIsTheSharedPath)
+{
+  // The context keeps one representation of the current file: pathname()
+  // reads through pathname_ref, so assigning pathname_ref alone moves
+  // location() to the new file.
+  parse_context_t ctx(path("/"));
+  BOOST_CHECK(ctx.pathname().empty());
+  BOOST_CHECK(&ctx.pathname() == ctx.pathname_ref.get());
+
+  ctx.pathname_ref = std::make_shared<const path>("/books/main.dat");
+  ctx.linenum = 3;
+  BOOST_CHECK_EQUAL(ctx.pathname().string(), "/books/main.dat");
+  BOOST_CHECK_EQUAL(ctx.location(), file_context(path("/books/main.dat"), 3));
+}
+
+BOOST_AUTO_TEST_CASE(testReadIntoDecodesEscapesAndCountsBytes)
+{
+  // read_into keeps reading while keep(next) holds and next is not a
+  // newline, decodes \b \f \n \r \t \v (any other escaped byte stands for
+  // itself), counts every byte taken (both bytes of an escape), leaves the
+  // terminator in the stream and returns it.
+  string out;
+  std::size_t consumed = 0;
+
+  std::istringstream brace("a\\tb}rest");
+  int c = read_into(brace, out, [](int ch) { return ch != '}'; }, &consumed);
+  BOOST_CHECK_EQUAL(out, "a\tb");
+  BOOST_CHECK_EQUAL(c, '}');
+  BOOST_CHECK_EQUAL(consumed, 4U);
+  BOOST_CHECK_EQUAL(brace.peek(), '}');
+
+  std::istringstream quote("A\\\"B\"x");
+  out.clear();
+  BOOST_CHECK_EQUAL(read_into(quote, out, [](int ch) { return ch != '"'; }), '"');
+  BOOST_CHECK_EQUAL(out, "A\"B");
+
+  std::istringstream newline("ab\ncd");
+  out.clear();
+  BOOST_CHECK_EQUAL(read_into(newline, out, [](int) { return true; }), '\n');
+  BOOST_CHECK_EQUAL(out, "ab");
+
+  std::istringstream trailing("ab\\");
+  out.clear();
+  consumed = 0;
+  BOOST_CHECK_EQUAL(read_into(trailing, out, [](int) { return true; }, &consumed),
+                    std::char_traits<char>::eof());
+  BOOST_CHECK_EQUAL(out, "ab");
+  BOOST_CHECK_EQUAL(consumed, 3U);
+
+  std::istringstream other("\\q\\\\x");
+  out.clear();
+  read_into(other, out, [](int) { return true; });
+  BOOST_CHECK_EQUAL(out, "q\\x");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

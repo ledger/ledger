@@ -1,20 +1,36 @@
 {
   "nodes": {
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767039857,
+        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
     "ledger-semantics": {
       "inputs": {
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1794033337,
-        "narHash": "sha256-CQNDW6g0kuCedv3dX74HzyZYwvD6BJQo8chNZF/SRmM=",
+        "lastModified": 1795617843,
+        "narHash": "sha256-mTOKgVAQyt2NU+IoaI2cVkJgUTLvlJy4tMQ3mu8iLMI=",
         "owner": "ledger",
         "repo": "ledger-semantics",
-        "rev": "368d027f4cc17c8b9576454a5ce11997300b433b",
+        "rev": "111ab8d3de438f2d9010e80a5494fe5c6868df41",
         "type": "github"
       },
       "original": {
         "owner": "ledger",
-        "ref": "368d027",
+        "ref": "111ab8d",
         "repo": "ledger-semantics",
         "type": "github"
       }
@@ -53,6 +69,7 @@
     },
     "root": {
       "inputs": {
+        "flake-compat": "flake-compat",
         "ledger-semantics": "ledger-semantics",
         "nixpkgs": "nixpkgs_2"
       }

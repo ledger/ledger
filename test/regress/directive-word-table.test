@@ -1,0 +1,31 @@
+; Every word directive that general_directive() dispatches, except
+; import and python, which need Python support (dir-import_py and
+; dir-python_py pin them), and include, which the include tests pin.
+; Each line of directive-word-table.dat takes effect where the reports
+; below show it: a directive dispatched to the wrong handler, or not at
+; all, changes them or fails the parse.  The journal lives in the .dat
+; file because the semantic oracle does not read every one of these
+; directives.
+
+test -f $sourcepath/test/regress/directive-word-table.dat reg
+23-Jan-02 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+23-Jan-03 Bakery                Business:Expenses:Food        $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+end test
+
+test -f $sourcepath/test/regress/directive-word-table.dat accounts
+Assets:Cash
+Business:Expenses:Food
+Expenses:Food
+end test
+
+test -f $sourcepath/test/regress/directive-word-table.dat tags
+Receipt
+end test
+
+test -f $sourcepath/test/regress/directive-word-table.dat bal --flat --no-total --format "%(account)|%(tax_rate)|%(double(2))\n"
+Assets:Cash|0.5|4
+Business:Expenses:Food|0.5|4
+Expenses:Food|0.5|4
+end test

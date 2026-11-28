@@ -1,12 +1,7 @@
-; Coverage test for draft.cc @@ cost with negative amount
-; When a draft template posting has the @@ cost operator and the
-; new_post amount is negative (from 'from' flag negation), the code
-; negates the existing cost on the new_post before overwriting.
-; Exercises:
-;   L463: if (*post.cost_operator == "@") -- false branch (@@)
-;   L470: else if (new_post->amount.sign() < 0) -- true branch
-;   L471: new_post->cost->in_place_negate()
-;   L474: new_post->cost = *post.cost
+; A total `@@` cost on a `from` posting: the amount is negated, and so is
+; the stored total cost, as the journal parser does for `-10 AAPL @@
+; $60.00`; print shows the cost's magnitude and the balancing posting is
+; inferred as $60.00.
 
 2024/01/01 Grocery Store
     Expenses:Food    10 AAPL @@ $50.00
@@ -15,5 +10,5 @@
 test xact 2024/06/15 Grocery to Assets:Cash from Expenses:Food '@@' '$60.00' '10 AAPL'
 2024/06/15 Grocery Store
     Assets:Cash
-    Expenses:Food                           -10 AAPL
+    Expenses:Food                           -10 AAPL @@ $60.00
 end test

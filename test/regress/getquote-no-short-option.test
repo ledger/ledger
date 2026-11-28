@@ -1,0 +1,14 @@
+; --getquote has no short form: neither -g nor --g names it.  The full
+; name still works; the -g and --g rejections live in
+; getquote-no-short-option-errors.test.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --getquote /bin/echo
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -119,10 +119,15 @@ void draft_t::xact_template_t::dump(std::ostream& out) const {
  *
  * The parser processes arguments left-to-right using the following rules:
  *
- *   - The first argument that looks like a date (digits with separators)
- *     or a day-of-week name becomes the transaction date.
+ *   - A date is recognized only before the payee: the first argument
+ *     that looks like a date (digits with separators), a relative date
+ *     ("today", "yesterday", ...) or a day-of-week name becomes the
+ *     transaction date.  After the payee such a token is an amount or
+ *     an account; "on DATE" gives the date anywhere.
  *   - Prepositions ("at", "to", "from", "on", "code", "note", "@", "@@")
  *     introduce their respective fields.
+ *   - "@" or "@@" prices the open posting or, after an amount, the
+ *     posting that amount concluded; with no posting yet it is an error.
  *   - Without a preposition, the first non-date token becomes the payee.
  *     Subsequent tokens become either accounts or amounts depending on
  *     whether they parse as valid amount_t values.
@@ -160,14 +165,7 @@ void draft_t::parse_args(const value_t& args) {
     } else {
       weekday = string_to_day_of_week(arg);
       if (check_for_date && weekday) {
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
         short dow = static_cast<short>(*weekday);
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic pop
-#endif
         date_t date = CURRENT_DATE() - date_duration(1);
         while (date.day_of_week() != dow)
           date -= date_duration(1);
@@ -181,6 +179,7 @@ void draft_t::parse_args(const value_t& args) {
           if (++begin == end)
             throw std::runtime_error(_("Invalid xact command arguments"));
           tmpl->payee_mask = (*begin).to_string();
+          check_for_date = false;
         } else if (arg == "to" || arg == "from") {
           if (!post || post->account_mask) {
             tmpl->posts.push_back(xact_template_t::post_template_t());
@@ -206,14 +205,22 @@ void draft_t::parse_args(const value_t& args) {
         } else if (arg == "rest") {
           ; // just ignore this argument
         } else if (arg == "@" || arg == "@@") {
+          // A cost prices the open posting or, once an amount has concluded
+          // it, the posting that amount was given to.
+          xact_template_t::post_template_t* priced = post;
+          if (!priced) {
+            if (tmpl->posts.empty())
+              throw std::runtime_error(_("Invalid xact command arguments"));
+            priced = &tmpl->posts.back();
+          }
           amount_t cost;
-          post->cost_operator = arg;
+          priced->cost_operator = arg;
           if (++begin == end)
             throw std::runtime_error(_("Invalid xact command arguments"));
           arg = (*begin).to_string();
           if (!cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
             throw std::runtime_error(_("Invalid xact command arguments"));
-          post->cost = cost;
+          priced->cost = cost;
         } else {
           // Without a preposition, it is either:
           //
@@ -224,11 +231,13 @@ void draft_t::parse_args(const value_t& args) {
 
           if (tmpl->payee_mask.empty()) {
             tmpl->payee_mask = arg;
+            check_for_date = false;
           } else {
             amount_t amt;
+            std::optional<amount_t> lot_total;
             optional<mask_t> account;
 
-            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE)) {
+            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE, &lot_total)) {
               // Before treating as an account, check if this argument
               // is a known commodity symbol that should attach to the
               // previous posting's uncommoditized amount (e.g., "1000
@@ -254,6 +263,7 @@ void draft_t::parse_args(const value_t& args) {
               post->account_mask = account;
             } else {
               post->amount = amt;
+              post->given_lot_total = lot_total;
               post = nullptr; // an amount concludes this posting
             }
           }
@@ -295,6 +305,32 @@ void draft_t::parse_args(const value_t& args) {
 
 namespace {
 /**
+ * @brief Give a posting copied from history a new amount (null to let
+ *        finalize infer it), discarding what described the old one.
+ *
+ * The copy carries the history's cost, balance assertion, {{total}} lot
+ * price and the flags that say how that amount and cost were written or
+ * computed.  Kept beside a new amount they would print or book something
+ * the draft never said: a hidden amount, a stale assertion, a stale @@ or
+ * (@)=, or the history's {{total}} on the draft's lot.  The new amount
+ * takes the {{total}} it was written with, @p given_lot_total, and an
+ * annotation on it is the user's, as the parser marks one (so print
+ * writes it back as given).
+ */
+void replace_copied_amount(post_t& post, const amount_t& amount,
+                           const std::optional<amount_t>& given_lot_total = std::nullopt) {
+  post.amount = amount;
+  post.cost = std::nullopt;
+  post.given_cost = std::nullopt;
+  post.given_lot_total = given_lot_total;
+  post.assigned_amount = std::nullopt;
+  post.drop_flags(POST_CALCULATED | POST_COST_CALCULATED | POST_COST_IN_FULL | POST_COST_FIXATED |
+                  POST_COST_VIRTUAL | POST_AMOUNT_USER_ANNOTATED | POST_AMOUNT_USER_DATE);
+  if (!amount.is_null() && amount.has_commodity() && amount.has_annotation())
+    post.add_flags(POST_AMOUNT_USER_ANNOTATED);
+}
+
+/**
  * @brief Remove any `UUID: ...` tag lines from a note copied off a
  *        matched transaction.
  *
@@ -331,7 +367,7 @@ optional<string> strip_uuid_lines(const optional<string>& note) {
 
   string result = out.str();
   if (result.empty())
-    return none;
+    return std::nullopt;
   return result;
 }
 } // namespace
@@ -423,7 +459,7 @@ xact_t* draft_t::insert(journal_t& journal) {
 
     added->_date = parse_date_expr(date_str);
     DEBUG("draft.xact",
-          "Setting date to parsed date string: " << *tmpl->date_string << " -> " << added->_date);
+          "Setting date to parsed date string: " << *tmpl->date_string << " -> " << *added->_date);
   }
 
   added->set_state(item_t::UNCLEARED);
@@ -445,7 +481,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       added->metadata = matching->metadata;
       added->metadata->erase(_("UUID"));
       if (added->metadata->empty())
-        added->metadata = none;
+        added->metadata = std::nullopt;
     }
 
 #if DEBUG_ON
@@ -548,32 +584,17 @@ xact_t* draft_t::insert(journal_t& journal) {
         if (post.account_mask) {
           DEBUG("draft.xact", "The template has an account mask");
 
-          account_t* acct = nullptr;
-          if (!acct) {
-            acct = journal.find_account_re(post.account_mask->str());
-#if DEBUG_ON
-            if (acct)
-              DEBUG("draft.xact", "Found account as a regular expression");
-#endif
-          }
-          if (!acct) {
+          account_t* acct = journal.find_account_re(post.account_mask->str());
+          if (!acct)
             acct = journal.find_account(post.account_mask->str());
-#if DEBUG_ON
-            if (acct)
-              DEBUG("draft.xact", "Found (or created) account by name");
-#endif
-          }
 
-          // Find out the default commodity to use by looking at the last
-          // commodity used in that account
-          for (xacts_list::reverse_iterator j = journal.xacts.rbegin(); j != journal.xacts.rend();
-               j++) {
-            for (post_t* x : (*j)->posts) {
-              if (x->account == acct && !x->amount.is_null()) {
-                new_post.reset(new post_t(*x));
-                DEBUG("draft.xact", "Found account in journal postings, setting new posting");
-                break;
-              }
+          // Take the default commodity (and, with no amount given, the
+          // amount) from the newest posting to that account.
+          for (auto j = acct->posts.rbegin(); j != acct->posts.rend(); ++j) {
+            if (!(*j)->amount.is_null()) {
+              new_post.reset(new post_t(**j));
+              DEBUG("draft.xact", "Found account in journal postings, setting new posting");
+              break;
             }
           }
 
@@ -593,11 +614,11 @@ xact_t* draft_t::insert(journal_t& journal) {
       assert(new_post->account);
 
       // Handle amount and commodity assignment
-      if (new_post.get() && !new_post->amount.is_null()) {
-        found_commodity = &new_post->amount.commodity();
+      if (!new_post->amount.is_null()) {
+        found_commodity = &new_post->amount.commodity().strip_annotations(keep_details_t());
 
         if (any_post_has_amount) {
-          new_post->amount = amount_t();
+          replace_copied_amount(*new_post, amount_t());
           DEBUG("draft.xact", "New posting has an amount, but we cleared it");
         } else {
           any_post_has_amount = true;
@@ -606,35 +627,13 @@ xact_t* draft_t::insert(journal_t& journal) {
       }
 
       if (post.amount) {
-        new_post->amount = *post.amount;
+        replace_copied_amount(*new_post, *post.amount, post.given_lot_total);
         DEBUG("draft.xact", "Copied over posting amount");
 
         if (post.from) {
           new_post->amount.in_place_negate();
           DEBUG("draft.xact", "Negated new posting amount");
         }
-      }
-
-      // Handle cost assignment (@ per-unit or @@ total)
-      if (post.cost) {
-        if (post.cost->sign() < 0)
-          throw parse_error(_("A posting's cost may not be negative"));
-
-        post.cost->in_place_unround();
-
-        if (*post.cost_operator == "@") {
-          // For the sole case where the cost might be uncommoditized,
-          // guarantee that the commodity of the cost after multiplication
-          // is the same as it was before.
-          commodity_t& cost_commodity(post.cost->commodity());
-          *post.cost *= new_post->amount;
-          post.cost->set_commodity(cost_commodity);
-        } else if (new_post->amount.sign() < 0) {
-          new_post->cost->in_place_negate();
-        }
-
-        new_post->cost = *post.cost;
-        DEBUG("draft.xact", "Copied over posting cost");
       }
 
       // If the posting has a commodity from history but the template
@@ -661,8 +660,19 @@ xact_t* draft_t::insert(journal_t& journal) {
         }
       }
 
+      // Apply the template cost (@ per unit, @@ in full) as the parser does.
+      if (post.cost) {
+        if (new_post->amount.is_null())
+          throw std::runtime_error(_("Invalid xact command arguments"));
+        // An amount kept from history (no template amount) still carries
+        // how that posting's cost was written or computed, and its lot.
+        if (!post.amount)
+          replace_copied_amount(*new_post, new_post->amount.strip_annotations(keep_details_t()));
+        new_post->set_given_cost(*post.cost, *post.cost_operator == "@@");
+        DEBUG("draft.xact", "Set posting cost: " << *new_post->cost);
+      }
+
       added->add_post(new_post.release());
-      added->posts.back()->account->add_post(added->posts.back());
       added->posts.back()->set_state(item_t::UNCLEARED);
 
       DEBUG("draft.xact", "Added new posting to derived entry");
@@ -686,20 +696,9 @@ value_t template_command(call_scope_t& args) {
   args.value().dump(out);
   out << '\n' << '\n';
 
-  // Suppress year directive state, same as xact_command.  (#707)
-  optional<int> saved_year_directive = year_directive_year;
-  optional<datetime_t> saved_epoch;
-  year_directive_year = none;
-  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
-    saved_epoch = epoch;
-    epoch = none;
-  }
-
+  // Draft against now, not the year directive (#707).
+  scoped_assign<optional<int>> suspension(year_directive_year, optional<int>());
   draft_t draft(args.value());
-
-  year_directive_year = saved_year_directive;
-  if (saved_epoch)
-    epoch = saved_epoch;
 
   out << _("--- Transaction template ---") << '\n';
   draft.dump(out);
@@ -710,30 +709,17 @@ value_t template_command(call_scope_t& args) {
 value_t xact_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
 
-  // The xact command drafts a new transaction whose date should be
-  // relative to "now" (--now or the wall clock), not to any year
-  // directive in the journal.  Temporarily suppress the year
-  // directive state so that CURRENT_DATE() and parse_date() use the
-  // intended date context.  (#707)
-  optional<int> saved_year_directive = year_directive_year;
-  optional<datetime_t> saved_epoch;
-  year_directive_year = none;
-  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
-    saved_epoch = epoch;
-    epoch = none;
+  // The drafted transaction is dated against now (--now or the clock),
+  // not against any year directive in the journal (#707).
+  xact_t* new_xact;
+  {
+    scoped_assign<optional<int>> suspension(year_directive_year, optional<int>());
+    draft_t draft(args.value());
+
+    // Once insert() succeeds the generated transaction is owned by the
+    // journal (destroyed in ~journal_t); do not delete it here.
+    new_xact = draft.insert(*report.session.journal.get());
   }
-
-  draft_t draft(args.value());
-
-  // Once insert() succeeds the generated transaction lives in the journal,
-  // which owns it (and destroys it in ~journal_t); deleting it here as well
-  // freed it out from under the journal, crashing later commands in the
-  // REPL and the --verify teardown (issue #3244).
-  xact_t* new_xact = draft.insert(*report.session.journal.get());
-
-  year_directive_year = saved_year_directive;
-  if (saved_epoch)
-    epoch = saved_epoch;
 
   if (new_xact) {
     // Only consider actual postings for the "xact" command

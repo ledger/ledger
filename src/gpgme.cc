@@ -79,20 +79,26 @@ streambuf::pos_type data_streambuffer_t::seekpos(streambuf::pos_type sp,
 
 streambuf::pos_type data_streambuffer_t::seekoff(streambuf::off_type off, ios_base::seekdir dir,
                                                  ios_base::openmode which = ios_base::in) {
-  streamoff pos = -1;
-  if (dir == ios::beg)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_SET));
-  else if (dir == ios::end)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_END));
-  else if (dir == ios::cur)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_CUR));
+  if (dir == ios::cur) {
+    // data has already been read up to egptr(); the reader is behind it by
+    // the bytes still unread in the get area.
+    const streamoff ahead = data.seek(0, SEEK_CUR);
+    if (ahead == -1)
+      throw runtime_error("Unable to seek to position");
+    const streambuf::off_type here = ahead - (this->egptr() - this->gptr());
+    if (off == 0)
+      return here; // tellg(): keep the buffered bytes
+    off += here;
+    dir = ios::beg;
+  }
 
+  const streamoff pos =
+      data.seek(static_cast<streamoff>(off), dir == ios::beg ? SEEK_SET : SEEK_END);
   if (pos == -1)
     throw runtime_error("Unable to seek to position");
 
   auto buf = cbuf.get();
-  // Trigger underflow on next read
-  this->setg(buf, buf + 1, buf + 1);
+  this->setg(buf, buf, buf); // empty get area: the next read underflows here
   return pos;
 }
 
@@ -105,8 +111,6 @@ FILE* decrypted_stream_t::open_file(const path& filename) {
 
 shared_ptr<Data> decrypted_stream_t::setup_cipher_buffer(FILE* f) {
   auto enc_d = make_shared<Data>(f);
-  if (!enc_d)
-    throw runtime_error("Unable to create cipher text buffer");
 
   if (enc_d->type() != Data::PGPEncrypted && enc_d->type() != Data::CMSEncrypted &&
       enc_d->type() != Data::Unknown && enc_d->type() != Data::Invalid)
@@ -127,7 +131,6 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
   shared_ptr<Data> dec_d;
 
   if (enc_d->type() == Data::Unknown || enc_d->type() == Data::Invalid) {
-    ctx = nullptr;
     dec_d = enc_d;
   } else {
     ctx = Context::create(enc_d->type() == Data::PGPEncrypted ? Protocol::OpenPGP : Protocol::CMS);
@@ -136,8 +139,6 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
 
     ctx->setOffline(true);
     dec_d = make_shared<Data>();
-    if (!dec_d)
-      throw runtime_error("Unable to create plain text buffer");
 
     auto res = ctx->decrypt(*enc_d.get(), *dec_d.get());
     if (res.error())
@@ -179,29 +180,7 @@ istream* decrypted_stream_t::open_stream(const path& filename) {
   return new ifstream(filename);
 }
 
-decrypted_stream_t::decrypted_stream_t(path& filename) : istream(nullptr), file(nullptr) {
-  init_lib();
-
-  file = open_file(filename);
-  std::unique_ptr<FILE, int (*)(FILE*)> file_guard(file, &fclose);
-
-  auto enc_d = setup_cipher_buffer(file);
-  dec_d = decrypt(enc_d);
-  dec_d.get()->rewind();
-
-  if (is_encrypted(enc_d)) {
-    file_guard.reset();
-    file = nullptr;
-  } else {
-    file_guard.release(); // constructor succeeded, member takes ownership
-  }
-
-  rdbuf(new data_streambuffer_t(*dec_d.get()));
-  clear();
-}
-
-decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
-    : istream(nullptr), dec_d(dec_d), file(nullptr) {
+decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d) : istream(nullptr), dec_d(dec_d) {
   rdbuf(new data_streambuffer_t(*dec_d.get()));
   clear();
 }
@@ -209,8 +188,6 @@ decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
 decrypted_stream_t::~decrypted_stream_t() {
   auto* buf = rdbuf(nullptr); // disconnect first
   delete buf;
-  if (file)
-    fclose(file);
 }
 
 } // namespace ledger

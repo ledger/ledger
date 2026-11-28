@@ -1,0 +1,39 @@
+; Account lookups with no alias in effect return the account unchanged;
+; an alias declared but suppressed by --no-aliases is not expanded; a
+; declared alias still expands, including under --recursive-aliases.
+
+account Assets:Cash
+alias Cash=Assets:Cash
+
+2024/01/01 Aliased
+    Cash          $10
+    Income:Gift
+
+2024/01/02 Plain
+    Expenses:Food   $3
+    Assets:Cash
+
+test bal
+                  $7  Assets:Cash
+                  $3  Expenses:Food
+                $-10  Income:Gift
+--------------------
+                   0
+end test
+
+test bal --no-aliases
+                 $-3  Assets:Cash
+                 $10  Cash
+                  $3  Expenses:Food
+                $-10  Income:Gift
+--------------------
+                   0
+end test
+
+test bal --recursive-aliases
+                  $7  Assets:Cash
+                  $3  Expenses:Food
+                $-10  Income:Gift
+--------------------
+                   0
+end test

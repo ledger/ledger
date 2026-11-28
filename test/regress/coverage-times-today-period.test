@@ -1,6 +1,6 @@
 ; Test today/tomorrow/yesterday as standalone period expressions
-; Exercises handle_simple_period_token
-; These are different from the determine_when TOK_TODAY/etc cases
+; Each resolves through determine_when, the same arm that handles
+; them after since/until/in, to a one-day range
 
 2024/01/14 Payee A
     Expenses:Food    $50.00

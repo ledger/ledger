@@ -1,0 +1,37 @@
+; A sale at a virtual cost, (@), records no market price, and neither
+; do the postings --lot-matching splits it into: each keeps the
+; sale's (@), so `prices` lists only the two purchases.
+
+2024/01/01 Buy
+    Assets:B1                 1 AAPL {$50} [2024/01/01]
+    Assets:Cash             $-50
+
+2024/02/01 Buy
+    Assets:B1                 1 AAPL {$60} [2024/02/01]
+    Assets:Cash             $-60
+
+2024/03/04 Sell at a virtual cost
+    Assets:B1                -2 AAPL (@) $100
+    Assets:Cash             $200
+    Income:Gains
+
+test --lot-matching fifo prices
+2024/01/01 AAPL              $50
+2024/02/01 AAPL              $60
+end test
+
+test --lot-matching fifo print
+2024/01/01 Buy
+    Assets:B1                           1 AAPL {$50} [2024/01/01]
+    Assets:Cash                                 $-50
+
+2024/02/01 Buy
+    Assets:B1                           1 AAPL {$60} [2024/02/01]
+    Assets:Cash                                 $-60
+
+2024/03/04 Sell at a virtual cost
+    Assets:B1                           -1 AAPL {$50} [2024/01/01] (@) $100
+    Assets:B1                           -1 AAPL {$60} [2024/02/01] (@) $100
+    Assets:Cash                                 $200
+    Income:Gains
+end test

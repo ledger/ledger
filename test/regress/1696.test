@@ -42,3 +42,22 @@ test reg --end "2018/12/16"
 18-Dec-15                       Work:ProjectA                 2.00h        2.00h
 18-Dec-15                       Work:ProjectB                 2.00h        4.00h
 end test
+
+; --now takes the same datetime forms.  The command line is scanned for
+; --now before the other options, so that --begin and --end resolve
+; "today" against it wherever --now appears.
+
+test reg --now "2018/12/16 08:00:00" -e today
+18-Dec-15                       Work:ProjectA                 2.00h        2.00h
+18-Dec-15                       Work:ProjectB                 2.00h        4.00h
+end test
+
+test reg -e today --now 2018/12/16@08:00:00
+18-Dec-15                       Work:ProjectA                 2.00h        2.00h
+18-Dec-15                       Work:ProjectB                 2.00h        4.00h
+end test
+
+test reg --now=2018/12/16@08:00:00 -e today
+18-Dec-15                       Work:ProjectA                 2.00h        2.00h
+18-Dec-15                       Work:ProjectB                 2.00h        4.00h
+end test

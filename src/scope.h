@@ -41,19 +41,30 @@
  * @ingroup expr
  *
  * The expression engine evaluates identifiers like `amount`, `total`,
- * `account`, and `payee` by looking them up through a chain of scope
- * objects.  Each scope in the chain represents a different level of the
- * ledger data model:
+ * `account`, and `payee` by calling scope_t::lookup().  A report evaluates
+ * an expression for one journal item at a time, through a bind_scope_t
+ * that joins the report to that item:
  *
  * @verbatim
- *   post_t  -->  xact_t  -->  item_t  -->  session_t  -->  global_scope_t
- *   (posting)   (transaction) (common)     (journal/options) (built-in functions)
+ *   bind_scope_t(report_t, post_t | xact_t | account_t)
+ *     1. the item:  post_t::lookup or xact_t::lookup, each falling through
+ *                   to item_t::lookup (a C++ base-class call, not a chain
+ *                   link), or account_t::lookup
+ *     2. report_t::lookup: session_t::lookup first (session options and
+ *                   functions, then symbols `define`d in the session), then
+ *                   report names
  * @endverbatim
  *
- * When the expression engine encounters an IDENT node (e.g., `amount`),
- * it calls scope_t::lookup() on the innermost scope.  If that scope does
- * not recognize the name, it delegates to its parent via child_scope_t,
- * walking up the chain until the symbol is found or the chain is exhausted.
+ * global_scope_t is not on that chain.  Command and option dispatch
+ * (global_scope_t::execute_command) uses bind_scope_t(global_scope_t,
+ * report_t), which tries report_t and then the global options and
+ * precommands.
+ *
+ * Only child_scope_t subclasses delegate to a parent.  item_t (the base
+ * class of post_t and xact_t), account_t, report_t and global_scope_t
+ * derive scope_t directly, and session_t derives symbol_scope_t with no
+ * parent; each returns nullptr for a name it does not know, and the
+ * bind_scope_t then asks its parent.
  *
  * This design allows each data-model type (post_t, xact_t, account_t) to
  * expose its own fields as expression variables without the expression
@@ -83,11 +94,10 @@
 namespace ledger {
 
 /**
- * @brief An entry in a symbol table: a named, typed definition.
+ * @brief The key of a symbol_scope_t entry: a symbol's kind and name.
  *
- * Symbols can represent functions, options, commands, directives, or
- * format strings.  They are stored in symbol_scope_t's sorted map and
- * compared by (kind, name) for lookup.
+ * Kinds keep functions, options, pre-commands and commands in separate
+ * namespaces; the map orders keys by kind, then name.
  */
 struct symbol_t {
   enum kind_t : uint8_t {
@@ -95,29 +105,51 @@ struct symbol_t {
     FUNCTION,   ///< A callable function (most expression identifiers).
     OPTION,     ///< A command-line option handler.
     PRECOMMAND, ///< A pre-command (executed before journal parsing).
-    COMMAND,    ///< A report command (balance, register, print, etc.).
-    DIRECTIVE,  ///< A journal directive handler.
-    FORMAT      ///< A named format string.
+    COMMAND     ///< A report command (balance, register, print, etc.).
   };
 
-  kind_t kind;                 ///< The category of this symbol.
-  string name;                 ///< The symbol name (e.g., "amount", "balance").
-  expr_t::ptr_op_t definition; ///< The expression tree implementing this symbol.
+  kind_t kind; ///< The category of this symbol.
+  string name; ///< The symbol name (e.g., "amount", "balance").
 
-  symbol_t() : kind(UNKNOWN), name(""), definition(nullptr) { TRACE_CTOR(symbol_t, ""); }
-  symbol_t(kind_t _kind, string _name, expr_t::ptr_op_t _definition = nullptr)
-      : kind(_kind), name(std::move(_name)), definition(std::move(_definition)) {
+  symbol_t() : kind(UNKNOWN), name("") { TRACE_CTOR(symbol_t, ""); }
+  symbol_t(kind_t _kind, string _name) : kind(_kind), name(std::move(_name)) {
     TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
   }
-  symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name), definition(sym.definition) {
-    TRACE_CTOR(symbol_t, "copy");
-  }
+  symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name) { TRACE_CTOR(symbol_t, "copy"); }
   symbol_t& operator=(const symbol_t&) = default;
   ~symbol_t() noexcept { TRACE_DTOR(symbol_t); }
 
-  bool operator<(const symbol_t& sym) const { return kind < sym.kind || name < sym.name; }
-  bool operator==(const symbol_t& sym) const { return kind == sym.kind || name == sym.name; }
+  bool operator<(const symbol_t& sym) const {
+    return kind != sym.kind ? kind < sym.kind : name < sym.name;
+  }
 };
+
+/// One row of a scope's table of the function names its lookup() binds.
+/// Each table is sorted by name; find_symbol() relies on that and
+/// symbol_table_sorted() lets a static_assert prove it.
+template <typename Fn>
+struct symbol_entry_t {
+  std::string_view name;
+  Fn fn;
+};
+
+/// Whether @p table is strictly increasing by name (sorted, no duplicates).
+template <typename Fn, std::size_t N>
+constexpr bool symbol_table_sorted(const symbol_entry_t<Fn> (&table)[N]) {
+  for (std::size_t i = 1; i < N; ++i)
+    if (!(table[i - 1].name < table[i].name))
+      return false;
+  return true;
+}
+
+/// The function bound to exactly @p name in the sorted @p table, or nullptr.
+template <typename Fn, std::size_t N>
+const Fn* find_symbol(const symbol_entry_t<Fn> (&table)[N], std::string_view name) {
+  const auto* it = std::lower_bound(
+      std::begin(table), std::end(table), name,
+      [](const symbol_entry_t<Fn>& entry, std::string_view key) { return entry.name < key; });
+  return it != std::end(table) && it->name == name ? &it->fn : nullptr;
+}
 
 class empty_scope_t;
 class bind_scope_t;
@@ -212,9 +244,9 @@ public:
  * implements the chain-of-responsibility pattern: if a lookup is not
  * handled by a derived class, it automatically propagates to the parent.
  *
- * Most data-model types (post_t, xact_t, account_t) inherit from
- * child_scope_t (via item_t) and override lookup() to provide their
- * own fields while delegating unknown names to the parent.
+ * The data-model types (item_t with its subclasses post_t and xact_t, and
+ * account_t) are not child scopes: they derive scope_t directly and are
+ * joined to a parent by a bind_scope_t.
  */
 class child_scope_t : public noncopyable, public scope_t {
 public:
@@ -339,27 +371,24 @@ inline report_t* scope_downcast<report_t>(scope_t* ptr) {
  *
  * This template function performs a depth-first search through the scope
  * hierarchy using scope_downcast() (and as_bind_scope() to recognise bind
- * nodes).  For bind_scope_t nodes (which have two children), the search
- * order depends on @p prefer_direct_parents:
- * - false (default): check grandchild first, then parent
- * - true: check parent first, then grandchild
+ * nodes).  At a bind_scope_t node the grandchild is searched before the
+ * parent.
  *
  * @tparam T The concrete scope type to search for (e.g., report_t, session_t).
  * @param ptr The starting scope.
- * @param prefer_direct_parents If true, prioritize parent over grandchild at bind nodes.
  * @return A pointer to the found scope, or nullptr if not found.
  */
 template <typename T>
-T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
+T* search_scope(scope_t* ptr) {
   DEBUG("scope.search", "Searching scope " << ptr->description());
 
   if (T* sought = scope_downcast<T>(ptr))
     return sought;
 
   if (bind_scope_t* scope = ptr->as_bind_scope()) {
-    if (T* sought = search_scope<T>(prefer_direct_parents ? scope->parent : &scope->grandchild))
+    if (T* sought = search_scope<T>(&scope->grandchild))
       return sought;
-    return search_scope<T>(prefer_direct_parents ? &scope->grandchild : scope->parent);
+    return search_scope<T>(scope->parent);
   } else if (scope_t* parent = ptr->get_parent()) {
     return search_scope<T>(parent);
   }
@@ -367,13 +396,12 @@ T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
 }
 
 /**
- * @brief Find a scope of type T in the chain, throwing if not found.
- * @param skip_this If true (default), start searching from scope.parent.
+ * @brief Find a scope of type T in the chain above @p scope (starting at
+ * scope.parent), throwing if not found.
  */
 template <typename T>
-inline T& find_scope(child_scope_t& scope, bool skip_this = true,
-                     bool prefer_direct_parents = false) {
-  if (T* sought = search_scope<T>(skip_this ? scope.parent : &scope, prefer_direct_parents))
+inline T& find_scope(child_scope_t& scope) {
+  if (T* sought = search_scope<T>(scope.parent))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));
@@ -382,8 +410,8 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true,
 
 /// @brief Overload of find_scope for a bare scope_t reference.
 template <typename T>
-inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false) {
-  if (T* sought = search_scope<T>(&scope, prefer_direct_parents))
+inline T& find_scope(scope_t& scope) {
+  if (T* sought = search_scope<T>(&scope))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));
@@ -398,8 +426,13 @@ inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false) {
  * local table is checked first; if the symbol is not found, the lookup
  * delegates to the parent via child_scope_t.
  *
- * This scope type is used by session_t and report_t to store option
- * handlers, commands, and user-defined functions.
+ * session_t derives from it to hold the symbols `define`d in a session
+ * (report_t::define forwards there); its options and built-in functions are
+ * answered by session_t::lookup itself, ahead of the symbol table.
+ * Short-lived instances hold lambda parameters
+ * (op_t::compile, call_lambda), SCOPE-block locals (op_t::compile),
+ * expr_t's accumulator variables, and a script's file-local symbols
+ * (script_command).  report_t derives scope_t, not symbol_scope_t.
  */
 class symbol_scope_t : public child_scope_t {
   using symbol_map = std::map<symbol_t, expr_t::ptr_op_t>;
@@ -500,11 +533,6 @@ public:
   }
 
   value_t& operator[](const std::size_t index) { return resolve(index); }
-#if 0
-  const value_t& operator[](const std::size_t index) const {
-    return args[index];
-  }
-#endif
 
   bool has(std::size_t index) { return index < args.size() && !(*this)[index].is_null(); }
   template <typename T>
@@ -529,7 +557,6 @@ public:
 
   void push_front(const value_t& val) { args.push_front(val); }
   void push_back(const value_t& val) { args.push_back(val); }
-  void pop_back() { args.pop_back(); }
 
   using iterator = value_t::sequence_t::iterator;
 
@@ -568,8 +595,6 @@ inline bool call_scope_t::has(std::size_t index) {
       resolve(index, value_t::DATE, false);
     else if constexpr (std::is_same_v<T, datetime_t>)
       resolve(index, value_t::DATETIME, false);
-    else if constexpr (std::is_same_v<T, scope_t*>)
-      resolve(index, value_t::SCOPE, false);
     else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>)
       resolve(index, value_t::ANY, false);
     return !args[index].is_null();
@@ -620,8 +645,6 @@ inline T call_scope_t::get(std::size_t index, bool convert) {
     if (convert)
       return resolve(index, value_t::DATETIME, false).to_datetime();
     return resolve(index, value_t::DATETIME).as_datetime();
-  } else if constexpr (std::is_same_v<T, scope_t*>) {
-    return resolve(index, value_t::SCOPE).as_scope();
   } else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>) {
     return args[index].as_any<expr_t::ptr_op_t>();
   }

@@ -1,0 +1,31 @@
+; xact_t::hash feeds the auxiliary date (and each posting's checkin and
+; checkout) as boost's optional operator<< spelled them: "--" when empty,
+; else a space and the value.  Hash: tags already written into journals
+; depend on that spelling, so it must not change with the optional type.
+
+2024/01/01=2024/01/05 (C1) Aux dated
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 No aux date
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test print --hashes=sha512 --columns=80
+2024/01/01=2024/01/05 (C1) Aux dated
+    ; Hash: 28ba7c6b113e489212f98f259bc54e5498da43a4056e29f18f4a88633d280f1120eb94caaff2e2ab396154be04193a5018f8692d502f501c7feb4b7f5bcc8e98
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 No aux date
+    ; Hash: 72a54de34577971ae2e14d82e1f59196d9242d5ec8c5b5d8565ec106f41674acce1b217de84ce763fb7a381554e2ddde1b07f1fb65b99da84d21a73d121240a1
+    Expenses:Food                             $20.00
+    Assets:Cash
+end test
+
+test -f $sourcepath/test/regress/hash-optional-fields.dat bal --hashes=sha512
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,51 @@
+; A rejected date is reported as the user wrote it, with its original
+; separators.  Under --input-date-format the date rewrite is off, so a
+; dotted date that no input format names is rejected under its original
+; spelling (the journal's 2024/01/15 still parses through the built-in
+; readers).  The 200-byte --begin date pins only its original spelling
+; in the error: the length guard and the round-trip check reject it with
+; the same message.  Input longer than 127 bytes is refused before parsing:
+; to_datetime reports a 128-byte string as "Invalid date:" (the length
+; guard's message, not "Invalid date/time:").  The 127-byte string that
+; fits the buffer is pinned in date-separator-normalization.test, a
+; positive file; every block here expects an error.
+
+2024/01/15 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --begin 2024.13.01 -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid date: 2024.13.01
+end test
+
+test reg --input-date-format "%d.%m.%Y" --begin 2024.01.16 -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid date: 2024.01.16
+end test
+
+test reg --begin 2024-01-111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid date: 2024-01-111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+end test
+
+test eval 'to_datetime("2024.13.15 08:30:00")' -> 1
+__ERROR__
+While evaluating value expression:
+  to_datetime("2024.13.15 08:30:00")
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'to_datetime 2024.13.15 08:30:00':
+Error: Invalid date/time: 2024.13.15 08:30:00
+end test
+
+test eval 'to_datetime("2024-01-15 08:30:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")' -> 1
+__ERROR__
+While evaluating value expression:
+  to_datetime("2024-01-15 08:30:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'to_datetime 2024-01-15 08:30:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
+Error: Invalid date: 2024-01-15 08:30:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+end test

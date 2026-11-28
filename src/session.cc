@@ -53,8 +53,6 @@
 #include "xact.h"
 #include "account.h"
 #include "journal.h"
-#include "iterators.h"
-#include "filters.h"
 
 namespace ledger {
 
@@ -69,8 +67,7 @@ namespace ledger {
  * down in reverse order.
  *
  * This function exists because several subsystems use file-scope static
- * variables.  Switching the "current session" re-points those globals so
- * that a different session's data is in scope.
+ * variables, which every session in the process shares.
  */
 void set_session_context(session_t* session) {
   if (session) {
@@ -81,7 +78,7 @@ void set_session_context(session_t* session) {
     amount_t::parse_conversion("1.00h", "60m");
 
     value_t::initialize();
-  } else if (!session) {
+  } else {
     value_t::shutdown();
     amount_t::shutdown();
     times_shutdown();
@@ -107,7 +104,7 @@ session_t::session_t()
  *
  * The loading sequence is:
  *   1. Determine the data files (from --file or the default ~/.ledger).
- *   2. Apply session-level journal flags (day_break, checking_style, etc.).
+ *   2. Apply the session's journal options (configure_journal).
  *   3. Read the price database if one exists.
  *   4. Read each data file in order, accumulating transactions.
  *   5. Verify the journal's internal consistency.
@@ -152,8 +149,8 @@ std::size_t session_t::read_data(const string& master_account) {
   optional<path> price_db_path;
   if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
-    if (!exists(price_db_path.get())) {
-      throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
+    if (!exists(*price_db_path)) {
+      throw_(parse_error, _f("Could not find specified price-db file %1%") % *price_db_path);
     }
   } else if (use_default_price_db) {
     if (const char* home_var = std::getenv("HOME")) {
@@ -163,114 +160,45 @@ std::size_t session_t::read_data(const string& master_account) {
     }
   }
 
-  // Transfer session-level option flags to the journal object before
-  // any parsing begins, because these flags affect how the parser
-  // validates input.
-  if (HANDLED(day_break))
-    journal->day_break = true;
-
-  if (HANDLED(time_round_)) {
-    int minutes = std::stoi(HANDLER(time_round_).str());
-    if (minutes > 0 && minutes <= INT_MAX / 60) {
-      journal->time_round = minutes * 60;
-    } else {
-      throw std::out_of_range("time_round value too large");
-    }
-  }
-
-  if (HANDLED(recursive_aliases))
-    journal->recursive_aliases = true;
-  if (HANDLED(no_aliases))
-    journal->no_aliases = true;
-
-  if (HANDLED(explicit)) {
-    // No-op
-  }
-  if (HANDLED(check_in_file_order))
-    journal->check_in_file_order = true;
-
-  if (HANDLED(check_payees))
-    journal->check_payees = true;
-
-  if (HANDLED(permissive))
-    journal->checking_style = journal_t::CHECK_PERMISSIVE;
-  else if (HANDLED(pedantic))
-    journal->checking_style = journal_t::CHECK_ERROR;
-  else if (HANDLED(strict))
-    journal->checking_style = journal_t::CHECK_WARNING;
-
-  // Commodity-only strictness (issue #3200): --strict and --pedantic
-  // already set both fields together via their option handlers, so by
-  // default commodity checking tracks the global checking style.  The
-  // explicit --strict-commodity / --pedantic-commodity flags are
-  // re-applied here so they win when read_journal_files runs after all
-  // options have been parsed.
-  if (HANDLED(pedantic_commodity))
-    journal->commodity_checking_style = journal_t::CHECK_ERROR;
-  else if (HANDLED(strict_commodity) && journal->commodity_checking_style != journal_t::CHECK_ERROR)
-    journal->commodity_checking_style = journal_t::CHECK_WARNING;
-
-  if (HANDLED(value_expr_))
-    journal->value_expr = HANDLER(value_expr_).str();
-
-  if (HANDLED(account_value_expr_))
-    journal->account_value_expr = HANDLER(account_value_expr_).str();
-
-  if (HANDLED(commodity_value_expr_))
-    journal->commodity_value_expr = HANDLER(commodity_value_expr_).str();
-
-  if (HANDLED(lot_matching_))
-    journal->lot_matching_policy = HANDLER(lot_matching_).policy;
+  // Apply the session's journal options before any parsing begins,
+  // because they affect how the parser validates input.
+  configure_journal();
 
   // Read the price database first so that commodity prices are available
   // during journal parsing (e.g., for balance assertions involving
   // market values).
   if (price_db_path) {
     if (exists(*price_db_path)) {
-      parsing_context.push(*price_db_path);
+      parse_context_stack_t::pushed_t pushed(parsing_context, *price_db_path);
       parsing_context.get_current().journal = journal.get();
-      try {
-        if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
-          throw_(parse_error, _("Transactions not allowed in price history file"));
-      } catch (...) {
-        parsing_context.pop();
-        throw;
-      }
-      parsing_context.pop();
+      if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
+        throw_(parse_error, _("Transactions not allowed in price history file"));
     }
   }
 
   // Read each journal data file in order
   for (const path& pathname : HANDLER(file_).data_files) {
+    std::optional<parse_context_stack_t::pushed_t> pushed;
     if (pathname == "-" || pathname == "/dev/stdin") {
       // To avoid problems with stdin and pipes, etc., we read the entire
       // file in beforehand into a memory buffer, and then parcel it out
       // from there.
       std::ostringstream buffer;
-
-      while (std::cin.good() && !std::cin.eof()) {
-        char line[8192];
-        std::cin.read(line, 8192);
-        std::streamsize count = std::cin.gcount();
-        buffer.write(line, count);
-      }
-      buffer.flush();
+      if (std::cin.good())
+        buffer << std::cin.rdbuf();
+      // Leave std::cin as a read to its end leaves it, so that a second "-"
+      // reads nothing rather than waiting on a terminal.
+      std::cin.setstate(std::ios::eofbit | std::ios::failbit);
 
       std::shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
-      parsing_context.push(stream);
+      pushed.emplace(parsing_context, stream);
     } else {
-      parsing_context.push(pathname);
+      pushed.emplace(parsing_context, pathname);
     }
 
     parsing_context.get_current().journal = journal.get();
     parsing_context.get_current().master = acct;
-    try {
-      xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
-    } catch (...) {
-      parsing_context.pop();
-      throw;
-    }
-    parsing_context.pop();
+    xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
   }
 
   DEBUG("ledger.read", "xact_count [" << xact_count << "] == journal->xacts.size() ["
@@ -320,21 +248,16 @@ journal_t* session_t::read_journal(const path& pathname) {
 
 journal_t* session_t::read_journal_from_string(const string& data) {
   journal.reset(new journal_t);
+  configure_journal();
 
   HANDLER(file_).data_files.clear();
 
   std::shared_ptr<std::istream> stream(new std::istringstream(data));
-  parsing_context.push(stream);
+  parse_context_stack_t::pushed_t pushed(parsing_context, stream);
 
   parsing_context.get_current().journal = journal.get();
   parsing_context.get_current().master = journal->master;
-  try {
-    journal->read(parsing_context, HANDLER(hashes_).hash_type);
-  } catch (...) {
-    parsing_context.pop();
-    throw;
-  }
-  parsing_context.pop();
+  journal->read(parsing_context, HANDLER(hashes_).hash_type);
 
   return journal.get();
 }
@@ -424,6 +347,48 @@ value_t session_t::fn_lot_tag(call_scope_t& args) {
     return NULL_VALUE;
 }
 
+/*--- Journal Options ---*/
+
+void session_t::configure_journal() {
+  option_t<session_t>* const journal_options[] = {
+      &HANDLER(account_value_expr_), &HANDLER(check_in_file_order),
+      &HANDLER(check_payees),        &HANDLER(commodity_value_expr_),
+      &HANDLER(day_break),           &HANDLER(lot_matching_),
+      &HANDLER(no_aliases),          &HANDLER(pedantic),
+      &HANDLER(pedantic_commodity),  &HANDLER(permissive),
+      &HANDLER(recursive_aliases),   &HANDLER(strict),
+      &HANDLER(strict_commodity),    &HANDLER(time_round_),
+      &HANDLER(value_expr_)};
+  for (option_t<session_t>* opt : journal_options) {
+    if (!*opt)
+      continue;
+    if (opt->wants_arg)
+      opt->handler_thunk(std::nullopt, opt->value);
+    else
+      opt->handler_thunk(std::nullopt);
+  }
+}
+
+void session_t::require_checking(journal_t::checking_style_t style) {
+  if (!HANDLED(permissive))
+    journal->checking_style = std::max(journal->checking_style, style);
+  journal->require_commodity_checking(style);
+}
+
+int session_t::parse_time_round(const string& minutes) {
+  int value = 0;
+  try {
+    value = lexical_cast<int>(minutes);
+  } catch (const bad_lexical_cast&) {
+    // Not a whole number that fits in an int; rejected below as 0.
+  }
+  if (value <= 0 || value > std::numeric_limits<int>::max() / 60)
+    throw_(option_error, _f("Invalid value for --time-round: %1%; expected a positive number "
+                            "of minutes") %
+                             minutes);
+  return value * 60;
+}
+
 /*--- Option Lookup ---*/
 
 option_t<session_t>* session_t::lookup_option(const char* p) {
@@ -455,7 +420,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     OPT_(file_); // -f
     break;
   case 'g':
-    OPT_(getquote_);
+    OPT(getquote_);
     break;
   case 'h':
     OPT(hashes_);

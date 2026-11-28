@@ -35,8 +35,8 @@
  * @ingroup python
  *
  * Provides bidirectional conversion between Boost.Date_Time types
- * (date_t, datetime_t, time_duration_t) and Python's datetime module
- * (datetime.date, datetime.datetime, datetime.timedelta).  Also exposes
+ * (date_t, datetime_t) and Python's datetime module (datetime.date,
+ * datetime.datetime).  Also exposes
  * the parse_datetime and parse_date utility functions and the
  * times_initialize/times_shutdown lifecycle hooks.
  *
@@ -143,66 +143,6 @@ struct datetime_from_python {
 using datetime_python_conversion =
     register_python_conversion<datetime_t, datetime_to_python, datetime_from_python>;
 
-/*--- time_duration_t <-> Python datetime.timedelta ---*/
-
-struct duration_to_python {
-  static int get_usecs(boost::posix_time::time_duration const& d) {
-    static int64_t resolution = boost::posix_time::time_duration::ticks_per_second();
-    int64_t fracsecs = d.fractional_seconds();
-    if (resolution > 1000000)
-      return static_cast<int>(fracsecs / (resolution / 1000000));
-    else
-      return static_cast<int>(fracsecs * (1000000 / resolution));
-  }
-
-  static PyObject* convert(posix_time::time_duration d) {
-    int days = d.hours() / 24;
-    if (days < 0)
-      days--;
-    int seconds = d.total_seconds() - days * (24 * 3600);
-    int usecs = get_usecs(d);
-    if (days < 0)
-      usecs = 1000000 - 1 - usecs;
-    return PyDelta_FromDSU(days, seconds, usecs);
-  }
-};
-
-/// Supports negative values but not special Boost time durations
-/// (pos_infin, neg_infin, not_a_date_time).
-struct duration_from_python {
-  static void* convertible(PyObject* obj_ptr) {
-    if (!PyDelta_Check(obj_ptr))
-      return nullptr;
-    return obj_ptr;
-  }
-
-  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
-    PyDateTime_Delta const* pydelta = reinterpret_cast<PyDateTime_Delta*>(obj_ptr);
-
-    int days = pydelta->days;
-    bool is_negative = (days < 0);
-    if (is_negative)
-      days = -days;
-
-    // Create time duration object
-    posix_time::time_duration duration =
-        (posix_time::hours(24) * days + posix_time::seconds(pydelta->seconds) +
-         posix_time::microseconds(pydelta->microseconds));
-    if (is_negative)
-      duration = duration.invert_sign();
-
-    void* storage =
-        reinterpret_cast<converter::rvalue_from_python_storage<posix_time::time_duration>*>(data)
-            ->storage.bytes;
-
-    new (storage) posix_time::time_duration(duration);
-    data->convertible = storage;
-  }
-};
-
-using duration_python_conversion =
-    register_python_conversion<time_duration_t, duration_to_python, duration_from_python>;
-
 /*--- Parse Functions ---*/
 
 datetime_t py_parse_datetime(const string& str) {
@@ -216,7 +156,6 @@ date_t py_parse_date(const string& str) {
 void export_times() {
   datetime_python_conversion();
   date_python_conversion();
-  duration_python_conversion();
 
   register_optional_to_python<datetime_t>();
   register_optional_to_python<date_t>();
@@ -225,11 +164,6 @@ void export_times() {
   scope().attr("parse_date") = &py_parse_date;
   scope().attr("times_initialize") = &times_initialize;
   scope().attr("times_shutdown") = &times_shutdown;
-
-#if 0
-  class_< interval_t > ("Interval")
-    ;
-#endif
 }
 
 } // namespace ledger

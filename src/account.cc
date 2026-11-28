@@ -49,6 +49,7 @@
 #include "account.h"
 #include "post.h"
 #include "xact.h"
+#include "annotate.h"
 
 namespace ledger {
 
@@ -227,7 +228,7 @@ void account_t::apply_deferred_posts() {
       for (post_t* post : pair.second)
         post->account->add_post(post);
     }
-    deferred_posts = none;
+    deferred_posts = std::nullopt;
   }
 
   // Also apply in child accounts
@@ -236,11 +237,15 @@ void account_t::apply_deferred_posts() {
 }
 
 bool account_t::remove_post(post_t* post) {
+  running_total_.reset();
+
   // It's possible that 'post' wasn't yet in this account, but try to
   // remove it anyway.  This can happen if there is an error during
   // parsing, when the posting knows what its account is, but
   // xact_t::finalize has not yet added that posting to the account.
-  posts.remove(post);
+  auto found = std::find(posts.rbegin(), posts.rend(), post);
+  if (found != posts.rend())
+    posts.erase(std::next(found).base());
   post->account = nullptr;
 
   if (deferred_posts) {
@@ -251,15 +256,18 @@ bool account_t::remove_post(post_t* post) {
 
   // Invalidate cached iterators
   if (xdata_) {
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
     invalidate_xdata_cache(this);
   }
 
+  lot_inventory.reset();
   return true;
 }
 
 void account_t::remove_posts(const std::set<post_t*>& doomed) {
+  running_total_.reset();
+
   auto is_doomed = [&doomed](post_t* post) { return doomed.count(post) != 0; };
 
   posts.remove_if(is_doomed);
@@ -274,10 +282,80 @@ void account_t::remove_posts(const std::set<post_t*>& doomed) {
 
   // Invalidate cached iterators
   if (xdata_) {
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
     invalidate_xdata_cache(this);
   }
+  lot_inventory.reset();
+}
+
+static void record_lot(account_t::lot_inventory_t& inventory, const post_t& post) {
+  const amount_t& amt(post.amount);
+  if (!amt.has_commodity() || !amt.has_annotation())
+    return;
+  commodity_t* lot = &amt.commodity();
+  const std::size_t next = inventory.seen.size();
+  auto& seen =
+      inventory.seen.try_emplace(lot, account_t::lot_inventory_t::seen_t{std::nullopt, next})
+          .first->second;
+  if (post.has_date() || (post.xact && post.xact->has_date())) {
+    const date_t when = post.primary_date();
+    if (!seen.first_date || when < *seen.first_date)
+      seen.first_date = when;
+  }
+  auto& held = inventory.open[&lot->referent()];
+  auto [it, fresh] = held.try_emplace(lot, amt);
+  if (!fresh)
+    it->second += amt;
+  if (it->second.is_realzero())
+    held.erase(it);
+}
+
+std::vector<account_lot_t> account_t::held_lots(const commodity_t& referent,
+                                                const std::vector<const post_t*>& pending) {
+  if (!lot_inventory)
+    lot_inventory.emplace();
+  lot_inventory_t& inventory(*lot_inventory);
+  // add_post() only appends, and remove_post()/remove_posts() drop the
+  // inventory, so the posts not yet folded in are the last ones.
+  assert(inventory.counted <= posts.size());
+  auto unseen = posts.end();
+  std::advance(unseen, -static_cast<std::ptrdiff_t>(posts.size() - inventory.counted));
+  for (; unseen != posts.end(); ++unseen)
+    record_lot(inventory, **unseen);
+  inventory.counted = posts.size();
+
+  std::unordered_map<commodity_t*, amount_t> holdings;
+  if (auto it = inventory.open.find(&referent); it != inventory.open.end())
+    holdings = it->second;
+  std::unordered_map<commodity_t*, std::size_t> pending_sequence;
+  for (std::size_t i = 0; i < pending.size(); ++i) {
+    const amount_t& amt(pending[i]->amount);
+    if (!amt.has_commodity() || !amt.has_annotation() || &amt.commodity().referent() != &referent)
+      continue;
+    auto [it, fresh] = holdings.try_emplace(&amt.commodity(), amt);
+    if (!fresh)
+      it->second += amt;
+    pending_sequence.try_emplace(&amt.commodity(), inventory.seen.size() + i);
+  }
+  std::vector<account_lot_t> lots;
+  for (auto& [lot, quantity] : holdings) {
+    if (quantity.sign() <= 0)
+      continue;
+    auto seen = inventory.seen.find(lot);
+    std::optional<date_t> date = as_annotated_commodity(*lot).details.date;
+    if (!date && seen != inventory.seen.end())
+      date = seen->second.first_date;
+    if (!date)
+      continue;
+    lots.push_back(
+        {lot, quantity.strip_annotations(keep_details_t()), *date,
+         seen != inventory.seen.end() ? seen->second.sequence : pending_sequence.at(lot)});
+  }
+  std::sort(lots.begin(), lots.end(), [](const account_lot_t& a, const account_lot_t& b) {
+    return a.date != b.date ? a.date < b.date : a.sequence < b.sequence;
+  });
+  return lots;
 }
 
 /*--- Name Formatting ---*/
@@ -302,14 +380,24 @@ string account_t::fullname() const {
   }
 }
 
+namespace {
+/// An ancestor stays visible in an indented account report when it is
+/// displayed itself or when more than one child leads to a displayed
+/// account; otherwise its name is folded into its one displayed
+/// descendant's.
+bool is_display_branch(const account_t& acct) {
+  return acct.has_xflags(ACCOUNT_EXT_TO_DISPLAY) ||
+         acct.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2) > 1;
+}
+} // namespace
+
 string account_t::partial_name(bool flat) const {
   string pname = name;
 
   for (const account_t* acct = parent; acct && acct->parent; acct = acct->parent) {
     if (!flat) {
-      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-      assert(count > 0);
-      if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+      assert(acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0);
+      if (is_display_branch(*acct))
         break;
     }
     pname = acct->name + ":" + pname; // NOLINT(performance-inefficient-string-concatenation)
@@ -390,12 +478,17 @@ value_t get_account_base(account_t& account) {
   return string_value(account.name);
 }
 
-value_t get_amount(account_t& account) {
-  return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
-}
-
 value_t get_total(account_t& account) {
   return SIMPLIFIED_VALUE_OR_ZERO(account.total());
+}
+
+value_t get_amount(account_t& account) {
+  // While compare_items<account_t> evaluates a sort key for an account whose
+  // row shows its family total, 'amount' -- and so a, t and display_amount,
+  // which reach it through amount_expr -- is that total.
+  if (account.has_xdata() && account.xdata().sort_amount_as_total)
+    return get_total(account);
+  return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
 }
 
 value_t get_subcount(account_t& account) {
@@ -408,14 +501,10 @@ value_t get_subcount(account_t& account) {
 }
 
 value_t get_count(account_t& account) {
-  std::size_t count = 0;
-  for (const post_t* post : account.posts) {
-    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_VISITED))
-      count++;
-  }
+  long count = get_subcount(account).to_long();
   for (const accounts_map::value_type& pair : account.accounts)
     count += get_count(*pair.second).to_long();
-  return long(count);
+  return count;
 }
 value_t get_cost(account_t&) {
   throw_(calc_error, _("An account does not have a 'cost' value"));
@@ -453,32 +542,20 @@ value_t get_addr(account_t& account) {
 value_t get_depth_parent(account_t& account) {
   std::size_t depth = 0;
   for (const account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    assert(count > 0);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+    assert(acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0);
+    if (is_display_branch(*acct))
       depth++;
   }
   return long(depth);
 }
 
 value_t get_depth_spacer(account_t& account) {
-  std::size_t depth = 0;
-  for (const account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    assert(count > 0);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-      depth++;
-  }
-
-  std::ostringstream out;
-  for (std::size_t i = 0; i < depth; i++)
-    out << "  ";
-
-  return string_value(out.str());
+  return string_value(
+      string(2 * static_cast<std::size_t>(get_depth_parent(account).to_long()), ' '));
 }
 
 value_t get_has_children_to_display(account_t& account) {
-  return account.children_with_flags(ACCOUNT_EXT_TO_DISPLAY) > 0;
+  return account.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0;
 }
 
 value_t get_latest_cleared(account_t& account) {
@@ -524,10 +601,9 @@ value_t get_display_parent_account(account_t& account) {
   // An ancestor is "elided" when it has exactly 1 child to display AND
   // does not itself have ACCOUNT_EXT_TO_DISPLAY set.
   // If all ancestors are elided (e.g., account is at display depth 0),
-  // falls back to the direct structural parent to preserve existing behavior.
+  // returns the direct structural parent.
   for (account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+    if (is_display_branch(*acct))
       return scope_value(acct);
   }
   // All ancestors were elided; fall back to direct parent
@@ -557,6 +633,49 @@ value_t fn_all(call_scope_t& args) {
   }
   return true;
 }
+
+/// The functions account_t binds by name.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> account_functions[] = {
+    {"N", get_wrapper<&get_count>},
+    {"O", get_wrapper<&get_total>},
+    {"a", get_wrapper<&get_amount>},
+    {"account", &get_account},
+    {"account_base", get_wrapper<&get_account_base>},
+    {"addr", get_wrapper<&get_addr>},
+    {"all", &fn_all},
+    {"amount", get_wrapper<&get_amount>},
+    {"any", &fn_any},
+    {"cost", get_wrapper<&get_cost>},
+    {"count", get_wrapper<&get_count>},
+    {"d", get_wrapper<&get_account_date>},
+    {"date", get_wrapper<&get_account_date>},
+    {"depth", get_wrapper<&get_depth>},
+    {"depth_parent", get_wrapper<&get_depth_parent>},
+    {"depth_spacer", get_wrapper<&get_depth_spacer>},
+    {"display_parent", get_wrapper<&get_display_parent_account>},
+    {"earliest", get_wrapper<&get_earliest>},
+    {"earliest_checkin", get_wrapper<&get_earliest_checkin>},
+    {"has_children_to_display", get_wrapper<&get_has_children_to_display>},
+    {"has_meta", account_has_tag},
+    {"has_tag", account_has_tag},
+    {"is_account", get_wrapper<&get_true>},
+    {"is_index", get_wrapper<&get_subcount>},
+    {"l", get_wrapper<&get_depth>},
+    {"latest", get_wrapper<&get_latest>},
+    {"latest_checkout", get_wrapper<&get_latest_checkout>},
+    {"latest_checkout_cleared", get_wrapper<&get_latest_checkout_cleared>},
+    {"latest_cleared", get_wrapper<&get_latest_cleared>},
+    {"meta", account_get_tag},
+    {"n", get_wrapper<&get_subcount>},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&get_parent_account>},
+    {"partial_account", get_partial_name},
+    {"subcount", get_wrapper<&get_subcount>},
+    {"tag", account_get_tag},
+    {"total", get_wrapper<&get_total>},
+    {"use_direct_amount", get_wrapper<&ignore>},
+};
+static_assert(symbol_table_sorted(account_functions), "account_functions must stay sorted");
 } // namespace
 
 /**
@@ -568,128 +687,9 @@ value_t fn_all(call_scope_t& args) {
  * the name to a callable functor.
  */
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn_name) {
-  if (kind != symbol_t::FUNCTION)
-    return nullptr;
-
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (fn_name[0]) {
-  case 'a':
-    if (fn_name[1] == '\0' || fn_name == "amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
-    else if (fn_name == "account")
-      return WRAP_FUNCTOR(&get_account);
-    else if (fn_name == "account_base")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (fn_name == "addr")
-      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (fn_name == "any")
-      return WRAP_FUNCTOR(&fn_any);
-    else if (fn_name == "all")
-      return WRAP_FUNCTOR(&fn_all);
-    break;
-
-  case 'c':
-    if (fn_name == "count")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (fn_name == "cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    break;
-
-  case 'd':
-    if (fn_name[1] == '\0' || fn_name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_date>);
-    else if (fn_name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    else if (fn_name == "depth_parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth_parent>);
-    else if (fn_name == "depth_spacer")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
-    else if (fn_name == "display_parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_display_parent_account>);
-    break;
-
-  case 'e':
-    if (fn_name == "earliest")
-      return WRAP_FUNCTOR(get_wrapper<&get_earliest>);
-    else if (fn_name == "earliest_checkin")
-      return WRAP_FUNCTOR(get_wrapper<&get_earliest_checkin>);
-    break;
-
-  case 'h':
-    if (fn_name == "has_children_to_display")
-      return WRAP_FUNCTOR(get_wrapper<&get_has_children_to_display>);
-    else if (fn_name == "has_tag" || fn_name == "has_meta")
-      return WRAP_FUNCTOR(account_has_tag);
-    break;
-
-  case 'm':
-    if (fn_name == "meta")
-      return WRAP_FUNCTOR(account_get_tag);
-    break;
-
-  case 'i':
-    if (fn_name == "is_account")
-      return WRAP_FUNCTOR(get_wrapper<&get_true>);
-    else if (fn_name == "is_index")
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    break;
-
-  case 'l':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    else if (fn_name == "latest_cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
-    else if (fn_name == "latest")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
-    else if (fn_name == "latest_checkout")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout>);
-    else if (fn_name == "latest_checkout_cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout_cleared>);
-    break;
-
-  case 'n':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    else if (fn_name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    break;
-
-  case 'p':
-    if (fn_name == "partial_account")
-      return WRAP_FUNCTOR(get_partial_name);
-    else if (fn_name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_parent_account>);
-    break;
-
-  case 's':
-    if (fn_name == "subcount")
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    break;
-
-  case 't':
-    if (fn_name == "tag")
-      return WRAP_FUNCTOR(account_get_tag);
-    else if (fn_name == "total")
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'u':
-    if (fn_name == "use_direct_amount")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    break;
-
-  case 'N':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'O':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (kind == symbol_t::FUNCTION)
+    if (const auto* fn = find_symbol(account_functions, fn_name))
+      return WRAP_FUNCTOR(*fn);
   return nullptr;
 }
 
@@ -722,11 +722,11 @@ bool account_t::children_with_xdata() const {
   return false;
 }
 
-std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const {
+std::size_t account_t::children_with_flags(xdata_t::flags_t flags, std::size_t limit) const {
   std::size_t count = 0;
 
-  for (const accounts_map::value_type& pair : accounts)
-    if (pair.second->has_xflags(flags) || pair.second->children_with_flags(flags) > 0)
+  for (auto it = accounts.begin(); it != accounts.end() && count < limit; ++it)
+    if (it->second->has_xflags(flags) || it->second->children_with_flags(flags, 1) > 0)
       count++;
 
   return count;
@@ -767,7 +767,7 @@ account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const d
 /*--- Cache Management ---*/
 
 void account_t::clear_xdata() {
-  xdata_ = none;
+  xdata_ = std::nullopt;
 
   // Recurse into all children, including ACCOUNT_TEMP ones.  When --pivot is
   // active, transfer_details creates a temporary parent account ("Invoice")
@@ -797,8 +797,8 @@ void account_t::clear_display_state() {
     // beginning.  Posts already marked POST_EXT_CONSIDERED will be
     // skipped, but newly visited posts anywhere in the list will be
     // picked up.
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
 
     xdata_->sort_values.clear();
   }
@@ -832,8 +832,7 @@ void account_t::clear_display_state() {
  * variables rather than cached in xdata, because the expression changes
  * the semantics of the accumulation.
  */
-value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr /*= none*/
-) const {
+value_t account_t::amount(bool real_only, expr_t* expr /*= nullptr*/) const {
   DEBUG("account.amount", "real only: " << real_only);
 
   if (!xdata_ || !xdata_->has_flags(ACCOUNT_EXT_VISITED))
@@ -877,20 +876,46 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
   }
 
-  return real_only == true ? real_total : total;
+  return real_only ? real_total : total;
 }
 
-value_t account_t::self_total(bool real_only) const {
+static value_t sum_posts(const posts_list& posts, bool real_only, const optional<date_t>& cutoff) {
   value_t result;
-  std::set<const post_t*> seen;
   for (const post_t* post : posts) {
-    if (!seen.insert(post).second)
-      continue;
     if (real_only && post->has_flags(POST_VIRTUAL))
       continue;
-    if (!post->amount.is_null())
+    if (!post->amount.is_null() && (!cutoff || post->date() <= *cutoff))
       add_or_set_value(result, post->amount);
   }
+  return result;
+}
+
+value_t account_t::self_total(bool real_only, const optional<date_t>& cutoff) const {
+  running_total_t& rt(running_total_);
+  if (rt.aux_dates != item_t::use_aux_date) {
+    rt.reset();
+    rt.aux_dates = item_t::use_aux_date;
+  }
+  for (auto i = rt.last ? std::next(*rt.last) : posts.begin(); i != posts.end(); ++i) {
+    const post_t* post = *i;
+    if (!post->amount.is_null()) {
+      add_or_set_value(rt.total, post->amount);
+      if (!post->has_flags(POST_VIRTUAL))
+        add_or_set_value(rt.real_total, post->amount);
+    }
+    date_t when = post->date();
+    if (!rt.latest || when > *rt.latest)
+      rt.latest = when;
+    rt.last = i;
+  }
+
+  // A post dated after the cutoff exists only when posts arrived out of
+  // date order (#847, #1092, #2071); only then rescan the account.
+  if (cutoff && rt.latest && *cutoff < *rt.latest)
+    return sum_posts(posts, real_only, cutoff);
+
+  value_t result = real_only ? rt.real_total : rt.total;
+  VERIFY(result == sum_posts(posts, real_only, cutoff));
   return result;
 }
 
@@ -902,7 +927,7 @@ value_t account_t::self_total(bool real_only) const {
  * result is cached via family_details.calculated so subsequent calls
  * return immediately.
  */
-value_t account_t::total(const optional<expr_t&>& expr) const {
+value_t account_t::total(expr_t* expr) const {
   if (!(xdata_ && xdata_->family_details.calculated)) {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;
 
@@ -924,8 +949,9 @@ const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) co
   if (!(xdata_ && xdata_->self_details.gathered)) {
     const_cast<account_t&>(*this).xdata().self_details.gathered = true;
 
+    const date_t today = CURRENT_DATE();
     for (const post_t* post : posts)
-      xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
+      xdata_->self_details.update(const_cast<post_t&>(*post), today, gather_all);
   }
   return xdata_->self_details;
 }
@@ -942,7 +968,7 @@ const account_t::xdata_t::details_t& account_t::family_details(bool gather_all) 
   return xdata_->family_details;
 }
 
-void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
+void account_t::xdata_t::details_t::update(post_t& post, const date_t& today, bool gather_all) {
   posts_count++;
 
   if (post.has_flags(POST_VIRTUAL))
@@ -951,8 +977,7 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
   if (gather_all && post.pos)
     filenames.insert(*post.pos->pathname);
 
-  date_t date = post.date();
-  date_t today = CURRENT_DATE();
+  const date_t date = post.date();
 
   // Recency counters should only include postings that have actually
   // occurred on or before today; future-dated postings must not inflate
@@ -970,10 +995,10 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
       latest_past_post = date;
   }
 
-  if (!is_valid(earliest_post) || post.date() < earliest_post)
-    earliest_post = post.date();
-  if (!is_valid(latest_post) || post.date() > latest_post)
-    latest_post = post.date();
+  if (!is_valid(earliest_post) || date < earliest_post)
+    earliest_post = date;
+  if (!is_valid(latest_post) || date > latest_post)
+    latest_post = date;
 
   if (post.checkin && (earliest_checkin.is_not_a_date_time() || *post.checkin < earliest_checkin))
     earliest_checkin = *post.checkin;
@@ -986,10 +1011,10 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
   if (post.state() == item_t::CLEARED) {
     posts_cleared_count++;
 
-    if (!is_valid(earliest_cleared_post) || post.date() < earliest_cleared_post)
-      earliest_cleared_post = post.date();
-    if (!is_valid(latest_cleared_post) || post.date() > latest_cleared_post)
-      latest_cleared_post = post.date();
+    if (!is_valid(earliest_cleared_post) || date < earliest_cleared_post)
+      earliest_cleared_post = date;
+    if (!is_valid(latest_cleared_post) || date > latest_cleared_post)
+      latest_cleared_post = date;
   }
 
   if (gather_all) {

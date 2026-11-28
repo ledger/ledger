@@ -5,4 +5,16 @@
     Assets:Checking
 
 test reg --options Expenses
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+               --columns = 80                                        --columns=80
+                   --now = 2030/06/15                                --now=2030/06/15
+===============================================================================
+24-Jan-01 Test                  Expenses:Food                $25.00       $25.00
 end test

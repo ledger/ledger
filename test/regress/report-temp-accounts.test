@@ -1,0 +1,76 @@
+; Account paths built at report time by account-rewrite, --pivot-only and
+; --account land on temporary accounts, created under whatever part of the
+; path the journal already has.  Two rules naming one path share a single
+; account, a path may extend an account the journal already has
+; (Expenses:Food:Fresh), and under --group-by a group shows only the
+; accounts its own postings reach.  test/regress/report-temp-accounts_py.test
+; checks that none of them joins the journal.
+
+account-rewrite Food  Expenses:Groceries
+account-rewrite Market  Expenses:Groceries
+account-rewrite Phone  Expenses:Food:Fresh
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    ; Assets: Kitchen
+    Assets:Cash
+
+2024/01/02 Farmer
+    Expenses:Market    $4.00
+    ; Assets: Kitchen
+    Assets:Cash
+
+2024/01/03 Carrier
+    Expenses:Phone    $30.00
+    Assets:Cash
+
+test bal
+             $-44.00  Assets:Cash
+              $44.00  Expenses
+              $30.00    Food
+              $30.00      Fresh
+              $14.00    Groceries
+--------------------
+                   0
+end test
+
+test bal --pivot-only Assets
+             $-30.00  Assets
+             $-44.00    Cash
+              $14.00    Kitchen
+              $30.00  Expenses:Food
+              $30.00    Fresh
+--------------------
+                   0
+end test
+
+test bal --pivot-only Assets --group-by payee
+Carrier
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Food
+              $30.00    Fresh
+--------------------
+                   0
+
+Farmer
+                   0  Assets
+              $-4.00    Cash
+               $4.00    Kitchen
+--------------------
+                   0
+
+Grocer
+                   0  Assets
+             $-10.00    Cash
+              $10.00    Kitchen
+--------------------
+                   0
+end test
+
+test bal --account '"Assets"' --flat
+             $-44.00  Assets:Assets:Cash
+              $30.00  Assets:Expenses:Food:Fresh
+              $14.00  Assets:Expenses:Groceries
+--------------------
+                   0
+end test

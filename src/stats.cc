@@ -40,7 +40,7 @@
 namespace ledger {
 
 void report_statistics::operator()(post_t& post) {
-  statistics.update(post, /* gather_all= */ true);
+  statistics.update(post, today, /* gather_all= */ true);
 }
 
 void report_statistics::flush() {
@@ -83,9 +83,17 @@ void report_statistics::flush() {
   out.width(6);
   out << statistics.posts_count;
 
-  out << " (";
-  out.precision(2);
-  out << (double(statistics.posts_count) / double(period_days)) << _(" per day)") << '\n';
+  // Format the rate on its own stream so the report stream's precision
+  // is untouched.  Two significant digits suit small rates (0.018, 0.17,
+  // 2); from ten upward print whole numbers, never scientific notation.
+  const double per_day = double(statistics.posts_count) / double(period_days);
+  std::ostringstream rate;
+  if (per_day >= 10)
+    rate << std::fixed << std::setprecision(0);
+  else
+    rate << std::setprecision(2);
+  rate << per_day;
+  out << " (" << rate.str() << _(" per day)") << '\n';
 
   out << _("  Uncleared postings:     ");
   out.width(6);
@@ -98,8 +106,8 @@ void report_statistics::flush() {
   // Fall back to latest_post only if every posting is in the future.
   out << _("  Days since last post:   ");
   out.width(6);
-  out << (CURRENT_DATE() - (is_valid(statistics.latest_past_post) ? statistics.latest_past_post
-                                                                  : statistics.latest_post))
+  out << (today - (is_valid(statistics.latest_past_post) ? statistics.latest_past_post
+                                                         : statistics.latest_post))
              .days()
       << '\n';
 

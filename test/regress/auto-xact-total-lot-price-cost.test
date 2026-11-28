@@ -1,0 +1,87 @@
+; An automated transaction that copies a lot-annotated amount derives the
+; generated posting's cost from the lot price.  Ledger stores a {{total}}
+; lot price per unit (amount_t::parse divides it by the quantity), so the
+; cost is the per-unit price times the amount for every spelling: the
+; {{72.00 EUR}}, {{36.00 EUR}}, {{=72.00 EUR}} and {{1.00 EUR}} lots below
+; must balance exactly as {0.72 EUR}, {=0.72 EUR} and {0.125 EUR} do, and
+; the generated cost (shown by reg -B) is the lot's total, not one unit's
+; price (see 2566.test for the @@ form without a lot price).
+
+= /Expenses/
+    Copy                                (a)
+    Copy                               (-b)
+
+2026/02/02 ACME
+    Expenses                 100 kWh {{72.00 EUR}} @@ 72.00 EUR
+    Liabilities                       -72.00 EUR
+
+2026/02/03 Refund
+    Expenses                 -50 kWh {{36.00 EUR}} @@ 36.00 EUR
+    Liabilities                        36.00 EUR
+
+2026/02/04 Fixated
+    Expenses                 100 kWh {{=72.00 EUR}}
+    Liabilities                       -72.00 EUR
+
+2026/02/05 Per-unit refund
+    Expenses                 -10 kWh @ 0.70 EUR
+    Liabilities                         7.00 EUR
+
+2026/02/06 Eighths
+    Expenses                 8 kWh {{1.00 EUR}} @@ 1.00 EUR
+    Liabilities                        -1.00 EUR
+
+test reg
+26-Feb-02 ACME                  Expenses                    100 kWh      100 kWh
+                                Liabilities              -72.00 EUR   -72.00 EUR
+                                                                         100 kWh
+                                Copy                        100 kWh   -72.00 EUR
+                                                                         200 kWh
+                                Copy                     -72.00 EUR  -144.00 EUR
+                                                                         200 kWh
+26-Feb-03 Refund                Expenses                    -50 kWh  -144.00 EUR
+                                                                         150 kWh
+                                Liabilities               36.00 EUR  -108.00 EUR
+                                                                         150 kWh
+                                Copy                        -50 kWh  -108.00 EUR
+                                                                         100 kWh
+                                Copy                      36.00 EUR   -72.00 EUR
+                                                                         100 kWh
+26-Feb-04 Fixated               Expenses                    100 kWh   -72.00 EUR
+                                                                         200 kWh
+                                Liabilities              -72.00 EUR  -144.00 EUR
+                                                                         200 kWh
+                                Copy                        100 kWh  -144.00 EUR
+                                                                         300 kWh
+                                Copy                     -72.00 EUR  -216.00 EUR
+                                                                         300 kWh
+26-Feb-05 Per-unit refund       Expenses                    -10 kWh  -216.00 EUR
+                                                                         290 kWh
+                                Liabilities                7.00 EUR  -209.00 EUR
+                                                                         290 kWh
+                                Copy                        -10 kWh  -209.00 EUR
+                                                                         280 kWh
+                                Copy                       7.00 EUR  -202.00 EUR
+                                                                         280 kWh
+26-Feb-06 Eighths               Expenses                      8 kWh  -202.00 EUR
+                                                                         288 kWh
+                                Liabilities               -1.00 EUR  -203.00 EUR
+                                                                         288 kWh
+                                Copy                          8 kWh  -203.00 EUR
+                                                                         296 kWh
+                                Copy                      -1.00 EUR  -204.00 EUR
+                                                                         296 kWh
+end test
+
+test reg -B Copy
+26-Feb-02 ACME                  Copy                      72.00 EUR    72.00 EUR
+                                Copy                     -72.00 EUR            0
+26-Feb-03 Refund                Copy                     -36.00 EUR   -36.00 EUR
+                                Copy                      36.00 EUR            0
+26-Feb-04 Fixated               Copy                      72.00 EUR    72.00 EUR
+                                Copy                     -72.00 EUR            0
+26-Feb-05 Per-unit refund       Copy                      -7.00 EUR    -7.00 EUR
+                                Copy                       7.00 EUR            0
+26-Feb-06 Eighths               Copy                       1.00 EUR     1.00 EUR
+                                Copy                      -1.00 EUR            0
+end test

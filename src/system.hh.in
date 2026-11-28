@@ -38,8 +38,7 @@
  * @brief  All system headers needed by Ledger.
  *
  * These are collected here so that a pre-compiled header can be made.
- * None of these header files (with the exception of acconf.h, when
- * configure is re-run) are expected to change.
+ * None of these header files are expected to change.
  */
 #pragma once
 
@@ -49,16 +48,12 @@
 /* Application configuration                                              */
 /*------------------------------------------------------------------------*/
 
-#cmakedefine01 HAVE_GETTEXT
-
 #cmakedefine01 HAVE_EDIT
 #cmakedefine01 HAVE_READLINE
 #cmakedefine01 HAVE_GETPWUID
 #cmakedefine01 HAVE_GETPWNAM
 #cmakedefine01 HAVE_IOCTL
 #cmakedefine01 HAVE_ISATTY
-
-#cmakedefine01 HAVE_UNIX_PIPES
 
 #cmakedefine01 HAVE_BOOST_PYTHON
 #cmakedefine01 HAVE_GPGME
@@ -107,15 +102,14 @@
 #include <optional>
 #include <variant>
 #include <set>
-#include <stack>
+#include <deque>
 #include <string>
 #include <string_view>
 #include <system_error>
-#include <variant>
+#include <tuple>
 #include <vector>
 
 #include <cctype>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -135,6 +129,8 @@
 #endif
 #endif
 #else
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -146,17 +142,7 @@
 #include <sys/ioctl.h>
 #endif
 
-#if HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
-#endif
-
-#if HAVE_GETTEXT
-#include <libintl.h>
-#define _(str) gettext(str)
-#else
 #define _(str) str
-#endif
 #define _f(str) boost::format(_(str))
 
 #include <gmp.h>
@@ -179,7 +165,6 @@
 #include <boost/intrusive_ptr.hpp>
 
 #include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/write.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -192,9 +177,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-// jww (2012-05-20): This must be included before Boost.Regex
-#include <boost/xpressive/xpressive_static.hpp>
-
 #if HAVE_BOOST_REGEX_UNICODE
 #include <boost/regex/icu.hpp>
 #else
@@ -204,14 +186,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 
-#include <boost/version.hpp>
-
 #include <boost/ptr_container/ptr_deque.hpp>
 
 #if HAVE_BOOST_PYTHON
 #include <boost/python.hpp>
 #include <boost/python/detail/wrap_python.hpp>
 #include <boost/python/module_init.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <boost/iterator/indirect_iterator.hpp>
 #endif // HAVE_BOOST_PYTHON

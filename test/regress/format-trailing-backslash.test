@@ -1,0 +1,28 @@
+; A format string that ends in a lone backslash prints the backslash.
+;
+; format_t::parse_elements stepped onto the string's terminating NUL after
+; the backslash, stored the NUL, and then walked past the end of the
+; string, copying whatever bytes followed into every line of the report.
+; The format ends without a newline, so awk ends the last line for the
+; comparison.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(payee)|\' | awk 1
+Payee|\
+end test
+
+test eval 'format("a\\")'
+a\
+end test
+
+test eval 'format("\\")'
+\
+end test
+
+; Complete escapes keep their meaning.
+test reg Expenses --format '%(payee)|\\|\n'
+Payee|\|
+end test

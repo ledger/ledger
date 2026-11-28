@@ -231,7 +231,7 @@ test reg expr 'amount > 40' -> 0
 24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $150.00
 end test
 
-; 25. 'account' as keyword - explicit account context
+; 25. 'account' is a plain account pattern (no keyword); it ORs with Food
 test reg account Food -> 0
 24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
 24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00

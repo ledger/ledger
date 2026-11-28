@@ -5,13 +5,19 @@ set(LLVM_COV "@LLVM_COV@")
 set(GENHTML "@GENHTML@")
 set(LEDGER_EXE "@CMAKE_BINARY_DIR@/ledger")
 set(CMAKE_CTEST_COMMAND "@CMAKE_CTEST_COMMAND@")
-# Additional instrumented binaries that exercise libledger source files.
+# Unit-test binaries; their own test/ sources are filtered out in step 4.
 set(EXTRA_OBJECTS
     -object "@CMAKE_BINARY_DIR@/TextualTests"
     -object "@CMAKE_BINARY_DIR@/UtilTests"
     -object "@CMAKE_BINARY_DIR@/FilterTests"
     -object "@CMAKE_BINARY_DIR@/MathTests"
 )
+# libledger (BUILD_LIBRARY=ON) holds the coverage mapping of every src/*.cc
+# except main.cc and global.cc; llvm-cov reads a mapping only from the
+# binary that contains it.
+if(LIBLEDGER_FILE)
+  list(APPEND EXTRA_OBJECTS -object "${LIBLEDGER_FILE}")
+endif()
 
 # 1. Delete stale profile data.
 file(GLOB OLD_PROFRAW "${BINDIR}/coverage-*.profraw")
@@ -31,7 +37,7 @@ execute_process(
   RESULT_VARIABLE _ctest_result
 )
 if(NOT _ctest_result EQUAL 0)
-  message(WARNING "ctest exited with code ${_ctest_result}; coverage may be incomplete")
+  message(FATAL_ERROR "ctest exited with code ${_ctest_result}; no coverage report for a failing suite")
 endif()
 
 # 3. Merge all profile data files.
@@ -49,7 +55,7 @@ if(NOT _merge_result EQUAL 0)
 endif()
 
 # 4. Export coverage data in lcov format.
-#    Pass all instrumented binaries so libledger source files are included.
+#    Pass the executable, libledger and the unit-test binaries.
 execute_process(
   COMMAND "${LLVM_COV}" export
           --format=lcov

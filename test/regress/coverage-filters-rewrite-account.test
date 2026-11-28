@@ -6,5 +6,5 @@
 
 test reg --account-rewrite "Food=Groceries:Items"
 24-Jan-01 Test                  Groceries:Items              $10.00       $10.00
-24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+                                Assets:Cash                 $-10.00            0
 end test

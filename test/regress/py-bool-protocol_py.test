@@ -1,0 +1,17 @@
+test python test/regress/py-bool-protocol.py
+Expr() False
+Expr('1') True
+Annotation() False
+null_commodity False
+$ commodity True
+Amount('0') False
+Amount('$1') True
+Balance() False
+Value(0) False
+Amount __bool__=True __nonzero__=False
+Balance __bool__=True __nonzero__=False
+Value __bool__=True __nonzero__=False
+Expr __bool__=True __nonzero__=False
+Annotation __bool__=True __nonzero__=False
+Commodity __bool__=True __nonzero__=False
+end test

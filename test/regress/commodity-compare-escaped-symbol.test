@@ -1,0 +1,69 @@
+; A string compared with a commodity may spell the commodity as a journal
+; does: bare, in double quotes, or with a backslash before a character
+; that would otherwise end a bare symbol (#3313, #3321).  A backslash
+; spelling names the commodity commodity_t::parse_symbol reads from it,
+; as the journal parser would; a spelling that begins with a double
+; quote keeps its #3241 rule: the two quotes are stripped, nothing more.
+;
+; Each command sits in shell single quotes, so the expression receives
+; its text unchanged.  In an expression string `\\` stands for one
+; backslash, so "A\\;B" holds the journal spelling A\;B.
+
+2024/01/02 * Broker
+    Assets:A       1 "A;B" @@ 100 €
+    Assets:Cash
+
+2024/01/03 * Broker
+    Assets:C       2 "C D" @@ 50 €
+    Assets:Cash
+
+; The strings hold the journal spellings.
+test eval '"A\\;B"'
+A\;B
+end test
+
+test eval '"C\\ D"'
+C\ D
+end test
+
+; A backslash escapes the ';' that would end a bare symbol.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity == "A\\;B"'
+Assets:A  A;B
+end test
+
+; A backslash escapes the space that would end a bare symbol.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity == "C\\ D"'
+Assets:C  C D
+end test
+
+test eval 'commodity(1 "A;B") == "A\\;B"'
+1
+end test
+
+; As in a directive, whitespace after a backslash spelling ends it.
+test eval 'commodity(1 "C D") == "C\\ D "'
+1
+end test
+
+; The spellings that already named the commodity still do.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity == "\"A;B\"" or commodity == "C D"'
+Assets:A  A;B
+Assets:C  C D
+end test
+
+; A backslash spelling that reads as a symbol followed by more text
+; names nothing, and neither does a quoted spelling with text after its
+; closing quote.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity == "\"A;B\" x" or commodity == "C\\ D x"'
+end test
+
+; A quoted spelling is only stripped of its two quotes: whitespace after
+; the closing quote makes it name nothing, and two quotes with nothing
+; between them name the empty symbol of an amount without a commodity.
+test eval 'commodity(1 "A;B") == "\"A;B\" "'
+0
+end test
+
+test eval 'commodity(1) == "\"\""'
+1
+end test

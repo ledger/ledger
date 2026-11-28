@@ -1,0 +1,15 @@
+P 2024/01/01 EUR $1.10
+P 2024/02/01 GBP $1.30
+
+test prices
+2024/01/01 EUR             $1.10
+2024/02/01 GBP             $1.30
+end test
+
+test pricedb
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 GBP $1.30
+end test
+
+test reg
+end test

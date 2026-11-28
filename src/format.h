@@ -49,8 +49,8 @@
  *
  * Two syntactic forms exist for expression elements:
  *   - `%(expr)`  -- evaluates the expression and applies min/max width
- *   - `%{expr}`  -- additionally wraps the result in `scrub()` and
- *     `justify()` calls, suitable for monetary amounts
+ *   - `%{amount}` -- a braced amount literal such as `%{$50}`, wrapped in
+ *     `scrub()` and `justify()` calls that apply the element's widths
  *
  * Single-letter shortcuts (e.g., `%P` for payee, `%t` for display_amount)
  * are expanded into their full expression equivalents at parse time via
@@ -69,8 +69,6 @@
 #include <boost/smart_ptr/scoped_ptr.hpp>
 
 namespace ledger {
-
-class unistring;
 
 /**
  * @brief Exception thrown when a format string cannot be parsed.
@@ -149,24 +147,6 @@ class format_t : public expr_base_t<string>, public noncopyable {
       return *this;
     }
 
-    /// @brief Emit ANSI red escape and apply alignment/width to the stream.
-    ///
-    /// Used by the report layer to highlight negative balances in color
-    /// terminals.
-    friend inline void mark_red(std::ostream& out, const element_t* elem) {
-      out.setf(std::ios::left);
-      out.width(0);
-      out << "\033[31m";
-
-      if (elem->has_flags(ELEMENT_ALIGN_LEFT))
-        out << std::left;
-      else
-        out << std::right;
-
-      if (elem->min_width > 0)
-        out.width(static_cast<std::streamsize>(elem->min_width));
-    }
-
     /// @brief Write a human-readable representation of this element for
     ///        debugging.
     void dump(std::ostream& out) const;
@@ -206,15 +186,14 @@ private:
    * @return      The head of the newly allocated element linked list.  The
    *              caller takes ownership.
    */
-  static element_t* parse_elements(const string& fmt, const optional<format_t&>& tmpl);
+  static element_t* parse_elements(const string& fmt, const format_t* tmpl);
 
 public:
   format_t() : base_type() { TRACE_CTOR(format_t, ""); }
 
   /// @brief Construct and immediately parse a format string.
   /// @param _str     The format string (e.g., `"%-20(account)  %12(total)\n"`).
-  /// @param context  Optional scope used for early compilation of expressions.
-  format_t(const string& _str, scope_t* context = nullptr) : base_type(context) {
+  format_t(const string& _str) : base_type() {
     if (!_str.empty())
       parse_format(_str);
     TRACE_CTOR(format_t, "const string&");
@@ -224,7 +203,7 @@ public:
   /// @brief Parse (or re-parse) a format string, replacing any prior elements.
   /// @param _format  The format string to parse.
   /// @param tmpl     Optional template format for `%$N` back-references.
-  void parse_format(const string& _format, const optional<format_t&>& tmpl = none) {
+  void parse_format(const string& _format, const format_t* tmpl = nullptr) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }

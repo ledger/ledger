@@ -66,7 +66,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
     // Create a fresh journal for each input to avoid state leakage
     journal_t journal;
-    journal.initialize();
 
     parse_context_stack_t context_stack;
     context_stack.push(

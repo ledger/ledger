@@ -1,44 +1,135 @@
 ; Coverage test for times.cc determine_when's N-units-ago/hence paths
+;
+; Each block prints how the period expression resolves as of 2030/06/15:
+; the stabilized range, start, finish and duration, and the first
+; interval the report would use.
 
-2000/01/01 Ancient Transaction
-    Expenses:Food    $10.00
-    Assets:Cash
+test period "2 years ago" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2028 month Jun day 15
+   start: 28-Jun-15
+  finish: 28-Jun-16
 
-test reg --period "2 years ago"
+--- Sample dates in range (max. 20) ---
+ 1: 28-Jun-15
 end test
 
-test reg --period "3 quarters ago"
+test period "3 quarters ago" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2029 month Sep day 15
+   start: 29-Sep-15
+  finish: 29-Sep-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 29-Sep-15
 end test
 
-test reg --period "2 months ago"
+test period "2 months ago" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Apr day 15
+   start: 30-Apr-15
+  finish: 30-Apr-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Apr-15
 end test
 
-test reg --period "2 weeks ago"
+test period "2 weeks ago" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 1
+   start: 30-Jun-01
+  finish: 30-Jun-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-01
 end test
 
-test reg --period "3 days ago"
+test period "3 days ago" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 12
+   start: 30-Jun-12
+  finish: 30-Jun-13
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-12
 end test
 
-test reg --period "1 year hence"
+test period "1 year hence" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2031 month Jun day 15
+   start: 31-Jun-15
+  finish: 31-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 31-Jun-15
 end test
 
-test reg --period "1 month hence"
+test period "1 month hence" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jul day 15
+   start: 30-Jul-15
+  finish: 30-Jul-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jul-15
 end test
 
-test reg --period "last 2 years"
+test period "last 2 years" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2028 month Jun day 15 to year 2030 month Jun day 15
+   start: 28-Jun-15
+  finish: 30-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 28-Jun-15
 end test
 
-test reg --period "last 3 months"
+test period "last 3 months" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Mar day 15 to year 2030 month Jun day 15
+   start: 30-Mar-15
+  finish: 30-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Mar-15
 end test
 
-test reg --period "last 2 quarters"
+test period "last 2 quarters" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2029 month Dec day 15 to year 2030 month Jun day 15
+   start: 29-Dec-15
+  finish: 30-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 29-Dec-15
 end test
 
-test reg --period "next 2 months"
+test period "next 2 months" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 15 to year 2030 month Aug day 15
+   start: 30-Jun-15
+  finish: 30-Aug-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15
 end test
 
-test reg --period "next 2 weeks"
+test period "next 2 weeks" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 15 to year 2030 month Jun day 29
+   start: 30-Jun-15
+  finish: 30-Jun-29
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15
 end test
 
-test reg --period "next 3 days"
+test period "next 3 days" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 15 to year 2030 month Jun day 18
+   start: 30-Jun-15
+  finish: 30-Jun-18
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15
 end test

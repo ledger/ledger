@@ -1,0 +1,43 @@
+; Payee validation runs only when --check-payees is given together with
+; --strict or --pedantic.  A `payee` directive declares a payee but does
+; not by itself turn the check on, and --check-payees alone checks
+; nothing.  A payee alias is applied before the check, so "Known Branch"
+; counts as the declared "Known Store".  Accounts and the commodity are
+; declared so that --strict and --pedantic have nothing else to report.
+
+commodity $
+
+account Expenses:Food
+account Assets:Cash
+
+payee Known Store
+    alias ^Known Branch$
+
+2024/01/15 Known Store
+    Expenses:Food              $50.00
+    Assets:Cash
+
+2024/01/18 Known Branch
+    Expenses:Food              $20.00
+    Assets:Cash
+
+2024/01/20 Other Store
+    Expenses:Food              $30.00
+    Assets:Cash
+
+test bal --strict --check-payees --columns=80
+            $-100.00  Assets:Cash
+             $100.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 24: Unknown payee 'Other Store'
+end test
+
+test bal --pedantic --check-payees --columns=80 -> 1
+__ERROR__
+While parsing file "$FILE", line 24:
+While parsing transaction:
+> 2024/01/20 Other Store
+Error: Unknown payee 'Other Store'
+end test

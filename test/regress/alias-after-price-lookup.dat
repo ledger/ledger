@@ -1,0 +1,13 @@
+; A price looked up before `alias Real` must be looked up again after
+; it: the alias joins Real's prices to BRL, so the lookup that found no
+; INR -> BRL price before the alias finds one after it.
+
+commodity BRL
+
+P 2024/01/01 INR 2.00 Real
+P 2024/01/05 XYZ (market(1 INR, [2024/01/10], "BRL"))
+
+commodity BRL
+    alias Real
+
+P 2024/01/06 QQQ (market(1 INR, [2024/01/10], "BRL"))

@@ -1,0 +1,5 @@
+bal
+parse amount
+bal
+format %(account)
+reg

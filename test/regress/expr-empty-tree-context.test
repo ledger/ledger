@@ -1,0 +1,27 @@
+; Issue #1899's guard: "()" parses to an empty tree (ptr == nullptr), so
+; compile() must still set the context even when there is nothing to compile.
+
+test expr '()'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+()
+
+--- Text as parsed ---
+
+
+--- Expression tree ---
+
+--- Compiled tree ---
+
+--- Calculated value ---
+null
+end test

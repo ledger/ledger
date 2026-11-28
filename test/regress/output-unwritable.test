@@ -1,0 +1,16 @@
+; --output names a file that cannot be opened for writing: ledger reports
+; the path and exits 1 instead of silently discarding the report.
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test bal --output /nonexistent-dir/report.txt -> 1
+__ERROR__
+Error: Cannot write to output file "/nonexistent-dir/report.txt"
+end test
+
+test bal -o / -> 1
+__ERROR__
+Error: Cannot write to output file "/"
+end test

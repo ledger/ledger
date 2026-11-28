@@ -1,0 +1,49 @@
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.20
+P 2024/01/15 GBP $1.30
+
+2024/01/05 Buy
+    Assets:Euro                               10 EUR @ $1.15
+    Assets:Pound                               5 GBP @ $1.25
+    Assets:Cash
+
+2024/03/01 Sell
+    Assets:Cash                                   $12.00
+    Assets:Euro                              -10 EUR @ $1.20
+
+test prices
+2024/01/01 EUR             $1.10
+2024/01/05 EUR             $1.15
+2024/02/01 EUR             $1.20
+2024/03/01 EUR             $1.20
+2024/01/05 GBP             $1.25
+2024/01/15 GBP             $1.30
+end test
+
+test pricedb
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/05 00:00:00 EUR $1.15
+P 2024/02/01 00:00:00 EUR $1.20
+P 2024/03/01 00:00:00 EUR $1.20
+P 2024/01/05 00:00:00 GBP $1.25
+P 2024/01/15 00:00:00 GBP $1.30
+end test
+
+test reg
+24-Jan-05 Buy                   Assets:Euro                  10 EUR       10 EUR
+                                Assets:Pound                  5 GBP       10 EUR
+                                                                           5 GBP
+                                Assets:Cash                 $-17.75      $-17.75
+                                                                          10 EUR
+                                                                           5 GBP
+24-Mar-01 Sell                  Assets:Cash                  $12.00       $-5.75
+                                                                          10 EUR
+                                                                           5 GBP
+                                Assets:Euro                 -10 EUR       $-5.75
+                                                                           5 GBP
+end test
+
+test reg -t 'amount * 2' Euro
+24-Jan-05 Buy                   Assets:Euro                  20 EUR       20 EUR
+24-Mar-01 Sell                  Assets:Euro                 -20 EUR            0
+end test

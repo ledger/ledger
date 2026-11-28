@@ -69,28 +69,22 @@ using op_bool_tuple = std::pair<expr_t::ptr_op_t, bool>;
 /// falling back to name (boolean).  This two-pass approach auto-detects
 /// whether the option takes an argument.
 op_bool_tuple find_option(scope_t& scope, const string& name) {
-  char buf[128];
-  char* p = buf;
-
+  // No option name is this long, but the error still reports an over-long
+  // LEDGER_* variable, whose failed lookup is otherwise ignored.
   if (name.length() > 127) {
     throw_(option_error, _f("Illegal option --%1%") % name);
   }
 
-  for (char ch : name) {
-    if (ch == '-')
-      *p++ = '_';
-    else
-      *p++ = ch;
-  }
-  *p++ = '_';
-  *p = '\0';
+  string key(name);
+  std::replace(key.begin(), key.end(), '-', '_');
+  key += '_';
 
-  if (expr_t::ptr_op_t op = scope.lookup(symbol_t::OPTION, buf))
+  if (expr_t::ptr_op_t op = scope.lookup(symbol_t::OPTION, key))
     return op_bool_tuple(op, true);
 
-  *--p = '\0';
+  key.pop_back();
 
-  return op_bool_tuple(scope.lookup(symbol_t::OPTION, buf), false);
+  return op_bool_tuple(scope.lookup(symbol_t::OPTION, key), false);
 }
 
 /// @brief Find an option by its single-character shortcut (e.g., 'S' for --sort).
@@ -234,11 +228,9 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
       if (!opt.first)
         throw_(option_error, _f("Illegal option --%1%") % name);
 
-      if (opt.second && !value && ++i != args.end() && value == nullptr) {
+      if (opt.second && !value && ++i != args.end()) {
         value = (*i).c_str();
         DEBUG("option.args", "  read option value from arg: " << value);
-        if (value == nullptr)
-          throw_(option_error, _f("Missing option argument for --%1%") % name);
       }
       process_option(string("--") + name, opt.first->as_function(), scope, value,
                      string("--") + name);
@@ -263,8 +255,6 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
         if (o.truth && ++i != args.end()) {
           value = (*i).c_str();
           DEBUG("option.args", "  read option value from arg: " << value);
-          if (value == nullptr)
-            throw_(option_error, _f("Missing option argument for -%1%") % o.ch);
         }
         process_option(string("-") + o.ch, o.op->as_function(), scope, value, string("-") + o.ch);
       }

@@ -1,0 +1,13 @@
+test python test/regress/py-unicode-strings.py
+1 café café 4
+1 € € 1
+1 𝄞 𝄞 1
+Café Ünïcode 😀 Expenses:Café 10 €
+Café Ünïcode 😀 Assets:Cash -10 €
+1 €
+'a\x00b' 3
+'' 0
+UnicodeEncodeError 'utf-8' codec can't encode character '\ud800' in position 2: surrogates not allowed
+UnicodeEncodeError 'utf-8' codec can't encode character '\udcff' in position 1: surrogates not allowed
+UnicodeEncodeError 'utf-8' codec can't encode character '\ud800' in position 1: surrogates not allowed
+end test

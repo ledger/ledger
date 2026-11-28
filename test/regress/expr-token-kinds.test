@@ -1,0 +1,38 @@
+; The value-expression lexer has no regex-mask, brace or modulus token
+; kinds: a /regex/ and a {amount} each lex as one VALUE token, and the
+; keyword `div` is a spelling of `/`, not integer division.  The two
+; parser paths that re-read the lookahead token -- the `)` closing a
+; parenthesized expression and the `else` after a postfix `if` -- are
+; pinned as well, nested inside each other.
+
+test eval '7 div 2'
+3.5
+end test
+
+test eval '(7 div 2) * 2'
+7
+end test
+
+test eval '{$5} div 2'
+$2.5
+end test
+
+test eval '{$5} * 2'
+$10
+end test
+
+test eval '"abc" =~ /b/'
+1
+end test
+
+test eval '((1 + 2) * 3)'
+9
+end test
+
+test eval '(5 if false else 6) + 1'
+7
+end test
+
+test eval '1 if false else (2 if false else (3))'
+3
+end test

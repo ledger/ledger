@@ -1,6 +1,6 @@
 ; Coverage test for format.cc
 ; Tests format field references (%$N) in multi-line formats.
-; %$0 triggers "must be a digit from 1-9" error
+; %$0 triggers "must be a digit from 1-9 or a letter A-F" error
 
 2024/01/15 Test
     Expenses:Food             $50.00
@@ -8,7 +8,7 @@
 
 test reg --format '%(date) %(payee) %(account) %(amount)\n%/    %$0\n' -> 1
 __ERROR__
-Error: %$ field reference must be a digit from 1-9
+Error: %$ field reference must be a digit from 1-9 or a letter A-F
 end test
 
 test reg --format '%(date) %(payee) %(account) %(amount)\n%/    %$4\n'

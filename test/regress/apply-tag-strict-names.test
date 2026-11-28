@@ -1,0 +1,80 @@
+; `apply tag` declares, for --strict, exactly the tag names it applies,
+; read by the scanner that applies them.  A `Key: value` after a `:a:b:`
+; run is not applied, so Gamma stays undeclared and its later use warns;
+; a leading `;` is skipped as in a comment (#1786), so Lead is declared;
+; and a `Key:: expr` value is evaluated only when it is applied to a
+; transaction, never when the directive is read.
+
+account Expenses:Food
+account Assets:Cash
+commodity $
+
+apply tag :alpha:beta: Gamma: one
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+end apply tag
+
+apply tag bare
+2024/01/02 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+end apply tag
+
+apply tag Kind: shared
+2024/01/03 Third
+    Expenses:Food    $30.00
+    Assets:Cash
+end apply tag
+
+apply tag ;Lead: x
+2024/01/04 Fourth
+    Expenses:Food    $40.00
+    Assets:Cash
+end apply tag
+
+apply tag Payer:: payee
+2024/01/05 Fifth
+    Expenses:Food    $50.00
+    Assets:Cash
+end apply tag
+
+2024/01/06 Sixth
+    ; Gamma: two
+    Expenses:Food    $60.00
+    Assets:Cash
+
+test print --strict
+2024/01/01 First
+    ; :alpha:
+    ; :beta:
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 Second
+    ; :bare:
+    Expenses:Food                             $20.00
+    Assets:Cash
+
+2024/01/03 Third
+    ; Kind: shared
+    Expenses:Food                             $30.00
+    Assets:Cash
+
+2024/01/04 Fourth
+    ; Lead: x
+    Expenses:Food                             $40.00
+    Assets:Cash
+
+2024/01/05 Fifth
+    ; Payer: Fifth
+    Expenses:Food                             $50.00
+    Assets:Cash
+
+2024/01/06 Sixth
+    ; Gamma: two
+    Expenses:Food                             $60.00
+    Assets:Cash
+__ERROR__
+Warning: "$FILE", line 42: Unknown metadata tag 'Gamma'
+end test

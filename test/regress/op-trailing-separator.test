@@ -1,0 +1,57 @@
+; A trailing ';' after the last statement of a sequence, or a trailing
+; ',' after the last argument of a call, leaves an O_SEQ or O_CONS node
+; without a right child.  Compiling copies such nodes, and the copy
+; must still read as "no right child" rather than failing with
+; bad_variant_access.
+
+test eval "x = 1; x;"
+1
+end test
+
+test eval "x = 1; y = 2; x + y;"
+3
+end test
+
+test eval "(x = 1; x;) + 1"
+2
+end test
+
+test eval "abs(-3,)"
+3
+end test
+
+test eval "dbl(a) = a * 2; dbl(4,)"
+8
+end test
+
+; These already worked: the parser's own nodes, a trailing comma after
+; two or more arguments, and lambda parameter lists.  They pin the
+; chain walks that this change folds into one helper.
+
+test eval "1; 2;"
+2
+end test
+
+test eval "min(1, 2,)"
+1
+end test
+
+test eval "x = 1; (x, 2,)"
+(1, 2)
+end test
+
+test eval "dbl(a,) = a * 2; dbl(4)"
+8
+end test
+
+test eval "add(a, b,) = a + b; add(1, 2)"
+3
+end test
+
+test eval "add(a, b, c) = a + b; add(1, 2)"
+3
+end test
+
+test eval "((a, b) -> a + b)(1, 2)"
+3
+end test

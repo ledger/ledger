@@ -113,21 +113,19 @@ protected:
    */
   class base_t : public noncopyable, public flags::supports_flags<uint_least16_t> {
   public:
-#define COMMODITY_STYLE_DEFAULTS 0x000        ///< No special formatting; symbol is prefixed.
-#define COMMODITY_STYLE_SUFFIXED 0x001        ///< Symbol follows the amount (e.g., "100 EUR").
-#define COMMODITY_STYLE_SEPARATED 0x002       ///< A space separates symbol from quantity.
-#define COMMODITY_STYLE_DECIMAL_COMMA 0x004   ///< Use comma as decimal point (European style).
-#define COMMODITY_STYLE_THOUSANDS 0x008       ///< Insert grouping separators (e.g., "1,000").
-#define COMMODITY_NOMARKET 0x010              ///< Exclude from market-price valuations (-V/-X).
-#define COMMODITY_BUILTIN 0x020               ///< Internally created (e.g., the null commodity).
-#define COMMODITY_WALKED 0x040                ///< Traversal flag for graph algorithms.
-#define COMMODITY_KNOWN 0x080                 ///< Explicitly declared via a commodity directive.
-#define COMMODITY_PRIMARY 0x100               ///< This commodity has appeared as a price target.
-#define COMMODITY_SAW_ANNOTATED 0x200         ///< An annotated variant has been created.
-#define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400   ///< Seen with a floating lot price.
-#define COMMODITY_SAW_ANN_PRICE_FIXATED 0x800 ///< Seen with a fixated lot price ({=...}).
-#define COMMODITY_STYLE_TIME_COLON 0x1000     ///< Use colon notation for time amounts.
-#define COMMODITY_STYLE_NO_MIGRATE 0x2000     ///< Do not migrate formatting from parsed amounts.
+#define COMMODITY_STYLE_DEFAULTS 0x000      ///< No special formatting; symbol is prefixed.
+#define COMMODITY_STYLE_SUFFIXED 0x001      ///< Symbol follows the amount (e.g., "100 EUR").
+#define COMMODITY_STYLE_SEPARATED 0x002     ///< A space separates symbol from quantity.
+#define COMMODITY_STYLE_DECIMAL_COMMA 0x004 ///< Use comma as decimal point (European style).
+#define COMMODITY_STYLE_THOUSANDS 0x008     ///< Insert grouping separators (e.g., "1,000").
+#define COMMODITY_NOMARKET 0x010            ///< Exclude from market-price valuations (-V/-X).
+#define COMMODITY_BUILTIN 0x020             ///< Internally created (e.g., the null commodity).
+#define COMMODITY_WALKED 0x040              ///< Unused; kept as a Python constant.
+#define COMMODITY_KNOWN 0x080               ///< Set by D, N, P; by `commodity` only when strict.
+#define COMMODITY_PRIMARY 0x100             ///< This commodity has appeared as a price target.
+#define COMMODITY_SAW_ANNOTATED 0x200       ///< An annotated variant has been created.
+#define COMMODITY_STYLE_TIME_COLON 0x1000   ///< Use colon notation for time amounts.
+#define COMMODITY_STYLE_NO_MIGRATE 0x2000   ///< Do not migrate formatting from parsed amounts.
 #define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000 ///< Use apostrophe as thousands separator.
 #define COMMODITY_PRECISION_FROM_PRICE 0x8000 ///< Precision was inferred from a price directive.
 
@@ -197,34 +195,38 @@ public:
   bool has_annotation() const { return annotated; }
 
   virtual commodity_t& strip_annotations(const keep_details_t&) { return *this; }
-  virtual void write_annotations(std::ostream&, bool, const amount_t* = nullptr,
-                                 uint_least8_t = 0) const {}
+  virtual void write_annotations(std::ostream&, bool, const amount_t* = nullptr) const {}
 
   commodity_pool_t& pool() const { return *parent_; }
 
-  string base_symbol() const { return base->symbol; }
-  string symbol() const { return qualified_symbol ? *qualified_symbol : base_symbol(); }
+  const string& base_symbol() const { return base->symbol; }
+  const string& symbol() const { return qualified_symbol ? *qualified_symbol : base->symbol; }
 
-  optional<std::size_t> graph_index() const {
-    ;
-    return base->graph_index;
-  }
-  void set_graph_index(const optional<std::size_t>& arg = none) { base->graph_index = arg; }
+  optional<std::size_t> graph_index() const { return base->graph_index; }
+  void set_graph_index(const optional<std::size_t>& arg = std::nullopt) { base->graph_index = arg; }
 
   optional<string> name() const { return base->name; }
-  void set_name(const optional<string>& arg = none) { base->name = arg; }
+  void set_name(const optional<string>& arg = std::nullopt) { base->name = arg; }
 
   optional<string> note() const { return base->note; }
-  void set_note(const optional<string>& arg = none) { base->note = arg; }
+  void set_note(const optional<string>& arg = std::nullopt) { base->note = arg; }
 
   amount_t::precision_t precision() const { return base->precision; }
   void set_precision(amount_t::precision_t arg) { base->precision = arg; }
 
+  /** Whether a price may mark this commodity's precision tentative
+      (COMMODITY_PRECISION_FROM_PRICE): not once a commodity, D, N or P
+      directive declared it (COMMODITY_KNOWN) or a format fixed its style
+      (COMMODITY_STYLE_NO_MIGRATE). */
+  bool accepts_price_precision() const {
+    return !has_flags(COMMODITY_KNOWN | COMMODITY_STYLE_NO_MIGRATE);
+  }
+
   optional<amount_t> smaller() const { return base->smaller; }
-  void set_smaller(const optional<amount_t>& arg = none) { base->smaller = arg; }
+  void set_smaller(const optional<amount_t>& arg = std::nullopt) { base->smaller = arg; }
 
   optional<amount_t> larger() const { return base->larger; }
-  void set_larger(const optional<amount_t>& arg = none) { base->larger = arg; }
+  void set_larger(const optional<amount_t>& arg = std::nullopt) { base->larger = arg; }
 
   virtual std::optional<expr_t> value_expr() const { return base->value_expr; }
   void set_value_expr(const std::optional<expr_t>& expr = {}) { base->value_expr = expr; }
@@ -250,8 +252,9 @@ public:
    *
    * Performs a memoized price lookup through the commodity price history
    * graph.  If no target commodity is specified, the pool's default
-   * commodity is used.  Results are cached in base->price_map; when the
-   * cache exceeds max_price_map_size, the oldest half is evicted.
+   * commodity is used.  Results are cached in base->price_map; when it
+   * holds more than max_price_map_size entries, the half with the smallest
+   * keys (the earliest moments) is erased.
    *
    * If the commodity has a value_expr, that expression is evaluated
    * instead of consulting the price graph.
@@ -284,6 +287,18 @@ public:
                                                        const datetime_t& moment,
                                                        const commodity_t* in_terms_of);
 
+  /**
+   * @brief Whether a --download attempt for this commodity (or its
+   * referent) was made less than quote_leeway seconds ago.
+   *
+   * check_for_updated_price() sets last_quote after every attempt,
+   * successful or not, so this throttles repeated downloads of the same
+   * commodity (issue #996) and also retries of a failing getquote
+   * script, which therefore runs at most once per leeway period
+   * (issue #1602).
+   */
+  bool quoted_recently() const;
+
   commodity_t& nail_down(const expr_t& expr);
 
   // Methods related to parsing, reading, writing, etc., the commodity
@@ -309,12 +324,6 @@ public:
    * trailing whitespace.
    */
   static void parse_symbol(char*& p, string& symbol);
-  /** @brief Convenience overload that returns the parsed symbol by value. */
-  static string parse_symbol(std::istream& in) {
-    string temp; // NOLINT(bugprone-unused-local-non-trivial-variable)
-    parse_symbol(in, temp);
-    return temp;
-  }
 
   virtual void print(std::ostream& out, bool elide_quotes = false,
                      bool print_annotations = false) const;

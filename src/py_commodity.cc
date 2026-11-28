@@ -38,7 +38,8 @@
  * registry of commodities), Commodity (individual currency/stock symbols),
  * AnnotatedCommodity (commodity with price/date/tag annotation), Annotation,
  * KeepDetails, and PricePoint.  CommodityPool supports dict-like access
- * (__getitem__, __contains__, keys, iteritems) and commodity exchange/pricing.
+ * (__getitem__, __contains__, has_key, keys, iteration over symbols,
+ * iterkeys, itervalues, iteritems) and commodity exchange/pricing.
  * This is the most complex binding file due to the breadth of the commodity
  * and annotation type system.
  */
@@ -90,18 +91,20 @@ commodity_t* py_find_2(commodity_pool_t& pool, const string& symbol, const annot
 
 // Exchange one commodity for another, while recording the factored price.
 
-// Mark the per_unit_cost commodity's precision as tentative (derived from a
-// price expression) so that actual transaction amounts can later override it.
-// This mirrors what parse_price_directive does in pool.cc: when a commodity's
-// precision has been set from a price expression rather than from an explicit
-// commodity declaration, we tag it with COMMODITY_PRECISION_FROM_PRICE so
-// that the textual parser is free to widen the precision if it sees a higher-
-// precision amount in the journal.
+// Mark the price commodity's precision tentative (COMMODITY_PRECISION_FROM_PRICE),
+// as parse_price_directive does, so journal amounts may still set it.  Unlike a P
+// directive this applies whatever the precision: the Amount literal passed in has
+// already taught it (issue #1019).  The next amount parsed in this commodity with
+// nonzero precision then sets its display precision outright (amount_t::parse),
+// narrowing it as readily as widening: after Amount('EUR 10.00'), an exchange()
+// priced in EUR and Amount('EUR 3.5'), the first amount prints as "EUR 10.0".
+// Every Amount literal teaches its commodity a precision, but only exchange()
+// marks it tentative; a literal never passed to exchange() keeps a precision
+// that narrower journal amounts cannot lower.
 static void mark_price_commodity_precision(const amount_t& per_unit_cost) {
   if (per_unit_cost.has_commodity()) {
     commodity_t& price_commodity = per_unit_cost.commodity();
-    if (!price_commodity.has_flags(COMMODITY_KNOWN) &&
-        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE)) {
+    if (price_commodity.accepts_price_precision()) {
       price_commodity.add_flags(COMMODITY_PRECISION_FROM_PRICE);
     }
   }
@@ -140,23 +143,12 @@ commodity_t* py_pool_getitem(commodity_pool_t& pool, const string& symbol) {
 }
 
 list py_pool_keys(commodity_pool_t& pool) {
-  list keys;
-  for (auto it = pool.commodities.rbegin(); it != pool.commodities.rend(); ++it) {
-    const auto& pair = *it;
-    keys.insert(0, pair.first);
-  }
-  return keys;
+  return to_py_list(pool.commodities.begin(), pool.commodities.end(),
+                    [](const auto& pair) -> const string& { return pair.first; });
 }
 
 bool py_pool_contains(commodity_pool_t& pool, const string& symbol) {
   return pool.commodities.find(symbol) != pool.commodities.end();
-}
-
-commodity_pool_t::commodities_map::iterator py_pool_commodities_begin(commodity_pool_t& pool) {
-  return pool.commodities.begin();
-}
-commodity_pool_t::commodities_map::iterator py_pool_commodities_end(commodity_pool_t& pool) {
-  return pool.commodities.end();
 }
 
 /*--- Pool Iterator Helpers ---*/
@@ -194,6 +186,26 @@ commodities_map_seconds_iterator py_pool_commodities_values_end(commodity_pool_t
       pool.commodities.end(),
       boost::bind(&std::shared_ptr<commodity_t>::get,
                   boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+}
+
+/// (symbol, commodity) pairs for iteritems().  The Commodity in each tuple is
+/// a plain non-owning reference: unlike itervalues(), whose
+/// return_internal_reference keeps the pool alive, nothing ties it to the
+/// pool.  That is safe because the pool, commodity_pool_t::current_pool,
+/// lives for the whole session and so outlives any Python script.
+boost::python::tuple py_pool_item(commodity_pool_t::commodities_map::value_type& pair) {
+  return boost::python::make_tuple(pair.first, boost::python::ptr(pair.second.get()));
+}
+
+using commodities_map_items_iterator = transform_iterator<
+    function<boost::python::tuple(commodity_pool_t::commodities_map::value_type&)>,
+    commodity_pool_t::commodities_map::iterator>;
+
+commodities_map_items_iterator py_pool_commodities_items_begin(commodity_pool_t& pool) {
+  return commodities_map_items_iterator(pool.commodities.begin(), py_pool_item);
+}
+commodities_map_items_iterator py_pool_commodities_items_end(commodity_pool_t& pool) {
+  return commodities_map_items_iterator(pool.commodities.end(), py_pool_item);
 }
 
 /*--- Commodity Method Wrappers ---*/
@@ -254,10 +266,6 @@ std::optional<amount_t> py_set_price(annotation_t& ann, const std::optional<amou
   return ann.price;
 }
 
-PyObject* py_commodity_unicode(commodity_t& commodity) {
-  return str_to_py_unicode(commodity.symbol());
-}
-
 } // unnamed namespace
 
 void export_commodity() {
@@ -306,16 +314,14 @@ void export_commodity() {
       .def("keys", py_pool_keys)
       .def("has_key", py_pool_contains)
       .def("__contains__", py_pool_contains)
-      .def("__iter__", boost::python::range<return_internal_reference<>>(py_pool_commodities_begin,
-                                                                         py_pool_commodities_end))
-      .def("iteritems", boost::python::range<return_internal_reference<>>(py_pool_commodities_begin,
-                                                                          py_pool_commodities_end))
+      .def("__iter__",
+           boost::python::range<>(py_pool_commodities_keys_begin, py_pool_commodities_keys_end))
+      .def("iteritems",
+           boost::python::range<>(py_pool_commodities_items_begin, py_pool_commodities_items_end))
       .def("iterkeys",
            boost::python::range<>(py_pool_commodities_keys_begin, py_pool_commodities_keys_end))
       .def("itervalues", boost::python::range<return_internal_reference<>>(
                              py_pool_commodities_values_begin, py_pool_commodities_values_end));
-
-  map_value_type_converter<commodity_pool_t::commodities_map>();
 
   scope().attr("commodities") = commodity_pool_t::current_pool;
 
@@ -332,22 +338,14 @@ void export_commodity() {
   scope().attr("COMMODITY_PRIMARY") = COMMODITY_PRIMARY;
 
   class_<commodity_t, boost::noncopyable>("Commodity", no_init)
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(flags_visitor<delegates_flags<uint_least16_t>>())
 
       .add_static_property("decimal_comma_by_default",
                            make_getter(&commodity_t::decimal_comma_by_default),
                            make_setter(&commodity_t::decimal_comma_by_default))
 
-      .def("__str__", &commodity_t::symbol)
-      .def("__unicode__", py_commodity_unicode)
-      .def("__nonzero__", &commodity_t::operator bool)
+      .def("__str__", &commodity_t::symbol, return_value_policy<copy_const_reference>())
+      .def("__bool__", &commodity_t::operator bool)
 
       .def(self == self)
       .def(self == other<string>())
@@ -364,8 +362,11 @@ void export_commodity() {
 
       .def("pool", &commodity_t::pool, return_internal_reference<>())
 
-      .add_property("base_symbol", &commodity_t::base_symbol)
-      .add_property("symbol", &commodity_t::symbol)
+      .add_property("base_symbol",
+                    make_function(&commodity_t::base_symbol,
+                                  return_value_policy<copy_const_reference>()))
+      .add_property("symbol",
+                    make_function(&commodity_t::symbol, return_value_policy<copy_const_reference>()))
 
       .add_property("name", &commodity_t::name, &commodity_t::set_name)
       .add_property("note", &commodity_t::note, &commodity_t::set_note)
@@ -388,13 +389,7 @@ void export_commodity() {
   register_optional_to_python<price_point_t>();
 
   class_<annotation_t>("Annotation")
-#if 1
-      .add_property("flags", &supports_flags<>::flags, &supports_flags<>::set_flags)
-      .def("has_flags", &supports_flags<>::has_flags)
-      .def("clear_flags", &supports_flags<>::clear_flags)
-      .def("add_flags", &supports_flags<>::add_flags)
-      .def("drop_flags", &supports_flags<>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<>>())
 
       .add_property("price", py_price, py_set_price)
       .add_property("date",
@@ -403,7 +398,7 @@ void export_commodity() {
       .add_property("tag", make_getter(&annotation_t::tag, return_value_policy<return_by_value>()),
                     make_setter(&annotation_t::tag, return_value_policy<return_by_value>()))
 
-      .def("__nonzero__", &annotation_t::operator bool)
+      .def("__bool__", &annotation_t::operator bool)
 
       .def(self == self)
 

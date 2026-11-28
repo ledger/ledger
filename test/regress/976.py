@@ -17,9 +17,9 @@ import ledger
 # vectors, ultimately producing a this=0x0 segfault in the ptime
 # comparison inside commodity_history_impl_t::find_price.
 #
-# The fix is to replace only the commodity pool in close_journal_files()
-# without touching the GMP temporaries, and to update ledger.commodities
-# in py_close_journal_files() so Python code sees the new pool.
+# The fix is to reset only the journal in close_journal_files(), keeping
+# the commodity pool and the GMP temporaries, so ledger.commodities and
+# every commodity obtained from it stay valid across the call.
 
 # 1. Bare close_journal_files() must not crash.
 ledger.close_journal_files()
@@ -29,6 +29,6 @@ j1 = ledger.read_journal("test/regress/976.dat")
 ledger.close_journal_files()
 j2 = ledger.read_journal("test/regress/976.dat")
 
-# 3. ledger.commodities must reflect the new pool after close.
+# 3. ledger.commodities must still name the live pool after close.
 eur = ledger.commodities.find_or_create("EUR")
 print(eur.symbol)

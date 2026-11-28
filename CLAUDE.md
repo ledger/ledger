@@ -16,7 +16,8 @@ requiring a database.
 ```bash
 # Initial setup and build
 ./acprep dependencies  # Install dependencies (platform-specific)
-./acprep update --output=build # Configure and build in one step
+./acprep update --output=build     # git pull, then configure and build
+./acprep debug make --output=build # Configure and build without pulling
 
 # Alternative configuration commands
 ./acprep opt --output=build   # Optimized build
@@ -37,7 +38,8 @@ Useful CMake flags:
 
 - `-DUSE_PYTHON=ON` -- Enable Python bindings (requires Boost.Python)
 - `-DUSE_SANITIZERS=ON` -- Enable AddressSanitizer + UBSan
-- `-DBUILD_DEBUG=ON` -- Enable runtime debugging support
+- `-DUSE_GCOV=ON` -- gcov instrumentation (with `-DCMAKE_BUILD_TYPE=Debug`); after `make && ctest`, `make coverage` writes `coverage_html/` and `make coverage-clean` resets the counters (both need lcov and genhtml)
+- `-DCMAKE_BUILD_TYPE=Debug` -- Debug build with runtime debugging support (`--debug`, `--verify`)
 - `-DDISABLE_ASSERTS=ON` -- Disable assertion checks
 
 ### Running Tests
@@ -46,13 +48,13 @@ Useful CMake flags:
 # Run all tests
 cd build && ctest
 
-# Run specific test categories
-cd build && ctest -R baseline     # Run baseline tests
-cd build && ctest -R regress      # Run regression tests
-cd build && ctest -R manual       # Run manual tests
+# Run specific test categories (-R is a case-sensitive regex)
+cd build && ctest -R BaselineTest_   # Run baseline tests
+cd build && ctest -R RegressTest_    # Run regression tests
+cd build && ctest -R ManualTest_     # Run manual tests
 
-# Run a single test by name
-cd build && ctest -R 2413         # Run regression test for issue #2413
+# Run a single test by name (tests are named <Class>Test_<file>)
+cd build && ctest -R '^RegressTest_2413$'  # Run regression test for issue #2413
 
 # Run a .test file directly via the harness
 python test/RegressTests.py --ledger ./build/ledger \
@@ -111,7 +113,9 @@ The codebase is organized around these key abstractions:
 
 ### Data Flow
 
-1. **Parsing**: Text files are parsed by `src/textual.cc` into the journal structure
+1. **Parsing**: Text files are parsed into the journal structure by `src/textual.cc` (driver),
+   `src/textual_directives.cc` (directives) and `src/textual_xacts.cc` (transactions and
+   postings), which share `src/textual_internal.h`
 2. **Processing**: Transactions flow through filters (`src/filters.h/cc`) for transformation
 3. **Reporting**: Output formatters (`src/output.h/cc`, `src/print.h/cc`) generate reports
 4. **Commands**: User commands are implemented in `src/report.cc` and related files
@@ -172,6 +176,9 @@ Key details:
 - `test <command> -> <exit_code>` tests for a specific exit code
 - `end test` closes the block
 - `__ERROR__` marks expected stderr output within a test block
+- A block with neither expected output nor an `__ERROR__` section asserts
+  empty stdout; a block with only an `__ERROR__` section leaves stdout
+  unchecked
 - `$FILE` is replaced with the test file path at runtime
 - Multiple `test`/`end test` blocks can appear in one file
 - Expected output must not depend on the day the suite runs. Dates written

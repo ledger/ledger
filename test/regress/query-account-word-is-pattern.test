@@ -1,0 +1,25 @@
+; `account` is not a query keyword: match_keyword has no `account`
+; entry, so a bare `account` is an account-name pattern like any other
+; term (it matches Assets:Accounts Receivable), and `account food` ORs
+; two patterns.  coverage-query-account-keyword.test and
+; testQueryLexerAccountNotKeyword use journals where no account name
+; contains "account", so they print the same either way.
+
+2024/01/01 Client
+    Assets:Accounts Receivable    $25.00
+    Income:Fees
+
+2024/01/02 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal account
+              $25.00  Assets:Accounts Receivable
+end test
+
+test bal account food
+              $25.00  Assets:Accounts Receivable
+              $10.00  Expenses:Food
+--------------------
+              $35.00
+end test

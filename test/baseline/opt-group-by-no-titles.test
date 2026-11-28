@@ -1,5 +1,5 @@
 ; Test --group-by combined with --no-titles
-; This exercises the accounts_title_printer checking no_titles flag
+; This exercises accounts_report's group-title printer checking the no_titles flag
 
 2008/01/01 Store A
     Expenses:Food           $10.00

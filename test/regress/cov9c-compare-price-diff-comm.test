@@ -1,5 +1,5 @@
 ; Coverage: commodity.cc (compare_by_commodity price comparison
-; with different price commodities -- recursion finds disparity)
+; with different price commodities, ordered by the price commodity symbol)
 ; Two lots of the same commodity with prices in different currencies
 
 2024/01/01 Buy in USD

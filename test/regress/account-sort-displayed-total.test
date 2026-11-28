@@ -1,0 +1,187 @@
+; An account sort reads an account's amount as the figure its balance row
+; shows.  In the account tree, with the default total, every row shows the
+; family total, so `amount` and its spellings `a`, `t` and
+; `display_amount` all sort by that total, for a parent with postings of
+; its own as well as for one without.  The sort used to rename the
+; function `amount` to `total` only for parents without postings: `-S a`
+; escaped the rename, a parent with its own posting sorted by that posting
+; alone, and `-S t` sorted by the total only when the first account it
+; evaluated was such a parent.  With --flat, or an explicit --total other
+; than `total`, a row shows the account's own amount and the sort follows
+; it; an account with no postings of its own sorts by its total throughout.
+
+2024/01/01 Opening
+    A:Sub                  $60
+    C                      $50
+    D                       $5
+    Expenses                $1
+    Expenses:Food         $100
+    Zeta:Sub              $200
+    X                      $50
+    Y:Sub                  $10
+    Z:Sub                 $500
+    Equity
+
+; A postless parent evaluated first.
+test bal ^A: ^C ^D -S amount
+                  $5  D
+                 $50  C
+                 $60  A:Sub
+--------------------
+                $115
+end test
+
+test bal ^A: ^C ^D -S a
+                  $5  D
+                 $50  C
+                 $60  A:Sub
+--------------------
+                $115
+end test
+
+test bal ^A: ^C ^D -S t
+                  $5  D
+                 $50  C
+                 $60  A:Sub
+--------------------
+                $115
+end test
+
+; A parent with a posting of its own sorts by the total it shows.
+test bal ^Expenses ^Zeta -S amount
+                $101  Expenses
+                $100    Food
+                $200  Zeta:Sub
+--------------------
+                $301
+end test
+
+test bal ^Expenses ^Zeta -S a
+                $101  Expenses
+                $100    Food
+                $200  Zeta:Sub
+--------------------
+                $301
+end test
+
+test bal ^Expenses ^Zeta -S t
+                $101  Expenses
+                $100    Food
+                $200  Zeta:Sub
+--------------------
+                $301
+end test
+
+test bal ^Expenses ^Zeta -S display_amount
+                $101  Expenses
+                $100    Food
+                $200  Zeta:Sub
+--------------------
+                $301
+end test
+
+test bal ^Expenses ^Zeta --depth 1 -S a
+                $101  Expenses
+                $200  Zeta
+--------------------
+                $301
+end test
+
+; Two postless parents and a leaf between them.
+test bal ^X ^Y: ^Z: -S t
+                 $10  Y:Sub
+                 $50  X
+                $500  Z:Sub
+--------------------
+                $560
+end test
+
+test bal ^X ^Y: ^Z: -S a
+                 $10  Y:Sub
+                 $50  X
+                $500  Z:Sub
+--------------------
+                $560
+end test
+
+; --flat: a postless parent whose children --depth hides shows its total.
+test bal ^X ^Y: ^Z: --flat --depth 1 -S amount
+                 $10  Y
+                 $50  X
+                $500  Z
+--------------------
+                $560
+end test
+
+test bal ^X ^Y: ^Z: --flat --depth 1 -S a
+                 $10  Y
+                 $50  X
+                $500  Z
+--------------------
+                $560
+end test
+
+; --flat --depth 1: a folded parent with postings of its own shows its
+; total ($101) but sorts by its own amount ($1), since whether its children
+; are displayed is decided only after sorting.  This pins that residual.
+test bal ^Expenses ^C ^Zeta --flat --depth 1 -S amount
+                $101  Expenses
+                 $50  C
+                $200  Zeta
+--------------------
+                $351
+end test
+
+test bal ^Expenses ^C ^Zeta --flat --depth 1 -S a
+                $101  Expenses
+                 $50  C
+                $200  Zeta
+--------------------
+                $351
+end test
+
+; --flat: an account with postings of its own shows, and sorts by, them.
+test bal ^Expenses ^Zeta --flat -S a
+                  $1  Expenses
+                $100  Expenses:Food
+                $200  Zeta:Sub
+--------------------
+                $301
+end test
+
+; An explicit --total that is not plain `total` changes what a tree row
+; shows: with -T amount a row shows the account's own amount, and the sort
+; follows it.  An account with no postings of its own still sorts by its
+; total, which its collapsed row (A:Sub) shows.
+test bal ^A: ^C ^D -T amount -S a
+                  $5  D
+                 $50  C
+                 $60  A:Sub
+--------------------
+                   0
+end test
+
+test bal ^Expenses ^C -T amount -S a
+                  $1  Expenses
+                $100    Food
+                 $50  C
+--------------------
+                   0
+end test
+
+; An explicit --total total is the default display.
+test bal ^Expenses ^C -T total -S a
+                 $50  C
+                $101  Expenses
+                $100    Food
+--------------------
+                $151
+end test
+
+; The sort leaves amount alone everywhere else in the report.
+test bal ^Expenses ^Zeta -S a --format '%(account) %(amount)|%(total)\n'
+Expenses $1|$101
+Expenses:Food $100|$100
+Zeta:Sub $200|$200
+ 0|$301
+end test

@@ -1,0 +1,33 @@
+; A `--permissive` option line in a journal suppresses the balance
+; assertions that follow it, in the same file, in files it includes and
+; in files read after it with a later -f, exactly as --permissive on the
+; command line does.
+
+--permissive
+
+2024/01/01 Local
+    A                                      1 = 5
+    B
+
+include permissive-in-file.dat
+
+test bal
+                   2  A
+                  -2  B
+--------------------
+                   0
+end test
+
+test bal --permissive
+                   2  A
+                  -2  B
+--------------------
+                   0
+end test
+
+test -f $FILE -f $sourcepath/test/regress/permissive-in-file-later.dat bal
+                   3  A
+                  -3  B
+--------------------
+                   0
+end test

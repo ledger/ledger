@@ -13,16 +13,9 @@ import os
 import re
 import shutil
 import sys
-import locale
 
-try:
-    import hashlib
-except:
-    import md5
-
-from os.path import *
-from stat import *
-from subprocess import Popen, PIPE, call
+from os.path import basename, exists, isdir, isfile, join
+from subprocess import Popen, call
 
 LEVELS = {'DEBUG':    logging.DEBUG,
           'INFO':     logging.INFO,
@@ -52,6 +45,13 @@ def which(program):
 
     return None
 
+# Ubuntu releases whose packages meet CMakeLists.txt's CMake and Boost minimums
+UBUNTU_RELEASES = [
+    'resolute', # 26.04
+    'noble',    # 24.04
+    'jammy',    # 22.04
+]
+
 class BoostInfo(object):
     def dependencies(self, system, python):
         if system in ['darwin-homebrew']:
@@ -63,35 +63,13 @@ class BoostInfo(object):
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-resolute', 'ubuntu-noble', 'ubuntu-jammy', 'ubuntu-focal',
-                        'ubuntu-bionic', 'ubuntu-xenial', 'ubuntu-eoan', 'ubuntu-trusty',
-                        'ubuntu-cosmic']:
+        elif system in ['ubuntu-' + release for release in UBUNTU_RELEASES]:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
                      'libboost-regex-dev',
                      'libboost-test-dev',
                      'tzdata' ] + ([ 'libboost-python-dev' ] if python else [])
-
-        elif system in [ 'ubuntu-saucy', 'ubuntu-precise']:
-            return [ 'autopoint',
-                     'libboost-dev',
-                     'libboost-test-dev',
-                     'libboost-regex-dev',
-                     'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
-                     'libboost-iostreams-dev',
-                     ] + ([ 'libboost-python-dev' ] if withPython else [])
-
-        elif system in ['ubuntu-lucid']:
-            return [ 'bjam', 'autopoint',
-                     'libboost-dev',
-                     'libboost-regex-dev',
-                     'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
-                     'libboost-iostreams-dev',
-                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
 
 class CommandLineApp(object):
@@ -297,7 +275,7 @@ class PrepareBuild(CommandLineApp):
                       help='Do not call out to Git; useful for offline builds')
         op.add_option('', '--doxygen', action='store_true',
                       dest='enable_doxygen', default=False,
-                      help='Enable use of Doxygen to build ref manual ("make docs")')
+                      help='Enable use of Doxygen to build ref manual ("make doc.doxygen")')
         op.add_option('', '--python', action='store_true', dest='python',
                       default=False,
                       help='Enable Python support')
@@ -311,9 +289,6 @@ class PrepareBuild(CommandLineApp):
                       help='Specify the Python version to use (e.g. 3.11)')
         op.add_option('', '--prefix', metavar='DIR', action="store",
                       dest="prefix_dir", help='Use custom installation prefix')
-        op.add_option('', '--products', metavar='DIR', action="store",
-                      dest="option_products",
-                      help='Collect all build products in this directory')
         op.add_option('', '--output', metavar='DIR', action="store",
                       default=self.source_dir,
                       dest="build_dir", help='Build in the specified directory')
@@ -361,12 +336,6 @@ class PrepareBuild(CommandLineApp):
         except OSError as e:
             self.log.error("Execution failed: " + e)
             sys.exit(1)
-
-    def isnewer(self, file1, file2):
-        "Check if file1 is newer than file2."
-        if not exists(file2):
-            return True
-        return os.stat(file1)[ST_MTIME] > os.stat(file2)[ST_MTIME]
 
     #########################################################################
     # Determine information about the surroundings                          #
@@ -416,7 +385,7 @@ class PrepareBuild(CommandLineApp):
         if not self.current_ver:
             major, minor, patch, date = None, None, None, None
 
-            version_m4 = open('CMakeLists.txt', 'r')
+            version_m4 = open(join(self.source_dir, 'doc', 'LedgerVersion.cmake'), 'r')
             for line in version_m4.readlines():
                 match = re.match(r'^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
                 if match:
@@ -427,7 +396,7 @@ class PrepareBuild(CommandLineApp):
                 match = re.match(r'^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
                 if match:
                     patch = match.group(1)
-                match = re.match(r'^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_DATE\s+([0-9]+)\)', line)
                 if match:
                     date = match.group(1)
                     break
@@ -500,7 +469,6 @@ class PrepareBuild(CommandLineApp):
                     'zlib',
                     'gmp', 'mpfr',
                     'ncurses',
-                    'gettext',
                     'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
@@ -559,19 +527,7 @@ class PrepareBuild(CommandLineApp):
                         'libgpgmepp-dev',
                         'libgpg-error-dev',
                     ]
-                    release_list = [
-                        "resolute", # 26.04
-                        "noble",   # 24.04
-                        "jammy",   # 22.04
-                        "focal",   # 20.04
-                        "eoan",    # 19.10
-                        "bionic",  # 18.04
-                        "xenial",  # 16.04
-                        "trusty",  # 14.04
-                        "saucy",   # 13.10
-                        "precise", # 12.04
-                    ]
-                    if release in release_list:
+                    if release in UBUNTU_RELEASES:
                         # Common Ubuntu packages
                         packages.extend(
                             [
@@ -580,29 +536,18 @@ class PrepareBuild(CommandLineApp):
                                 "libmpfr-dev",
                                 "libicu-dev",
                                 "libgpgmepp-dev",
-                                "gettext",
                                 "zlib1g-dev",
                                 "libbz2-dev",
                                 "libedit-dev",
                                 "texinfo",
                                 "lcov",
                                 "sloccount",
-                                (
-                                    "python3-dev"
-                                    if release in ["resolute", "noble", "jammy"]
-                                    else "python-dev"
-                                ),
+                                "python3-dev",
+                                "doxygen",
+                                "ninja-build",
+                                "libutfcpp-dev",
                             ]
                         )
-                        # doxygen & ninja build
-                        if release != 'precise':
-                            packages.extend(['doxygen','ninja-build'])
-                        # libutfcpp-dev
-                        if release != 'saucy':
-                            packages.extend(['libutfcpp-dev'])
-                        # Precise (Ubuntu 12.04) need GNU libtool
-                        if release == 'precise':
-                            packages.extend(['libtool'])
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
@@ -648,7 +593,6 @@ class PrepareBuild(CommandLineApp):
                         'libicu-dev',
                         'libedit-dev',
                         'libutfcpp-dev',
-                        'gettext',
                         'texinfo',
                         'doxygen',
                         'graphviz',
@@ -678,7 +622,6 @@ class PrepareBuild(CommandLineApp):
                         'bzip2-devel',
                         'python-devel',
                         'gmp-devel',
-                        'gettext-devel',
                         #'mpfr-devel'
                         'libedit-devel',
                         #'texlive-full',
@@ -687,31 +630,6 @@ class PrepareBuild(CommandLineApp):
                         'texinfo',
                         #'lcov',
                         #'sloccount'
-                    ]
-                    self.log.info('Executing: ' + ' '.join(packages))
-                    self.execute(*packages)
-                    found_distro = True
-                elif release.startswith('Fedora release 20'):
-                    self.log.info('Looks like you are using YUM on Fedora 20')
-                    packages = [
-                        'sudo', 'yum', 'install',
-                        'boost-devel',
-                        'bzip2-devel',
-                        'cmake',
-                        'doxygen',
-                        'gcc',
-                        'gcc-c++',
-                        'gettext',
-                        'gettext-devel',
-                        'gmp-devel',
-                        'lcov',
-                        'libedit-devel',
-                        'mpfr-devel',
-                        'ninja-build',
-                        'python-devel',
-                        'sloccount',
-                        'texinfo',
-                        'zlib-devel'
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
@@ -743,30 +661,6 @@ class PrepareBuild(CommandLineApp):
     # Determine the system's basic configuration                            #
     #########################################################################
 
-    def setup_for_johnw(self):
-        self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
-
-        if not self.options.compiler:
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/bin/clang++')
-
-            if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O3')
-                self.configure_args.append('-DCMAKE_EXE_LINKER_FLAGS:STRING=-O3')
-                self.configure_args.append('-DCMAKE_SHARED_LINKER_FLAGS:STRING=-O3')
-                self.configure_args.append('-DCMAKE_MODULE_LINKER_FLAGS:STRING=-O3')
-            #else:
-            #    self.CXXFLAGS.append('-g -O1 -faddress-sanitizer')
-            #    self.LDFLAGS.append('-g -O1 -faddress-sanitizer')
-
-            self.configure_args.append(self.source_dir)
-
-        else:
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=' + self.options.compiler)
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib')
-            self.configure_args.append('-DBOOST_ROOT=/usr/local')
-            self.configure_args.append(self.source_dir)
-
     def setup_for_system(self):
         system = os.uname().sysname
         self.log.info('System type is => ' + system)
@@ -780,6 +674,10 @@ class PrepareBuild(CommandLineApp):
         if self.options.python_version:
             self.configure_args.append('-DPYTHON_REQUIRED_VERSION=' + self.options.python_version)
 
+        # Name the macOS SDK explicitly: CMake 4 no longer picks a default
+        # CMAKE_OSX_SYSROOT, and non-Apple compilers (e.g. Homebrew LLVM) need
+        # one.  CMakeLists.txt clears it again when the compiler comes from Nix,
+        # whose clang wrapper supplies its own SDK.
         if system == 'Darwin':
             import subprocess
             try:
@@ -802,9 +700,6 @@ class PrepareBuild(CommandLineApp):
         elif self.options.use_ninja:
             self.configure_args.append('-GNinja')
 
-        if exists('/Users/johnw/Projects/ledger/plan/TODO'):
-            self.setup_for_johnw()
-
     def setup_flavor(self):
         self.setup_for_system()
 
@@ -815,9 +710,6 @@ class PrepareBuild(CommandLineApp):
         self.log.info('Setting up build flavor => ' + self.current_flavor)
         PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
 
-    def escape_string(self, data):
-        return re.sub(r'(["\\\\])', '\\\\\\1', data)
-
     def finalize_config(self):
         self.setup_flavor()
 
@@ -826,9 +718,6 @@ class PrepareBuild(CommandLineApp):
             if value:
                 first = not self.envvars[var]
                 for member in value:
-                    #escaped = self.escape_string(member)
-                    #if member != escaped:
-                    #    member = escaped
                     if first:
                         first = False
                     else:
@@ -863,28 +752,19 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Release')
-        self.configure_args.append('-DNO_ASSERTS=1')
 
     def setup_flavor_gcov(self):
-        # NO_ASSERTS is set so that branch coverage ignores the never-taken
+        # DISABLE_ASSERTS is set so that branch coverage ignores the never-taken
         # else branch inside assert statements.
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
-        self.configure_args.append('-DNO_ASSERTS=1')
-        self.configure_args.append('-DCLANG_GCOV=1')
-
-        self.CXXFLAGS.append('-fprofile-arcs')
-        self.CXXFLAGS.append('-ftest-coverage')
-        self.LDFLAGS.append('-fprofile-arcs')
-        self.LDFLAGS.append('-ftest-coverage')
-
-        if not self.options.compiler or self.options.compiler == "clang-3.1":
-            self.LDFLAGS.append('-lgcov')
+        self.configure_args.append('-DDISABLE_ASSERTS=ON')
+        self.configure_args.append('-DUSE_GCOV=ON')
 
     def setup_flavor_lcov(self):
         # Uses LLVM's native instrumentation coverage (no -lgcov needed).
         # After building, run tests, then: cd build && make coverage
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
-        self.configure_args.append('-DNO_ASSERTS=1')
+        self.configure_args.append('-DDISABLE_ASSERTS=ON')
         self.configure_args.append('-DUSE_LLVM_COV=ON')
 
     def setup_flavor_gprof(self):
@@ -932,7 +812,7 @@ class PrepareBuild(CommandLineApp):
                                      self.envvars[var])
 
         if self.options.boost_root:
-            conf_args.append('-DBOOST_ROOT=%s' %
+            conf_args.append('-DBoost_ROOT=%s' %
                              self.options.boost_root)
             conf_args.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
         if self.options.boost_suffix:
@@ -1108,8 +988,6 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_flavor('opt', reset=False)
         self.log.info('=== Testing opt ===')
-        # jww (2012-05-20): Can't use fullcheck yet
-        #self.phase_make('fullcheck')
         self.phase_make('test')
 
         self.configure_flavor('gcov', reset=False)
@@ -1119,14 +997,12 @@ class PrepareBuild(CommandLineApp):
 
         self.configure_flavor('default', reset=False)
         self.log.info('=== Testing default ===')
-        #self.phase_make('fullcheck')
         self.phase_make('test')
         # jww (2012-05-20): docs are not working yet
         #self.phase_make('docs')
 
         self.configure_flavor('debug', reset=False)
         self.log.info('=== Testing debug ===')
-        #self.phase_make('fullcheck')
         self.phase_make('test')
 
     def phase_makeall(self, reset=False, *args):
@@ -1159,17 +1035,18 @@ class PrepareBuild(CommandLineApp):
 Of the optional ARGS, the first is an optional build FLAVOR, with the default
 being 'debug':
 
-  default           Regular autoconf settings
+  default           Plain CMake defaults
   debug             Debugging and --verify support (default)
   opt               Full optimizations
   gcov              Coverage analysis
   lcov              Coverage analysis using LLVM instrumentation + lcov/genhtml (works on macOS)
-  gprof             Code profiling (for macOS, just use: 'shark -i ledger ...')
+  gprof             Code profiling with -pg (analyze gmon.out with gprof)
   prof              Clang instrumentation profiling (use llvm-profdata to analyze)
 
 Next is the optional build PHASE, with 'config' being the default:
 
-  clean             Runs 'make clean' in the build directory
+  check             Runs ctest in the build directory
+  clean             Runs the 'clean' target (make or ninja) in the build directory
   config            Configure the environment for building
   dependencies      Automatically install all necessary build dependencies
   gitclean          Runs 'git clean -dfx', which *really* cleans things
@@ -1184,13 +1061,10 @@ There are many other build phases, though most are not of interest to the
 typical user:
 
   configure         Runs just cmake
-  do_all            Runs makeall followed by proof
-  gettext           Initialize gettext support
   makeall           Build every flavor there is
   products          Report the products directory path
   rsync             Rsync a copy of the source tree into Products
   sloc              Report total Source Lines Of Code
-  version           Output current HEAD version to version.m4
 
 NOTE: If you wish to pass options to CMake or make, add "--" followed by
 your options.  Those starting with "-D" or "--" will be passed on to CMake,
@@ -1207,4 +1081,5 @@ Here are some real-world examples:
   ./acprep make doc -- -DBUILD_WEB_DOCS=1""")
         sys.exit(0)
 
-PrepareBuild().run()
+if __name__ == '__main__':
+    PrepareBuild().run()

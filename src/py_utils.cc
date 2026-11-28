@@ -37,9 +37,7 @@
  * Registers bidirectional converters for bool and string (handling UTF-8/
  * UTF-16/UTF-32 transparently), and exposes the flags support classes
  * (SupportFlags8, SupportFlags16, DelegatesFlags16) used by many Ledger
- * types for bitfield state management.  These converters and flag bindings
- * are foundational -- they must be registered before any other binding that
- * passes booleans or strings across the C++/Python boundary.
+ * types for bitfield state management.
  */
 
 #include <system.hh>
@@ -87,57 +85,10 @@ using bool_python_conversion = register_python_conversion<bool, bool_to_python, 
 
 struct string_to_python {
   static PyObject* convert(const string& str) {
-    // Return bytes, not characters; see __unicode__ methods for that
+    // Boost.Python converts std::string to a Python str (UTF-8 decoded).
     return incref(object(static_cast<const std::string&>(str)).ptr());
   }
 };
-
-/// Extracts a UTF-8 string from a Python unicode object, handling all
-/// three internal representations (UCS-1, UCS-2/UTF-16, UCS-4/UTF-32).
-static void fill_utf8_string(string& result, PyObject* obj_ptr) {
-  Py_ssize_t size;
-#if PY_MINOR_VERSION >= 3
-  size = PyUnicode_GET_LENGTH(obj_ptr);
-  switch (PyUnicode_KIND(obj_ptr)) {
-  case PyUnicode_1BYTE_KIND: {
-    Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
-    if (value == 0)
-      throw_error_already_set();
-    utf8::utf16to8(value, value + size, std::back_inserter(result));
-  } break;
-#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
-  case PyUnicode_WCHAR_KIND:
-#endif
-  case PyUnicode_2BYTE_KIND: {
-    Py_UCS2* value = PyUnicode_2BYTE_DATA(obj_ptr);
-    if (value == 0)
-      throw_error_already_set();
-    utf8::utf16to8(value, value + size, std::back_inserter(result));
-  } break;
-#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 4
-  case PyUnicode_WCHAR_KIND:
-#endif
-  case PyUnicode_4BYTE_KIND: {
-    Py_UCS4* value = PyUnicode_4BYTE_DATA(obj_ptr);
-    if (value == 0)
-      throw_error_already_set();
-    utf8::utf32to8(value, value + size, std::back_inserter(result));
-  } break;
-  default:
-    assert("PyUnicode_KIND returned an unexpected kind" == NULL);
-  }
-#else                      // PY_MINOR_VERSION >= 3
-  size = PyUnicode_GET_SIZE(obj_ptr);
-  const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
-#if Py_UNICODE_SIZE == 2   // UTF-16
-  utf8::utf16to8(value, value + size, std::back_inserter(result));
-#elif Py_UNICODE_SIZE == 4 // UTF-32
-  utf8::utf32to8(value, value + size, std::back_inserter(result));
-#else
-  assert("Py_UNICODE has an unexpected size" == nullptr);
-#endif
-#endif // PY_MINOR_VERSION >= 3
-}
 
 struct string_from_python {
   static void* convertible(PyObject* obj_ptr) {
@@ -147,17 +98,14 @@ struct string_from_python {
   }
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
-    VERIFY(PyUnicode_Check(obj_ptr));
-
-#if PY_MINOR_VERSION < 12
-    if (PyUnicode_READY(obj_ptr))
-      return;
-#endif
+    Py_ssize_t size;
+    const char* utf8 = PyUnicode_AsUTF8AndSize(obj_ptr, &size);
+    if (!utf8)
+      throw_error_already_set();
 
     void* storage =
         reinterpret_cast<converter::rvalue_from_python_storage<string>*>(data)->storage.bytes;
-    string* str_ptr = new (storage) string();
-    fill_utf8_string(*str_ptr, obj_ptr);
+    new (storage) string(utf8, static_cast<std::size_t>(size));
     data->convertible = storage;
   }
 };
@@ -176,41 +124,16 @@ void export_utils() {
       .def(init<supports_flags<uint_least8_t>>())
       .def(init<uint_least8_t>())
 
-      .add_property("flags", &supports_flags<uint_least8_t>::flags,
-                    &supports_flags<uint_least8_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least8_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least8_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least8_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least8_t>::drop_flags);
+      .def(flags_visitor<supports_flags<uint_least8_t>>());
 
   class_<supports_flags<uint_least16_t>>("SupportFlags16")
       .def(init<supports_flags<uint_least16_t>>())
       .def(init<uint_least16_t>())
 
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags);
-
-#if 0
-  class_< basic_flags_t<uint_least8_t>,
-          bases<supports_flags<uint_least8_t> > > ("BasicFlags8")
-    .def(init<uint_least8_t>())
-
-    .def("plus_flags", &basic_flags_t<uint_least8_t>::plus_flags)
-    .def("minus_flags", &basic_flags_t<uint_least8_t>::minus_flags)
-    ;
-#endif
+      .def(flags_visitor<supports_flags<uint_least16_t>>());
 
   class_<delegates_flags<uint_least16_t>, boost::noncopyable>("DelegatesFlags16", no_init)
-      .add_property("flags", &delegates_flags<uint_least16_t>::flags,
-                    &delegates_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags);
+      .def(flags_visitor<delegates_flags<uint_least16_t>>());
 
   bool_python_conversion();
   string_python_conversion();

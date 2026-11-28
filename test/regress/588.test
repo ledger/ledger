@@ -5,6 +5,15 @@
 ; by using a mock getquote script that supports the --batch protocol.  Three
 ; different stock commodities are held in the journal; the batch script returns
 ; a price for each in a single invocation, and --market converts them all to $.
+;
+; The mock answers single-mode requests one dollar higher than batch mode, so
+; the balance below holds only if the one batch call priced every stock.  $,
+; the commodity the stocks are priced in, is never requested.  AAPL also has
+; the alias Apple; the second block reads back the price database the batch
+; wrote and shows that AAPL was requested once, not once per name.
+
+commodity AAPL
+    alias Apple
 
 2024/01/15 Buy Stock A
     Assets:Brokerage        10 AAPL
@@ -18,10 +27,16 @@
     Assets:Brokerage        5 MSFT
     Assets:Checking        $-500.00
 
-test bal --market --download --getquote $sourcepath/test/scripts/mock-batch-getquote.sh -> 0
+test bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/mock-batch-getquote.sh -> 0
             $3700.00  Assets
             $7200.00    Brokerage
            $-3500.00    Checking
 --------------------
             $3700.00
+end test
+
+test -f $FILE bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/mock-batch-getquote.sh --price-db "${PDB:=$(mktemp)}" > /dev/null && LC_ALL=C sort "$PDB" && rm -f "$PDB"
+P 2024/06/15 00:00:00 AAPL $150.00
+P 2024/06/15 00:00:00 GOOG $180.00
+P 2024/06/15 00:00:00 MSFT $420.00
 end test

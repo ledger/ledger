@@ -1,0 +1,2 @@
+account Assets:Cash
+    assert amount > 0

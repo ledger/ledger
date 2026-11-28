@@ -1,0 +1,19 @@
+; A bad --now value is reported like any other bad option value, naming
+; the option it came from, even though --now is applied before the
+; other options.
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --now garbage -> 1
+__ERROR__
+While parsing option '--now'
+Error: Unexpected date period token 'garbage'
+end test
+
+test reg --now -> 1
+__ERROR__
+While parsing option '--now'
+Error: No argument provided for --now
+end test

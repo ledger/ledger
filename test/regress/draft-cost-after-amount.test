@@ -1,0 +1,84 @@
+; A `@` or `@@` cost written after an amount prices the posting that
+; amount concluded.  draft_t::parse_args used to dereference a null
+; posting pointer here (an amount resets it), crashing with SIGSEGV.
+
+2024/01/01 Opening Balance
+    Assets:Checking                  $1,000.00
+    Assets:Vault                       1 AAPL
+    Equity:Opening Balances         $-1,000.00
+    Equity:Opening Balances            -1 AAPL
+
+test template 2024/01/02 Broker Assets:Brokerage '10 AAPL' @ '$5' Assets:Checking
+--- Input arguments ---
+("2024/01/02", "Broker", "Assets:Brokerage", "10 AAPL", "@", "$5", "Assets:Checking")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Broker
+
+[Posting "to"]
+  Account mask: Assets:Brokerage
+  Amount:       AAPL10
+  Cost:         @ $5
+
+[Posting "from"]
+  Account mask: Assets:Checking
+end test
+
+test xact 2024/01/02 Broker Assets:Brokerage '10 AAPL' @ '$5'
+2024/01/02 Broker
+    Assets:Brokerage                         10 AAPL @ $5.00
+    Liabilities:Unknown
+end test
+
+test xact 2024/01/02 Broker Assets:Brokerage '10 AAPL' @@ '$50' Assets:Checking
+2024/01/02 Broker
+    Assets:Brokerage                         10 AAPL @@ $50.00
+    Assets:Checking
+end test
+
+test xact 2024/01/02 Broker Assets:Brokerage 10 AAPL @ '$5'
+2024/01/02 Broker
+    Assets:Brokerage                         10 AAPL @ $5.00
+    Liabilities:Unknown
+end test
+
+test xact 2024/01/02 Broker to Assets:Brokerage '10 AAPL' @ '$5'
+2024/01/02 Broker
+    Assets:Brokerage                         10 AAPL @ $5.00
+    Liabilities:Unknown
+end test
+
+test template Broker '10 AAPL' @ '$5' Assets:Checking
+--- Input arguments ---
+("Broker", "10 AAPL", "@", "$5", "Assets:Checking")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Broker
+
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+  Amount:       AAPL10
+  Cost:         @ $5
+
+[Posting "from"]
+  Account mask: Assets:Checking
+end test
+
+test template Broker Assets:Brokerage '10 AAPL' @ '$5' @@ '$60'
+--- Input arguments ---
+("Broker", "Assets:Brokerage", "10 AAPL", "@", "$5", "@@", "$60")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Broker
+
+[Posting "to"]
+  Account mask: Assets:Brokerage
+  Amount:       AAPL10
+  Cost:         @@ $60
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

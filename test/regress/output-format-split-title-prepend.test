@@ -1,0 +1,97 @@
+; Pins the shared paths of the register (format_posts) and balance
+; (format_accounts) handlers: splitting a format on %/ into up to three
+; sub-formats (later ones may back-reference the first with %$N), the
+; --group-by title, and --prepend-format/--prepend-width/--append-format
+; on account, posting and balance-total lines.
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Expenses:Drink    $5.00
+    Assets:Cash
+
+2024/01/02 Garage
+    Expenses:Car     $20.00
+    Expenses:Food     $1.00
+    Assets:Cash
+
+test bal Expenses --format '%(account) %(display_total)\n'
+Expenses $36.00
+Expenses:Car $20.00
+Expenses:Drink $5.00
+Expenses:Food $11.00
+ $36.00
+end test
+
+test bal Expenses --format '%(account) %(display_total)\n%/= %$2\n'
+Expenses $36.00
+Expenses:Car $20.00
+Expenses:Drink $5.00
+Expenses:Food $11.00
+= $36.00
+end test
+
+test bal Expenses --format '%(account) %(display_total)\n%/= %$2\n%/--\n'
+Expenses $36.00
+Expenses:Car $20.00
+Expenses:Drink $5.00
+Expenses:Food $11.00
+--
+= $36.00
+end test
+
+test reg Expenses --format '%(payee) %(account) %(amount)\n%/  %$2 %(amount)\n'
+Grocer Expenses:Food $10.00
+  Expenses:Drink $5.00
+Garage Expenses:Car $20.00
+  Expenses:Food $1.00
+end test
+
+test reg Expenses --format '%(payee) %(account)\n%/  %(account)\n%/--\n'
+Grocer Expenses:Food
+  Expenses:Drink
+--
+Garage Expenses:Car
+  Expenses:Food
+end test
+
+test bal Expenses --group-by payee --prepend-format '[%(account_base)]' --prepend-width 10 --append-format ' <%(account_base)>' --group-title-format '== %(value) ==\n'
+== Garage ==
+[Expenses]              $21.00  Expenses <Expenses>
+     [Car]              $20.00    Car <Car>
+    [Food]               $1.00    Food <Food>
+          --------------------
+        []              $21.00 <>
+
+== Grocer ==
+[Expenses]              $15.00  Expenses <Expenses>
+   [Drink]               $5.00    Drink <Drink>
+    [Food]              $10.00    Food <Food>
+          --------------------
+        []              $15.00 <>
+end test
+
+test reg Expenses --group-by payee --prepend-format '[%(account_base)]' --prepend-width 8 --append-format ' #' --group-title-format '== %(value) ==\n'
+== Garage ==
+   [Car]24-Jan-02 Garage                Expenses:Car                 $20.00       $20.00 #
+  [Food]                                Expenses:Food                 $1.00       $21.00 #
+
+== Grocer ==
+  [Food]24-Jan-01 Grocer                Expenses:Food                $10.00       $10.00 #
+ [Drink]                                Expenses:Drink                $5.00       $15.00 #
+end test
+
+test bal Expenses --format '%/x\n'
+x
+end test
+
+test bal Expenses --format '%(account)\n%/'
+Expenses
+Expenses:Car
+Expenses:Drink
+Expenses:Food
+end test
+
+test reg Expenses --format '%/  %(account)\n'
+  Expenses:Drink
+  Expenses:Food
+end test

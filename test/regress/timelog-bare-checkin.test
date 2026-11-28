@@ -1,0 +1,12 @@
+; A clock-in line must name an account.  A bare "i DATE TIME" line is
+; an error, even when an earlier, longer line left bytes in the reused
+; line buffer that could be read as an account name.
+
+; 345678901234567890123Stale:Account  junk
+i 2024/01/15 09:00:00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Clock-in directive requires an account
+end test

@@ -1,0 +1,36 @@
+; A word that names no directive is never dispatched, even when an
+; expression definition gives it a meaning: `define` makes a function,
+; not a directive.  With an argument it is an unrecognized source line;
+; without one it is reported as missing its argument, since only
+; comment, end, python and test take none.  A word directive that needs
+; an argument reports it missing, and the legacy `Y` does the same.
+
+define foo=1
+
+foo bar
+
+foo
+
+year
+
+Y
+
+end
+
+2024-01-01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 5
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: Unrecognized source line 'foo bar'
+While parsing file "$FILE", line 12:
+Error: Directive 'foo' requires an argument
+While parsing file "$FILE", line 14:
+Error: Directive 'year' requires an argument
+While parsing file "$FILE", line 16:
+Error: Directive 'Y' requires an argument
+While parsing file "$FILE", line 18:
+Error: 'end' or 'end apply' found, but no enclosing 'apply' directive
+end test

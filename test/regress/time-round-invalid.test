@@ -1,0 +1,51 @@
+; --time-round takes a positive whole number of minutes.  A value that is
+; not one is rejected when the option is read, with one message that names
+; the option and the value.  Before, a word such as abc surfaced the C++
+; library's own conversion message, zero was called too large, and the
+; trailing characters of 15x or 1.5 were silently dropped.  The accepted
+; values are pinned in test/baseline/opt-time-round.test.
+
+i 2024/01/01 09:00:00 Projects:Work
+o 2024/01/01 09:07:00
+
+test bal --time-round 0 -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: 0; expected a positive number of minutes
+end test
+
+test bal --time-round -5 -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: -5; expected a positive number of minutes
+end test
+
+test bal --time-round abc -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: abc; expected a positive number of minutes
+end test
+
+test bal --time-round 15x -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: 15x; expected a positive number of minutes
+end test
+
+test bal --time-round=1.5 -> 1
+__ERROR__
+While parsing option '--time-round=1.5'
+Error: Invalid value for --time-round: 1.5; expected a positive number of minutes
+end test
+
+test bal --time-round 35791395 -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: 35791395; expected a positive number of minutes
+end test
+
+test bal --time-round 99999999999 -> 1
+__ERROR__
+While parsing option '--time-round'
+Error: Invalid value for --time-round: 99999999999; expected a positive number of minutes
+end test

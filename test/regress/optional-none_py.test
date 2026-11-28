@@ -1,0 +1,9 @@
+test python test/regress/optional-none.py
+C1  a note EUR20
+None None None
+ABC n 1 EUR
+code ArgumentError
+cost ArithmeticError
+payee ArgumentError
+ABC 1 EUR Payee
+end test

@@ -54,9 +54,7 @@ namespace ledger {
 using namespace python;
 using namespace boost::python;
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(exchange_commodities_overloads, exchange_commodities, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
@@ -79,18 +77,17 @@ std::optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_t
 
 /*--- Type Introspection and Debugging ---*/
 
-/// Returns the Python type object corresponding to the value's current
-/// variant type (PyBool_Type, PyLong_Type, PyUnicode_Type, or the
-/// Boost.Python wrapper class).
-PyObject* py_base_type(value_t& value) {
+/// Returns the Python type object for the value's current variant type:
+/// bool, int or str for boolean, integer and string values, ledger.Value
+/// for every other type.
+object py_base_type(value_t& value) {
   PyTypeObject* const t = value.is_boolean()  ? &PyBool_Type
                           : value.is_long()   ? &PyLong_Type
                           : value.is_string() ? &PyUnicode_Type
                                               : nullptr;
   if (t != nullptr)
-    return reinterpret_cast<PyObject*>(t);
-  object typeobj(object(value).attr("__class__"));
-  return typeobj.ptr();
+    return object(handle<>(borrowed(reinterpret_cast<PyObject*>(t))));
+  return object(value).attr("__class__");
 }
 
 string py_dump(const value_t& value) {
@@ -123,18 +120,7 @@ value_t py_strip_annotations_1(value_t& value, const keep_details_t& keep) {
   return value.strip_annotations(keep);
 }
 
-PyObject* py_value_unicode(value_t& value) {
-  return str_to_py_unicode(value.to_string());
-}
-
 } // unnamed namespace
-
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(value_error)
 
 void export_value() {
   enum_<value_t::type_t>("ValueType")
@@ -166,8 +152,6 @@ void export_value() {
       .def(init<const commodity_t&>())
       .def(init<mask_t>())
       .def(init<std::string>())
-      // jww (2009-11-02): Need to support conversion of value_t::sequence_t
-      //.def(init<value_t::sequence_t>())
       .def(init<value_t>())
 
       .def("is_equal_to", &value_t::is_equal_to)
@@ -304,10 +288,8 @@ void export_value() {
       .def("value", py_value_2, args("in_terms_of", "moment"))
       .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-      //.def("value", &value_t::value, value_overloads())
       .def("exchange_commodities", &value_t::exchange_commodities, exchange_commodities_overloads())
 
-      .def("__nonzero__", &value_t::is_nonzero)
       .def("is_nonzero", &value_t::is_nonzero)
       .def("is_realzero", &value_t::is_realzero)
       .def("is_zero", &value_t::is_zero)
@@ -353,7 +335,6 @@ void export_value() {
       .def("to_balance", &value_t::to_balance)
       .def("to_commodity", &value_t::to_commodity, return_internal_reference<>())
       .def("__str__", &value_t::to_string)
-      .def("__unicode__", py_value_unicode)
       .def("to_string", &value_t::to_string)
       .def("to_mask", &value_t::to_mask)
       .def("to_sequence", &value_t::to_sequence)
@@ -373,9 +354,6 @@ void export_value() {
       .def("strip_annotations", py_strip_annotations_0)
       .def("strip_annotations", py_strip_annotations_1)
 
-#if 0
-    .def("__getitem__", &value_t::operator[])
-#endif
       .def("push_back", &value_t::push_back)
       .def("pop_back", &value_t::pop_back)
       .def("size", &value_t::size)
@@ -386,14 +364,6 @@ void export_value() {
       .def("valid", &value_t::valid)
 
       .def("basetype", py_base_type);
-
-#if 0
-  // jww (2010-06-10): This is not working since I switched sequence_t to
-  // ptr_deque<value_t>.
-  class_< value_t::sequence_t > ("ValueSequence")
-    .def(vector_indexing_suite< value_t::sequence_t, true >());
-    ;
-#endif
 
   scope().attr("NULL_VALUE") = NULL_VALUE;
   scope().attr("string_value") = &string_value;
@@ -411,9 +381,7 @@ void export_value() {
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(value_error);
+  register_error_translator<value_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

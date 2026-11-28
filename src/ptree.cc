@@ -62,7 +62,7 @@ namespace {
 /// hierarchy in the XML output so that only relevant accounts appear.
 bool account_visited_p(const account_t& acct) {
   return ((acct.has_xdata() && acct.xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
-          acct.children_with_flags(ACCOUNT_EXT_VISITED));
+          acct.children_with_flags(ACCOUNT_EXT_VISITED, 1));
 }
 } // namespace
 
@@ -95,13 +95,24 @@ void format_ptree::flush() {
         put_post(post_tree.add("posting", ""), *post);
   }
 
-  switch (format) {
-  case FORMAT_XML:
-    auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
-    property_tree::write_xml(out, pt, indented);
-    out << '\n';
-    break;
-  }
+  auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
+  property_tree::write_xml(out, pt, indented);
+  out << '\n';
+
+  // The document is written.  Under --group-by-cumulative the splitter
+  // flushes this handler again for the next group without a clear(), and
+  // the postings keep their xdata, so the next document would list this
+  // one's transactions again, and in a transaction it shares with this one
+  // the postings this one listed.  Forget the transactions and commodities,
+  // and drop the visited mark from the postings listed: a posting the next
+  // group visits gets it again from calc_posts.
+  for (const xact_t* xact : transactions)
+    for (post_t* post : xact->posts)
+      if (post->has_xdata())
+        post->xdata().drop_flags(POST_EXT_VISITED);
+  commodities.clear();
+  transactions_set.clear();
+  transactions.clear();
 }
 
 void format_ptree::operator()(post_t& post) {

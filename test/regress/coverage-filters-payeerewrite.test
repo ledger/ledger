@@ -2,8 +2,7 @@
 ; Tests payee_rewrite directive which triggers rewrite_posts filter.
 ; payee_rewrite_mappings iteration
 ; new payee assignment
-; Each rewritten posting gets the new payee repeated since each creates
-; a new temporary xact.
+; The rewritten transaction is one copy, so its payee is shown once.
 
 payee-rewrite Groceries  Whole Foods Market
 
@@ -17,7 +16,7 @@ payee-rewrite Groceries  Whole Foods Market
 
 test reg
 24-Jan-15 Whole Foods Market    Expenses:Food                $50.00       $50.00
-24-Jan-15 Whole Foods Market    Assets:Cash                 $-50.00            0
+                                Assets:Cash                 $-50.00            0
 24-Jan-20 Gas Station           Expenses:Gas                 $30.00       $30.00
                                 Assets:Cash                 $-30.00            0
 end test

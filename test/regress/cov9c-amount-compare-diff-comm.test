@@ -1,5 +1,5 @@
 ; Coverage: value.cc (compare_by_commodity for different commodities
-; in is_less_than) and the commodity comparison recursion paths.
+; in is_less_than), which orders unannotated amounts by commodity symbol.
 ; Sorting amounts with different commodities triggers the commodity comparison.
 
 2024/01/01 Buy EUR

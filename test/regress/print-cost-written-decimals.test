@@ -1,0 +1,95 @@
+; print writes a cost with the decimals the journal gave it.  The zeros
+; are part of the cost's precision: an amount inferred from a cost is
+; shown to the cost's decimals (#1151), so a printed journal that drops
+; them reports a different balance (`ledger generate` seeds 9, 15 and 16
+; failed their print round trip this way).  A cost never teaches its
+; commodity a precision, so of these only EUR, written as an amount,
+; has one.  A cost given by an expression has the precision its
+; evaluation gives it, and a division adds digits: `@ (10.50 N / 2)`
+; prints as `@ N5.25000000`, which the inferred amount N-15.75000000 is
+; shown to.
+
+2024/01/01 Total cost written with a trailing zero
+    Assets:Broker                  Ql-7331.61 @@ 2102.480 R
+    Equity:Other
+
+2024/01/02 Total cost whose last decimal is zero
+    Assets:Broker                  A8799.42 @@ 4809.70F
+    Assets:Cash
+
+2024/01/03 Per-unit cost written with a trailing zero
+    Assets:Broker                  10 AAPL @ $1.030
+    Assets:Cash
+
+2024/01/04 Per-unit cost of one decimal on a fractional quantity
+    Assets:Broker                  5.25 X @ 2.0 Q
+    Assets:Cash
+
+2024/01/05 Virtual total cost
+    Assets:Broker                  10.00 EUR (@@) 13.00 USD
+    Assets:Cash
+
+2024/01/06 Per-unit cost on a sale
+    Assets:Broker                  -5 Y @ 10.500 W
+    Assets:Cash
+
+2024/01/07 Per-unit cost shorter than the learned precision
+    Assets:Broker                  3 Z @ 1.5 EUR
+    Assets:Cash
+
+2024/01/08 Total cost given by an expression
+    Assets:Broker                  4 K @@ (2.50 V * 2)
+    Assets:Cash
+
+2024/01/09 Per-unit cost given by a division
+    Assets:Broker                  3 M @ (10.50 N / 2)
+    Assets:Cash
+
+test print
+2024/01/01 Total cost written with a trailing zero
+    Assets:Broker                         Ql-7331.61 @@ R2102.480
+    Equity:Other
+
+2024/01/02 Total cost whose last decimal is zero
+    Assets:Broker                           A8799.42 @@ F4809.70
+    Assets:Cash
+
+2024/01/03 Per-unit cost written with a trailing zero
+    Assets:Broker                            10 AAPL @ $1.030
+    Assets:Cash
+
+2024/01/04 Per-unit cost of one decimal on a fractional quantity
+    Assets:Broker                             5.25 X @ Q2.0
+    Assets:Cash
+
+2024/01/05 Virtual total cost
+    Assets:Broker                          10.00 EUR (@@) USD13.00
+    Assets:Cash
+
+2024/01/06 Per-unit cost on a sale
+    Assets:Broker                               -5 Y @ W10.500
+    Assets:Cash
+
+2024/01/07 Per-unit cost shorter than the learned precision
+    Assets:Broker                                3 Z @ 1.50 EUR
+    Assets:Cash
+
+2024/01/08 Total cost given by an expression
+    Assets:Broker                                4 K @@ V5.00
+    Assets:Cash
+
+2024/01/09 Per-unit cost given by a division
+    Assets:Broker                                3 M @ N5.25000000
+    Assets:Cash
+end test
+
+test bal Assets:Cash
+            $-10.300
+           -4.50 EUR
+           F-4809.70
+       N-15.75000000
+              Q-10.5
+              USD-13
+                 V-5
+             W52.500  Assets:Cash
+end test

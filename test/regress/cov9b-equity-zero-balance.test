@@ -1,6 +1,7 @@
 ; Coverage for filters.cc equity filter zero amount in balance
 ; When equity report has a multi-commodity balance with a zero component
-; the create_post_from_amount skips zero amounts
+; the balancing-post lambda in posts_as_equity::report_subtotal skips zero
+; amounts
 
 2024/01/01 Buy EUR
     Assets:Foreign      100 EUR

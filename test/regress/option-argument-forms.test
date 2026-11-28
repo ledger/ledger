@@ -1,0 +1,20 @@
+; process_arguments reads an option's argument from "--name=value", from the
+; next argv word, or, for the last letter of a short-option cluster, from the
+; next argv word.  option-argument-missing.test pins the missing-argument
+; diagnostic.
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal --limit=account=~/Food/
+              $10.00  Expenses:Food
+end test
+
+test bal --limit account=~/Food/
+              $10.00  Expenses:Food
+end test
+
+test bal -El account=~/Cash/
+             $-10.00  Assets:Cash
+end test

@@ -1,0 +1,49 @@
+; With an explicit since date, periods start on that date and advance by
+; whole intervals whether or not --align-intervals is given; only a period
+; without a since date snaps to the calendar boundary.
+
+2023/01/10 Before since
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2023/01/20 January
+    Expenses:Food    $2.00
+    Assets:Cash
+
+2023/02/20 February
+    Expenses:Food    $4.00
+    Assets:Cash
+
+2023/03/20 March
+    Expenses:Food    $8.00
+    Assets:Cash
+
+test reg Food --now 2023/06/01 -p "monthly from 2023/01/15"
+23-Jan-15 - 23-Feb-14  Expenses:Food                   $2.00        $2.00
+23-Feb-15 - 23-Mar-14  Expenses:Food                   $4.00        $6.00
+23-Mar-15 - 23-Apr-14  Expenses:Food                   $8.00       $14.00
+end test
+
+test reg Food --now 2023/06/01 -p "monthly from 2023/01/15" --align-intervals
+23-Jan-15 - 23-Feb-14  Expenses:Food                   $2.00        $2.00
+23-Feb-15 - 23-Mar-14  Expenses:Food                   $4.00        $6.00
+23-Mar-15 - 23-Apr-14  Expenses:Food                   $8.00       $14.00
+end test
+
+test reg Food --now 2023/06/01 -p "every 2 weeks from 2023/01/18"
+23-Jan-18 - 23-Jan-31  Expenses:Food                   $2.00        $2.00
+23-Feb-15 - 23-Feb-28  Expenses:Food                   $4.00        $6.00
+23-Mar-15 - 23-Mar-28  Expenses:Food                   $8.00       $14.00
+end test
+
+test reg Food --now 2023/06/01 -p "every 2 weeks from 2023/01/18" --align-intervals
+23-Jan-18 - 23-Jan-31  Expenses:Food                   $2.00        $2.00
+23-Feb-15 - 23-Feb-28  Expenses:Food                   $4.00        $6.00
+23-Mar-15 - 23-Mar-28  Expenses:Food                   $8.00       $14.00
+end test
+
+test reg Food --now 2023/06/01 -p monthly
+23-Jan-01 - 23-Jan-31  Expenses:Food                   $3.00        $3.00
+23-Feb-01 - 23-Feb-28  Expenses:Food                   $4.00        $7.00
+23-Mar-01 - 23-Mar-31  Expenses:Food                   $8.00       $15.00
+end test

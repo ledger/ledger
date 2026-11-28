@@ -1,0 +1,280 @@
+; A query term that holds <, <=, > or >= outside a quoted pattern is a
+; value-expression comparison, whatever the operator's spelling.
+
+2024/01/05 Grocer
+    Expenses:Food                 $15.00
+    Assets:Cash
+
+2024/01/10 Bookshop
+    Expenses:Books                $25.00
+    Assets:Cash
+
+2024/01/20 Landlord
+    Expenses:Rent                $500.00
+    Assets:Cash
+
+2024/01/25 Transfer
+    Assets:Checking->Savings      $40.00
+    Assets:Cost>Basis
+
+2024/01/28 Lender
+    ; Rate>: 5
+    ; Rate: 5
+    Expenses:Interest              $3.00
+    Assets:Cash
+
+2024/01/29 Broker
+    ; Rate: 5
+    Expenses:Fees                  $2.00
+    Assets:Cash
+
+; '>' filters by amount exactly as '>=' does (it used to be the account
+; regex /amount>25/, which matches nothing).
+test reg 'amount>25'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $540.00
+end test
+
+test reg 'amount>=25'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $565.00
+end test
+
+test reg 'amount<-25'
+24-Jan-20 Landlord              Assets:Cash                $-500.00     $-500.00
+24-Jan-25 Transfer              Assets:Cost>Basis           $-40.00     $-540.00
+end test
+
+test reg 'amount<=-25'
+24-Jan-10 Bookshop              Assets:Cash                 $-25.00      $-25.00
+24-Jan-20 Landlord              Assets:Cash                $-500.00     $-525.00
+24-Jan-25 Transfer              Assets:Cost>Basis           $-40.00     $-565.00
+end test
+
+; Parentheses around the term do not change the rule.
+test reg '(amount>25)'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $540.00
+end test
+
+; A commodity-bearing right-hand side is a comparison too.
+test reg 'amount>$25'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $540.00
+end test
+
+; Spaces around the operator inside one argument do not change the rule.
+test reg 'amount > 25'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $540.00
+end test
+
+; The rule is the same after a payee, code or note prefix, where '>='
+; was already a comparison: '>' no longer falls back to a payee regex.
+test reg '@amount>25'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $540.00
+end test
+
+test reg '@amount>=25'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $565.00
+end test
+
+; '->' is not a comparison: the term stays an account pattern.
+test reg 'Checking->Savings'
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $40.00
+end test
+
+; A quoted pattern is never a comparison.
+test reg "'Cost>Basis'"
+24-Jan-25 Transfer              Assets:Cost>Basis           $-40.00      $-40.00
+end test
+
+; A metadata term keeps '=' as its tag/value separator, after '>' too:
+; '%Rate>=5' is has_tag(/Rate>/, /5/), not has_tag(/Rate>=5/).
+test reg '%Rate>=5'
+24-Jan-28 Lender                Expenses:Interest             $3.00        $3.00
+                                Assets:Cash                  $-3.00            0
+end test
+
+; A comparison term after a metadata term is still a comparison.  The metadata
+; term peeks at the next argument, and that lookahead must not split '>=' at
+; the '='.  (The deleted ends_with_cmp branch used to glue it back; if the
+; lookahead were lexed as a metadata term, 'amount>=500' would become the
+; account pattern /amount>/ and the '=' and '500' would be dropped.)  Each
+; query is "tagged or comparison": every Rate transaction plus the matching
+; postings.
+test reg %Rate 'amount>=500'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-28 Lender                Expenses:Interest             $3.00      $503.00
+                                Assets:Cash                  $-3.00      $500.00
+24-Jan-29 Broker                Expenses:Fees                 $2.00      $502.00
+                                Assets:Cash                  $-2.00      $500.00
+end test
+
+test reg tag Rate 'amount<=-500'
+24-Jan-20 Landlord              Assets:Cash                $-500.00     $-500.00
+24-Jan-28 Lender                Expenses:Interest             $3.00     $-497.00
+                                Assets:Cash                  $-3.00     $-500.00
+24-Jan-29 Broker                Expenses:Fees                 $2.00     $-498.00
+                                Assets:Cash                  $-2.00     $-500.00
+end test
+
+test reg 'tag(Rate)' 'amount>=500'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-28 Lender                Expenses:Interest             $3.00      $503.00
+                                Assets:Cash                  $-3.00      $500.00
+24-Jan-29 Broker                Expenses:Fees                 $2.00      $502.00
+                                Assets:Cash                  $-2.00      $500.00
+end test
+
+test reg not %Rate 'amount>=500'
+24-Jan-05 Grocer                Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $40.00
+                                Assets:Cost>Basis           $-40.00            0
+end test
+
+test reg %Rate 'd>=[2024/01/25]'
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $40.00
+                                Assets:Cost>Basis           $-40.00            0
+24-Jan-28 Lender                Expenses:Interest             $3.00        $3.00
+                                Assets:Cash                  $-3.00            0
+24-Jan-29 Broker                Expenses:Fees                 $2.00        $2.00
+                                Assets:Cash                  $-2.00            0
+end test
+
+; The same after a metadata term for '>' (a pattern on the base, so this one
+; fails there): Landlord's rent exceeds 400.
+test reg %Rate 'amount>400'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+24-Jan-28 Lender                Expenses:Interest             $3.00      $503.00
+                                Assets:Cash                  $-3.00      $500.00
+24-Jan-29 Broker                Expenses:Fees                 $2.00      $502.00
+                                Assets:Cash                  $-2.00      $500.00
+end test
+
+; A comparison must be the whole term: text left over after it makes
+; the term a pattern (here one that matches no account), never a
+; comparison that silently ignores the rest.  The right-hand side carries
+; a commodity ($25) so that the amount lexer cannot absorb "junk" as the
+; commodity of the number (as it does for "25 junk"): the expression parser
+; sees a leftover identifier, which only T0148's end-of-input check rejects.
+; The block counts the rows because the harness does not compare the output
+; of a block that has none.
+test reg 'amount>$25 junk' | awk 'END { print NR }'
+0
+end test
+
+; A term the expression parser rejects stays a pattern, whatever it throws.
+; The parser rejects these with boost::bad_day_of_month, std::out_of_range
+; and boost::bad_lexical_cast, none of them a std::runtime_error (and none
+; an assert, so the blocks hold with -DDISABLE_ASSERTS=ON); every one is
+; still the account pattern it is on the base, which matches nothing here.
+test reg 'd>[2024/02/30]'
+end test
+
+test reg 'x>[1399/01/01]'
+end test
+
+test reg 'x>[32]'
+end test
+
+test reg 'x>[13/1]'
+end test
+
+test reg 'x>[feb 30]'
+end test
+
+test reg 'x>[9999999999]'
+end test
+
+; A boolean combination of comparisons in one argument is one comparison
+; expression: these filter on the base when the operators include '>=' or
+; '>[', and the rule must not take them away.
+test reg 'date>[2024/01/10] and date<[2024/01/21]'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+end test
+
+test reg 'date>=[2024/01/10] and date<[2024/01/21]'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+end test
+
+test reg 'amount>= 20 and amount<100'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $65.00
+end test
+
+; The same with '>' and '<' (a pattern on the base), and with 'or'.
+test reg 'amount>20 and amount<100'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $65.00
+end test
+
+test reg 'amount>20 or amount<-30'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+                                Assets:Cash                $-500.00       $25.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $65.00
+                                Assets:Cost>Basis           $-40.00       $25.00
+end test
+
+; A compound that holds a comparison next to an operand that is not one is
+; still an expression (the base already treats 'date>[...] and cleared' so):
+; every operand need not be a comparison.  Nothing in the journal is cleared.
+test reg 'date>[2024/01/10] and not cleared'
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00       $40.00
+                                Assets:Cost>Basis           $-40.00            0
+24-Jan-28 Lender                Expenses:Interest             $3.00        $3.00
+                                Assets:Cash                  $-3.00            0
+24-Jan-29 Broker                Expenses:Fees                 $2.00        $2.00
+                                Assets:Cash                  $-2.00            0
+end test
+
+test reg 'date>[2024/01/10] or cleared' | awk 'END { print NR }'
+8
+end test
+
+test reg 'amount>= 20 and not cleared'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $565.00
+end test
+
+test reg 'amount>20 and not cleared'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $565.00
+end test
+
+; A lambda root ('Checking' over 'Savings and amount>1') is not a comparison
+; tree: the term stays the account pattern it is on the base.
+test reg 'Checking->Savings and amount>1' | awk 'END { print NR }'
+0
+end test
+
+; A comparison operator at the end of one argument no longer takes the next
+; argument as its right-hand side: 'amount>=' is a pattern, and so is 25.
+; Write the comparison as one argument ('amount>=25' or 'amount>= 25').
+test reg 'amount>=' 25 | awk 'END { print NR }'
+0
+end test
+
+test reg 'amount>= 25'
+24-Jan-10 Bookshop              Expenses:Books               $25.00       $25.00
+24-Jan-20 Landlord              Expenses:Rent               $500.00      $525.00
+24-Jan-25 Transfer              Asse:Checking->Savings       $40.00      $565.00
+end test

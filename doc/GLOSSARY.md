@@ -79,8 +79,8 @@ The Ledger software also has its own terms.
   line begins with name of the directive and may have additional arguments or
   additional indented lines.  The single letters *AbCDhIiNOoY* are aliased to
   other command directives, providing compatibility with the ancient past.
-  The characters **'='** and **'-'** are command directives for an automatic
-  transactions and periodic transactions, respectively.
+  The characters **'='** and **'~'** begin automated transactions and
+  periodic transactions, respectively.
   [&sect; Command Directives](http://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives)
 
 **Commodity**: any currency, stock, time or resource to be tracked
@@ -99,7 +99,7 @@ The Ledger software also has its own terms.
 
 **Effective Date**: an optional, second date information item in for a posting
   or transaction.  Some use the effective date for when work is billed or when
-  a check has cleared.  The `--effective-date` option causes the effective
+  a check has cleared.  The `--effective` option causes the effective
   date to override the transaction's initial date for that report.
   [&sect; Effective Dates](http://www.ledger-cli.org/3.0/doc/ledger3.html#Effective-Dates);
 

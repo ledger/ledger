@@ -71,8 +71,21 @@ public:
   /// programmatically (false).
   using tag_data_t = std::pair<std::optional<value_t>, bool>;
 
+  /**
+   * @brief Case-insensitive ordering for metadata tag names.
+   *
+   * The comparator type of string_map, so that lookups by exact string
+   * are case-insensitive: a tag set as "Payee" can be retrieved via
+   * has_tag("payee") or get_tag("PAYEE").
+   */
+  struct CaseInsensitiveKeyCompare {
+    bool operator()(const string& s1, const string& s2) const {
+      return boost::algorithm::ilexicographical_compare(s1, s2);
+    }
+  };
+
   /// Case-insensitive ordered map from tag names to their values.
-  using string_map = std::map<string, tag_data_t, std::function<bool(string, string)>>;
+  using string_map = std::map<string, tag_data_t, CaseInsensitiveKeyCompare>;
 
   optional<string_map> metadata; ///< Structured metadata tags parsed from comment lines.
 
@@ -110,26 +123,55 @@ public:
   /**
    * @brief Set or overwrite a metadata tag, creating the map if needed.
    *
-   * The map is initialized lazily with a case-insensitive comparator.
+   * The map is initialized lazily; its comparator type,
+   * CaseInsensitiveKeyCompare, makes its keys case-insensitive.
    * Null or empty-string values are normalized to nullopt.
    */
   virtual string_map::iterator set_tag(const string& tag, const std::optional<value_t>& value = {},
                                        bool overwrite_existing = true);
 
   /**
-   * @brief Parse `:tag:` and `Key:`/`Key::` metadata from a comment line.
+   * @brief One tag found in a comment by scan_metadata_tags().
    *
-   * Recognizes:
+   * A bare `:name:` tag has no value; a `Key:` or `Key::` setting
+   * carries the trimmed rest of the line, which is an expression when
+   * @c by_value is set.
+   */
+  struct parsed_tag_t {
+    string name;
+    std::optional<string> value;
+    bool by_value = false;
+  };
+
+  /**
+   * @brief Find the `:tag:` and `Key:`/`Key::` metadata in a comment line.
+   *
+   * This is the tokenizer of parse_metadata_tags(); it sets and
+   * evaluates nothing.  Recognizes:
    *   - `:tag1:tag2:tag3:` -- colon-delimited bare tags.
-   *   - `Key: value`       -- the first whitespace-delimited token ending
-   *                           in `:` names a key whose value is the rest of
-   *                           the line as a string.
-   *   - `Key:: expr`       -- like `Key:` but the value is parsed and
-   *                           evaluated as an expression in @p outer_scope
-   *                           bound through @p self_scope.
+   *   - `Key: value`       -- if the comment's first whitespace-delimited
+   *                           token of two or more characters ends in `:`,
+   *                           it names a key whose value is the rest of the
+   *                           line as a string.  A later token never names
+   *                           a key, and a leading `:tag:` token takes the
+   *                           first position.
+   *   - `Key:: expr`       -- like `Key:` but the value is an expression,
+   *                           which parse_metadata_tags() evaluates.
    *
    * Skips a leading run of `;`/whitespace so that comments written as
    * `;;Key: value` parse the same as `; Key: value` (issue #1786).
+   *
+   * @param p Raw comment text.
+   * @return  The tags in the order they appear.
+   */
+  static std::vector<parsed_tag_t> scan_metadata_tags(const char* p);
+
+  /**
+   * @brief Parse `:tag:` and `Key:`/`Key::` metadata from a comment line.
+   *
+   * Applies the tags scan_metadata_tags() finds in @p p, in order,
+   * marking each as parsed from a comment.  A `Key:: expr` value is
+   * evaluated in @p outer_scope bound through @p self_scope.
    *
    * @param p                  Raw comment text.
    * @param outer_scope        Scope used to evaluate `Key:: expr` forms.

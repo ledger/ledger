@@ -24,6 +24,10 @@ test reg --dc --collapse Expenses
 end test
 
 test reg --dc --collapse
+24-Jan-01 Salary           <Total>            $1000.00     $1000.00            0
+24-Jan-15 Groceries        <Total>             $200.00      $200.00            0
+24-Jan-20 Foreign Purchase <Total>             200 EUR      $220.00     $-220.00
+                                                                         200 EUR
 end test
 
 test reg --dc -X '$' Expenses

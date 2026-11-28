@@ -1,0 +1,48 @@
+; While a Python function called from a value expression runs, SIGINT
+; has its default disposition, with or without arguments; afterwards
+; Ledger puts back the handler that was installed before the call, on
+; every return path, including a function whose result is not a Value.
+;
+; Ledger used to leave SIGINT at its default disposition after such a
+; function returned, so a later Ctrl-C killed the process instead of
+; stopping the report with "Interrupted by user", and it ran functions
+; called without arguments under its own handler.
+
+python
+    import ctypes
+    import signal
+    libc = ctypes.CDLL(None)
+    libc.signal.restype = ctypes.c_void_p
+    libc.signal.argtypes = [ctypes.c_int, ctypes.c_void_p]
+    def disposition():
+        previous = libc.signal(signal.SIGINT, None)
+        libc.signal(signal.SIGINT, previous)
+        return previous
+    before = disposition()
+    seen = {}
+    def opaque_result(x):
+        seen["with an argument"] = disposition() is None
+        return object()
+    def plain_result():
+        seen["without arguments"] = disposition() is None
+        return True
+
+eval opaque_result(1)
+
+python
+    after_opaque = disposition()
+
+eval plain_result()
+
+python
+    print("default before:", before is None)
+    print("default during a call:", seen)
+    print("restored after a non-Value result:", after_opaque == before)
+    print("restored after a Value result:", disposition() == before)
+
+test reg
+default before: False
+default during a call: {'with an argument': True, 'without arguments': True}
+restored after a non-Value result: True
+restored after a Value result: True
+end test

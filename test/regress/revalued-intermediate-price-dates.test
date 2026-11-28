@@ -1,0 +1,29 @@
+; Revaluations between two postings come one per distinct pricing date,
+; whichever commodities and however many prices fall on that date: two
+; AAA prices and one BBB price on 2030/02/01 give one <Revalued> row,
+; with the total valued as of that date.
+
+P 2030/01/01 AAA $1.00
+P 2030/01/01 BBB $2.00
+
+2030/01/02 Buy
+    Assets:Broker    10 AAA
+    Assets:Broker    5 BBB
+    Assets:Cash
+
+P 2030/02/01 00:00:00 AAA $1.50
+P 2030/02/01 12:00:00 AAA $1.60
+P 2030/02/01 BBB $2.50
+P 2030/03/01 BBB $3.00
+
+2030/04/01 Sell
+    Assets:Broker    -1 AAA
+    Assets:Cash      $1.60
+
+test reg Broker -V --now 2030/06/15
+30-Jan-02 Buy                   Assets:Broker                $10.00       $10.00
+                                Assets:Broker                $10.00       $20.00
+30-Feb-01 Commodities revalued  <Revalued>                    $7.50       $27.50
+30-Mar-01 Commodities revalued  <Revalued>                    $3.50       $31.00
+30-Apr-01 Sell                  Assets:Broker                $-1.60       $29.40
+end test

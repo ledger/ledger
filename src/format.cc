@@ -134,29 +134,27 @@ struct format_mapping_t {
     {'a', "account"},
     {'A', "account"},
     {'t', "justify(scrub(display_amount), $min, $max, $left, color)"},
-    {'T', "justify(scrub(display_total), $min, $max, $left, color)"},
+    {'T', "justify(scrubbed_display_total, $min, $max, $left, color)"},
     {'N', "note"},
 };
 
 /**
  * @brief Parse an expression from the current position in a format string.
  *
- * Called when the parser encounters `%(` or `%{`.  Reads the expression text
- * using Ledger's expression parser (in PARSE_SINGLE or PARSE_PARTIAL mode)
- * and advances the pointer past the consumed characters.
+ * Called when the parser encounters `%(` or `%{`.  Reads one term with
+ * Ledger's expression parser in PARSE_SINGLE mode (a parenthesized
+ * expression, or a braced amount literal) and advances the pointer past the
+ * consumed characters.
  *
  * @param p            Reference to the current scan pointer; advanced past
  *                     the parsed expression on return.
- * @param single_expr  If true, parse a single complete expression; if false,
- *                     parse a partial expression (stopping at the first
- *                     unmatched delimiter).
  * @return             The parsed and ready-to-compile expression.
  */
-expr_t parse_single_expression(const char*& p, bool single_expr = true) {
-  string temp(p); // NOLINT(bugprone-unused-local-non-trivial-variable)
+expr_t parse_single_expression(const char*& p) {
+  string temp(p);
   ptristream str(const_cast<char*&>(p));
   expr_t expr;
-  expr.parse(str, single_expr ? PARSE_SINGLE : PARSE_PARTIAL, temp);
+  expr.parse(str, PARSE_SINGLE, temp);
   if (str.eof()) {
     expr.set_text(p);
     p += std::strlen(p);
@@ -175,7 +173,7 @@ expr_t parse_single_expression(const char*& p, bool single_expr = true) {
 }
 
 /// @brief Create an IDENT op node, used when building AST wrappers for
-///        the scrub/justify/ansify_if calls that surround `%{..}` elements.
+///        the scrub/justify calls that surround `%{..}` elements.
 inline expr_t::ptr_op_t ident_node(const string& ident) {
   expr_t::ptr_op_t node(new expr_t::op_t(expr_t::op_t::IDENT));
   node->set_ident(ident);
@@ -185,7 +183,7 @@ inline expr_t::ptr_op_t ident_node(const string& ident) {
 
 /*--- Format String Parsing ---*/
 
-format_t::element_t* format_t::parse_elements(const string& fmt, const optional<format_t&>& tmpl) {
+format_t::element_t* format_t::parse_elements(const string& fmt, const format_t* tmpl) {
   unique_ptr<element_t> result;
 
   element_t* current = nullptr;
@@ -221,6 +219,11 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
     if (*p == '\\') {
       p++;
       current->type = element_t::STRING;
+      if (*p == '\0') {
+        // A trailing backslash stands for itself.
+        current->data = string("\\");
+        break;
+      }
       switch (*p) {
       case 'b':
         current->data = string("\b");
@@ -338,16 +341,13 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         p++;
         if (*p == '0' || (!std::isdigit(static_cast<unsigned char>(*p)) && *p != 'A' && *p != 'B' &&
                           *p != 'C' && *p != 'D' && *p != 'E' && *p != 'F'))
-          throw_(format_error, _("%$ field reference must be a digit from 1-9"));
+          throw_(format_error, _("%$ field reference must be a digit from 1-9 or a letter A-F"));
 
         int index = std::isdigit(static_cast<unsigned char>(*p)) ? *p - '0' : (*p - 'A' + 10);
         element_t* tmpl_elem = tmpl->elements.get();
-
-        for (int i = 1; i < index && tmpl_elem; i++) {
-          tmpl_elem = tmpl_elem->next.get();
-          while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
-            tmpl_elem = tmpl_elem->next.get();
-        }
+        for (int seen = 0; tmpl_elem; tmpl_elem = tmpl_elem->next.get())
+          if (tmpl_elem->type == element_t::EXPR && ++seen == index)
+            break;
 
         if (!tmpl_elem)
           throw_(format_error, _("%$ reference to a non-existent prior field"));
@@ -358,9 +358,8 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
       case '(':
       case '{': {
-        // '(' parses a raw expression; '{' parses an expression and
-        // additionally wraps it in scrub()/justify()/ansify_if() calls
-        // so that monetary amounts are formatted and colorized properly.
+        // '(' parses a raw expression; '{' parses a braced amount literal and
+        // wraps it in scrub() and justify() calls with the element's widths.
         bool format_amount = *p == '{';
 
         current->type = element_t::EXPR;
@@ -383,7 +382,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
                 expr_t::ptr_op_t call1_node(new expr_t::op_t(expr_t::op_t::O_CALL));
                 {
                   call1_node->set_left(ident_node("scrub"));
-                  call1_node->set_right(op->kind == expr_t::op_t::O_CONS ? op->left() : op);
+                  call1_node->set_right(op);
                 }
 
                 args3_node->set_left(call1_node);
@@ -431,32 +430,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         current->max_width = 0;
 
         string prev_expr = std::get<expr_t>(current->data).text();
-
-        expr_t::ptr_op_t colorize_op;
-        if (op->kind == expr_t::op_t::O_CONS)
-          colorize_op = op->has_right() ? op->right() : nullptr;
-
-        if (colorize_op) {
-          expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
-          {
-            call3_node->set_left(ident_node("ansify_if"));
-
-            {
-              expr_t::ptr_op_t args4_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-              {
-                args4_node->set_left(call2_node); // from above
-                args4_node->set_right(colorize_op);
-              }
-
-              call3_node->set_right(args4_node);
-            }
-          }
-
-          current->data = expr_t(call3_node);
-        } else {
-          current->data = expr_t(call2_node);
-        }
-
+        current->data = expr_t(call2_node);
         std::get<expr_t>(current->data).set_text(prev_expr);
         break;
       }
@@ -550,27 +524,18 @@ string format_t::real_calc(scope_t& scope) {
 
     // Step 3: Apply width constraints.  If the rendered text is wider than
     // max_width, truncate it.  If it is narrower than min_width, pad it.
+    // Both are measured in display columns, ignoring ANSI escapes, as
+    // justify() measures them in step 2.
     if (elem->max_width > 0 || elem->min_width > 0) {
       const string rendered(out.str());
+      const std::size_t cols = display_width(rendered);
 
-      // Printable ASCII needs no decoding: bytes are code points.
-      if (is_plain_ascii(rendered) && !(elem->max_width > 0 && elem->max_width < rendered.size())) {
-        out_str << rendered;
-        if (elem->min_width > rendered.size())
-          out_str << string(elem->min_width - rendered.size(), ' ');
+      if (elem->max_width > 0 && elem->max_width < cols) {
+        out_str << truncate(unistring(rendered), elem->max_width);
       } else {
-        unistring temp(rendered);
-        string result;
-
-        if (elem->max_width > 0 && elem->max_width < temp.length()) {
-          result = truncate(temp, elem->max_width);
-        } else {
-          result = temp.extract();
-          if (elem->min_width > temp.length())
-            for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
-              result += " ";
-        }
-        out_str << result;
+        out_str << rendered;
+        if (elem->min_width > cols)
+          out_str << string(elem->min_width - cols, ' ');
       }
     } else {
       out_str << out.str();
@@ -584,8 +549,6 @@ string format_t::real_calc(scope_t& scope) {
 
 string format_t::truncate(const unistring& ustr, const std::size_t width,
                           const std::size_t account_abbrev_length) {
-  assert(width < 4095);
-
   const std::size_t len = ustr.width();
   if (width == 0 || len <= width)
     return ustr.extract();
@@ -634,7 +597,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       // First, chop up the Unicode string into individual segments.
       std::list<string> parts;
       string::size_type beg = 0;
-      string strcopy(ustr.extract()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string strcopy(ustr.extract());
       for (string::size_type pos = strcopy.find(':'); pos != string::npos;
            beg = pos + 1, pos = strcopy.find(':', beg))
         parts.push_back(string(strcopy, beg, pos - beg));
@@ -667,7 +630,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       // passes until the overflow is gone, or we cannot reduce any
       // further.  The calculation to find the amount to remove is:
       //
-      //   overflow * (((len(segment) + counter) * iteration) /
+      //   overflow * (((len(segment) + 3 * counter) * iteration) /
       //               (len(string) - len(last_segment) - counter))
       //
       // Where:
@@ -686,9 +649,9 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       //
       // Therefore, the amount to be removed from Assets is calculated as:
       //
-      //   9 * (((6 + 3) * 1) / (29 - 8 - 3)) = ceil(4.5) = 5
+      //   9 * (((6 + 3 * 3) * 1) / (29 - 8 - 3)) = ceil(7.5) = 8
       //
-      // However, since removing 5 chars would make the length of the
+      // However, since removing 8 chars would make the length of the
       // segment shorter than the default minimum of 2, we can only
       // remove 4 chars from Assets to reduce the overflow.  And on it
       // goes.
@@ -710,26 +673,42 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
             break;
           DEBUG("format.abbrev", "Overflow is " << overflow << " chars");
           std::size_t adjust;
-          if (overflow == 1)
+          if (overflow == 1) {
             adjust = 1;
-          else
-            adjust = std::size_t(
-                std::ceil(double(overflow) * ((double(*i + counter * 3) * double(iteration)) /
-                                              (double(len_minus_last) - double(counter)))));
-          DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + " << counter
-                                                  << ") * " << iteration << ") / ("
+          } else {
+            // The divisor is zero when every segment but the last is zero
+            // columns wide.  This segment is then one of them and has no
+            // slack to give up, so let its weight be the whole overflow.
+            const double divisor = double(len_minus_last) - double(counter);
+            const double weight =
+                divisor > 0 ? std::ceil(double(overflow) *
+                                        ((double(*i + counter * 3) * double(iteration)) / divisor))
+                            : double(overflow);
+            // Converting a double that size_t cannot represent is
+            // undefined, so cap the weight at the overflow first.
+            adjust = weight < double(overflow) ? std::size_t(weight) : overflow;
+          }
+          DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + 3 * "
+                                                  << counter << ") * " << iteration << ") / ("
                                                   << len_minus_last << " - " << counter << ")))");
-          if (adjust == 0)
-            adjust = 1;
-          else if (adjust > overflow)
-            adjust = overflow;
           DEBUG("format.abbrev", "The weighted part is " << adjust << " chars");
           std::size_t slack = *i - std::min(*i, account_abbrev_length);
           if (adjust > slack)
             adjust = slack;
           if (adjust > 0) {
             DEBUG("format.abbrev", "Reducing segment " << ++index << " by " << adjust << " chars");
-            while (std::isspace(static_cast<unsigned char>((*x)[*i - adjust - 1])) && adjust < *i) {
+            // Don't leave the shortened segment ending in whitespace.  *i
+            // counts display columns, not bytes, so look at the text that
+            // will be shown rather than indexing into *x.  Only an ASCII
+            // byte is a character by itself; in a UTF-8 locale, isspace()
+            // may also claim one that ends a longer character, as 0xA0
+            // ends "à".
+            const unistring segment(*x);
+            while (adjust < *i) {
+              const string kept = segment.extract_by_width(0, *i - adjust);
+              const auto last = static_cast<unsigned char>(kept.empty() ? '\0' : kept.back());
+              if (last >= 0x80 || !std::isspace(last))
+                break;
               DEBUG("format.abbrev", "Segment ends in whitespace, adjusting down");
               ++adjust;
             }

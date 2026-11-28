@@ -1,0 +1,48 @@
+; convert resolves each imported transaction's account from its payee:
+; a payee alias renames the CSV description before the account lookup
+; (Corner Grocer -> Grocer -> Expenses:Food); a payee UUID declared for
+; the CSV line's SHA-1 renames the payee and the account lookup runs
+; again on the new name (ACH ... -> Landlord -> Expenses:Rent); when the
+; CSV description already chose an account, the UUID renames the payee
+; but keeps that account (Fuel Stop -> Expenses:Car, payee Landlord);
+; with no match the account is Expenses:Unknown.  When several aliases
+; match, the first one declared wins.
+
+account Assets:Checking
+
+account Expenses:Food
+    payee ^Grocer$
+
+account Expenses:Rent
+    payee ^Landlord$
+
+account Expenses:Car
+    payee ^Fuel
+
+payee Grocer
+    alias ^Corner Grocer
+
+payee Grocery Outlet
+    alias ^Corner
+
+payee Landlord
+    uuid fd74fe5f67ec3002956e82457985dbdd70377761
+    uuid 6a8416749d5f5ae78c1f9be35d46c0cf7fec2d35
+
+test -f $FILE convert $sourcepath/test/input/payee-account-lookup.csv --input-date-format %m/%d/%Y --account Assets:Checking --invert
+2018/01/05 * Grocer
+    Expenses:Food                           1.00 USD
+    Assets:Checking
+
+2018/01/06 * Landlord
+    Expenses:Rent                           2.00 USD
+    Assets:Checking
+
+2018/01/07 * Landlord
+    Expenses:Car                            3.00 USD
+    Assets:Checking
+
+2018/01/08 * Plain Vendor
+    Expenses:Unknown                        4.00 USD
+    Assets:Checking
+end test

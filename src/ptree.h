@@ -83,21 +83,18 @@ protected:
   using commodities_map = std::map<string, commodity_t*>;
   using commodities_pair = std::pair<string, commodity_t*>;
 
-  commodities_map commodities;        ///< Unique commodities seen in matched postings
-  std::set<xact_t*> transactions_set; ///< Set for O(1) duplicate detection
-  std::deque<xact_t*> transactions;   ///< Transactions in encounter order
+  commodities_map commodities;        ///< Commodities seen since the last flush()
+  std::set<xact_t*> transactions_set; ///< Transactions already queued, for de-duplication
+  std::deque<xact_t*> transactions;   ///< Transactions since the last flush(), in encounter order
 
 public:
-  /// Output format selector (currently only XML is supported).
-  enum format_t : uint8_t { FORMAT_XML } format;
-
-  format_ptree(report_t& _report, format_t _format = FORMAT_XML)
-      : report(_report), format(_format) {
-    TRACE_CTOR(format_ptree, "report&, format_t");
+  explicit format_ptree(report_t& _report) : report(_report) {
+    TRACE_CTOR(format_ptree, "report&");
   }
   ~format_ptree() override { TRACE_DTOR(format_ptree); }
 
-  /// Build the property tree from accumulated data and write XML output.
+  /// Build the property tree from accumulated data and write XML output,
+  /// then forget that data, so a later flush writes only what came after.
   void flush() override;
   /// Collect a posting: record its commodity and parent transaction.
   void operator()(post_t& post) override;

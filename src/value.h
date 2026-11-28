@@ -62,7 +62,7 @@
  * follows a hierarchy from least to most general:
  *
  *   VOID < BOOLEAN < DATETIME < DATE < INTEGER < AMOUNT < BALANCE
- *        < STRING < MASK < SEQUENCE < SCOPE < ANY
+ *        < COMMODITY < STRING < MASK < SEQUENCE < SCOPE < ANY
  *
  * Storage is reference-counted with copy-on-write semantics, so
  * passing value_t by value through the filter pipeline is cheap:
@@ -91,7 +91,7 @@ class scope_t;
  *
  * The following type is a polymorphous value type used solely for
  * performance reasons.  The alternative is to compute value
- * expressions (valexpr.cc) in terms of the largest data type,
+ * expressions (expr.cc, op.cc) in terms of the largest data type,
  * balance_t. This was found to be prohibitively expensive, especially
  * when large logic chains were involved, since many temporary
  * allocations would occur for every operator.  With value_t, and the
@@ -163,7 +163,7 @@ public:
                  date_t,             // DATE
                  long,               // INTEGER
                  amount_t,           // AMOUNT
-                 balance_t*,         // BALANCE
+                 balance_t,          // BALANCE
                  commodity_t const*, // COMMODITY
                  string,             // STRING
                  mask_t,             // MASK
@@ -172,6 +172,8 @@ public:
                  std::any            // ANY
                  >
         data;
+    static_assert(sizeof(balance_t) <= std::max(sizeof(string), sizeof(std::any)),
+                  "BALANCE must not grow value_t::storage_t");
 
     type_t type;
 
@@ -244,9 +246,6 @@ public:
       switch (type) {
       case VOID:
         return;
-      case BALANCE: // NOLINT(bugprone-branch-clone)
-        checked_delete(std::get<balance_t*>(data));
-        break;
       case SEQUENCE:
         checked_delete(std::get<sequence_t*>(data));
         break;
@@ -371,13 +370,6 @@ public:
     set_scope(item);
     TRACE_CTOR(value_t, "scope_t *");
   }
-#if 0
-  template <typename T>
-  explicit value_t(T& item) {
-    set_any(item);
-    TRACE_CTOR(value_t, "T&");
-  }
-#endif
 
   /**
    * Destructor.  This does not do anything, because the intrusive_ptr
@@ -395,11 +387,16 @@ public:
     *this = val;
     TRACE_CTOR(value_t, "copy");
   }
+  value_t(value_t&& val) noexcept : storage(std::move(val.storage)) { TRACE_CTOR(value_t, "move"); }
   value_t& operator=(const value_t& val) {
     if (this == &val)
       return *this;
     if (storage != val.storage)
       storage = val.storage;
+    return *this;
+  }
+  value_t& operator=(value_t&& val) noexcept {
+    storage = std::move(val.storage);
     return *this;
   }
 
@@ -425,11 +422,6 @@ public:
 
   /**
    * Binary arithmetic operators.
-   *
-   * add(amount_t, optional<amount_t>) allows for the possibility of
-   * adding both an amount and its cost in a single operation.
-   * Otherwise, there is no way to separately represent the "cost"
-   * part of an amount addition statement.
    */
   value_t& operator+=(const value_t& val);
   value_t& operator-=(const value_t& val);
@@ -547,10 +539,11 @@ public:
   /// conversion even when the amount is already in one of the listed target
   /// commodities.
   ///
-  /// For a simple single-commodity target with no special syntax, this
-  /// delegates to value() for efficiency.  For complex expressions, it
-  /// parses the specification and reprices each component of an AMOUNT or
-  /// BALANCE individually.
+  /// For a single target with no comma, colon or equals sign, this drops a
+  /// trailing `!` (forcing a lone target changes nothing) and delegates to
+  /// value() for efficiency.  Otherwise it parses the specification and
+  /// converts an AMOUNT, or each component of a BALANCE, with the first
+  /// entry that matches it and can price it.
   ///
   /// @param commodities  Comma-separated exchange specification string.
   /// @param add_prices   If true, record discovered prices in the price
@@ -558,7 +551,7 @@ public:
   /// @param moment       The point in time for price lookup.
   /// @return The repriced value.
   value_t exchange_commodities(const std::string& commodities, const bool add_prices = false,
-                               const datetime_t& moment = datetime_t());
+                               const datetime_t& moment = datetime_t()) const;
 
   /**
    * Truth tests.
@@ -596,24 +589,27 @@ public:
    * is_date()
    * is_amount()
    * is_balance()
+   * is_commodity()
    * is_string()
    * is_mask()
    * is_sequence()
+   * is_scope()
    * is_any()
    *
    * There are corresponding as_*() methods that represent a value as a
    * reference to its underlying type.  For example, as_long() returns a
    * reference to a "const long".
    *
-   * There are also as_*_lval() methods, which represent the underlying data
-   * as a reference to a non-const type.  The difference here is that an
-   * _lval() call causes the underlying data to be fully copied before the
-   * resulting reference is returned.
+   * Every type except VOID, COMMODITY and SCOPE also has an as_*_lval()
+   * method, which returns a reference to a non-const type.  Before
+   * returning, an _lval() call gives this value a private copy of its
+   * storage if that storage is shared with another value_t (copy-on-write,
+   * see _dup()), so writing through the reference never changes another
+   * value.
    *
    * Lastly, there are corresponding set_*(data) methods for directly
    * assigning data of a particular type, rather than using the regular
-   * assignment operator (whose implementation simply calls the various set_
-   * methods).
+   * assignment operator.
    */
   bool is_boolean() const { return is_type(BOOLEAN); }
   bool& as_boolean_lval() {
@@ -695,16 +691,16 @@ public:
   balance_t& as_balance_lval() {
     VERIFY(is_balance());
     _dup();
-    return *std::get<balance_t*>(storage->data);
+    return std::get<balance_t>(storage->data);
   }
   const balance_t& as_balance() const {
     VERIFY(is_balance());
-    return *std::get<balance_t*>(storage->data);
+    return std::get<balance_t>(storage->data);
   }
   void set_balance(const balance_t& val) {
     VERIFY(val.valid());
     set_type(BALANCE);
-    storage->data = new balance_t(val);
+    storage->data = val;
   }
 
   bool is_commodity() const { return is_type(COMMODITY); }
@@ -785,10 +781,13 @@ public:
   }
 
   /**
-   * Dealing with any type at all is bit involved because we actually
-   * deal with typed object.  For example, if you call as_any it returns
-   * a std::any object, but if you use as_any<type_t>, then it returns
-   * a type_t by value.
+   * Dealing with any type at all is a bit involved because we actually
+   * deal with typed objects.  as_any() returns a reference to the
+   * std::any object itself.  as_any<T>() returns a const T& to the T
+   * it contains (std::any_cast<const T&>) and never copies it.
+   * as_any_lval<T>() returns a T&; like every _lval call, it first
+   * un-shares shared storage (see _dup()).  Either reference is valid
+   * only while this value's storage is.
    */
   bool is_any() const { return is_type(ANY); }
   template <typename T>
@@ -830,7 +829,6 @@ public:
   bool to_boolean() const;
   int to_int() const;
   long to_long() const;
-  std::size_t to_size_t() const { return static_cast<std::size_t>(to_long()); }
   datetime_t to_datetime() const;
   date_t to_date() const;
   amount_t to_amount() const;
@@ -843,13 +841,20 @@ public:
   /**
    * Dynamic typing conversion methods.
    *
-   * `cast(type_t)` returns a new value whose type has been cast to
+   * `casted(type_t)` returns a new value whose type has been cast to
    * the given type, but whose value is based on the original value.
    * For example, the uncommoditized AMOUNT "100.00" could be cast to
-   * an INTEGER value.  If a cast would lose information or is not
-   * meaningful, an exception is thrown.
+   * an INTEGER value.  A cast with no conversion path throws
+   * value_error, and so do BALANCE -> AMOUNT for a balance with more
+   * than one non-zero commodity and STRING -> INTEGER for a string
+   * that does not parse as a long; the other STRING casts throw when
+   * the string does not parse (STRING -> COMMODITY when it names no
+   * known commodity).  No cast throws for lost precision or a dropped
+   * commodity: AMOUNT -> INTEGER rounds to the nearest integer (ties
+   * to even) and drops the commodity.  See the Section 3 table in
+   * value.cc.
    *
-   * `simplify()` is an automatic cast to the simplest type that can
+   * `simplified()` is an automatic cast to the simplest type that can
    * still represent the original value.
    *
    * There are also "in-place" versions of these two methods:
@@ -878,8 +883,12 @@ public:
   void annotate(const annotation_t& details);
   bool has_annotation() const;
 
-  annotation_t& annotation();
-  const annotation_t& annotation() const { return const_cast<value_t&>(*this).annotation(); }
+  const annotation_t& annotation() const;
+  // The annotation is the pooled commodity's own (non-const) details, so
+  // writing through it never touches this value's storage.
+  annotation_t& annotation() {
+    return const_cast<annotation_t&>(std::as_const(*this).annotation());
+  }
 
   value_t strip_annotations(const keep_details_t& what_to_keep) const;
 
@@ -975,7 +984,7 @@ public:
   /**
    * Informational methods.
    */
-  [[nodiscard]] string label(optional<type_t> the_type = none) const;
+  [[nodiscard]] string label(optional<type_t> the_type = std::nullopt) const;
 
   /**
    * Printing methods.  With AMOUNT_PRINT_COLORIZE, print renders negative
@@ -999,7 +1008,6 @@ inline value_t string_value(const string& str = "") {
   return value_t(str, true);
 }
 
-#define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
 #define SIMPLIFIED_VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val).simplified())
 
 inline value_t mask_value(const string& str) {
@@ -1013,7 +1021,7 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
 
 inline string value_context(const value_t& val) {
   std::ostringstream buf;
-  val.print(buf, 20, 20, true);
+  val.print(buf, 20, 20, AMOUNT_PRINT_RIGHT_JUSTIFY);
   return buf.str();
 }
 

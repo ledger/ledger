@@ -97,17 +97,13 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        account_t* ref_account) {
   scorecard_t scores;
 
-  // Normalize the search identifier to lowercase for case-insensitive
-  // matching.  Unicode-aware lowering is not yet implemented when
-  // Boost.Regex unicode support is unavailable.
-#if !HAVE_BOOST_REGEX_UNICODE
+  // Fold the identifier and each candidate payee to lowercase so that
+  // scoring ignores case.  to_lower() folds ASCII letters only (the C
+  // locale) and leaves UTF-8 bytes intact; the exact-match test below still
+  // compares the raw strings.
   string lident = ident;
   to_lower(lident);
   unistring lowered_ident(lident);
-#else
-  // jww (2010-03-07): Not yet implemented
-  unistring lowered_ident(ident);
-#endif
 
   DEBUG("lookup.account", "Looking up identifier '" << lowered_ident.extract() << "'");
 #if DEBUG_ON
@@ -120,13 +116,6 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   xact_t* xact;
   bool found_exact = false;
   while (!found_exact && iter != end && (xact = *iter++) != nullptr) {
-#if 0
-    // Only consider transactions from the last two years (jww (2010-03-07):
-    // make this an option)
-    if ((CURRENT_DATE() - xact->date()).days() > 700)
-      continue;
-#endif
-
     // Collect all effective payees: the header payee plus any Payee: tags
     // on postings.
     std::vector<string> payee_candidates;
@@ -148,14 +137,9 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         break;
       }
 
-#if !HAVE_BOOST_REGEX_UNICODE
       string payee = candidate;
       to_lower(payee);
       unistring value_key(payee);
-#else
-      // jww (2010-03-07): Not yet implemented
-      unistring value_key(candidate);
-#endif
 
       DEBUG("lookup", "Considering payee: " << value_key.extract());
 
@@ -181,8 +165,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         // matches.
 
         char_positions_map::iterator pi = positions.find(ch);
-        while (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
-               (*pi).second + 1 < value_len)
+        if (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
+            (*pi).second + 1 < value_len)
           pos = value_key.find(ch, (*pi).second + 1);
 
         if (pos != unistring::npos) {
@@ -208,14 +192,11 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
             last_match_pos = pos;
           }
 
-          // If it occurs in the same general sequence as the source identifier,
-          // it's worth 5 points, plus an extra point if it's within the next 3
-          // characters, and an extra point if it's preceded by a non-alphabetic
-          // character.
-          //
-          // If the letter occurs at all in the target identifier, it's worth 1
-          // point, plus an extra point if it's within 3 characters, and an
-          // extra point if it's preceded by a non-alphabetic character.
+          // Otherwise the letter is worth 5 points if it occurs in the payee
+          // at or after the position it has in the identifier, or 1 point if
+          // it occurs before it.  An in-order match (one lying past the
+          // previous match) that lies at most 2 positions past the letter's
+          // position in the identifier earns 1 more point.
 
           else {
             bool in_order_match = (last_match_pos != unistring::npos && pos > last_match_pos);
@@ -232,21 +213,6 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 
             if (in_order_match && pos - index < 3)
               addend++;
-
-#if 0
-#if !HAVE_BOOST_REGEX_UNICODE
-            // Probably doesn't make sense with value_key as unistring,
-            // but this code is under #if 0 anyway, so if anyone is
-            // tempted to use this by changing value_key to string, let's
-            // avoid leaving a rake to step on.
-            if (pos == 0 ||
-                (pos > 0 &&
-                 !std::isalnum(static_cast<unsigned char>(value_key[pos - 1]))))
-              addend++;
-#else
-            // jww (2010-03-07): Not yet implemented
-#endif
-#endif
 
             last_match_pos = pos;
           }

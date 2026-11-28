@@ -1,4 +1,4 @@
-; Test commodity compare with recursive disparity
+; Lots priced in $ and in EUR sort by the price commodity's symbol
 2024/01/01 Buy A
     Assets:Stocks    10 AAPL {$100.00}
     Assets:Cash

@@ -1,0 +1,22 @@
+; A sequence compares with a number element by element, and a value
+; expression evaluates `a > b` as `b < a`.  So an element that cannot be
+; compared with the number is reported as the `<` comparison that was
+; made: `("a", 1) > 0` asks whether 0 is less than "a".
+
+test eval '("a", 1) > 0' -> 1
+__ERROR__
+While evaluating value expression:
+  (("a", 1) > 0)
+  ^^^^^^^^^^^^^^
+While comparing if 0 is less than a:
+Error: Cannot compare an amount to a string
+end test
+
+test eval '("a", 1) < 0' -> 1
+__ERROR__
+While evaluating value expression:
+  (("a", 1) < 0)
+  ^^^^^^^^^^^^^^
+While comparing if a is less than 0:
+Error: Cannot compare a string to an amount
+end test

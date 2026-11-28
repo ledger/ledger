@@ -1,0 +1,50 @@
+; An identifier that begins with a reserved word followed by '_' is one
+; identifier, not the reserved word followed by another name.
+
+test eval 'or_x=3; or_x'
+3
+end test
+
+test eval 'and_b=5; and_b'
+5
+end test
+
+test eval 'not_x=2; not_x'
+2
+end test
+
+test eval 'div_c=6; div_c'
+6
+end test
+
+test eval 'if_a=4; if_a'
+4
+end test
+
+test eval 'if_=1; if_'
+1
+end test
+
+test eval 'else_d=7; else_d'
+7
+end test
+
+test eval 'true_x=3; true_x'
+3
+end test
+
+test eval 'false_e=8; false_e'
+8
+end test
+
+test eval 'true and not false'
+1
+end test
+
+test eval '7 div 2 or false'
+3.5
+end test
+
+test eval '1 if false else 2'
+2
+end test

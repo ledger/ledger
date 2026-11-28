@@ -1,0 +1,42 @@
+; A quoted or /regex/ term after for/since/until is a period word, never a
+; section keyword.  These queries used to rewind the query lexer to an
+; iterator that was never set (exit 139); now the quoted word reaches the
+; period parser, which rejects it.
+
+2024/01/15 January Purchase
+    Expenses:Books    $25.00
+    Liabilities:Cards
+
+2024/05/20 May Dinner
+    Expenses:Dining   $40.00
+    Assets:Checking
+
+test reg for "'show'" -> 1
+__ERROR__
+Error: Unexpected date period token 'show'
+end test
+
+test reg for /until/ -> 1
+__ERROR__
+Error: Unexpected end of expression
+end test
+
+test reg for '"since"' -> 1
+__ERROR__
+Error: Unexpected end of expression
+end test
+
+test reg Books for "'bold'" -> 1
+__ERROR__
+Error: Unexpected date period token 'bold'
+end test
+
+test reg for 2024 "'show'" Books -> 1
+__ERROR__
+Error: Unexpected date period token 'books'
+end test
+
+test reg for 2024 /only/ Books -> 1
+__ERROR__
+Error: Unexpected date period token 'books'
+end test

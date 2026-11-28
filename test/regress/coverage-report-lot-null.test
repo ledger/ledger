@@ -3,4 +3,5 @@
     Assets:Cash
 
 test reg --format '%(lot_date(amount))%(lot_price(amount))%(lot_tag(amount))\n' Expenses:Food
+
 end test

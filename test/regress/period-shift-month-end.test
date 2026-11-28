@@ -1,0 +1,55 @@
+; --period-shift N starts each monthly, quarterly or yearly period N days
+; after the calendar period's first day.  The boundary is computed from
+; the calendar start (Jan 1 + 30 = Jan 31, Feb 1 + 30 = Mar 2 in 2024;
+; Feb 1 + 27 = Feb 28 in 2023), never by month arithmetic on a shifted
+; date, which snaps a month-end boundary to the next month's end.
+
+2023/02/10 Fee 1
+    Expenses:Fee    $1
+    Assets:Cash
+
+2023/03/01 Fee 2
+    Expenses:Fee    $2
+    Assets:Cash
+
+2023/03/29 Fee 3
+    Expenses:Fee    $4
+    Assets:Cash
+
+2024/03/01 A
+    Expenses:Rent    $1
+    Assets:Cash
+
+2024/03/15 B
+    Expenses:Rent    $2
+    Assets:Cash
+
+2024/04/05 C
+    Expenses:Rent    $4
+    Assets:Cash
+
+test reg -M --period-shift 30 Expenses:Rent
+24-Jan-31 - 24-Mar-01  Expenses:Rent                      $1           $1
+24-Mar-02 - 24-Mar-30  Expenses:Rent                      $2           $3
+24-Mar-31 - 24-Apr-30  Expenses:Rent                      $4           $7
+end test
+
+test reg --quarterly --period-shift 30 Expenses:Rent
+24-Jan-31 - 24-Apr-30  Expenses:Rent                      $7           $7
+end test
+
+test reg -M --period-shift 27 Expenses:Fee
+23-Jan-28 - 23-Feb-27  Expenses:Fee                       $1           $1
+23-Feb-28 - 23-Mar-27  Expenses:Fee                       $2           $3
+23-Mar-28 - 23-Apr-27  Expenses:Fee                       $4           $7
+end test
+
+; A negative shift starts each period before the calendar month's first
+; day, so the boundary follows the previous month's length (Jan 27,
+; Feb 24, Mar 27, Apr 26 in 2023) instead of repeating the first shifted
+; day number.
+test reg -M --period-shift -5 Expenses:Fee
+23-Jan-27 - 23-Feb-23  Expenses:Fee                       $1           $1
+23-Feb-24 - 23-Mar-26  Expenses:Fee                       $2           $3
+23-Mar-27 - 23-Apr-25  Expenses:Fee                       $4           $7
+end test

@@ -1,0 +1,14 @@
+; Everything after "--" on the command line is a query term, never an
+; option.  The scan that applies --now ahead of the other options must
+; stop there too: "--now=foo" below is a query term that matches no
+; account, not a --now option with a bad date.
+
+i 2018/12/15 10:00:00 Work:ProjectA
+o 2018/12/15 12:00:00
+
+i 2018/12/15 13:00:00 Work:ProjectB
+o 2018/12/15 15:00:00
+
+test reg -- ProjectB or --now=foo
+18-Dec-15                       Work:ProjectB                 2.00h        2.00h
+end test

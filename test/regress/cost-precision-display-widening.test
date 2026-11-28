@@ -1,0 +1,50 @@
+; An amount inferred from a cost (#1692) is tested for zero and printed
+; at one precision: the commodity's, widened to the precision of the cost
+; when the commodity's stored precision is 0 or the amount would round to
+; zero at it.  Once a later amount teaches the commodity a precision that
+; shows the inferred amount, that precision governs.  The inferred
+; amounts here are negative and positive, below and above one unit.
+
+2018-01-01 * Foo
+    Assets:A                    2 X @ 0.2 Y
+    Assets:B
+
+2018-02-01 * Bar
+    Assets:C                   -2 M @ 0.0002 N
+    Assets:D
+
+2018-03-01 * Baz
+    Assets:E                    1.25 Y
+    Assets:F                   -1.25 Y
+
+2018-04-01 * Qux
+    Assets:G                    3 X @ 0.123 Y
+    Assets:H
+
+test bal
+                -2 M
+             N0.0004
+                 5 X
+             -0.77 Y  Assets
+                 2 X    A
+             -0.40 Y    B
+                -2 M    C
+             N0.0004    D
+              1.25 Y    E
+             -1.25 Y    F
+                 3 X    G
+             -0.37 Y    H
+--------------------
+                -2 M
+             N0.0004
+                 5 X
+             -0.77 Y
+end test
+
+test reg Assets:B Assets:D Assets:H
+18-Jan-01 Foo                   Assets:B                    -0.40 Y      -0.40 Y
+18-Feb-01 Bar                   Assets:D                    N0.0004      N0.0004
+                                                                         -0.40 Y
+18-Apr-01 Qux                   Assets:H                    -0.37 Y      N0.0004
+                                                                         -0.77 Y
+end test

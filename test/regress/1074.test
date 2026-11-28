@@ -62,18 +62,19 @@
     A                 $10
     B
 
+; A yearless month is its most recent occurrence by --now (see yearless-date-rollback-rule.test).
 test --now 2012-02-03 reg -p "from june to july"
-2012-06-01 Jun 2012             A                               $10          $10
+2011-06-01 Jun 2011             A                               $10          $10
                                 B                              $-10            0
 end test
 
 test --now 2013-02-03 reg -p "from june to july"
-2013-06-01 Jun 2013             A                               $10          $10
+2012-06-01 Jun 2012             A                               $10          $10
                                 B                              $-10            0
 end test
 
 test --now 2014-02-03 reg -p "from june to july"
-2014-06-01 Jun 2014             A                               $10          $10
+2013-06-01 Jun 2013             A                               $10          $10
                                 B                              $-10            0
 end test
 
@@ -83,6 +84,12 @@ test --now 2014-10-02 reg -p "from june to july"
 end test
 
 test --now 2012-02-03 reg -p "from june to july 2014"
+2011-06-01 Jun 2011             A                               $10          $10
+                                B                              $-10            0
+2011-07-01 Jul 2011             A                               $10          $10
+                                B                              $-10            0
+2011-08-01 Aug 2011             A                               $10          $10
+                                B                              $-10            0
 2012-06-01 Jun 2012             A                               $10          $10
                                 B                              $-10            0
 2012-07-01 Jul 2012             A                               $10          $10
@@ -111,6 +118,12 @@ test --now 2013-10-02 reg -p "from june to july 2014"
 end test
 
 test --now 2014-01-02 reg -p "from june to july 2014"
+2013-06-01 Jun 2013             A                               $10          $10
+                                B                              $-10            0
+2013-07-01 Jul 2013             A                               $10          $10
+                                B                              $-10            0
+2013-08-01 Aug 2013             A                               $10          $10
+                                B                              $-10            0
 2014-06-01 Jun 2014             A                               $10          $10
                                 B                              $-10            0
 end test

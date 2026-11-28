@@ -22,4 +22,4 @@ if __name__ == "__main__":
                                  parents=[CheckManpage.parser()]).parse_args()
   script = CheckManpage(args)
   status = script.main()
-  sys.exit(status)
+  sys.exit(1 if status else 0)

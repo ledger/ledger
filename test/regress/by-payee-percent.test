@@ -1,0 +1,25 @@
+; --by-payee uses each payee name verbatim: a '%' in a payee is not a
+; strftime conversion.  Before the fix "100% Fun %Y" printed as "100 Fun 2024".
+
+2024/01/15 100% Fun %Y
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Plain Shop
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-15 100% Fun %Y           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Jan-20 Plain Shop            Assets:Cash                  $-5.00       $-5.00
+                                Expenses:Food                 $5.00            0
+end test
+
+; --date-format does not reach the payee either.
+test reg --by-payee --date-format '%Y'
+2024 100% Fun %Y           Assets:Cash                   $-10.00      $-10.00
+                           Expenses:Food                  $10.00            0
+2024 Plain Shop            Assets:Cash                    $-5.00       $-5.00
+                           Expenses:Food                   $5.00            0
+end test

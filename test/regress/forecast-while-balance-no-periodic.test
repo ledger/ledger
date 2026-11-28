@@ -1,0 +1,19 @@
+; With no periodic transactions, --forecast-while has nothing to bound.
+; A balance report then never evaluates its predicate: accounts reports
+; install no forecast-while filter_posts, and forecast_posts evaluates the
+; predicate only on generated forecast groups.  An invalid predicate (the
+; bare word Food) therefore goes unreported in bal, and the report prints
+; the plain balance.  reg still evaluates the predicate on every posting
+; and reports the error.  (bal --budget is a separate case, pinned by
+; forecast-while-balance-budget.test.)
+
+2030/03/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --forecast-while Food --now 2030/06/15
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

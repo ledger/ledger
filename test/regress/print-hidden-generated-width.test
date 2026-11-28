@@ -1,0 +1,22 @@
+; print aligns amounts to the postings it prints: a generated posting
+; that print hides must not widen the account column.
+
+= /Food/
+    (Liabilities:Some:Very:Long:Generated:Account:Name:Here)    0.1
+
+2024/01/01 Grocery
+    Expenses:Food    $10
+    Assets:Cash
+
+test print
+2024/01/01 Grocery
+    Expenses:Food                                $10
+    Assets:Cash
+end test
+
+test print --generated
+2024/01/01 Grocery
+    Expenses:Food                                                    $10
+    Assets:Cash                                                     $-10
+    (Liabilities:Some:Very:Long:Generated:Account:Name:Here)          $1
+end test

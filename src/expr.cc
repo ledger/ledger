@@ -63,7 +63,6 @@
 // scope.h must be included before the symbol_scope_t / lexical_scope_t definitions
 // are needed by merged_expr_t methods below.
 
-#include <boost/smart_ptr/scoped_ptr.hpp>
 #include <utility>
 
 namespace ledger {
@@ -103,6 +102,9 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
     ptr = _expr.ptr;
     fast_path_ = _expr.fast_path_;
     accumulator_scope_.reset();
+    // The copy owns a fresh accumulator scope, so it must recompile to
+    // declare its accumulators there again.
+    compiled = false;
   }
   return *this;
 }
@@ -129,11 +131,10 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
   } else if (end_pos > start_pos) {
     in.clear();
     in.seekg(start_pos, std::ios::beg);
-    scoped_array<char> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
-    std::streamoff len = std::streamoff(end_pos) - std::streamoff(start_pos);
-    in.read(buf.get(), len);
-    buf[len] = '\0';
-    set_text(buf.get());
+    string text(static_cast<std::size_t>(end_pos - start_pos), '\0');
+    in.read(text.data(), static_cast<std::streamsize>(text.size()));
+    text.resize(static_cast<std::size_t>(in.gcount()));
+    set_text(text);
   } else {
     set_text("<stream>");
   }
@@ -141,11 +142,50 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 
 /*--- Compilation ---*/
 
+namespace {
+
+/// @brief The scope an expr_t compiles through: every lookup and every
+/// ordinary definition goes to the caller's scope, but an accumulator's
+/// PLUG sentinel goes to the expression's own accumulator scope.
+///
+/// op_t::compile defines a PLUG through its compile scope only for a
+/// self-referential O_DEFINE (an accumulator such as n=n+1); lambda
+/// parameters get theirs in a private scope.  So the PLUG kind is what
+/// tells an accumulator's declaration apart from a definition that other
+/// expressions may share.  The accumulator scope is deliberately not
+/// searched here: after mark_uncompiled() it holds the running value,
+/// which a compile-time lookup would inline as a constant.  For the same
+/// reason a PLUG never replaces a value already there.
+class accumulator_compile_scope_t : public child_scope_t {
+  scope_t& accumulators;
+
+public:
+  accumulator_compile_scope_t(scope_t& caller, scope_t& _accumulators)
+      : child_scope_t(caller), accumulators(_accumulators) {}
+
+  string description() override { return parent->description(); }
+
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
+    if (def && def->kind == expr_t::op_t::PLUG) {
+      if (!accumulators.lookup(kind, name))
+        accumulators.define(kind, name, def);
+    } else {
+      child_scope_t::define(kind, name, def);
+    }
+  }
+};
+
+} // namespace
+
 void expr_t::compile(scope_t& scope) {
   if (!compiled) {
     if (ptr) {
       fast_path_ = fast_path_t::NONE;
-      ptr = ptr->compile(scope);
+      if (!accumulator_scope_)
+        accumulator_scope_ = std::make_unique<symbol_scope_t>();
+      accumulator_compile_scope_t sentinels(scope, *accumulator_scope_);
+      ptr = ptr->compile(sentinels);
       detect_fast_path();
     }
     base_type::compile(scope);
@@ -162,15 +202,14 @@ void expr_t::detect_fast_path() {
   // By detecting this pattern, callers can bypass the full
   // scope/calc machinery.
   if (ptr && ptr->is_ident()) {
-    const string& name = ptr->as_ident();
-    if (name == "amount" || name == "a")
+    if (is_post_amount_ident(ptr->as_ident()))
       fast_path_ = fast_path_t::POST_AMOUNT;
   }
 }
 
 /*--- Evaluation ---*/
 
-value_t expr_t::calc_with_scope(scope_t& scope) {
+value_t expr_t::calc_with_scope(scope_t& scope, ptr_op_t* locus) {
   static thread_local int eval_depth = 0;
 
   struct EvalDepthGuard {
@@ -181,7 +220,7 @@ value_t expr_t::calc_with_scope(scope_t& scope) {
   if (ptr) {
     if (eval_depth > 256)
       throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
-    return ptr->calc(scope);
+    return ptr->calc(scope, locus);
   }
   return NULL_VALUE;
 }
@@ -194,7 +233,7 @@ value_t expr_t::real_calc(scope_t& scope) {
 
     ptr_op_t locus;
     try {
-      return ptr->calc(wrapped, &locus);
+      return calc_with_scope(wrapped, &locus);
     } catch (const recursion_error&) {
       throw;
     } catch (const std::exception&) {
@@ -211,18 +250,13 @@ value_t expr_t::real_calc(scope_t& scope) {
 
           std::istringstream in(buf.str());
           std::ostringstream out;
-          char linebuf[1024];
           bool first = true;
-          while (in.good() && !in.eof()) {
-            in.getline(linebuf, 1023);
-            std::streamsize len = in.gcount();
-            if (len > 0) {
-              if (first)
-                first = false;
-              else
-                out << '\n';
-              out << "  " << linebuf;
-            }
+          for (string line; std::getline(in, line);) {
+            if (first)
+              first = false;
+            else
+              out << '\n';
+            out << "  " << line;
           }
           add_error_context(out.str());
         }
@@ -248,16 +282,6 @@ bool expr_t::is_function() const {
   return ptr && ptr->is_function();
 }
 
-value_t& expr_t::constant_value() {
-  assert(is_constant());
-  return ptr->as_value_lval();
-}
-
-const value_t& expr_t::constant_value() const {
-  assert(is_constant());
-  return ptr->as_value();
-}
-
 expr_t::func_t& expr_t::get_function() {
   assert(is_function());
   return ptr->as_function_lval();
@@ -281,9 +305,9 @@ void expr_t::dump(std::ostream& out) const {
 
 /*--- merged_expr_t Implementation ---*/
 
-merged_expr_t::merged_expr_t(const string& _term, const string& expr, const string& merge_op)
-    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
-  TRACE_CTOR(merged_expr_t, "string, string, string");
+merged_expr_t::merged_expr_t(const string& _term, const string& expr)
+    : expr_t(), term(_term), base_expr(expr) {
+  TRACE_CTOR(merged_expr_t, "string, string");
 }
 
 // NOLINTBEGIN(bugprone-copy-constructor-init)
@@ -291,8 +315,7 @@ merged_expr_t::merged_expr_t(const string& _term, const string& expr, const stri
 // starts with a fresh, uncompiled expression state.  push_report() needs an
 // independent expression context for the new report, not a shared compiled state.
 merged_expr_t::merged_expr_t(const merged_expr_t& other)
-    : expr_t(), term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
-      exprs(other.exprs) {
+    : expr_t(), term(other.term), base_expr(other.base_expr), exprs(other.exprs) {
   TRACE_CTOR(merged_expr_t, "copy");
 }
 // NOLINTEND(bugprone-copy-constructor-init)
@@ -302,7 +325,6 @@ merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
     expr_t::operator=(expr_t()); // reset to fresh uncompiled expression
     term = other.term;
     base_expr = other.base_expr;
-    merge_operator = other.merge_operator;
     exprs = other.exprs;
     // accumulator_scope_ reset is handled by expr_t::operator=() above
   }
@@ -315,8 +337,10 @@ merged_expr_t::~merged_expr_t() {
 
 bool merged_expr_t::check_for_single_identifier(const string& expr) {
   bool single_identifier = true;
+  // Only a bare alphanumeric name replaces the base expression.  A name
+  // containing '_' (e.g. display_amount) is appended as a merged step.
   for (const char* p = expr.c_str(); *p; ++p)
-    if (!std::isalnum(static_cast<unsigned char>(*p)) || *p == '_') {
+    if (!std::isalnum(static_cast<unsigned char>(*p))) {
       single_identifier = false;
       break;
     }
@@ -337,12 +361,8 @@ void merged_expr_t::compile(scope_t& scope) {
     std::ostringstream buf;
 
     buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
-    for (const string& expr : exprs) {
-      if (merge_operator == ";")
-        buf << merge_operator << term << "=(" << expr << ")";
-      else
-        buf << merge_operator << "(" << expr << ")";
-    }
+    for (const string& expr : exprs)
+      buf << ";" << term << "=(" << expr << ")";
     buf << ";" << term << ");__tmp_" << term;
 
     DEBUG("expr.merged.compile", "Compiled expr: " << buf.str());
@@ -357,7 +377,11 @@ void merged_expr_t::compile(scope_t& scope) {
   // PLUG sentinels and runtime values in the persistent accumulator_scope_
   // rather than propagating them up to report/session.  This prevents
   // accumulator variables from shadowing report-level functions such as
-  // fn_display_amount and fn_amount_expr in subsequent lookups.
+  // fn_display_amount and fn_amount_expr in subsequent lookups.  The
+  // context recorded for a later no-argument calc() is the caller's scope,
+  // never this stack-local wrapper.
+  if (!context)
+    context = &scope;
   lexical_scope_t wrapped(scope, *accumulator_scope_);
   expr_t::compile(wrapped);
 }
@@ -391,10 +415,6 @@ expr_t::ptr_op_t as_expr(const value_t& val) {
   return val.as_any<expr_t::ptr_op_t>();
 }
 
-void set_expr(value_t& val, expr_t::ptr_op_t op) {
-  val.set_any(op);
-}
-
 value_t expr_value(expr_t::ptr_op_t op) {
   value_t temp;
   temp.set_any(op);
@@ -404,36 +424,31 @@ value_t expr_value(expr_t::ptr_op_t op) {
 /*--- Script Command ---*/
 
 value_t script_command(call_scope_t& args) {
-  std::istream* in = nullptr;
-  scoped_ptr<ifstream> stream;
-  string pathname;
+  std::istream* in = &std::cin;
+  std::ifstream file;
 
   if (args.has(0)) {
-    pathname = args.get<string>(0);
-    stream.reset(new ifstream(path(pathname)));
-    in = stream.get();
-  } else {
-    pathname = "<stdin>";
-    in = &std::cin;
+    string pathname = args.get<string>(0);
+    file.open(path(pathname));
+    if (!file)
+      throw_(std::runtime_error, _f("Could not open script file: %1%") % pathname);
+    in = &file;
   }
 
   symbol_scope_t file_locals(args);
   std::size_t linenum = 0;
-  char buf[4096];
-  std::istream::pos_type pos;
 
-  while (in->good() && !in->eof()) {
-    pos = in->tellg();
-    in->getline(buf, 4095);
+  for (string line; std::getline(*in, line);) {
     linenum++;
 
-    char* p = skip_ws(buf);
+    char* p = skip_ws(line.data());
     if (*p && *p != ';') {
       try {
         expr_t(p).calc(file_locals);
       } catch (const std::exception&) {
         add_error_context(_f("While parsing value expression on line %1%:") % linenum);
-        add_error_context(source_context(pathname, pos, in->tellg(), "> "));
+        add_error_context("> " + line);
+        throw;
       }
     }
   }

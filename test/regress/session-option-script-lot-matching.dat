@@ -1,0 +1,2 @@
+xact --lot-matching fifo 2024/04/01 "Buy First" Assets:Brokerage -- -1 AAPL Assets:Cash
+xact 2024/04/01 "Buy First" Assets:Brokerage -- -1 AAPL Assets:Cash

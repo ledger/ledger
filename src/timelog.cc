@@ -45,7 +45,9 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
                          parse_context_t& context) {
   unique_ptr<xact_t> curr(new xact_t);
   curr->_date = in_event.checkin.date();
-  curr->code = out_event.desc; // if it wasn't used above
+  // The check-out description becomes the code, unless
+  // clock_out_from_timelog already made it the payee and cleared it.
+  curr->code = out_event.desc;
   curr->payee = in_event.desc;
   curr->pos = in_event.position;
 
@@ -79,7 +81,6 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
 
   post_t* raw_post = post.release();
   curr->add_post(raw_post);
-  account->add_post(raw_post);
 
   if (context.journal->bucket) {
     auto bp = std::make_unique<post_t>(context.journal->bucket, amt.negated(),
@@ -87,7 +88,6 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
     bp->set_state(out_event.completed ? item_t::CLEARED : item_t::UNCLEARED);
     post_t* raw_bp = bp.release();
     curr->add_post(raw_bp);
-    context.journal->bucket->add_post(raw_bp);
   }
 
   if (!context.journal->add_xact(curr.get()))
@@ -121,11 +121,6 @@ std::size_t clock_out_from_timelog(std::list<time_xact_t>& time_xacts, time_xact
     if (!found)
       throw parse_error(_("Timelog check-out event does not match any current check-ins"));
   }
-
-  if (event.checkin.is_not_a_date_time())
-    throw parse_error(_("Timelog check-in has no corresponding check-out"));
-  if (out_event.checkin.is_not_a_date_time())
-    throw parse_error(_("Timelog check-out has no corresponding check-in"));
 
   if (out_event.checkin < event.checkin)
     throw parse_error(_("Timelog check-out date less than corresponding check-in"));
@@ -191,28 +186,26 @@ void time_log_t::close() {
 
     for (account_t* account : accounts) {
       DEBUG("timelog", "Clocking out from account " << account->fullname());
-      context.count +=
-          clock_out_from_timelog(time_xacts, time_xact_t(none, now, false, account), context);
+      context.count += clock_out_from_timelog(
+          time_xacts, time_xact_t(std::nullopt, now, false, account), context);
     }
     assert(time_xacts.empty());
   }
 }
 
 void time_log_t::clock_in(const time_xact_t& event) {
-  if (!time_xacts.empty()) {
-    for (time_xact_t& time_xact : time_xacts) {
-      if (event.account == time_xact.account)
-        throw parse_error(_("Cannot double check-in to the same account"));
-    }
+  if (!event.account)
+    throw parse_error(_("Clock-in directive requires an account"));
+
+  for (time_xact_t& time_xact : time_xacts) {
+    if (event.account == time_xact.account)
+      throw parse_error(_("Cannot double check-in to the same account"));
   }
 
   time_xacts.push_back(event);
 }
 
 std::size_t time_log_t::clock_out(const time_xact_t& event) {
-  if (time_xacts.empty())
-    throw std::logic_error(_("Timelog check-out event without a check-in"));
-
   return clock_out_from_timelog(time_xacts, event, context);
 }
 

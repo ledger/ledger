@@ -1,0 +1,80 @@
+; Two copies of a transaction that carry the same UUID are one
+; transaction when they hold the same multiset of (account, amount)
+; postings, whatever order those postings appear in.  The later copy
+; is dropped and the earlier one is kept as written.
+
+2024/01/15 Store
+    ; UUID: reorder-1
+    Expenses:A          $10.00
+    Expenses:A          $20.00
+    Assets:Cash        $-30.00
+
+2024/01/15 Store
+    ; UUID: reorder-1
+    Expenses:A          $20.00
+    Expenses:A          $10.00
+    Assets:Cash        $-30.00
+
+; Same-account postings in two commodities, in swapped order: the
+; comparison must not order amounts of different commodities.
+
+2024/01/16 Exchange
+    ; UUID: reorder-2
+    Expenses:B          $5.00
+    Expenses:B          7 EUR
+    Assets:Cash        $-5.00
+    Assets:Cash        -7 EUR
+
+2024/01/16 Exchange
+    ; UUID: reorder-2
+    Expenses:B          7 EUR
+    Expenses:B          $5.00
+    Assets:Cash        -7 EUR
+    Assets:Cash        $-5.00
+
+; Same-account postings of one commodity under two lot prices, in
+; swapped order: lots are compared by their annotated commodity.
+
+2024/01/17 Broker
+    ; UUID: reorder-3
+    Assets:Broker       10 AAPL {$5.00} @ $5.00
+    Assets:Broker       10 AAPL {$6.00} @ $6.00
+    Assets:Cash       $-110.00
+
+2024/01/17 Broker
+    ; UUID: reorder-3
+    Assets:Broker       10 AAPL {$6.00} @ $6.00
+    Assets:Broker       10 AAPL {$5.00} @ $5.00
+    Assets:Cash       $-110.00
+
+test bal --columns=80
+            $-145.00
+             20 AAPL
+              -7 EUR  Assets
+             20 AAPL    Broker
+            $-145.00
+              -7 EUR    Cash
+              $35.00
+               7 EUR  Expenses
+              $30.00    A
+               $5.00
+               7 EUR    B
+--------------------
+            $-110.00
+             20 AAPL
+end test
+
+test reg --columns=80
+24-Jan-15 Store                 Expenses:A                   $10.00       $10.00
+                                Expenses:A                   $20.00       $30.00
+                                Assets:Cash                 $-30.00            0
+24-Jan-16 Exchange              Expenses:B                    $5.00        $5.00
+                                Expenses:B                    7 EUR        $5.00
+                                                                           7 EUR
+                                Assets:Cash                  $-5.00        7 EUR
+                                Assets:Cash                  -7 EUR            0
+24-Jan-17 Broker                Assets:Broker               10 AAPL      10 AAPL
+                                Assets:Broker               10 AAPL      20 AAPL
+                                Assets:Cash                $-110.00     $-110.00
+                                                                         20 AAPL
+end test

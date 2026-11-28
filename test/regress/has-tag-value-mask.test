@@ -1,0 +1,41 @@
+; A tag query with a value, such as %Foo=b or has_tag(/Foo/, /b/), matches
+; when any tag whose name matches has a matching value, as tag(/Foo/, /b/)
+; does.  It used to look only at the first tag whose name matched (Foo,
+; which sorts before FooBar), so it missed the FooBar: b below.
+
+2024/01/01 Tagged
+    ; Foo: a
+    ; FooBar: b
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Untagged
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Valueless
+    ; :Foo:
+    ; FooBar: c
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg %Foo=b
+24-Jan-01 Tagged                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg %Foo=a
+24-Jan-01 Tagged                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg %Foo=c
+24-Jan-03 Valueless             Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg Food --format '%P|%(has_tag(/Foo/, /b/))|%(tag(/Foo/, /b/))\n'
+Tagged|true|b
+Untagged|false|
+Valueless|false|
+end test

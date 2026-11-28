@@ -1,7 +1,8 @@
-; Coverage for value.cc
-; When --exchange specifies a source:target pair and the source commodity
-; does not exist in the commodity pool, sources.push_back(nullptr) is
-; called. Here NONEXIST is not a known commodity.
+; --exchange with a source:target entry whose source the commodity pool
+; does not know converts nothing: NONEXIST names no commodity, so the
+; entry can match no amount and every amount prints unconverted.  An
+; unknown source used to lift the entry's restriction and convert every
+; commodity.
 
 2024/01/01 Test
     Expenses:Food    100 EUR
@@ -11,7 +12,8 @@ P 2024/01/01 EUR $1.20
 
 test bal --exchange NONEXIST:$
             $-120.00  Assets:Cash
-             $120.00  Expenses:Food
+             100 EUR  Expenses:Food
 --------------------
-                   0
+            $-120.00
+             100 EUR
 end test

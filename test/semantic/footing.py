@@ -238,8 +238,10 @@ from decimal import Decimal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.append(os.path.dirname(HERE))
 import check_all  # journal extraction, shared with the bisimulation
 import sweep      # amount normalization
+from LedgerHarness import sanitized_env  # the environment the .test harness gives ledger
 
 NOW = ["--now", "2026/08/26"]
 COMMON = ["--permissive", "--real"]  # after the per-file flags and NOW
@@ -276,6 +278,14 @@ EXPECTED_REFUSALS = {
         "reason": "a lot price that is itself a two-commodity balance"
                   " cannot be valued (market() in bal -V and bal -G)",
     },
+    "test/regress/basket-price-precision.test": {
+        "stderr": "Cannot convert a balance with multiple commodities"
+                  " to an amount",
+        "reason": "each basket's value expression is a balance of two"
+                  " commodities, which market() cannot convert to one"
+                  " amount (bal -V and bal -G), as on"
+                  " value-expr-basket-order.test",
+    },
     "test/regress/value-expr-basket-order.test": {
         "stderr": "Cannot convert a balance with multiple commodities"
                   " to an amount",
@@ -283,26 +293,19 @@ EXPECTED_REFUSALS = {
                   " commodities, which market() cannot convert to one"
                   " amount (bal -V)",
     },
+    "test/regress/yearless-feb29-rollback.test": {
+        "stderr": "Day of month is not valid for year",
+        "reason": "the journal's one transaction is dated 02/29 without"
+                  " a year, which the test reads with --now 2029/01/15"
+                  " as 2028/02/29; under this check's --now 2026/08/26"
+                  " it falls in 2026, which has no Feb 29",
+    },
 }
 
 # Journals that C++ leaves unfooted: every report that fails, with its
 # total, unrealized row and gain, and the reason.  On regress/999-a the
 # -X report prints a total that leaves unconverted what its rows
-# convert, as before the G7 fix.  The rewrite journals are unfooted by
-# design: uses_cost_baseline (src/filters.cc) keeps the revaluation
-# between postings for a journal with an account-rewrite or
-# payee-rewrite directive, because rewrite_posts copies each posting
-# that a rule matches (for payee-rewrite, every posting of a
-# transaction whose payee it matches) into a transaction of its own,
-# dated by the posting.  On these journals that revaluation books no
-# gain under -V or -X.
-_REWRITE = ("{} directive: uses_cost_baseline keeps the revaluation"
-            " between postings, and bal -V --unrealized and bal -X $"
-            " --unrealized each total $200 with no unrealized row while"
-            " bal -G and bal -G -X $ report $200; the test pins the -V"
-            " report")
-_REWRITE_FAILS = {"total": {"$": "200"}, "unrealized": {},
-                  "gain": {"$": "200"}}
+# convert, as before the G7 fix.
 EXPECTED_NONFOOTING = {
     "test/regress/999-a.test": {
         "failures": {"-X": {"total": {"$": "-1000", "AAPL": "1000"},
@@ -313,12 +316,20 @@ EXPECTED_NONFOOTING = {
                    " unconverted, $-1000 and 1000 AAPL, with no"
                    " unrealized row, and bal -G -X $ prints nothing, as"
                    " on 3.4.1 and on the build before the G7 fix")},
-    "test/regress/unrealized-account-rewrite.test": {
-        "failures": {"-V": _REWRITE_FAILS, "-X": _REWRITE_FAILS},
-        "reason": _REWRITE.format("an account-rewrite")},
-    "test/regress/unrealized-payee-rewrite.test": {
-        "failures": {"-V": _REWRITE_FAILS, "-X": _REWRITE_FAILS},
-        "reason": _REWRITE.format("a payee-rewrite")},
+    "test/regress/lot-total-vs-displayed-unit.test": {
+        "failures": {"-V": {"total": {}, "unrealized": {},
+                            "gain": {"$": "-0.000001"}},
+                     "-X": {"total": {}, "unrealized": {},
+                            "gain": {"$": "-0.000001"}}},
+        "reason": ("Assets:C buys 3 Z @@ $10, a cost of $10, and sells"
+                   " them by the lot's displayed unit price, {$3.333333},"
+                   " a basis of $9.999999, so bal -B --flat keeps"
+                   " $0.000001 in Assets; bal -G and bal -G -X $ show it"
+                   " as a $-0.000001 loss, while bal -V --unrealized and"
+                   " bal -X $ --unrealized print nothing, no unrealized"
+                   " row among them.  The journal pins lot matching, not"
+                   " valuation; C++ behaves so on the build before"
+                   " P4-024 too")},
 }
 
 # Journals on which a valuation report is not compared because its rows
@@ -420,6 +431,12 @@ EXPECTED_UNVALUED = {
               " neither report values the XYZ holding, whose cost $1"
               " is a virtual posting's cost; -X $ values the $ rows and"
               " foots"),
+    "test/regress/alias-retired-lot-price-target.test": (
+        "-X", "the lot prices are in Yen, which a later alias retires"
+              " into JPY; bal -B still states the costs in Yen, so C is"
+              " Yen, and -X Yen, which the alias reads as JPY, values"
+              " every row in JPY; -V values them in Yen, as written in"
+              " the lot prices, and foots"),
 }
 
 # The tests the check exists for: on the default corpus each must PASS,
@@ -428,6 +445,7 @@ EXPECTED_COMPARED = {
     "test/baseline/opt-unrealized-gains.test": "-V -X",
     "test/regress/coverage-report-unrealized.test": "-V -X",
     "test/regress/flat-unrealized.test": "-V -X",
+    "test/regress/unrealized-account-rewrite.test": "-V -X",
     "test/regress/unrealized-excluded-reports.test": "-V -X",
     "test/regress/unrealized-footing-after-terminus.test": "-V -X",
     "test/regress/unrealized-footing-debit-credit.test": "-V -X",
@@ -436,6 +454,7 @@ EXPECTED_COMPARED = {
     "test/regress/unrealized-footing-same-day-lots.test": "-V -X",
     "test/regress/unrealized-footing-two-lots.test": "-V -X",
     "test/regress/unrealized-footing-unfiltered.test": "-V -X",
+    "test/regress/unrealized-payee-rewrite.test": "-V -X",
     "test/regress/unrealized-unpriced-holding.test": "-X",
 }
 
@@ -688,10 +707,14 @@ def classify_selftest():
     -> the cases that land in another bin than they must."""
     other = "test/regress/not-in-any-table.test"
     ref_rel, ref = sorted(EXPECTED_REFUSALS.items())[0]
-    nf_rel, nf = next((rel, e) for rel, e in
-                      sorted(EXPECTED_NONFOOTING.items())
-                      if sorted(e["failures"]) == ["-V", "-X"]
-                      and rel not in EXPECTED_UNVALUED)
+    # No journal of the corpus is recorded as unfooted under both reports
+    # (regress/999-a fails under -X alone), so the cases that need one
+    # record a journal of their own for the length of the selftest.
+    nf_rel = "test/regress/selftest-nonfooting.test"
+    nf_fails = {"total": {"$": "200"}, "unrealized": {},
+                "gain": {"$": "200"}}
+    nf = {"failures": {"-V": nf_fails, "-X": nf_fails},
+          "reason": "made up for classify_selftest"}
     nfu_rel, nfu = next((rel, e) for rel, e in
                         sorted(EXPECTED_NONFOOTING.items())
                         if EXPECTED_UNVALUED.get(rel, ("",))[0] == "-V")
@@ -755,10 +778,14 @@ def classify_selftest():
          {"dropped": {"-V": mixed, "-X": outside}}, fail),
     ]
     faults = []
-    for label, rel, b, why, want in cases:
-        got = classify(rel, b, why)[0]
-        if got != want:
-            faults.append(f"{label}: {got}, not {want}")
+    EXPECTED_NONFOOTING[nf_rel] = nf
+    try:
+        for label, rel, b, why, want in cases:
+            got = classify(rel, b, why)[0]
+            if got != want:
+                faults.append(f"{label}: {got}, not {want}")
+    finally:
+        del EXPECTED_NONFOOTING[nf_rel]
     return faults
 
 
@@ -858,7 +885,7 @@ def main():
 
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
-    env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
+    ledger_env = sanitized_env()
     dirs = args.dirs or [os.path.join(repo, "test", d)
                          for d in ("baseline", "regress", "manual")]
     if not os.path.isfile(ledger):
@@ -874,16 +901,16 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         home = os.path.join(tmp, "home")  # holds no .pricedb
         os.makedirs(home)
-        checker = Checker(ledger, {**env, "HOME": home})
-        jobs = []
+        checker = Checker(ledger, {**ledger_env, "HOME": home})
+        pending = []  # (rel, test path, journal, flags, dc)
         tests = sorted(os.path.join(root, f) for d in dirs
-                       for root, _, files in os.walk(d)
+                       for root, _, files in os.walk(os.path.abspath(d))
                        for f in files if f.endswith(".test"))
         if not tests:
             print("valuation footing: no .test file found under "
                   + ", ".join(dirs), file=sys.stderr)
             sys.exit(1)
-        for i, tpath in enumerate(tests):
+        for tpath in tests:
             rel = os.path.relpath(tpath, repo)
             journal, skip, flags, dc = check_all.classify_test_file(tpath)
             if journal is not None and check_all.has_python_block(journal):
@@ -903,13 +930,13 @@ def main():
             if "--now" in flags:
                 k = flags.index("--now")
                 flags = flags[:k] + flags[k + 2:]
-            fdir = os.path.join(tmp, f"{i:05d}")
-            os.makedirs(fdir)
-            dat = os.path.join(fdir, os.path.basename(tpath))
-            with open(dat, "w", encoding="utf-8") as fh:
-                fh.write(journal)
-            check_all.copy_includes(journal, os.path.dirname(tpath), fdir)
-            jobs.append((rel, dat, flags + NOW, dc))
+            pending.append((rel, tpath, journal, flags, dc))
+        # One tree that mirrors the sources, as check_all.py replays them.
+        dats = check_all.overlay(os.path.commonpath([repo, *tests]),
+                                 os.path.join(tmp, "tree"),
+                                 {t: j for _, t, j, _, _ in pending})
+        jobs = [(rel, dats[t], flags + NOW, dc)
+                for rel, t, _, flags, dc in pending]
 
         # Detector: the fixture, each valuation report limited to one
         # account, the perturbed price read by one -G report alone, and
@@ -1008,8 +1035,8 @@ def main():
             "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "git_rev": first_line(["git", "rev-parse", "HEAD"], cwd=repo),
             "ledger_version": first_line([ledger, "--args-only",
-                                          "--version"], env=env),
-            "tz": env["TZ"], "home": "an empty directory",
+                                          "--version"], env=ledger_env),
+            "tz": ledger_env["TZ"], "home": "an empty directory",
             "capture": "test/semantic/footing.py",
             "cpp_flags_common": ["--args-only", *NOW, *COMMON],
             "cpp_flags_note": ("per-file flags (--decimal-comma,"

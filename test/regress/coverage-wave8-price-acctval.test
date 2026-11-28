@@ -6,11 +6,11 @@ P 2024/01/01 EUR $1.10
 
 ; Test account value directive
 account Assets:Stocks
-  value =market(amount, date, "USD")
+  value market(amount, date, "USD")
 
 ; Test commodity value directive
 commodity AAPL
-  value =market(amount, date, "USD")
+  value market(amount, date, "USD")
 
 2024/01/01 Test
     Expenses:Food             $10.00

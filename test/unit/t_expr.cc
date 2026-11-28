@@ -54,14 +54,12 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer1)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer2)
@@ -69,14 +67,12 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer2)
   value_t args;
   args.push_back(string_value("foo and bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
@@ -86,7 +82,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar)"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -95,7 +90,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
@@ -107,7 +101,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
   args.push_back(string_value("bar"));
   args.push_back(string_value(")"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -116,7 +109,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
@@ -125,7 +117,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
   args.push_back(string_value("( foo and"));
   args.push_back(string_value("bar)"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -134,7 +125,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
@@ -144,7 +134,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
@@ -152,7 +141,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
@@ -160,13 +148,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
   value_t args;
   args.push_back(string_value("=foo and bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer8)
@@ -174,13 +160,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer8)
   value_t args;
   args.push_back(string_value("expr 'foo and bar'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer9)
@@ -189,13 +173,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer9)
   args.push_back(string_value("expr"));
   args.push_back(string_value("'foo and bar'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
@@ -206,7 +188,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
@@ -214,7 +195,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
@@ -226,7 +206,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
   args.push_back(string_value("or"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -235,7 +214,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
@@ -247,7 +225,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
   args.push_back(string_value("|"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -256,7 +233,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
@@ -267,7 +243,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
   args.push_back(string_value("bar"));
   args.push_back(string_value("|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -276,7 +251,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
@@ -287,7 +261,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
   args.push_back(string_value("bar|"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -296,7 +269,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
@@ -306,7 +278,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -315,7 +286,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
@@ -324,7 +294,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
   args.push_back(string_value("foo"));
   args.push_back(string_value("and bar|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -333,12 +302,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 // -----------------------------------------------------------------------
 // Tests for token.cc operator<<(ostream&, kind_t)
-// Exercises lines 560-681 of token.cc
+// Exercises token.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testTokenKindOutputError)
@@ -362,13 +330,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputIdent)
   BOOST_CHECK_EQUAL(out.str(), "<identifier>");
 }
 
-BOOST_AUTO_TEST_CASE(testTokenKindOutputMask)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::MASK;
-  BOOST_CHECK_EQUAL(out.str(), "<regex mask>");
-}
-
 BOOST_AUTO_TEST_CASE(testTokenKindOutputLparen)
 {
   std::ostringstream out;
@@ -381,20 +342,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputRparen)
   std::ostringstream out;
   out << expr_t::token_t::RPAREN;
   BOOST_CHECK_EQUAL(out.str(), ")");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenKindOutputLbrace)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::LBRACE;
-  BOOST_CHECK_EQUAL(out.str(), "{");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenKindOutputRbrace)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::RBRACE;
-  BOOST_CHECK_EQUAL(out.str(), "}");
 }
 
 BOOST_AUTO_TEST_CASE(testTokenKindOutputEqual)
@@ -523,13 +470,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputKwOr)
   BOOST_CHECK_EQUAL(out.str(), "or");
 }
 
-BOOST_AUTO_TEST_CASE(testTokenKindOutputKwMod)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::KW_MOD;
-  BOOST_CHECK_EQUAL(out.str(), "mod");
-}
-
 BOOST_AUTO_TEST_CASE(testTokenKindOutputKwIf)
 {
   std::ostringstream out;
@@ -595,8 +535,8 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputUnknown)
 
 // -----------------------------------------------------------------------
 // Tests for token.cc operator<<(ostream&, token_t)
-// Exercises lines 683-701 of token.cc
-// The token_t operator<< has special output for VALUE, IDENT, MASK;
+// Exercises token.cc
+// The token_t operator<< has special output for VALUE and IDENT;
 // other kinds delegate to kind_t operator<<
 // -----------------------------------------------------------------------
 
@@ -618,16 +558,6 @@ BOOST_AUTO_TEST_CASE(testTokenOutputIdentKind)
   std::ostringstream out;
   out << tok;
   BOOST_CHECK_EQUAL(out.str(), "<ident 'myvar'>");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenOutputMaskKind)
-{
-  expr_t::token_t tok;
-  tok.kind = expr_t::token_t::MASK;
-  tok.value = string_value("foo.*");
-  std::ostringstream out;
-  out << tok;
-  BOOST_CHECK_EQUAL(out.str(), "<mask 'foo.*'>");
 }
 
 BOOST_AUTO_TEST_CASE(testTokenOutputDefaultKind)
@@ -713,174 +643,146 @@ BOOST_AUTO_TEST_CASE(testTokenExpectedUnknownKind)
 
 BOOST_AUTO_TEST_CASE(testQueryLexerNotKeyword)
 {
-  // Cover query.cc line 212: "not" keyword -> TOK_NOT
+  // Cover query.cc: "not" keyword -> TOK_NOT
   value_t args;
   args.push_back(string_value("not"));
   args.push_back(string_value("foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOT, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerCodeKeyword)
 {
-  // Cover query.cc line 214: "code" keyword -> TOK_CODE
+  // Cover query.cc: "code" keyword -> TOK_CODE
   value_t args;
   args.push_back(string_value("code"));
   args.push_back(string_value("1234"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_CODE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerDescPayeeKeyword)
 {
-  // Cover query.cc lines 216-218: "desc" and "payee" keywords -> TOK_PAYEE
+  // Cover query.cc: "desc" and "payee" keywords -> TOK_PAYEE
   {
     value_t args;
     args.push_back(string_value("desc"));
     args.push_back(string_value("Grocery"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("payee"));
     args.push_back(string_value("Grocery"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerNoteKeyword)
 {
-  // Cover query.cc line 220: "note" keyword -> TOK_NOTE
+  // Cover query.cc: "note" keyword -> TOK_NOTE
   value_t args;
   args.push_back(string_value("note"));
   args.push_back(string_value("lunch"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTagMetaDataKeywords)
 {
-  // Cover query.cc lines 222-226: "tag", "meta", "data" keywords -> TOK_META
+  // Cover query.cc: "tag", "meta", "data" keywords -> TOK_META
   {
     value_t args;
     args.push_back(string_value("tag"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("meta"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("data"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerShowOnlyBoldKeywords)
 {
-  // Cover query.cc lines 228-232: "show", "only", "bold" keywords
+  // Cover query.cc: "show", "only", "bold" keywords
   {
     value_t args;
     args.push_back(string_value("show"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_SHOW, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("only"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_ONLY, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("bold"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_BOLD, tokens.next_token().kind);
-#endif
   }
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerForSinceUntilKeywords)
 {
-  // Cover query.cc lines 234-238: "for", "since", "until" keywords
+  // Cover query.cc: "for", "since", "until" keywords
   {
     value_t args;
     args.push_back(string_value("for"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_FOR, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("since"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_SINCE, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("until"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_UNTIL, tokens.next_token().kind);
-#endif
   }
 }
 
@@ -890,125 +792,107 @@ BOOST_AUTO_TEST_CASE(testQueryLexerSpecialChars)
   value_t args;
   args.push_back(string_value("!@#%foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOT, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_CODE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerQuotedPattern)
 {
-  // Cover query.cc lines 83-84, 93, 95: quoted patterns and error paths
+  // Cover query.cc: quoted patterns and error paths
   {
     // Single-quoted pattern
     value_t args;
     args.push_back(string_value("'food'"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
   {
     // Double-quoted pattern
     value_t args;
     args.push_back(string_value("\"food\""));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
   {
     // Regex pattern
     value_t args;
     args.push_back(string_value("/food/"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerEscapeInQuotedPattern)
 {
-  // Cover query.cc line 83-84: backslash in quoted pattern
+  // Cover query.cc: backslash in quoted pattern
   value_t args;
   args.push_back(string_value("'fo\\od'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   query_t::lexer_t::token_t tok = tokens.next_token();
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
   BOOST_CHECK(tok.value);
   BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerUnclosedQuote)
 {
-  // Cover query.cc line 93: unclosed quoted pattern
+  // Cover query.cc: unclosed quoted pattern
   value_t args;
   args.push_back(string_value("'food"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerEmptyPattern)
 {
-  // Cover query.cc line 95: empty pattern
+  // Cover query.cc: empty pattern
   value_t args;
   args.push_back(string_value("''"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerBackslashAtEnd)
 {
-  // Cover query.cc line 84: backslash at end of pattern
+  // Cover query.cc: backslash at end of pattern
   value_t args;
   args.push_back(string_value("'foo\\"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerUnbalancedBraces)
 {
-  // Cover query.cc lines 46-47: unbalanced_braces function
+  // Cover query.cc: unbalanced_braces function
   value_t args;
   args.push_back(string_value("test"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK(tokens.unbalanced_braces("(foo"));
   BOOST_CHECK(tokens.unbalanced_braces("foo)"));
   BOOST_CHECK(! tokens.unbalanced_braces("(foo)"));
   BOOST_CHECK(! tokens.unbalanced_braces("foo"));
   BOOST_CHECK(tokens.unbalanced_braces("((foo)"));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
@@ -1018,7 +902,6 @@ BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
   args.push_back(string_value("foo"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   // peek should return the token without consuming it
   query_t::lexer_t::token_t tok1 = tokens.peek_token();
@@ -1026,26 +909,22 @@ BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
   // next should return the same token
   query_t::lexer_t::token_t tok2 = tokens.next_token();
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok2.kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTokenExpected)
 {
-  // Cover query.cc lines 251-253: token_t::expected(char)
+  // Cover query.cc: token_t::expected(char)
   value_t args;
   args.push_back(string_value("foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   query_t::lexer_t::token_t tok = tokens.next_token();
   BOOST_CHECK_THROW(tok.expected(')'), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTokenSymbol)
 {
-  // Cover query.h lines 169-222: token_t::symbol() for all token types
-#ifndef NOT_FOR_PYTHON
+  // Cover query.h: token_t::symbol() for all token types
   {
     query_t::lexer_t::token_t tok;
     tok.kind = query_t::lexer_t::token_t::LPAREN;
@@ -1141,87 +1020,73 @@ BOOST_AUTO_TEST_CASE(testQueryLexerTokenSymbol)
     tok.kind = query_t::lexer_t::token_t::END_REACHED;
     BOOST_CHECK_EQUAL(string("<EOF>"), tok.symbol());
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseCode)
 {
-  // Cover query.cc parse_query_term for TOK_CODE (lines 328-330)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_query_term for TOK_CODE
   query_t query;
   value_t args;
   args.push_back(string_value("code"));
   args.push_back(string_value("1234"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParsePayee)
 {
-  // Cover query.cc parse_query_term for TOK_PAYEE (lines 325-327)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_query_term for TOK_PAYEE
   query_t query;
   value_t args;
   args.push_back(string_value("@Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNote)
 {
-  // Cover query.cc parse_query_term for TOK_NOTE (lines 331-333)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_query_term for TOK_NOTE
   query_t query;
   value_t args;
   args.push_back(string_value("=lunch"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseMeta)
 {
-  // Cover query.cc parse_query_term for TOK_META (lines 289-314)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_query_term for TOK_META
   query_t query;
   value_t args;
   args.push_back(string_value("%Payee"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseMetaWithEquals)
 {
-  // Cover query.cc lines 300-310: metadata with equality operator
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc: metadata with equality operator
   query_t query;
   value_t args;
   args.push_back(string_value("%Payee=Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNot)
 {
-  // Cover query.cc parse_unary_expr TOK_NOT (lines 373)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_unary_expr TOK_NOT
   query_t query;
   value_t args;
   args.push_back(string_value("not"));
   args.push_back(string_value("food"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseAnd)
 {
-  // Cover query.cc parse_and_expr TOK_AND (lines 399)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_and_expr TOK_AND
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
@@ -1229,13 +1094,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseAnd)
   args.push_back(string_value("@Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseOr)
 {
-  // Cover query.cc parse_or_expr TOK_OR (lines 420)
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc parse_or_expr TOK_OR
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
@@ -1243,13 +1106,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseOr)
   args.push_back(string_value("rent"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseShowOnlyBold)
 {
-  // Cover query.cc lines 454-488: SHOW, ONLY, BOLD query sections
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc: SHOW, ONLY, BOLD query sections
   {
     query_t query;
     value_t args;
@@ -1280,13 +1141,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseShowOnlyBold)
     BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
     BOOST_CHECK(query.has_query(query_t::QUERY_BOLD));
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseFor)
 {
-  // Cover query.cc lines 492-528: FOR/SINCE/UNTIL query sections
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc: FOR/SINCE/UNTIL query sections
   {
     query_t query;
     value_t args;
@@ -1319,13 +1178,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseFor)
     BOOST_CHECK(query.has_query(query_t::QUERY_FOR));
     BOOST_CHECK_EQUAL(string("until 2024"), query.get_query(query_t::QUERY_FOR));
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseParenthesized)
 {
-  // Cover query.cc lines 350-354: parenthesized subexpressions
-#ifndef NOT_FOR_PYTHON
+  // Cover query.cc: parenthesized subexpressions
   query_t query;
   value_t args;
   args.push_back(string_value("(food"));
@@ -1333,81 +1190,50 @@ BOOST_AUTO_TEST_CASE(testQueryParseParenthesized)
   args.push_back(string_value("rent)"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryGetQueryMissing)
 {
-  // Cover query.h lines 341-346: get_query for missing query returns empty
-#ifndef NOT_FOR_PYTHON
+  // Cover query.h: get_query for missing query returns empty
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
   query.parse_args(args);
   BOOST_CHECK_EQUAL(string(""), query.get_query(query_t::QUERY_SHOW));
-#endif
-}
-
-BOOST_AUTO_TEST_CASE(testQueryTokensRemaining)
-{
-  // Cover query.h line 349: tokens_remaining()
-#ifndef NOT_FOR_PYTHON
-  query_t query;
-  // With no parser initialized, tokens_remaining returns false
-  BOOST_CHECK(! query.tokens_remaining());
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryHasQueryNoParser)
 {
-  // Cover query.h line 338: has_query with no parser
-#ifndef NOT_FOR_PYTHON
+  // Cover query.h: has_query with no parser
   query_t query;
   BOOST_CHECK(! query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryGetQueryNoParser)
 {
-  // Cover query.h line 346: get_query with no parser
-#ifndef NOT_FOR_PYTHON
+  // Cover query.h: get_query with no parser
   query_t query;
   BOOST_CHECK_EQUAL(string(""), query.get_query(query_t::QUERY_LIMIT));
-#endif
-}
-
-BOOST_AUTO_TEST_CASE(testQueryConstructFromString)
-{
-  // Cover query.h lines 312-319: string constructor
-#ifndef NOT_FOR_PYTHON
-  string food_str("food");
-  query_t query(food_str, keep_details_t(), true);
-  BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryConstructFromValue)
 {
-  // Cover query.h lines 320-326: value_t constructor
-#ifndef NOT_FOR_PYTHON
+  // Cover query.h: value_t constructor
   value_t args;
   args.push_back(string_value("food"));
   query_t query(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryConstructEmpty)
 {
-  // Cover query.h lines 308, 312-319: empty string constructor
-#ifndef NOT_FOR_PYTHON
+  // Default and empty-argument constructors leave no query.
   query_t query1;
   BOOST_CHECK(! query1.has_query(query_t::QUERY_LIMIT));
 
-  string empty_str("");
-  query_t query2(empty_str, keep_details_t(), true);
+  value_t empty_args;
+  query_t query2(empty_args);
   BOOST_CHECK(! query2.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 // -----------------------------------------------------------------------
@@ -1418,7 +1244,6 @@ BOOST_AUTO_TEST_CASE(testQueryLexerAccountNotKeyword)
 {
   // Note: despite TOK_ACCOUNT existing in the enum, the lexer has no
   // keyword check for "account" -- it becomes a plain TERM.
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("account"));
   args.push_back(string_value("Food"));
@@ -1429,13 +1254,11 @@ BOOST_AUTO_TEST_CASE(testQueryLexerAccountNotKeyword)
   BOOST_CHECK(tok.value && *tok.value == "account");
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseImplicitOr)
 {
   // Multiple bare terms at top level are implicitly OR'd
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("Food"));
@@ -1446,35 +1269,29 @@ BOOST_AUTO_TEST_CASE(testQueryParseImplicitOr)
   string pred = query.get_query(query_t::QUERY_LIMIT);
   BOOST_CHECK(pred.find("Food") != string::npos);
   BOOST_CHECK(pred.find("Gas") != string::npos);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseCodeNoArg)
 {
   // 'code' keyword with no following argument should throw
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("code"));
   BOOST_CHECK_THROW(query.parse_args(args), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseExprNoArg)
 {
   // 'expr' keyword with no following argument should throw
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("expr"));
   BOOST_CHECK_THROW(query.parse_args(args), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseSinceNoLimit)
 {
   // 'since' with no limit predicate should still populate QUERY_FOR
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("since"));
@@ -1483,13 +1300,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseSinceNoLimit)
   BOOST_CHECK(! query.has_query(query_t::QUERY_LIMIT));
   BOOST_CHECK(query.has_query(query_t::QUERY_FOR));
   BOOST_CHECK(query.get_query(query_t::QUERY_FOR).find("since") != string::npos);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
 {
   // Nested parentheses: ((Food and @Grocery) or Gas)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("((Food"));
@@ -1499,7 +1314,6 @@ BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
   args.push_back(string_value("Gas)"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 // -----------------------------------------------------------------------
@@ -1508,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
 
 BOOST_AUTO_TEST_CASE(testExprContextToStr)
 {
-  // Cover expr.cc lines 213-215: context_to_str()
+  // Cover expr.cc: context_to_str()
   {
     expr_t expr("42");
     string ctx = expr.context_to_str();
@@ -1523,7 +1337,7 @@ BOOST_AUTO_TEST_CASE(testExprContextToStr)
 
 BOOST_AUTO_TEST_CASE(testExprPrint)
 {
-  // Cover expr.cc lines 217-220: print()
+  // Cover expr.cc: print()
   expr_t expr("42 + 1");
   std::ostringstream out;
   expr.print(out);
@@ -1532,7 +1346,7 @@ BOOST_AUTO_TEST_CASE(testExprPrint)
 
 BOOST_AUTO_TEST_CASE(testExprDump)
 {
-  // Cover expr.cc lines 222-224: dump()
+  // Cover expr.cc: dump()
   expr_t expr("42 + 1");
   std::ostringstream out;
   expr.dump(out);
@@ -1558,22 +1372,22 @@ BOOST_AUTO_TEST_CASE(testExprIsEmpty)
 }
 
 // -----------------------------------------------------------------------
-// Cover expr.cc line 185: NULL_VALUE return from empty expr
+// Cover expr.cc: NULL_VALUE return from empty expr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprCalcEmpty)
 {
-  // Cover expr.cc line 185: real_calc returns NULL_VALUE for empty expr
+  // Cover expr.cc: real_calc returns NULL_VALUE for empty expr
   expr_t expr;
   // An empty expression (no ptr) should not crash
   BOOST_CHECK(!expr); // operator bool returns false
 }
 
 // -----------------------------------------------------------------------
-// Cover expr.cc lines 266-279: as_expr, set_expr, expr_value
+// Cover expr.cc: as_expr, expr_value
 // -----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(testAsExprSetExprExprValue)
+BOOST_AUTO_TEST_CASE(testAsExprExprValue)
 {
   // Create a simple op
   expr_t e("42");
@@ -1587,15 +1401,10 @@ BOOST_AUTO_TEST_CASE(testAsExprSetExprExprValue)
   // as_expr: extracts op from value_t
   expr_t::ptr_op_t recovered = as_expr(val);
   BOOST_CHECK(recovered);
-
-  // set_expr: sets op on a value_t
-  value_t val2;
-  set_expr(val2, op);
-  BOOST_CHECK(val2.is_any());
 }
 
 // -----------------------------------------------------------------------
-// Cover expr.cc lines 105: parse from empty stream
+// Cover expr.cc: parse from empty stream
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprParseFromStream)
@@ -1608,7 +1417,7 @@ BOOST_AUTO_TEST_CASE(testExprParseFromStream)
 }
 
 // -----------------------------------------------------------------------
-// Cover expr.cc lines 193-196, 208-210: is_function, get_function
+// Cover expr.cc: is_function, get_function
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprIsFunction)
@@ -1620,13 +1429,13 @@ BOOST_AUTO_TEST_CASE(testExprIsFunction)
 }
 
 // -----------------------------------------------------------------------
-// Tests for op_t::dump() - exercises lines 835-930 of op.cc
+// Tests for op_t::dump() - exercises op.cc
 // Covers dump output for every operator type
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpDumpPlug)
 {
-  // Cover lines 835-836: PLUG case
+  // Cover PLUG case
   expr_t::ptr_op_t op(new expr_t::op_t(expr_t::op_t::PLUG));
   std::ostringstream out;
   op->dump(out, 0);
@@ -1635,7 +1444,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpPlug)
 
 BOOST_AUTO_TEST_CASE(testOpDumpScopeNull)
 {
-  // Cover lines 852-854: SCOPE with unset scope data
+  // Cover SCOPE with unset scope data
   expr_t::ptr_op_t op(new expr_t::op_t(expr_t::op_t::SCOPE));
   std::ostringstream out;
   op->dump(out, 0);
@@ -1645,7 +1454,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpScopeNull)
 
 BOOST_AUTO_TEST_CASE(testOpDumpScopeSet)
 {
-  // Cover lines 856-857: SCOPE with set scope pointer
+  // Cover SCOPE with set scope pointer
   expr_t::ptr_op_t op(new expr_t::op_t(expr_t::op_t::SCOPE));
   op->set_scope(std::make_shared<empty_scope_t>());
   op->set_left(expr_t::op_t::wrap_value(value_t(1L)));
@@ -1661,9 +1470,27 @@ BOOST_AUTO_TEST_CASE(testOpDumpScopeSet)
   BOOST_CHECK(after_scope != "null");
 }
 
+BOOST_AUTO_TEST_CASE(testParsedScopeNodesCarryScope)
+{
+  // The parser gives every SCOPE node (an assignment's right side, a
+  // lambda's body) its scope when it builds it, so an uncompiled tree,
+  // such as the right operand of a '.' lookup, can be evaluated.
+  expr_t def("x = 1");
+  expr_t::ptr_op_t op = def.get_op();
+  BOOST_REQUIRE(op && op->kind == expr_t::op_t::O_DEFINE);
+  BOOST_REQUIRE(op->right()->is_scope());
+  BOOST_CHECK(!op->right()->is_scope_unset());
+
+  expr_t lam("y -> y * 2");
+  op = lam.get_op();
+  BOOST_REQUIRE(op && op->kind == expr_t::op_t::O_LAMBDA);
+  BOOST_REQUIRE(op->right()->is_scope());
+  BOOST_CHECK(!op->right()->is_scope_unset());
+}
+
 BOOST_AUTO_TEST_CASE(testOpDumpNot)
 {
-  // Cover lines 876-877: O_NOT
+  // Cover O_NOT
   expr_t expr("!x");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1672,7 +1499,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpNot)
 
 BOOST_AUTO_TEST_CASE(testOpDumpNeg)
 {
-  // Cover lines 879-880: O_NEG
+  // Cover O_NEG
   expr_t expr("-x");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1681,7 +1508,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpNeg)
 
 BOOST_AUTO_TEST_CASE(testOpDumpAdd)
 {
-  // Cover lines 883-884: O_ADD
+  // Cover O_ADD
   expr_t expr("x + y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1690,7 +1517,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpAdd)
 
 BOOST_AUTO_TEST_CASE(testOpDumpSub)
 {
-  // Cover lines 886-887: O_SUB
+  // Cover O_SUB
   expr_t expr("x - y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1699,7 +1526,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpSub)
 
 BOOST_AUTO_TEST_CASE(testOpDumpMul)
 {
-  // Cover lines 889-890: O_MUL
+  // Cover O_MUL
   expr_t expr("x * y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1708,7 +1535,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpMul)
 
 BOOST_AUTO_TEST_CASE(testOpDumpDiv)
 {
-  // Cover lines 892-893: O_DIV
+  // Cover O_DIV
   expr_t expr("x / y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1717,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpDiv)
 
 BOOST_AUTO_TEST_CASE(testOpDumpEq)
 {
-  // Cover lines 896-897: O_EQ
+  // Cover O_EQ
   expr_t expr("x == y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1726,7 +1553,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpEq)
 
 BOOST_AUTO_TEST_CASE(testOpDumpLt)
 {
-  // Cover lines 899-900: O_LT
+  // Cover O_LT
   expr_t expr("x < y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1735,7 +1562,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpLt)
 
 BOOST_AUTO_TEST_CASE(testOpDumpLte)
 {
-  // Cover lines 902-903: O_LTE
+  // Cover O_LTE
   expr_t expr("x <= y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1744,7 +1571,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpLte)
 
 BOOST_AUTO_TEST_CASE(testOpDumpGt)
 {
-  // Cover lines 905-906: O_GT
+  // Cover O_GT
   expr_t expr("x > y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1753,7 +1580,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpGt)
 
 BOOST_AUTO_TEST_CASE(testOpDumpGte)
 {
-  // Cover lines 908-909: O_GTE
+  // Cover O_GTE
   expr_t expr("x >= y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1762,7 +1589,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpGte)
 
 BOOST_AUTO_TEST_CASE(testOpDumpAnd)
 {
-  // Cover lines 912-913: O_AND
+  // Cover O_AND
   expr_t expr("x & y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1771,7 +1598,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpAnd)
 
 BOOST_AUTO_TEST_CASE(testOpDumpOr)
 {
-  // Cover lines 915-916: O_OR
+  // Cover O_OR
   expr_t expr("x | y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1780,7 +1607,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpOr)
 
 BOOST_AUTO_TEST_CASE(testOpDumpTernary)
 {
-  // Cover lines 919-920 (O_QUERY) and 922-923 (O_COLON)
+  // Cover O_QUERY and O_COLON
   expr_t expr("x ? y : z");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1790,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpTernary)
 
 BOOST_AUTO_TEST_CASE(testOpDumpDefine)
 {
-  // Cover lines 860-861: O_DEFINE
+  // Cover O_DEFINE
   expr_t expr("x = 5");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1799,7 +1626,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpDefine)
 
 BOOST_AUTO_TEST_CASE(testOpDumpLookup)
 {
-  // Cover lines 863-864: O_LOOKUP
+  // Cover O_LOOKUP
   expr_t expr("x.y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1808,7 +1635,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpLookup)
 
 BOOST_AUTO_TEST_CASE(testOpDumpLambda)
 {
-  // Cover lines 866-867: O_LAMBDA
+  // Cover O_LAMBDA
   expr_t expr("x -> x + 1");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1817,7 +1644,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpLambda)
 
 BOOST_AUTO_TEST_CASE(testOpDumpCall)
 {
-  // Cover lines 869-870: O_CALL
+  // Cover O_CALL
   expr_t expr("f(x)");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1826,7 +1653,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpCall)
 
 BOOST_AUTO_TEST_CASE(testOpDumpCons)
 {
-  // Cover lines 926-927: O_CONS
+  // Cover O_CONS
   expr_t expr("f(x, y)");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1835,7 +1662,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpCons)
 
 BOOST_AUTO_TEST_CASE(testOpDumpSeq)
 {
-  // Cover lines 929-930: O_SEQ
+  // Cover O_SEQ
   expr_t expr("x; y");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1844,7 +1671,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpSeq)
 
 BOOST_AUTO_TEST_CASE(testOpDumpMatch)
 {
-  // Verify O_MATCH dump (lines 871-873)
+  // Verify O_MATCH dump
   expr_t expr("x =~ /foo/");
   std::ostringstream out;
   expr.get_op()->dump(out, 0);
@@ -1853,12 +1680,12 @@ BOOST_AUTO_TEST_CASE(testOpDumpMatch)
 
 // -----------------------------------------------------------------------
 // Tests for op_t::print() - uncovered operator cases
-// Exercises lines 630-631, 644-647, 753-758 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintFunction)
 {
-  // Cover lines 630-631: FUNCTION case in print
+  // Cover FUNCTION case in print
   auto func_op = expr_t::op_t::wrap_functor(
       [](call_scope_t&) -> value_t { return value_t(1L); });
   std::ostringstream out;
@@ -1866,9 +1693,44 @@ BOOST_AUTO_TEST_CASE(testOpPrintFunction)
   BOOST_CHECK(out.str().find("<FUNCTION>") != std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(testOpPrintDumpTerminalsExact)
+{
+  // Byte-exact print()/dump() for kinds `parse` cannot show.  dump()
+  // starts each line with an 18-column address field, skipped here.
+  auto dump_of = [](const expr_t::ptr_op_t& op) {
+    std::ostringstream out;
+    op->dump(out, 1);
+    return out.str().substr((sizeof(void*) * 2) + 2);
+  };
+  auto print_of = [](const expr_t::ptr_op_t& op) {
+    std::ostringstream out;
+    op->print(out);
+    return out.str();
+  };
+
+  expr_t::ptr_op_t plug(new expr_t::op_t(expr_t::op_t::PLUG));
+  BOOST_CHECK_EQUAL(print_of(plug), "");
+  BOOST_CHECK_EQUAL(dump_of(plug), " PLUG (1)\n");
+
+  expr_t::ptr_op_t func =
+      expr_t::op_t::wrap_functor([](call_scope_t&) { return value_t(1L); });
+  BOOST_CHECK_EQUAL(print_of(func), "<FUNCTION>");
+  BOOST_CHECK_EQUAL(dump_of(func), " FUNCTION (1)\n");
+
+  expr_t::ptr_op_t neg = expr_t::op_t::new_node(expr_t::op_t::O_NEG, func);
+  BOOST_CHECK_EQUAL(print_of(neg), "(- <FUNCTION>)");
+
+  expr_t::ptr_op_t scope(new expr_t::op_t(expr_t::op_t::SCOPE));
+  scope->set_left(plug);
+  BOOST_CHECK_EQUAL(print_of(scope), "");
+
+  expr_t::ptr_op_t call = expr_t::op_t::new_node(expr_t::op_t::O_CALL, func);
+  BOOST_CHECK_EQUAL(print_of(call), "<FUNCTION>()");
+}
+
 BOOST_AUTO_TEST_CASE(testOpPrintNeg)
 {
-  // Cover lines 644-647: O_NEG case in print
+  // Cover O_NEG case in print
   expr_t expr("-x");
   std::ostringstream out;
   expr.get_op()->print(out);
@@ -1877,7 +1739,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintNeg)
 
 BOOST_AUTO_TEST_CASE(testOpPrintDefine)
 {
-  // Cover lines 753-758: O_DEFINE case in print
+  // Cover O_DEFINE case in print
   expr_t expr("x = 5");
   std::ostringstream out;
   expr.get_op()->print(out);
@@ -2003,8 +1865,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintAllOperators)
 
 // -----------------------------------------------------------------------
 // Tests for print() with context to trigger found=true branches
-// Exercises lines 651, 658, 665, 680, 687, 694, 701, 708, 723,
-//   765, 770, 782, 786, 799 of op.cc
+// Exercises op_t::print in op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundBinaryOps)
@@ -2012,16 +1873,16 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundBinaryOps)
   // For each binary operator, set op_to_find to the left child
   // to trigger the found=true branch on left()->print().
   const char* exprs[] = {
-    "x + y",   // O_ADD line 651
-    "x - y",   // O_SUB line 658
-    "x * y",   // O_MUL line 665
+    "x + y",   // O_ADD
+    "x - y",   // O_SUB
+    "x * y",   // O_MUL
     "x / y",   // O_DIV
-    "x == y",  // O_EQ  line 680
-    "x < y",   // O_LT  line 687
-    "x <= y",  // O_LTE line 694
-    "x > y",   // O_GT  line 701
-    "x >= y",  // O_GTE line 708
-    "x | y",   // O_OR  line 723
+    "x == y",  // O_EQ
+    "x < y",   // O_LT
+    "x <= y",  // O_LTE
+    "x > y",   // O_GT
+    "x >= y",  // O_GTE
+    "x | y",   // O_OR
   };
   for (const char* es : exprs) {
     expr_t expr(es);
@@ -2039,7 +1900,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundBinaryOps)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundLookup)
 {
-  // Cover line 765: O_LOOKUP right-child found=true
+  // Cover O_LOOKUP right-child found=true
   expr_t expr("x.y");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->right();
@@ -2053,7 +1914,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundLookup)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundLambda)
 {
-  // Cover line 770: O_LAMBDA left-child found=true
+  // Cover O_LAMBDA left-child found=true
   expr_t expr("x -> x + 1");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->left();
@@ -2067,7 +1928,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundLambda)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundCallSingleArg)
 {
-  // Cover line 786: O_CALL with non-O_CONS right child, found=true
+  // Cover O_CALL with non-O_CONS right child, found=true
   expr_t expr("f(x)");
   expr_t::ptr_op_t root = expr.get_op();
   // Target the argument (right child)
@@ -2082,7 +1943,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundCallSingleArg)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundCallMultiArg)
 {
-  // Cover line 782: O_CALL with O_CONS right child
+  // Cover O_CALL with O_CONS right child
   expr_t expr("f(x, y)");
   expr_t::ptr_op_t root = expr.get_op();
 
@@ -2093,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundCallMultiArg)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundMatch)
 {
-  // Cover line 799: O_MATCH right-child found=true
+  // Cover O_MATCH right-child found=true
   expr_t expr("x =~ /foo/");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->right();
@@ -2106,13 +1967,13 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundMatch)
 }
 
 // -----------------------------------------------------------------------
-// Tests for print_cons/print_seq found=true branches
-// Exercises lines 574, 581, 592, 597 of op.cc
+// Tests for print_list found=true branches (O_CONS and O_SEQ)
+// Exercises the first and later elements of both list kinds
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundConsLeft)
 {
-  // Cover line 574: print_cons left child found=true
+  // print_list on O_CONS: first element found=true
   expr_t expr("f(x, y)");
   expr_t::ptr_op_t root = expr.get_op();
 
@@ -2137,7 +1998,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundConsLeft)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundConsRight)
 {
-  // Cover line 581: print_cons right non-cons child found=true
+  // print_list on O_CONS: second element (left of the nested O_CONS) found=true
   expr_t expr("f(x, y)");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t cons = root->right();
@@ -2154,7 +2015,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundConsRight)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqLeft)
 {
-  // Cover line 592: print_seq left child found=true
+  // print_list on O_SEQ: first element found=true
   expr_t expr("x; y");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->left();
@@ -2168,7 +2029,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqLeft)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqRight)
 {
-  // Cover line 597: print_seq right non-seq child found=true
+  // print_list on O_SEQ: last element (not an O_SEQ) found=true
   expr_t expr("x; y");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->right();
@@ -2182,7 +2043,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqRight)
 
 // -----------------------------------------------------------------------
 // Test for split_cons_expr with null op
-// Exercises line 51 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSplitConsExprNull)
@@ -2193,7 +2054,7 @@ BOOST_AUTO_TEST_CASE(testSplitConsExprNull)
 
 // -----------------------------------------------------------------------
 // Test for calc_cons with non-O_CONS right child
-// Exercises lines 532-533 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcConsNonConsRight)
@@ -2233,7 +2094,7 @@ BOOST_AUTO_TEST_CASE(testCalcSeq)
 
 // -----------------------------------------------------------------------
 // Test for calc basic arithmetic operators
-// Exercises lines 335-346 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcArithmetic)
@@ -2272,11 +2133,11 @@ BOOST_AUTO_TEST_CASE(testCalcArithmetic)
 
 // NOTE: calc comparison/logical/unary/ternary tests removed because
 // empty_scope_t doesn't provide the compile context needed by expr_t.
-// Those op.cc lines (319-377) are already covered by regression tests.
+// Those op.cc lines are already covered by regression tests.
 
 // -----------------------------------------------------------------------
 // Test for calc O_DEFINE
-// Exercises line 255 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcDefine)
@@ -2294,7 +2155,7 @@ BOOST_AUTO_TEST_CASE(testCalcDefine)
 
 // -----------------------------------------------------------------------
 // Test for calc O_LAMBDA
-// Exercises line 309 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcLambda)
@@ -2313,12 +2174,12 @@ BOOST_AUTO_TEST_CASE(testCalcLambda)
 
 // -----------------------------------------------------------------------
 // Tests for token_t::unexpected() - all 8 branches
-// Exercises lines 503-528 of token.cc
+// Exercises token.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedEofNoWanted)
 {
-  // Cover line 511: TOK_EOF with wanted='\0'
+  // Cover TOK_EOF with wanted='\0'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::TOK_EOF;
   BOOST_CHECK_THROW(tok.unexpected(), parse_error);
@@ -2326,7 +2187,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedEofNoWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedIdentNoWanted)
 {
-  // Cover line 513: IDENT with wanted='\0'
+  // Cover IDENT with wanted='\0'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::IDENT;
   tok.value = string_value("sym");
@@ -2335,7 +2196,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedIdentNoWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedValueNoWanted)
 {
-  // Cover line 515: VALUE with wanted='\0'
+  // Cover VALUE with wanted='\0'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::VALUE;
   tok.value = value_t(42L);
@@ -2344,7 +2205,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedValueNoWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedDefaultNoWanted)
 {
-  // Cover line 517: default (symbol) with wanted='\0'
+  // Cover default (symbol) with wanted='\0'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::PLUS;
   tok.symbol[0] = '+';
@@ -2354,7 +2215,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedDefaultNoWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedEofWithWanted)
 {
-  // Cover line 522: TOK_EOF with wanted=')'
+  // Cover TOK_EOF with wanted=')'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::TOK_EOF;
   BOOST_CHECK_THROW(tok.unexpected(')'), parse_error);
@@ -2362,7 +2223,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedEofWithWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedIdentWithWanted)
 {
-  // Cover line 524: IDENT with wanted=')'
+  // Cover IDENT with wanted=')'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::IDENT;
   tok.value = string_value("sym");
@@ -2371,7 +2232,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedIdentWithWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedValueWithWanted)
 {
-  // Cover line 526: VALUE with wanted=')'
+  // Cover VALUE with wanted=')'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::VALUE;
   tok.value = value_t(42L);
@@ -2380,7 +2241,7 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedValueWithWanted)
 
 BOOST_AUTO_TEST_CASE(testTokenUnexpectedDefaultWithWanted)
 {
-  // Cover line 528: default (symbol) with wanted=')'
+  // Cover default (symbol) with wanted=')'
   expr_t::token_t tok;
   tok.kind = expr_t::token_t::PLUS;
   tok.symbol[0] = '+';
@@ -2390,40 +2251,40 @@ BOOST_AUTO_TEST_CASE(testTokenUnexpectedDefaultWithWanted)
 
 // -----------------------------------------------------------------------
 // Tests for token_t::expected(char, int) - all 4 branches
-// Exercises lines 533-544 of token.cc
+// Exercises token.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testTokenExpectedCharEofNoWanted)
 {
-  // Cover line 536: c==-1, wanted=='\0'
+  // Cover c==-1, wanted=='\0'
   expr_t::token_t tok;
   BOOST_CHECK_THROW(tok.expected('\0', -1), parse_error);
 }
 
 BOOST_AUTO_TEST_CASE(testTokenExpectedCharEofWithWanted)
 {
-  // Cover line 538: c==-1, wanted==')'
+  // Cover c==-1, wanted==')'
   expr_t::token_t tok;
   BOOST_CHECK_THROW(tok.expected(')', -1), parse_error);
 }
 
 BOOST_AUTO_TEST_CASE(testTokenExpectedCharInvalidNoWanted)
 {
-  // Cover line 542: c!=-1, wanted=='\0'
+  // Cover c!=-1, wanted=='\0'
   expr_t::token_t tok;
   BOOST_CHECK_THROW(tok.expected('\0', 'a'), parse_error);
 }
 
 BOOST_AUTO_TEST_CASE(testTokenExpectedCharInvalidWithWanted)
 {
-  // Cover line 544: c!=-1, wanted==')'
+  // Cover c!=-1, wanted==')'
   expr_t::token_t tok;
   BOOST_CHECK_THROW(tok.expected(')', 'a'), parse_error);
 }
 
 // -----------------------------------------------------------------------
 // Test for op_t::call() on FUNCTION node
-// Exercises line 487 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpCallFunction)
@@ -2436,8 +2297,8 @@ BOOST_AUTO_TEST_CASE(testOpCallFunction)
 }
 
 // -----------------------------------------------------------------------
-// Test for expr_t::is_constant() and constant_value()
-// Exercises lines 188-205 of expr.cc
+// Test for expr_t::is_constant()
+// Exercises expr.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprIsConstant)
@@ -2445,12 +2306,12 @@ BOOST_AUTO_TEST_CASE(testExprIsConstant)
   expr_t expr("42");
   expr.compile(*scope_t::default_scope);
   BOOST_CHECK(expr.is_constant());
-  BOOST_CHECK_EQUAL(42L, expr.constant_value().to_long());
+  BOOST_CHECK_EQUAL(42L, expr.get_op()->as_value().to_long());
 }
 
 // -----------------------------------------------------------------------
 // Test for expr_t::is_function() returning true and get_function()
-// Exercises lines 193-196, 208-210 of expr.cc
+// Exercises expr.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprGetFunction)
@@ -2466,7 +2327,7 @@ BOOST_AUTO_TEST_CASE(testExprGetFunction)
 
 // -----------------------------------------------------------------------
 // Test for print() SCOPE with left child and found=true
-// Exercises lines 633-636 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintScopeFound)
@@ -2486,12 +2347,12 @@ BOOST_AUTO_TEST_CASE(testOpPrintScopeFound)
 
 // -----------------------------------------------------------------------
 // Test for print() unary operators with found=true
-// Exercises lines 641, 645 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintUnaryFound)
 {
-  // O_NOT found=true (line 641)
+  // O_NOT found=true
   {
     expr_t::ptr_op_t val = expr_t::op_t::wrap_value(value_t(1L));
     expr_t::ptr_op_t not_op = expr_t::op_t::new_node(
@@ -2505,7 +2366,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintUnaryFound)
     BOOST_CHECK(found);
     BOOST_CHECK(out.str().find("!") != std::string::npos);
   }
-  // O_NEG found=true (line 645)
+  // O_NEG found=true
   {
     expr_t::ptr_op_t val = expr_t::op_t::wrap_value(value_t(1L));
     expr_t::ptr_op_t neg_op = expr_t::op_t::new_node(
@@ -2523,12 +2384,12 @@ BOOST_AUTO_TEST_CASE(testOpPrintUnaryFound)
 
 // -----------------------------------------------------------------------
 // Test for print() O_AND and O_QUERY/O_COLON found=true
-// Exercises lines 716, 731, 739 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundAndQueryColon)
 {
-  // O_AND found=true (line 716)
+  // O_AND found=true
   {
     expr_t expr("x & y");
     expr_t::ptr_op_t root = expr.get_op();
@@ -2540,7 +2401,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundAndQueryColon)
     std::ostringstream out;
     BOOST_CHECK(root->print(out, ctx));
   }
-  // O_QUERY found=true (line 731)
+  // O_QUERY found=true
   {
     expr_t expr("x ? y : z");
     expr_t::ptr_op_t root = expr.get_op();
@@ -2552,7 +2413,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundAndQueryColon)
     std::ostringstream out;
     BOOST_CHECK(root->print(out, ctx));
   }
-  // O_DEFINE found=true (line 754)
+  // O_DEFINE found=true
   {
     expr_t::ptr_op_t name = expr_t::op_t::new_node(expr_t::op_t::IDENT);
     name->set_ident("x");
@@ -2570,7 +2431,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundAndQueryColon)
 
 // -----------------------------------------------------------------------
 // Test for dump() binary operator with no left child
-// Exercises lines 947-948 of op.cc
+// Exercises op.cc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpDumpBinaryNoLeft)
@@ -2582,7 +2443,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpBinaryNoLeft)
 }
 
 // -----------------------------------------------------------------------
-// Test for print() O_CALL with no arguments (line 790)
+// Test for print() O_CALL with no arguments
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintCallNoArgs)
@@ -2598,7 +2459,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintCallNoArgs)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 752-758: print() O_DEFINE
+// Coverage for op.cc: print() O_DEFINE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintDefineW6)
@@ -2619,7 +2480,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintDefineW6)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 760-766: print() O_LOOKUP
+// Coverage for op.cc: print() O_LOOKUP
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintLookup)
@@ -2640,7 +2501,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintLookup)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 768-774: print() O_LAMBDA
+// Coverage for op.cc: print() O_LAMBDA
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintLambda)
@@ -2660,7 +2521,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintLambda)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 776-792: print() O_CALL with cons arguments
+// Coverage for op.cc: print() O_CALL with cons arguments
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintCallWithConsArgs)
@@ -2687,7 +2548,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintCallWithConsArgs)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 776-792: print() O_CALL with single arg (not cons)
+// Coverage for op.cc: print() O_CALL with single arg (not cons)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintCallWithSingleArg)
@@ -2711,7 +2572,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintCallWithSingleArg)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 859-867: dump() O_DEFINE, O_LOOKUP, O_LAMBDA, O_CALL
+// Coverage for op.cc: dump() O_DEFINE, O_LOOKUP, O_LAMBDA, O_CALL
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpDumpDefineW6)
@@ -2769,7 +2630,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpCallW6)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc lines 851-857: dump() SCOPE
+// Coverage for op.cc: dump() SCOPE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpDumpScopeNullW6)
@@ -2784,7 +2645,7 @@ BOOST_AUTO_TEST_CASE(testOpDumpScopeNullW6)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc line 392: calc unexpected expr node
+// Coverage for op.cc: calc unexpected expr node
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpCalcLambda)
@@ -2804,7 +2665,7 @@ BOOST_AUTO_TEST_CASE(testOpCalcLambda)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for op.cc line 455: O_DEFINE calc returns NULL_VALUE
+// Coverage for op.cc: O_DEFINE calc returns NULL_VALUE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpCalcDefine)
@@ -2822,7 +2683,7 @@ BOOST_AUTO_TEST_CASE(testOpCalcDefine)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for expr.cc lines 157-177: calc error handling with locus
+// Coverage for expr.cc: calc error handling with locus
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprCalcErrorWithLocus)
@@ -2835,7 +2696,7 @@ BOOST_AUTO_TEST_CASE(testExprCalcErrorWithLocus)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for expr.cc line 185: calc returns NULL_VALUE for null expr
+// Coverage for expr.cc: calc returns NULL_VALUE for null expr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprCalcNullExpr)
@@ -2847,24 +2708,7 @@ BOOST_AUTO_TEST_CASE(testExprCalcNullExpr)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for expr.cc lines 203-205: constant_value() const
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testExprConstantValueConst)
-{
-  expr_t expr("42");
-  symbol_scope_t scope;
-  expr.compile(scope);
-
-  BOOST_CHECK(expr.is_constant());
-  const expr_t& cexpr = expr;
-  const value_t& cv = cexpr.constant_value();
-  // The constant value might be INTEGER or AMOUNT depending on parsing
-  BOOST_CHECK(!cv.is_null());
-}
-
-// -----------------------------------------------------------------------
-// Coverage for expr.cc line 215: context_to_str for null ptr
+// Coverage for expr.cc: context_to_str for null ptr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprContextToStrEmpty)
@@ -2919,7 +2763,7 @@ BOOST_AUTO_TEST_CASE(testExprDumpNull)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for expr.cc lines 255, 291-292: merged_expr_t
+// Coverage for expr.cc: merged_expr_t
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testMergedExprCompile)
@@ -2932,7 +2776,7 @@ BOOST_AUTO_TEST_CASE(testMergedExprCompile)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 159 - compile O_DEFINE with invalid definition
+// op.cc - compile O_DEFINE with invalid definition
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompileDefineInvalidW7)
@@ -2950,7 +2794,7 @@ BOOST_AUTO_TEST_CASE(testCompileDefineInvalidW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc lines 169-172 - compile O_LAMBDA with non-ident param
+// op.cc - compile O_LAMBDA with non-ident param
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompileLambdaNonIdentParamW7)
@@ -2966,7 +2810,7 @@ BOOST_AUTO_TEST_CASE(testCompileLambdaNonIdentParamW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 187 - compile with no left (syntax error)
+// op.cc - compile with no left (syntax error)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompileNoLeftW7)
@@ -2980,13 +2824,13 @@ BOOST_AUTO_TEST_CASE(testCompileNoLeftW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 392 - calc default case (unexpected op kind)
+// op.cc - calc default case (unexpected op kind)
 // This is hard to trigger directly since all kinds are handled.
 // The test below exercises O_COLON reaching the assert.
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 455 - call_lambda throws "Invalid function definition"
+// op.cc - call_lambda throws "Invalid function definition"
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCallLambdaInvalidParamW7)
@@ -3002,7 +2846,7 @@ BOOST_AUTO_TEST_CASE(testCallLambdaInvalidParamW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 477 - call_lambda with no scope on right
+// op.cc - call_lambda with no scope on right
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCallLambdaNoScopeW7)
@@ -3021,7 +2865,7 @@ BOOST_AUTO_TEST_CASE(testCallLambdaNoScopeW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 491 - op_t::call for non-function, non-lambda
+// op.cc - op_t::call for non-function, non-lambda
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpCallIdentW7)
@@ -3042,7 +2886,7 @@ BOOST_AUTO_TEST_CASE(testOpCallIdentW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc lines 512-513 - calc_call exception rethrow
+// op.cc - calc_call exception rethrow
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcCallExceptionW7)
@@ -3066,8 +2910,8 @@ BOOST_AUTO_TEST_CASE(testCalcCallExceptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 581 - print_cons right non-cons
-// Also: op.cc line 597 - print_seq right non-seq
+// op.cc print_list - O_CONS whose right is not O_CONS
+// Also: print_list - O_SEQ whose right is not O_SEQ
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW7)
@@ -3101,7 +2945,7 @@ BOOST_AUTO_TEST_CASE(testPrintSeqRightNonSeqW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc lines 757-758 - print O_DEFINE
+// op.cc - print O_DEFINE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintDefineW7)
@@ -3121,7 +2965,7 @@ BOOST_AUTO_TEST_CASE(testPrintDefineW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 782-790 - print O_CALL no args
+// op.cc - print O_CALL no args
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintCallNoArgsW7)
@@ -3140,18 +2984,18 @@ BOOST_AUTO_TEST_CASE(testPrintCallNoArgsW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc lines 812-815 - print with symbol after switch
+// op.cc - print with symbol after switch
 // This path is taken when the 'symbol' variable is set, which happens
 // for IDENT nodes in certain contexts.
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: exprbase.h line 62 - compile_error exception
+// exprbase.h - compile_error exception
 // (covered by testCompileDefineInvalidW7 above)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: exprbase.h lines 118-121 - base parse from stream
+// exprbase.h - base parse from stream
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprBaseParseStreamW7)
@@ -3163,7 +3007,7 @@ BOOST_AUTO_TEST_CASE(testExprBaseParseStreamW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: exprbase.h line 184 - calc() no-arg version
+// exprbase.h - calc() no-arg version
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprCalcNoArgW7)
@@ -3185,7 +3029,7 @@ BOOST_AUTO_TEST_CASE(testExprCalcNoArgW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: exprbase.h line 189 - context_to_str virtual
+// exprbase.h - context_to_str virtual
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExprBaseContextToStrW7)
@@ -3198,39 +3042,27 @@ BOOST_AUTO_TEST_CASE(testExprBaseContextToStrW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: exprbase.h lines 207-208 - virtual print/dump defaults
+// exprbase.h - virtual print/dump defaults
 // These are covered by calling print()/dump() on an empty expr_t
 // which has no ptr, so expr_t::print/dump do nothing.
 // The base class versions are trivially empty.
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: expr.cc line 215 - context_to_str with null ptr
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testExprContextToStrNullW7)
-{
-  expr_t expr;
-  // With null ptr, returns "<empty expression>"
-  string ctx = expr.context_to_str();
-  BOOST_CHECK(!ctx.empty());
-}
-
-// -----------------------------------------------------------------------
-// W7 Coverage: expr.cc line 255 - merged_expr with non-semicolon merge op
+// expr.cc - merged_expr with non-semicolon merge op
 // -----------------------------------------------------------------------
 
 // Merged expr with non-semicolon merge operator test removed because
 // the generated expression syntax is complex and hard to test in isolation.
-// Line 255 of expr.cc is covered by ledger's integration tests instead.
+// That merged_expr_t path is covered by ledger's integration tests instead.
 
 // -----------------------------------------------------------------------
-// W7 Coverage: expr.cc lines 291-292 - source_command with no args
+// report_t::source_command with no args
 // (Reads from stdin - cannot easily test in unit test, skip)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 95 - empty_scope_t::description()
+// scope.h - empty_scope_t::description()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testEmptyScopeDescriptionW7)
@@ -3241,7 +3073,7 @@ BOOST_AUTO_TEST_CASE(testEmptyScopeDescriptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 136 - bind_scope_t::description()
+// scope.h - bind_scope_t::description()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBindScopeDescriptionW7)
@@ -3255,7 +3087,7 @@ BOOST_AUTO_TEST_CASE(testBindScopeDescriptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 195 - find_scope throw when not found
+// scope.h - find_scope throw when not found
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindScopeNotFoundW7)
@@ -3267,7 +3099,25 @@ BOOST_AUTO_TEST_CASE(testFindScopeNotFoundW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h lines 220-226 - symbol_scope_t::description()
+// search_scope / find_scope order: grandchild before parent at a bind
+// node; find_scope on a child_scope_t starts at its parent.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSearchScopeBindOrder)
+{
+  empty_scope_t root;
+  symbol_scope_t outer(root);
+  symbol_scope_t inner(root);
+  bind_scope_t bound(outer, inner);
+
+  BOOST_CHECK(search_scope<symbol_scope_t>(&bound) == &inner);
+  BOOST_CHECK(&find_scope<symbol_scope_t>(static_cast<scope_t&>(bound)) == &inner);
+  BOOST_CHECK(&find_scope<symbol_scope_t>(bound) == &outer);
+  BOOST_CHECK_THROW(find_scope<bind_scope_t>(root), std::runtime_error);
+}
+
+// -----------------------------------------------------------------------
+// scope.h - symbol_scope_t::description()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSymbolScopeDescriptionW7)
@@ -3280,7 +3130,7 @@ BOOST_AUTO_TEST_CASE(testSymbolScopeDescriptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 245 - context_scope_t::description()
+// scope.h - context_scope_t::description()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testContextScopeDescriptionW7)
@@ -3292,11 +3142,11 @@ BOOST_AUTO_TEST_CASE(testContextScopeDescriptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 297 - call_scope_t::context()
+// scope.h - call_scope_t::context()
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h line 299 - call_scope_t::push_front
+// scope.h - call_scope_t::push_front
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCallScopePushFrontW7)
@@ -3309,7 +3159,7 @@ BOOST_AUTO_TEST_CASE(testCallScopePushFrontW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h lines 348-384 - call_scope_t::has<T>/get<T> templates
+// scope.h - call_scope_t::has<T>/get<T> templates
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCallScopeHasAndGetW7)
@@ -3321,25 +3171,25 @@ BOOST_AUTO_TEST_CASE(testCallScopeHasAndGetW7)
   call.push_back(value_t(amount_t(10L)));
   call.push_back(string_value("hello"));
 
-  // has<bool> (line 348/354)
+  // has<bool>
   BOOST_CHECK(call.has<bool>(0));
 
-  // has<long> (line 362)
+  // has<long>
   BOOST_CHECK(call.has<long>(1));
 
-  // has<amount_t> (line 366)
+  // has<amount_t>
   BOOST_CHECK(call.has<amount_t>(2));
 
-  // has<string> (line 370)
+  // has<string>
   BOOST_CHECK(call.has<string>(3));
 
-  // get<bool> (line 354)
+  // get<bool>
   BOOST_CHECK_EQUAL(call.get<bool>(0), true);
 
-  // get<long> (line 362)
+  // get<long>
   BOOST_CHECK_EQUAL(call.get<long>(1), 42L);
 
-  // get<string> (line 370)
+  // get<string>
   BOOST_CHECK_EQUAL(call.get<string>(3), "hello");
 }
 
@@ -3353,10 +3203,10 @@ BOOST_AUTO_TEST_CASE(testCallScopeGetDateW7)
   dv.set_date(d);
   call.push_back(dv);
 
-  // has<date_t> (line 374)
+  // has<date_t>
   BOOST_CHECK(call.has<date_t>(0));
 
-  // get<date_t> (line 374)
+  // get<date_t>
   date_t result = call.get<date_t>(0);
   BOOST_CHECK(is_valid(result));
 }
@@ -3371,10 +3221,10 @@ BOOST_AUTO_TEST_CASE(testCallScopeGetDatetimeW7)
   dv.set_datetime(dt);
   call.push_back(dv);
 
-  // has<datetime_t> (line 378)
+  // has<datetime_t>
   BOOST_CHECK(call.has<datetime_t>(0));
 
-  // get<datetime_t> (line 378)
+  // get<datetime_t>
   datetime_t result = call.get<datetime_t>(0);
   BOOST_CHECK(is_valid(result));
 }
@@ -3387,13 +3237,13 @@ BOOST_AUTO_TEST_CASE(testCallScopeGetMaskW7)
   mv.set_mask("foo.*");
   call.push_back(mv);
 
-  // get<mask_t> (line 370)
+  // get<mask_t>
   mask_t result = call.get<mask_t>(0);
   BOOST_CHECK(result.match("foobar"));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: scope.h lines 412,416,421 - value_scope_t
+// scope.h - value_scope_t
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testValueScopeW7)
@@ -3401,30 +3251,30 @@ BOOST_AUTO_TEST_CASE(testValueScopeW7)
   empty_scope_t parent;
   value_scope_t vscope(parent, value_t(42L));
 
-  // description() delegates to parent (line 412)
+  // description() delegates to parent
   string desc = vscope.description();
   BOOST_CHECK(!desc.empty());
 
-  // lookup for "value" returns a functor (line 416-419)
+  // lookup for "value" returns a functor
   expr_t::ptr_op_t op = vscope.lookup(symbol_t::FUNCTION, "value");
   BOOST_CHECK(op);
 
-  // lookup for non-FUNCTION kind returns NULL (line 415-416)
+  // lookup for non-FUNCTION kind returns NULL
   expr_t::ptr_op_t op2 = vscope.lookup(symbol_t::OPTION, "value");
   BOOST_CHECK(!op2);
 
-  // lookup for unknown name delegates to parent (line 421)
+  // lookup for unknown name delegates to parent
   expr_t::ptr_op_t op3 = vscope.lookup(symbol_t::FUNCTION, "unknown");
   BOOST_CHECK(!op3);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 477 - call_lambda without scope right
+// op.cc - call_lambda without scope right
 // (Already covered by testCallLambdaNoScopeW7)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc - O_MATCH (line 312-317)
+// op.cc calc - O_MATCH
 // Build op trees directly to avoid constant folding
 // -----------------------------------------------------------------------
 
@@ -3443,7 +3293,7 @@ BOOST_AUTO_TEST_CASE(testCalcMatchW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc - O_AND (lines 356-361), O_OR (lines 363-368)
+// op.cc calc - O_AND, O_OR
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcAndShortCircuitW7)
@@ -3503,7 +3353,7 @@ BOOST_AUTO_TEST_CASE(testCalcOrFalseLeftW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc - O_QUERY/O_COLON (lines 370-377)
+// op.cc calc - O_QUERY/O_COLON
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcQueryColonW7)
@@ -3532,8 +3382,8 @@ BOOST_AUTO_TEST_CASE(testCalcQueryColonW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc - comparison operators (O_EQ, O_LT, O_LTE, O_GT, O_GTE)
-// Lines 319-333 - build op trees directly to avoid constant folding
+// op.cc calc - comparison operators (O_EQ, O_LT, O_LTE, O_GT, O_GTE)
+// build op trees directly to avoid constant folding
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcComparisonOpsW7)
@@ -3578,8 +3428,8 @@ BOOST_AUTO_TEST_CASE(testCalcComparisonOpsW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc - arithmetic operators (O_ADD, O_SUB, O_MUL, O_DIV)
-// Lines 335-346 - build op trees directly to avoid constant folding
+// op.cc calc - arithmetic operators (O_ADD, O_SUB, O_MUL, O_DIV)
+// build op trees directly to avoid constant folding
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcArithmeticOpsW7)
@@ -3617,7 +3467,7 @@ BOOST_AUTO_TEST_CASE(testCalcArithmeticOpsW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 349 - O_NEG
+// op.cc - O_NEG
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcNegW7)
@@ -3632,7 +3482,7 @@ BOOST_AUTO_TEST_CASE(testCalcNegW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 353 - O_NOT
+// op.cc - O_NOT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcNotW7)
@@ -3647,7 +3497,7 @@ BOOST_AUTO_TEST_CASE(testCalcNotW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc calc O_LOOKUP (lines 288-301)
+// op.cc calc O_LOOKUP
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcLookupW7)
@@ -3688,7 +3538,7 @@ BOOST_AUTO_TEST_CASE(testCalcLookupW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc FUNCTION calc (lines 267-274)
+// op.cc FUNCTION calc
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCalcFunctionDirectW7)
@@ -3704,24 +3554,7 @@ BOOST_AUTO_TEST_CASE(testCalcFunctionDirectW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: merged_expr_t with exprs (non-empty) and semicolon merge_operator
-// (expr.cc line 253)
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testMergedExprSemicolonW7)
-{
-  empty_scope_t parent;
-  symbol_scope_t scope(parent);
-  merged_expr_t merged(";", "t");
-  merged.set_base_expr("1");
-  // Use a non-identifier expression so check_for_single_identifier returns false
-  merged.prepend("2 + 3");
-  merged.compile(scope);
-  BOOST_CHECK(!merged.text().empty());
-}
-
-// -----------------------------------------------------------------------
-// W7 Coverage: op.cc compile O_DEFINE with O_CALL left (lines 134-154)
+// op.cc compile O_DEFINE with O_CALL left
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompileDefineWithCallW7)
@@ -3737,7 +3570,7 @@ BOOST_AUTO_TEST_CASE(testCompileDefineWithCallW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc compile IDENT with left (line 122-124)
+// op.cc compile IDENT with left
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompileIdentWithLeftW7)
@@ -3757,8 +3590,7 @@ BOOST_AUTO_TEST_CASE(testCompileIdentWithLeftW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc print O_CALL with single arg (non-cons right)
-// (line 784-788)
+// op.cc print O_CALL with single arg (non-cons right)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintCallSingleArgW7)
@@ -3777,7 +3609,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallSingleArgW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc print O_MATCH (lines 794-800)
+// op.cc print O_MATCH
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintMatchW7)
@@ -3795,7 +3627,7 @@ BOOST_AUTO_TEST_CASE(testPrintMatchW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc print O_LAMBDA (lines 768-774)
+// op.cc print O_LAMBDA
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintLambdaW7)
@@ -3813,7 +3645,7 @@ BOOST_AUTO_TEST_CASE(testPrintLambdaW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc print O_LOOKUP (lines 760-766)
+// op.cc print O_LOOKUP
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintLookupW7)
@@ -3832,13 +3664,13 @@ BOOST_AUTO_TEST_CASE(testPrintLookupW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: compare.cc line 62 - push_sort_value null sort value throws
-// Also: compare.cc lines 87-89, 98-100, 120, 131
+// compare.cc - push_sort_value null sort value throws
+// Also: compare.cc
 // These require full session/journal setup, so use .test files instead
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: sort_value_is_less_than (value.cc lines 2165-2190)
+// sort_value_is_less_than (value.cc)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSortValueIsLessThanW7)
@@ -3898,7 +3730,7 @@ BOOST_AUTO_TEST_CASE(testSortValueEqualW7)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print() for O_DEFINE (line 752-758)
+// op.cc - print() for O_DEFINE
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintDefineW8)
@@ -3918,26 +3750,7 @@ BOOST_AUTO_TEST_CASE(testPrintDefineW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print() for O_LAMBDA (line 768-774)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testPrintLambdaW8)
-{
-  // Build: x -> 42
-  expr_t::ptr_op_t param = expr_t::op_t::new_node(expr_t::op_t::IDENT);
-  param->set_ident("x");
-  expr_t::ptr_op_t body = expr_t::op_t::wrap_value(value_t(42L));
-  expr_t::ptr_op_t lambda = expr_t::op_t::new_node(
-      expr_t::op_t::O_LAMBDA, param, body);
-
-  std::ostringstream out;
-  lambda->print(out);
-  string result = out.str();
-  BOOST_CHECK(result.find("->") != string::npos);
-}
-
-// =======================================================================
-// W8 Coverage: op.cc - print() for O_CALL with right (line 776-792)
+// op.cc - print() for O_CALL with right
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintCallWithArgsW8)
@@ -3990,7 +3803,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallWithConsArgsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print_cons with right non-cons (line 580-581)
+// op.cc - print_list on O_CONS whose right is not O_CONS
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW8)
@@ -4009,7 +3822,7 @@ BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print_seq with right non-seq (line 597)
+// op.cc - print_list on O_SEQ whose right is not O_SEQ
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintSeqRightNonSeqW8)
@@ -4028,7 +3841,7 @@ BOOST_AUTO_TEST_CASE(testPrintSeqRightNonSeqW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - dump() for O_DEFINE (line 859-860)
+// op.cc - dump() for O_DEFINE
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpDefineW8)
@@ -4046,7 +3859,7 @@ BOOST_AUTO_TEST_CASE(testDumpDefineW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - dump() for O_LOOKUP (line 862-863)
+// op.cc - dump() for O_LOOKUP
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpLookupW8)
@@ -4065,7 +3878,7 @@ BOOST_AUTO_TEST_CASE(testDumpLookupW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - dump() for O_LAMBDA (line 865-866)
+// op.cc - dump() for O_LAMBDA
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpLambdaW8)
@@ -4083,7 +3896,7 @@ BOOST_AUTO_TEST_CASE(testDumpLambdaW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - dump() for O_CALL (line 868-869)
+// op.cc - dump() for O_CALL
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpCallW8)
@@ -4100,12 +3913,12 @@ BOOST_AUTO_TEST_CASE(testDumpCallW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - calc() O_COLON assert (line 380-381)
+// op.cc - calc() O_COLON assert
 // Cannot directly test O_COLON calc (it's an assertion failure).
 // =======================================================================
 
 // =======================================================================
-// W8 Coverage: op.cc - calc() default/unexpected (line 392)
+// op.cc - calc() default/unexpected
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcUnexpectedNodeTypeW8)
@@ -4123,7 +3936,7 @@ BOOST_AUTO_TEST_CASE(testCalcUnexpectedNodeTypeW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - compile() O_DEFINE with invalid def (line 159)
+// op.cc - compile() O_DEFINE with invalid def
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCompileDefineInvalidW8)
@@ -4139,7 +3952,7 @@ BOOST_AUTO_TEST_CASE(testCompileDefineInvalidW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - compile() O_DEFINE with IDENT (lines 136-141)
+// op.cc - compile() O_DEFINE with IDENT
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCompileDefineIdentW8)
@@ -4158,7 +3971,7 @@ BOOST_AUTO_TEST_CASE(testCompileDefineIdentW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - compile() O_DEFINE with O_CALL (lines 144-155)
+// op.cc - compile() O_DEFINE with O_CALL
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCompileDefineCallW8)
@@ -4180,7 +3993,7 @@ BOOST_AUTO_TEST_CASE(testCompileDefineCallW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - calc_call exception rethrow (lines 512-513)
+// op.cc - calc_call exception rethrow
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcCallExceptionContextW8)
@@ -4192,7 +4005,7 @@ BOOST_AUTO_TEST_CASE(testCalcCallExceptionContextW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - is_function() (line 193-196)
+// expr.cc - is_function()
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprIsFunctionW8)
@@ -4206,7 +4019,7 @@ BOOST_AUTO_TEST_CASE(testExprIsFunctionW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - context_to_str (line 213-215)
+// expr.cc - context_to_str
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprContextToStrW8)
@@ -4224,7 +4037,7 @@ BOOST_AUTO_TEST_CASE(testExprContextToStrEmptyW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - print() (line 217-220)
+// expr.cc - print()
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprPrintW8)
@@ -4236,7 +4049,7 @@ BOOST_AUTO_TEST_CASE(testExprPrintW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - dump() (line 222-225)
+// expr.cc - dump()
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprDumpW8)
@@ -4248,25 +4061,8 @@ BOOST_AUTO_TEST_CASE(testExprDumpW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - compile with scope (line 255)
-// merged_expr_t::compile with non-semicolon merge operator
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testMergedExprCompileW8)
-{
-  // Test merged_expr_t compile with non-semicolon merge operator
-  // The constructor takes (term, base_expr, merge_op)
-  merged_expr_t me("amount", "1", "+");
-  me.prepend("2");
-
-  symbol_scope_t scope(*scope_t::empty_scope);
-  // This will compile the merged expression, exercising line 255
-  BOOST_CHECK_NO_THROW(me.compile(scope));
-}
-
-// =======================================================================
-// W8 Coverage: expr.cc lines 157-177 - error path with SHOW_INFO
-// When an expression eval fails and locus is set, lines 157-177 emit
+// expr.cc - error path with SHOW_INFO
+// When an expression eval fails and locus is set, the error path emits
 // tree dump context if SHOW_INFO() is true. This is hard to trigger in
 // unit tests. We test the calc error path instead.
 // =======================================================================
@@ -4280,7 +4076,7 @@ BOOST_AUTO_TEST_CASE(testExprCalcErrorContextW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - calc() O_LAMBDA returns expr_value (line 308-310)
+// op.cc - calc() O_LAMBDA returns expr_value
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcLambdaReturnsExprValueW8)
@@ -4300,7 +4096,7 @@ BOOST_AUTO_TEST_CASE(testCalcLambdaReturnsExprValueW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_AND, O_OR calc (lines 356-368)
+// op.cc - O_AND, O_OR calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcAndTrueW8)
@@ -4336,7 +4132,7 @@ BOOST_AUTO_TEST_CASE(testCalcOrFalseW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_QUERY/O_COLON calc (lines 370-377)
+// op.cc - O_QUERY/O_COLON calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcTernaryTrueW8)
@@ -4356,7 +4152,7 @@ BOOST_AUTO_TEST_CASE(testCalcTernaryFalseW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_EQ, O_LT, O_LTE, O_GT, O_GTE calc
+// op.cc - O_EQ, O_LT, O_LTE, O_GT, O_GTE calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcComparisonOpsW8)
@@ -4374,7 +4170,7 @@ BOOST_AUTO_TEST_CASE(testCalcComparisonOpsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_MATCH calc (lines 312-317)
+// op.cc - O_MATCH calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcMatchW8)
@@ -4386,7 +4182,7 @@ BOOST_AUTO_TEST_CASE(testCalcMatchW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_CONS calc (lines 519-540)
+// op.cc - O_CONS calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcConsW8)
@@ -4403,7 +4199,7 @@ BOOST_AUTO_TEST_CASE(testCalcConsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_SEQ calc (lines 542-565)
+// op.cc - O_SEQ calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCalcSeqW8)
@@ -4420,8 +4216,8 @@ BOOST_AUTO_TEST_CASE(testCalcSeqW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - user-defined function via expression
-// (lines 242-246: compile O_CALL, 280-282: scope paths)
+// op.cc - user-defined function via expression
+// (compile O_CALL and its scope paths)
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testUserDefinedFuncW8)
@@ -4434,8 +4230,8 @@ BOOST_AUTO_TEST_CASE(testUserDefinedFuncW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - lambda call
-// (lines 445-479: call_lambda path)
+// op.cc - lambda call
+// (call_lambda path)
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testLambdaCallW8)
@@ -4449,7 +4245,7 @@ BOOST_AUTO_TEST_CASE(testLambdaCallW8)
 }
 
 // =======================================================================
-// W8 Coverage: compare.cc - push_sort_value null handling (line 62)
+// compare.cc - push_sort_value null handling
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushSortValueNullHandledW8)
@@ -4466,7 +4262,7 @@ BOOST_AUTO_TEST_CASE(testPushSortValueNullHandledW8)
 }
 
 // =======================================================================
-// W8 Coverage: compare.cc - push_sort_value with O_NEG (line 52-54)
+// compare.cc - push_sort_value with O_NEG
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushSortValueInvertedW8)
@@ -4484,33 +4280,36 @@ BOOST_AUTO_TEST_CASE(testPushSortValueInvertedW8)
 }
 
 // =======================================================================
-// W8 Coverage: compare.cc - push_sort_value with O_CONS (lines 44-48)
+// push_sort_value on a parser-built O_CONS chain
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushSortValueConsW8)
 {
-  std::list<sort_value_t> sort_values;
-  // Build: O_CONS(1, O_CONS(2, 3)) to exercise the while loop in
-  // push_sort_value that walks O_CONS chains.
-  // The left of each O_CONS is pushed; the rightmost non-CONS tail
-  // is not pushed (matches production behavior).
-  expr_t::ptr_op_t v1 = expr_t::op_t::wrap_value(value_t(1L));
-  expr_t::ptr_op_t v2 = expr_t::op_t::wrap_value(value_t(2L));
-  expr_t::ptr_op_t v3 = expr_t::op_t::wrap_value(value_t(3L));
-  expr_t::ptr_op_t inner_cons = expr_t::op_t::new_node(
-      expr_t::op_t::O_CONS, v2, v3);
-  expr_t::ptr_op_t outer_cons = expr_t::op_t::new_node(
-      expr_t::op_t::O_CONS, v1, inner_cons);
+  // The parser builds "1, 2, 3" as O_CONS(1, O_CONS(2, O_CONS(3))): every
+  // key, the last one included, is the left child of a CONS node, and the
+  // last CONS has no right child.  push_sort_value pushes one sort value
+  // per key, in order.
+  expr_t expr("1, 2, 3");
+  expr_t::ptr_op_t root = expr.get_op();
+  BOOST_REQUIRE(root && root->kind == expr_t::op_t::O_CONS);
+  BOOST_REQUIRE(root->right() && root->right()->kind == expr_t::op_t::O_CONS);
+  expr_t::ptr_op_t tail = root->right()->right();
+  BOOST_REQUIRE(tail && tail->kind == expr_t::op_t::O_CONS);
+  BOOST_CHECK(!tail->has_right());
 
+  std::list<sort_value_t> sort_values;
   symbol_scope_t scope(*scope_t::empty_scope);
-  ledger::push_sort_value(sort_values, outer_cons, scope);
-  // v1 is pushed (left of outer), v2 is pushed (left of inner),
-  // v3 is the tail after the while loop exits.
-  BOOST_CHECK_EQUAL(sort_values.size(), 2u);
+  ledger::push_sort_value(sort_values, root, scope);
+  BOOST_REQUIRE_EQUAL(sort_values.size(), 3u);
+  long expected = 1;
+  for (const sort_value_t& sv : sort_values) {
+    BOOST_CHECK(!sv.inverted);
+    BOOST_CHECK_EQUAL(sv.value.to_long(), expected++);
+  }
 }
 
 // =======================================================================
-// W8 Coverage: op.cc dump - SCOPE with null (line 853-854)
+// op.cc dump - SCOPE with null
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpScopeW8)
@@ -4527,7 +4326,7 @@ BOOST_AUTO_TEST_CASE(testDumpScopeW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_MATCH dump (line 871-872)
+// op.cc - O_MATCH dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpMatchW8)
@@ -4544,7 +4343,7 @@ BOOST_AUTO_TEST_CASE(testDumpMatchW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_SEQ dump (line 928-929)
+// op.cc - O_SEQ dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpSeqW8)
@@ -4561,7 +4360,7 @@ BOOST_AUTO_TEST_CASE(testDumpSeqW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - O_CONS dump (line 925-926)
+// op.cc - O_CONS dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpConsW8)
@@ -4578,7 +4377,7 @@ BOOST_AUTO_TEST_CASE(testDumpConsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - dump O_QUERY, O_COLON (lines 918-923)
+// op.cc - dump O_QUERY, O_COLON
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpQueryColonW8)
@@ -4599,7 +4398,7 @@ BOOST_AUTO_TEST_CASE(testDumpQueryColonW8)
 }
 
 // =======================================================================
-// W8 Coverage: expr.cc - get_function (line 208-211)
+// expr.cc - get_function
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprGetFunctionW8)
@@ -4623,7 +4422,7 @@ BOOST_AUTO_TEST_CASE(testExprGetFunctionW8)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_DEFINE compile with invalid left kind (line 159)
+// Coverage: op.cc - O_DEFINE compile with invalid left kind
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCompileInvalidDefine)
@@ -4639,7 +4438,7 @@ BOOST_AUTO_TEST_CASE(testCompileInvalidDefine)
 }
 
 // =======================================================================
-// Coverage: op.cc - print O_CONS (line 581, 782) and O_SEQ (line 597)
+// Coverage: op.cc - print O_CONS and O_SEQ
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintCons)
@@ -4680,7 +4479,7 @@ BOOST_AUTO_TEST_CASE(testPrintSeq)
 
 BOOST_AUTO_TEST_CASE(testPrintCallWithCons)
 {
-  // Build O_CALL with O_CONS as right child (line 780-782)
+  // Build O_CALL with O_CONS as right child
   expr_t::ptr_op_t fn_ident = expr_t::op_t::new_node(expr_t::op_t::IDENT);
   fn_ident->set_ident("myfunc");
   expr_t::ptr_op_t a1 = expr_t::op_t::wrap_value(value_t(1L));
@@ -4699,7 +4498,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallWithCons)
 
 BOOST_AUTO_TEST_CASE(testPrintCallNoArgs)
 {
-  // Build O_CALL with no right child (line 789-791)
+  // Build O_CALL with no right child
   expr_t::ptr_op_t fn_ident = expr_t::op_t::new_node(expr_t::op_t::IDENT);
   fn_ident->set_ident("noargs");
   expr_t::ptr_op_t call = expr_t::op_t::new_node(
@@ -4713,7 +4512,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallNoArgs)
 
 BOOST_AUTO_TEST_CASE(testPrintCallSingleArg)
 {
-  // Build O_CALL with non-O_CONS right child (line 783-787)
+  // Build O_CALL with non-O_CONS right child
   expr_t::ptr_op_t fn_ident = expr_t::op_t::new_node(expr_t::op_t::IDENT);
   fn_ident->set_ident("singlearg");
   expr_t::ptr_op_t arg = expr_t::op_t::wrap_value(value_t(42L));
@@ -4728,7 +4527,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallSingleArg)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_DEFINE print (line 757) and O_MATCH print (line 802)
+// Coverage: op.cc - O_DEFINE print and O_MATCH print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintDefine)
@@ -4761,7 +4560,7 @@ BOOST_AUTO_TEST_CASE(testPrintMatch)
 }
 
 // =======================================================================
-// Coverage: op.cc - print with context op_to_find (lines 609-612, 817-819)
+// Coverage: op.cc - print with context op_to_find
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintWithContext)
@@ -4780,7 +4579,7 @@ BOOST_AUTO_TEST_CASE(testPrintWithContext)
 }
 
 // =======================================================================
-// Coverage: expr.cc - context_to_str with empty ptr (line 215)
+// Coverage: expr.cc - context_to_str with empty ptr
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testContextToStrEmpty)
@@ -4791,30 +4590,103 @@ BOOST_AUTO_TEST_CASE(testContextToStrEmpty)
   BOOST_CHECK(!ctx.empty());
 }
 
-// =======================================================================
-// Coverage: expr.cc - merged_expr_t compile with non-";" operator (line 255)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testMergedExprNonSemicolonOperator)
-{
-  merged_expr_t merged("total", "amount", "+");
-  merged.append("amount * 2");
-
-  symbol_scope_t scope(*scope_t::empty_scope);
-  BOOST_CHECK_NO_THROW(merged.compile(scope));
-}
-
 BOOST_AUTO_TEST_CASE(testMergedExprSemicolonOperator)
 {
-  merged_expr_t merged("total", "amount", ";");
+  merged_expr_t merged("total", "amount");
   merged.append("amount * 3");
 
   symbol_scope_t scope(*scope_t::empty_scope);
   BOOST_CHECK_NO_THROW(merged.compile(scope));
 }
 
+// -----------------------------------------------------------------------
+// merged_expr_t::append: only a bare alphanumeric name replaces the base
+// expression; a name containing '_' is appended as a merged step.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testMergedExprAppendUnderscoreName)
+{
+  merged_expr_t merged("amount", "amount");
+  merged.append("amount * 2");
+  BOOST_CHECK_EQUAL(std::size_t(1), merged.exprs.size());
+
+  merged.append("cost");
+  BOOST_CHECK_EQUAL(string("cost"), merged.base_expr);
+  BOOST_CHECK(merged.exprs.empty());
+
+  merged.append("display_amount");
+  BOOST_CHECK_EQUAL(string("cost"), merged.base_expr);
+  BOOST_CHECK_EQUAL(std::size_t(1), merged.exprs.size());
+  BOOST_CHECK_EQUAL(string("display_amount"), merged.exprs.back());
+
+  BOOST_CHECK(!merged.check_for_single_identifier("_"));
+}
+
+BOOST_AUTO_TEST_CASE(testSelfReferentialDefineStaysInExpression)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t counter("n = n + 1; n");
+  BOOST_CHECK(counter.calc(scope) == value_t(1L));
+  BOOST_CHECK(counter.calc(scope) == value_t(2L));
+  // The accumulator lives in counter's own scope, not in the caller's.
+  BOOST_CHECK(!scope.lookup(symbol_t::FUNCTION, "n"));
+
+  // A definition that does not mention itself is still shared.
+  expr_t shared("m = 5; true");
+  shared.calc(scope);
+  BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "m"));
+}
+
+BOOST_AUTO_TEST_CASE(testAssignedCompiledExprReadsAccumulatorAsNull)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t original("n = n + 1; n");
+  BOOST_CHECK(original.calc(scope) == value_t(1L));
+
+  // A copy has a fresh accumulator and must declare it again: its first
+  // read of n is null, not an unknown identifier.
+  expr_t assigned;
+  assigned = original;
+  BOOST_CHECK(assigned.calc(scope) == value_t(1L));
+  BOOST_CHECK(assigned.calc(scope) == value_t(2L));
+  BOOST_CHECK(original.calc(scope) == value_t(2L));
+}
+
+BOOST_AUTO_TEST_CASE(testRecompileKeepsRunningAccumulator)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t counter("n = n + 1; n");
+  BOOST_CHECK(counter.calc(scope) == value_t(1L));
+  BOOST_CHECK(counter.calc(scope) == value_t(2L));
+
+  // journal_t::check_tag and the --group-by filters recompile a plain
+  // expression between uses; the running value must survive and the name
+  // must still not reach the caller's scope.
+  counter.mark_uncompiled();
+  BOOST_CHECK(counter.calc(scope) == value_t(3L));
+  BOOST_CHECK(counter.calc(scope) == value_t(4L));
+  counter.mark_uncompiled();
+  BOOST_CHECK(counter.calc(scope) == value_t(5L));
+  BOOST_CHECK(!scope.lookup(symbol_t::FUNCTION, "n"));
+}
+
+BOOST_AUTO_TEST_CASE(testMergedExprCompileKeepsCallerContext)
+{
+  merged_expr_t merged("total", "amount");
+  merged.append("amount * 3");
+
+  symbol_scope_t scope(*scope_t::empty_scope);
+  merged.compile(scope);
+  // compile() must record the caller's scope, never its own stack-local
+  // lexical wrapper.
+  BOOST_CHECK(merged.get_context() == &scope);
+}
+
 // =======================================================================
-// Coverage: exprbase.h - context_to_str base class (line 189)
+// Coverage: exprbase.h - context_to_str base class
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprBaseContextToStr)
@@ -4827,7 +4699,7 @@ BOOST_AUTO_TEST_CASE(testExprBaseContextToStr)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - calc() without args (line 184)
+// Coverage: exprbase.h - calc() without args
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprCalcWithContext)
@@ -4843,25 +4715,22 @@ BOOST_AUTO_TEST_CASE(testExprCalcWithContext)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - print and dump (lines 207-208)
+// Coverage: exprbase.h - print_to_str
 // =======================================================================
 
-BOOST_AUTO_TEST_CASE(testExprPrintAndDumpCov)
+BOOST_AUTO_TEST_CASE(testExprPrintToStrCov)
 {
   expr_t e("2*3");
   symbol_scope_t scope(*scope_t::empty_scope);
   e.compile(scope);
 
-  // Test print_to_str and dump_to_str (exprbase.h lines 191-199)
+  // Test print_to_str
   string printed = e.print_to_str();
   BOOST_CHECK(!printed.empty());
-
-  string dumped = e.dump_to_str();
-  BOOST_CHECK(!dumped.empty());
 }
 
 // =======================================================================
-// Coverage: op.cc - O_LAMBDA print (line 768-774)
+// Coverage: op.cc - O_LAMBDA print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintLambda)
@@ -4880,7 +4749,7 @@ BOOST_AUTO_TEST_CASE(testPrintLambda)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_LOOKUP print (line 760-766)
+// Coverage: op.cc - O_LOOKUP print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintLookup)
@@ -4899,7 +4768,7 @@ BOOST_AUTO_TEST_CASE(testPrintLookup)
 }
 
 // =======================================================================
-// Coverage: op.cc lines 312-317 - O_MATCH calc
+// Coverage: op.cc - O_MATCH calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpMatchCalc)
@@ -4925,7 +4794,7 @@ BOOST_AUTO_TEST_CASE(testOpMatchCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc line 353 - O_NOT calc
+// Coverage: op.cc - O_NOT calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpNotCalc)
@@ -4957,7 +4826,7 @@ BOOST_AUTO_TEST_CASE(testOpNotCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc lines 356-361 - O_AND with non-boolean operands
+// Coverage: op.cc - O_AND with non-boolean operands
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpAndWithNonBooleanOperands)
@@ -4991,7 +4860,7 @@ BOOST_AUTO_TEST_CASE(testOpAndWithNonBooleanOperands)
 }
 
 // =======================================================================
-// Coverage: op.cc lines 363-367 - O_OR with non-boolean operands
+// Coverage: op.cc - O_OR with non-boolean operands
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpOrWithNonBooleanOperands)
@@ -5024,7 +4893,7 @@ BOOST_AUTO_TEST_CASE(testOpOrWithNonBooleanOperands)
 }
 
 // =======================================================================
-// Coverage: op.cc line 254 - O_DEFINE calc returns NULL_VALUE
+// Coverage: op.cc - O_DEFINE calc returns NULL_VALUE
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpDefineCalc)
@@ -5042,7 +4911,7 @@ BOOST_AUTO_TEST_CASE(testOpDefineCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_DEFINE compile (line 134-161)
+// Coverage: op.cc - O_DEFINE compile
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpDefineCompile)
@@ -5061,7 +4930,7 @@ BOOST_AUTO_TEST_CASE(testOpDefineCompile)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_CALL print (lines 776-792)
+// Coverage: op.cc - O_CALL print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintOCall)
@@ -5118,7 +4987,7 @@ BOOST_AUTO_TEST_CASE(testPrintOCallWithCons)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_MATCH print (line 794-800)
+// Coverage: op.cc - O_MATCH print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintOMatch)
@@ -5136,7 +5005,7 @@ BOOST_AUTO_TEST_CASE(testPrintOMatch)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_DEFINE dump (line 859-861)
+// Coverage: op.cc - O_DEFINE dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpODefine)
@@ -5154,9 +5023,7 @@ BOOST_AUTO_TEST_CASE(testDumpODefine)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_CONS dump and O_COMMA print (line 782)
-// Note: There's no O_COMMA in the enum; line 782 likely refers to O_CONS
-// which uses comma-separated printing
+// Coverage: op.cc - O_CONS dump and its comma-separated print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOCons)
@@ -5173,7 +5040,7 @@ BOOST_AUTO_TEST_CASE(testDumpOCons)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_MATCH dump (line 871-873)
+// Coverage: op.cc - O_MATCH dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOMatch)
@@ -5191,7 +5058,7 @@ BOOST_AUTO_TEST_CASE(testDumpOMatch)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_CALL calc (lines 303-306, 494-517)
+// Coverage: op.cc - O_CALL calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpCallCalc)
@@ -5218,7 +5085,7 @@ BOOST_AUTO_TEST_CASE(testOpCallCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_EQ calc (line 319-321)
+// Coverage: op.cc - O_EQ calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpEqCalc)
@@ -5243,7 +5110,7 @@ BOOST_AUTO_TEST_CASE(testOpEqCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_DEFINE print (lines 752-758)
+// Coverage: op.cc - O_DEFINE print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintODefine)
@@ -5261,7 +5128,7 @@ BOOST_AUTO_TEST_CASE(testPrintODefine)
 }
 
 // =======================================================================
-// Coverage: op.cc - context_to_str formatting (lines 802-815)
+// Coverage: op.cc - context_to_str formatting
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOpContextToStr)
@@ -5284,7 +5151,7 @@ BOOST_AUTO_TEST_CASE(testOpContextNoLocus)
 }
 
 // =======================================================================
-// Coverage: op.cc - symbol annotation (lines 811-815)
+// Coverage: op.cc - symbol annotation
 // The print method has code for when symbol is non-empty,
 // checking commodity_pool_t::current_pool->find(symbol)
 // =======================================================================
@@ -5303,7 +5170,7 @@ BOOST_AUTO_TEST_CASE(testPrintWithSymbol)
 }
 
 // =======================================================================
-// Coverage: expr.cc - context_to_str (lines 213-215, 291-292)
+// Coverage: expr.cc - context_to_str
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprContextToStrCov)
@@ -5320,7 +5187,7 @@ BOOST_AUTO_TEST_CASE(testExprContextToStrCov)
 }
 
 // =======================================================================
-// Coverage: expr.cc - print and dump (lines 217-225)
+// Coverage: expr.cc - print and dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprPrintAndDumpCov2)
@@ -5339,7 +5206,7 @@ BOOST_AUTO_TEST_CASE(testExprPrintAndDumpCov2)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - parse from stream (lines 118-121)
+// Coverage: exprbase.h - parse from stream
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprParseFromStreamCov)
@@ -5353,7 +5220,7 @@ BOOST_AUTO_TEST_CASE(testExprParseFromStreamCov)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - calc() auto-compile path (lines 146-179)
+// Coverage: exprbase.h - calc() auto-compile path
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprCalcAutoCompile)
@@ -5365,20 +5232,6 @@ BOOST_AUTO_TEST_CASE(testExprCalcAutoCompile)
   // Do NOT call compile - calc should do it
   value_t result = e.calc(scope);
   BOOST_CHECK_EQUAL(result.to_long(), 8L);
-}
-
-// =======================================================================
-// Coverage: op.cc - O_CALL compile and lambda definition (lines 144-156)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testOpDefineWithOCall)
-{
-  // Test defining a function using O_DEFINE where left is O_CALL
-  // This is equivalent to: f(x) = x + 1
-  expr_t e("f(x) = x + 1; f(5)");
-  symbol_scope_t scope(*scope_t::empty_scope);
-  value_t result = e.calc(scope);
-  BOOST_CHECK_EQUAL(result.to_long(), 6L);
 }
 
 // =======================================================================
@@ -5449,7 +5302,7 @@ BOOST_AUTO_TEST_CASE(testExprLambda)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_SEQ calc (lines 542-565) and O_CONS calc
+// Coverage: op.cc - O_SEQ calc and O_CONS calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprSequenceCalc)
@@ -5462,7 +5315,7 @@ BOOST_AUTO_TEST_CASE(testExprSequenceCalc)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_QUERY/O_COLON calc (lines 370-377)
+// Coverage: op.cc - O_QUERY/O_COLON calc
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testExprTernary)
@@ -5480,7 +5333,7 @@ BOOST_AUTO_TEST_CASE(testExprTernary)
 }
 
 // =======================================================================
-// Coverage: op.cc dump - O_CALL dump (line 868-870)
+// Coverage: op.cc dump - O_CALL dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOCall)
@@ -5498,7 +5351,7 @@ BOOST_AUTO_TEST_CASE(testDumpOCall)
 }
 
 // =======================================================================
-// Coverage: op.cc dump - O_SEQ dump (line 928-930)
+// Coverage: op.cc dump - O_SEQ dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOSeq)
@@ -5515,7 +5368,7 @@ BOOST_AUTO_TEST_CASE(testDumpOSeq)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_OR dump (line 914-916)
+// Coverage: op.cc - O_OR dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOOr)
@@ -5532,7 +5385,7 @@ BOOST_AUTO_TEST_CASE(testDumpOOr)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_AND dump (line 911-913)
+// Coverage: op.cc - O_AND dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOAnd)
@@ -5549,7 +5402,7 @@ BOOST_AUTO_TEST_CASE(testDumpOAnd)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_NOT dump (line 875-877)
+// Coverage: op.cc - O_NOT dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpONot)
@@ -5565,7 +5418,7 @@ BOOST_AUTO_TEST_CASE(testDumpONot)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_LAMBDA dump (line 865-867)
+// Coverage: op.cc - O_LAMBDA dump
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDumpOLambda)
@@ -5584,7 +5437,7 @@ BOOST_AUTO_TEST_CASE(testDumpOLambda)
 }
 
 // =======================================================================
-// Coverage: expr.cc lines 157-177 - error reporting with expression tree
+// Coverage: expr.cc - error reporting with expression tree
 // This tests the calc error handling in real_calc
 // =======================================================================
 
@@ -5598,7 +5451,7 @@ BOOST_AUTO_TEST_CASE(testExprCalcErrorContext)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - parse() base class path (lines 118-121)
+// Coverage: exprbase.h - parse() base class path
 // The base class parse(stream) sets text to original_string or "<stream>"
 // =======================================================================
 
@@ -5624,19 +5477,7 @@ BOOST_AUTO_TEST_CASE(testExprBaseParseStreamWithOrigString)
 }
 
 // =======================================================================
-// Coverage: exprbase.h line 189 - context_to_str() base class
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testExprBaseContextToStrEmpty)
-{
-  // An empty expr_t should return the "<empty expression>" message
-  expr_t e;
-  string ctx = e.context_to_str();
-  BOOST_CHECK(!ctx.empty());
-}
-
-// =======================================================================
-// Coverage: op.cc - O_CALL compile (lines 144-156)
+// Coverage: op.cc - O_CALL compile
 // Defining a function using f(x) = ... syntax compiles O_CALL in O_DEFINE
 // =======================================================================
 
@@ -5671,7 +5512,7 @@ BOOST_AUTO_TEST_CASE(testOpDefineWithOCallCompile)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_NOT print (lines 638-642)
+// Coverage: op.cc - O_NOT print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintONot)
@@ -5687,7 +5528,7 @@ BOOST_AUTO_TEST_CASE(testPrintONot)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_OR print (lines 712-720)
+// Coverage: op.cc - O_OR print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintOOr)
@@ -5721,7 +5562,41 @@ BOOST_AUTO_TEST_CASE(testManySharedCopies)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_AND print (lines 706-714)
+// op.h - operator nodes without a right child
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testOperatorWithoutRightChild)
+{
+  // new_node() (and so op_t::copy() during compile) creates operator
+  // nodes whose right child is absent; right() must then return null
+  // and agree with has_right(), never throw bad_variant_access.
+  expr_t::ptr_op_t lhs = expr_t::op_t::wrap_value(value_t(1L));
+  expr_t::ptr_op_t seq = expr_t::op_t::new_node(expr_t::op_t::O_SEQ, lhs);
+  const expr_t::op_t& node(*seq);
+  BOOST_CHECK(!node.has_right());
+  BOOST_CHECK_NO_THROW(node.right());
+  BOOST_CHECK(!node.right());
+
+  expr_t::ptr_op_t cons(new expr_t::op_t(expr_t::op_t::O_CONS));
+  BOOST_CHECK(!cons->has_right());
+  BOOST_CHECK(!cons->right());
+}
+
+BOOST_AUTO_TEST_CASE(testLambdaParameterWalkRejectsNonIdent)
+{
+  // compile()'s O_LAMBDA arm walks the parameter chain and rejects any
+  // element that is not an identifier, in the middle of the chain or
+  // at its tail.  (call_lambda's walk is pinned by
+  // testCallLambdaInvalidParamW7.)
+  symbol_scope_t scope;
+  expr_t middle("dbl(a, 1) = a; dbl(1)");
+  BOOST_CHECK_THROW(middle.calc(scope), calc_error);
+  expr_t tail("dbl(a + b) = a; dbl(1)");
+  BOOST_CHECK_THROW(tail.calc(scope), calc_error);
+}
+
+// =======================================================================
+// Coverage: op.cc - O_AND print
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintOAnd)
@@ -5735,6 +5610,226 @@ BOOST_AUTO_TEST_CASE(testPrintOAnd)
   and_op->print(out);
   string result = out.str();
   BOOST_CHECK(result.find("&") != string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(testFindDefinitionHopLimitThrowsRecursionError)
+{
+  // An identifier whose definition is itself makes find_definition hop
+  // forever; past 256 hops it must raise recursion_error (not value_error)
+  // so calc_call and expr_t::real_calc pass it through without context.
+  symbol_scope_t scope;
+  expr_t::ptr_op_t a = expr_t::op_t::new_node(expr_t::op_t::IDENT);
+  a->set_ident("a");
+  scope.define(symbol_t::FUNCTION, "a", a);
+  BOOST_CHECK_THROW(a->call(value_t(1L), scope), recursion_error);
+}
+
+// -----------------------------------------------------------------------
+// Guards for the query section loops, the merged expression form and the
+// context kept across a lazy compile.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testQuerySectionOrChains)
+{
+  // Each section ORs its terms left to right; show, only and bold each land
+  // under their own query kind; a section with no terms records nothing.
+  value_t args;
+  for (const char* arg : {"Food", "Cash", "Gas", "show", "Food", "Gas", "Oil", "only", "Cash",
+                          "Bank", "Fees", "bold", "A", "B", "C", "for", "2024"})
+    args.push_back(string_value(arg));
+  query_t query(args);
+  BOOST_CHECK_EQUAL(string("(((account =~ /Food/) | (account =~ /Cash/)) | (account =~ /Gas/))"),
+                    query.get_query(query_t::QUERY_LIMIT));
+  BOOST_CHECK_EQUAL(string("(((account =~ /Food/) | (account =~ /Gas/)) | (account =~ /Oil/))"),
+                    query.get_query(query_t::QUERY_SHOW));
+  BOOST_CHECK_EQUAL(string("(((account =~ /Cash/) | (account =~ /Bank/)) | (account =~ /Fees/))"),
+                    query.get_query(query_t::QUERY_ONLY));
+  BOOST_CHECK_EQUAL(string("(((account =~ /A/) | (account =~ /B/)) | (account =~ /C/))"),
+                    query.get_query(query_t::QUERY_BOLD));
+  BOOST_CHECK_EQUAL(string("2024"), query.get_query(query_t::QUERY_FOR));
+
+  value_t empty_show;
+  for (const char* arg : {"show", "only", "Cash"})
+    empty_show.push_back(string_value(arg));
+  query_t query2(empty_show);
+  BOOST_CHECK(!query2.has_query(query_t::QUERY_LIMIT));
+  BOOST_CHECK(!query2.has_query(query_t::QUERY_SHOW));
+  BOOST_CHECK_EQUAL(string("(account =~ /Cash/)"), query2.get_query(query_t::QUERY_ONLY));
+}
+
+BOOST_AUTO_TEST_CASE(testMergedExprAssemblesSequence)
+{
+  // Merged pieces are threaded through the term with ';' assignments.
+  symbol_scope_t scope(*scope_t::empty_scope);
+  merged_expr_t merged("total", "amount");
+  merged.append("amount * 3");
+  merged.append("total + 1");
+  merged.compile(scope);
+  BOOST_CHECK_EQUAL(
+      string("__tmp_total=(total=(amount);total=(amount * 3);total=(total + 1);total);__tmp_total"),
+      merged.text());
+
+  // A bare identifier replaces the base and drops the merged pieces.
+  merged_expr_t ident("total", "amount");
+  ident.append("amount * 3");
+  ident.append("cost");
+  BOOST_CHECK_EQUAL(string("cost"), ident.base_expr);
+  BOOST_CHECK(ident.exprs.empty());
+  ident.compile(scope);
+  BOOST_CHECK_EQUAL(string("cost"), ident.text());
+}
+
+BOOST_AUTO_TEST_CASE(testExprCalcKeepsSetContext)
+{
+  // A context set with set_context() survives the lazy compile inside
+  // calc(scope), even when calc() is given a short-lived scope.
+  symbol_scope_t long_lived(*scope_t::empty_scope);
+
+  expr_t plain("1 + 2");
+  plain.set_context(&long_lived);
+  {
+    symbol_scope_t short_lived(static_cast<scope_t&>(long_lived));
+    BOOST_CHECK_EQUAL(3L, plain.calc(short_lived).to_long());
+  }
+  BOOST_CHECK(plain.get_context() == &long_lived);
+
+  merged_expr_t merged("t", "1");
+  merged.append("t * 2");
+  merged.set_context(&long_lived);
+  {
+    symbol_scope_t short_lived(static_cast<scope_t&>(long_lived));
+    BOOST_CHECK_EQUAL(2L, merged.calc(short_lived).to_long());
+  }
+  BOOST_CHECK(merged.get_context() == &long_lived);
+
+  // With no context set, the lazy compile records the scope it was given.
+  expr_t unset("4");
+  BOOST_CHECK_EQUAL(4L, unset.calc(long_lived).to_long());
+  BOOST_CHECK(unset.get_context() == &long_lived);
+}
+
+BOOST_AUTO_TEST_CASE(testScanPatternLiteral)
+{
+  // Regex regime: \/ -> /, \\ -> \, every other \X kept whole
+  string re("a\\/b\\\\c\\.d/rest");
+  string::const_iterator i = re.cbegin();
+  BOOST_CHECK_EQUAL(string("a/b\\c\\.d"), scan_pattern_literal(i, re.cend(), '/', true));
+  BOOST_CHECK_EQUAL(string("rest"), string(i, re.cend()));
+
+  // Literal regime with the same delimiter: every \X -> X
+  string lit("a\\/b\\\\c\\.d/rest");
+  string::const_iterator l = lit.cbegin();
+  BOOST_CHECK_EQUAL(string("a/b\\c.d"), scan_pattern_literal(l, lit.cend(), '/', false));
+  BOOST_CHECK_EQUAL(string("rest"), string(l, lit.cend()));
+
+  // Quoted pattern, literal regime: \X -> X
+  const char* q = "it\\'s\\.x' tail";
+  const char* qp = q;
+  BOOST_CHECK_EQUAL(string("it's.x"), scan_pattern_literal(qp, q + std::strlen(q), '\'', false));
+  BOOST_CHECK_EQUAL(string(" tail"), string(qp));
+
+  // Stream input: the stream is left just past the closing delimiter
+  std::istringstream in("a\\|b/ x");
+  std::istreambuf_iterator<char> si(in), eos;
+  BOOST_CHECK_EQUAL(string("a\\|b"), scan_pattern_literal(si, eos, '/', true));
+  BOOST_CHECK_EQUAL(' ', static_cast<char>(in.get()));
+
+  // A lone trailing backslash, and a missing closing delimiter
+  auto says = [](const char* msg) {
+    return [msg](const parse_error& e) { return string(e.what()) == msg; };
+  };
+  string bs("abc\\");
+  string::const_iterator j = bs.cbegin();
+  BOOST_CHECK_EXCEPTION(scan_pattern_literal(j, bs.cend(), '/', true), parse_error,
+                        says("Unexpected '\\' at end of pattern"));
+  string open("abc");
+  string::const_iterator k = open.cbegin();
+  BOOST_CHECK_EXCEPTION(scan_pattern_literal(k, open.cend(), '"', false), parse_error,
+                        says("Expected '\"' at end of pattern"));
+}
+
+// -----------------------------------------------------------------------
+// symbol_t orders symbol_scope_t's map by (kind, name)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSymbolScopeOrdersByKindThenName)
+{
+  // Definitions of different kinds sharing names, made in every order, are
+  // each found under their own key; a redefinition replaces only its own
+  // entry; an undefined key falls through to the parent.
+  const std::vector<std::pair<symbol_t::kind_t, string>> keys = {
+      {symbol_t::FUNCTION, "a"},
+      {symbol_t::FUNCTION, "z"},
+      {symbol_t::OPTION, "a"},
+      {symbol_t::OPTION, "z"}};
+  std::vector<expr_t::ptr_op_t> defs;
+  for (std::size_t i = 0; i < keys.size(); ++i)
+    defs.push_back(expr_t::op_t::wrap_value(value_t(static_cast<long>(i))));
+
+  std::vector<std::size_t> order = {0, 1, 2, 3};
+  do {
+    empty_scope_t parent;
+    symbol_scope_t scope(parent);
+    for (std::size_t i : order)
+      scope.define(keys[i].first, keys[i].second, defs[i]);
+    for (std::size_t i = 0; i < keys.size(); ++i)
+      BOOST_CHECK(scope.lookup(keys[i].first, keys[i].second) == defs[i]);
+
+    expr_t::ptr_op_t redefined(expr_t::op_t::wrap_value(value_t(99L)));
+    scope.define(symbol_t::OPTION, "a", redefined);
+    BOOST_CHECK(scope.lookup(symbol_t::OPTION, "a") == redefined);
+    BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "a") == defs[0]);
+    BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "z") == defs[1]);
+    BOOST_CHECK(scope.lookup(symbol_t::OPTION, "z") == defs[3]);
+    BOOST_CHECK(!scope.lookup(symbol_t::COMMAND, "a"));
+  } while (std::next_permutation(order.begin(), order.end()));
+}
+
+// -----------------------------------------------------------------------
+// The POST_AMOUNT fast path covers exactly the identifiers post_t::lookup
+// binds to the posting amount
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testExprFastPathPostAmountIdents)
+{
+  empty_scope_t parent;
+  symbol_scope_t scope(parent);
+  for (const char* text : {"amount", "a", "(amount)"}) {
+    expr_t expr(text);
+    expr.compile(scope);
+    BOOST_CHECK_MESSAGE(expr.fast_path() == expr_t::fast_path_t::POST_AMOUNT, text);
+  }
+  for (const char* text : {"account", "amt", "b", "A", "amount + 1", "-amount"}) {
+    expr_t expr(text);
+    expr.compile(scope);
+    BOOST_CHECK_MESSAGE(expr.fast_path() == expr_t::fast_path_t::NONE, text);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testInfoTreeDumpKeepsLongLines)
+{
+  // With --verbose an evaluation error carries the value expression tree.
+  // A dump line longer than any fixed buffer must reach the error context
+  // whole, and so must the lines after it.
+  const string literal(1100, 'a');
+  expr_t expr("\"" + literal + "\" + (1 / 0)");
+  empty_scope_t scope;
+
+  const log_level_t saved_level = _log_level;
+  _log_level = LOG_INFO;
+  discard_error_context(); // context left by earlier cases
+  bool threw = false;
+  try {
+    expr.calc(scope);
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  _log_level = saved_level;
+
+  const string context = error_context();
+  BOOST_CHECK(threw);
+  BOOST_CHECK(context.find("VALUE: \"" + literal + "\"") != string::npos);
+  BOOST_CHECK(context.find("O_DIV") != string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

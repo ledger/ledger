@@ -1,0 +1,17 @@
+; A journal assert whose expression has trailing text is a parse error
+; instead of asserting only the expression's first term.
+
+assert 1 2
+
+2024/01/05 Grocer
+    Expenses:Food                 $15.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+While parsing value expression:
+  1 2
+    ^
+Error: Unexpected value '2'
+end test

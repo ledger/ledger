@@ -1,0 +1,33 @@
+; An `apply year` still open at the end of a file is undone there, as
+; `end apply` would undo it, so the next -f file dates its entries by the
+; current year again.  Every apply left open is undone, newest first: the
+; open `apply account` below the `apply year` used to hide it, as did a
+; second open `apply year`, and 2020 leaked into apply-year-unclosed-eof.dat.
+
+apply year 2020
+apply account Foo
+
+01/05 A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --now 2030/06/15 -f $FILE -f $sourcepath/test/regress/apply-year-unclosed-eof.dat reg --format '%D %P %A\n'
+2020/01/05 A Foo:Expenses:Food
+2020/01/05 A Foo:Assets:Cash
+2030/01/06 B Expenses:Food
+2030/01/06 B Assets:Cash
+end test
+
+test --now 2030/06/15 -f $sourcepath/test/regress/apply-year-unclosed-eof-alone.dat -f $sourcepath/test/regress/apply-year-unclosed-eof.dat reg --format '%D %P %A\n'
+2020/01/05 A Expenses:Food
+2020/01/05 A Assets:Cash
+2030/01/06 B Expenses:Food
+2030/01/06 B Assets:Cash
+end test
+
+test --now 2030/06/15 -f $sourcepath/test/regress/apply-year-unclosed-eof-nested.dat -f $sourcepath/test/regress/apply-year-unclosed-eof.dat reg --format '%D %P %A\n'
+2021/01/05 A Expenses:Food
+2021/01/05 A Assets:Cash
+2030/01/06 B Expenses:Food
+2030/01/06 B Assets:Cash
+end test

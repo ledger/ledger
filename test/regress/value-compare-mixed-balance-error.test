@@ -12,9 +12,12 @@
 ; order changes from run to run, so every component's commodity is now
 ; checked before any is compared.
 ;
-; A value expression evaluates `a > b` as `b < a`, so `total > $3`
-; compares the amount with the balance, which needs the balance as a
-; single amount and fails with another message, as it always did.
+; A value expression evaluates `a > b` as `b < a`, `a <= b` as
+; `not (b < a)` and `a >= b` as `not (a < b)`, so `total > $3` and
+; `total <= $3` compare the amount with the balance.  That asks the
+; balance the mirrored question, and fails with the same error.  Ledger
+; used to turn the balance into a single amount there instead, and failed
+; with "Cannot convert a balance with multiple commodities to an amount".
 ;
 ; The comparisons on this journal that answer are in
 ; value-compare-mixed-balance.test: the semantic bisimulation skips a
@@ -50,7 +53,13 @@ __ERROR__
 While evaluating value expression:
   (total > $3.00)
   ^^^^^^^^^^^^^^^
-While converting $5.00
-10 EUR to an amount:
-Error: Cannot convert a balance with multiple commodities to an amount
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
+end test
+
+test bal Assets -d 'total <= $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total <= $3.00)
+  ^^^^^^^^^^^^^^^^
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
 end test

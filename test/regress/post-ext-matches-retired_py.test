@@ -1,0 +1,11 @@
+test python test/regress/post-ext-matches-retired.py
+False
+POST_EXT_RECEIVED True
+POST_EXT_HANDLED True
+POST_EXT_DISPLAYED True
+POST_EXT_DIRECT_AMT True
+POST_EXT_SORT_CALC True
+POST_EXT_COMPOUND True
+POST_EXT_VISITED True
+POST_EXT_CONSIDERED True
+end test

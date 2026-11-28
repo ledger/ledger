@@ -25,7 +25,8 @@ def load_results(path: Path) -> dict[str, dict]:
 def compare(baseline_path: Path, candidate_path: Path, threshold: float) -> int:
     """Compare two benchmark result sets.
 
-    Returns 0 if no regressions exceed threshold, 1 otherwise.
+    Returns 0 if no regression exceeds the threshold, 1 if one does, and
+    2 if the baseline has no results.
     """
     baseline = load_results(baseline_path)
     candidate = load_results(candidate_path)

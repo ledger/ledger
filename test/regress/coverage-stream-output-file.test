@@ -1,9 +1,14 @@
 ; Test stream.cc: output to file path
-; Using --output to write to a file exercises the ofstream path
+; Using --output to write to a temporary file exercises the ofstream path.
+; Check the contents and remove the temporary file.
 
 2024/01/01 Test
     Expenses:Food   $10.00
     Assets:Cash
 
-test bal --output /tmp/ledger_coverage_test_output.txt
+test -f "$FILE" bal --output "${OUT:=$(mktemp)}" && cat "$OUT"; status=$?; rm -f "$OUT" || status=1; exit "$status"
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
 end test

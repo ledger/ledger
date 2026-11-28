@@ -1,0 +1,5 @@
+; Read after a file that ends inside `apply year 2020`; see
+; apply-year-unclosed-eof.test.
+01/06 B
+    Expenses:Food    $20.00
+    Assets:Cash

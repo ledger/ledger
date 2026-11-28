@@ -1,0 +1,49 @@
+; --time-round rounds each timelog entry up to the next multiple of N
+; minutes.  With --day-break a session that crosses midnight becomes one
+; entry per day, and each entry is rounded on its own: 23:55-00:05 is
+; 5m + 5m, billed as 15m + 15m = 30m, where the same session without
+; --day-break is one 10m entry billed as 15m.  A session that ends at
+; midnight stays one entry, and a whole day inside a longer session is
+; already a multiple of N, so only its first and last parts round up.
+
+i 2024/01/01 23:55:00 Work:Night
+o 2024/01/02 00:05:00
+
+i 2024/01/03 23:45:00 Work:Edge
+o 2024/01/04 00:00:00
+
+i 2024/01/05 23:55:00 Work:Long
+o 2024/01/07 00:05:00
+
+test reg ^Work:Night --time-round 15
+24-Jan-01                       Work:Night                    15.0m        15.0m
+end test
+
+test reg ^Work:Night --time-round 15 --day-break
+24-Jan-01                       Work:Night                    15.0m        15.0m
+24-Jan-02                       Work:Night                    15.0m        30.0m
+end test
+
+test reg ^Work:Night --day-break
+24-Jan-01                       Work:Night                     5.0m         5.0m
+24-Jan-02                       Work:Night                     5.0m        10.0m
+end test
+
+test reg ^Work:Edge --time-round 15 --day-break
+24-Jan-03                       Work:Edge                     15.0m        15.0m
+end test
+
+test reg ^Work:Long --time-round 15 --day-break
+24-Jan-05                       Work:Long                     15.0m        15.0m
+24-Jan-06                       Work:Long                    24.00h       24.25h
+24-Jan-07                       Work:Long                     15.0m       24.50h
+end test
+
+test bal --time-round 15 --day-break
+              25.25h  Work
+               15.0m    Edge
+              24.50h    Long
+               30.0m    Night
+--------------------
+              25.25h
+end test

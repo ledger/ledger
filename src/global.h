@@ -121,9 +121,6 @@ public:
   /// @return The remaining non-option arguments (verb + operands).
   strings_list read_command_arguments(scope_t& scope, strings_list args);
 
-  /// Log informational messages about which files and databases are in use.
-  void normalize_session_options();
-
   /// Search the scope chain for a pre-command matching @p verb.
   /// Pre-commands (e.g., "parse", "eval") bypass journal loading entirely.
   expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);
@@ -175,8 +172,12 @@ public:
    * @brief Wrapper around execute_command that handles report stack
    *        management and exception reporting.
    *
-   * @return \c true if a command was actually executed; otherwise, it probably
-   *         just resulted in setting some options.
+   * @return 0 if the command completed (also when, with @p at_repl, the line
+   *         only set options), or 1 if it threw a std::exception, which has
+   *         already been reported through report_error().  An error_count
+   *         (journal parse errors, --version) is not a std::exception and
+   *         propagates to main().  main() uses the result as the exit status
+   *         in batch and --script mode and ignores it at the REPL.
    */
   int execute_command_wrapper(strings_list args, bool at_repl);
 
@@ -256,7 +257,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
       CTOR(global_scope_t, init_file_) {
         if (!_init_file.empty())
           // _init_file is filled during handle_debug_options
-          on(none, _init_file);
+          on(std::nullopt, _init_file);
       });
 
   OPTION(global_scope_t, options);       ///< Dump all options before command output
@@ -267,7 +268,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION(global_scope_t, verify_memory); ///< Enable memory allocation tracing
 
   OPTION_(
-      global_scope_t, version, DO() { // -v
+      global_scope_t, version, DO() {
         parent->show_version_info(std::cout);
         throw error_count(0, ""); // exit immediately
       });

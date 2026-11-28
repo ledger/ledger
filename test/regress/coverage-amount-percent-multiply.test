@@ -1,13 +1,15 @@
 ; Coverage for amount.cc
 ; When multiplying a bare amount (no commodity) by a percentage amount,
 ; the result inherits the "%" commodity. quantity(amount) strips the
-; commodity, so the multiplication result takes "%" from the multiplier.
+; commodity, so the multiplication result takes "%" from the multiplier,
+; and a bare number times a percentage is not scaled: 100.00 * 50% is
+; 5000% (that is, 50), the same as 50% * 100.00.
 
 2024/01/01 Test
     Expenses:Food    100.00
     Assets:Cash
 
 test reg --format "%(quantity(amount) * 50%)\n"
-50%
--50%
+5000%
+-5000%
 end test

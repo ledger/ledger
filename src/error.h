@@ -43,11 +43,13 @@
  *
  * @brief Exception throwing, warning, and error context facilities.
  *
- * Ledger avoids using raw `throw` statements.  Instead, all exceptions are
- * raised through the `throw_()` macro, which first assembles the message in
- * a thread-local `std::ostringstream` and then throws the specified exception
- * type.  This keeps the throw-site syntax concise and supports Boost.Format
- * and streaming operators in the message expression.
+ * Most exceptions are raised through the `throw_()` macro, which first
+ * assembles the message in a thread-local `std::ostringstream` and then
+ * throws the specified exception type.  This keeps the throw-site syntax
+ * concise and supports Boost.Format and streaming operators in the message
+ * expression.  Some sites still throw directly (for example
+ * `check_for_signal()` in utils.h and the pager setup in stream.cc), so a
+ * handler must not assume every exception passed through `throw_()`.
  *
  * Similarly, `warning_()` prints a warning to stderr and `add_error_context()`
  * appends location information (file name, line number, source excerpt) to a
@@ -135,7 +137,7 @@ string error_context();
 /// will never be shown, so it must not be printed with the next one.
 void discard_error_context();
 
-/// Format a "file:line:" context string for error messages.
+/// Format the location prefix of an error message: "FILE", line N:
 string file_context(const path& file, std::size_t line);
 
 /// Format a source line with a caret (^) indicator under the error position.
@@ -150,10 +152,15 @@ string line_context(const string& line, const string::size_type pos = 0,
 string source_context(const path& file, const std::istream::pos_type pos,
                       const std::istream::pos_type end_pos, const string& prefix = "");
 
-/// Tracks the number of errors encountered during a parse run.  Thrown
-/// when the error threshold is exceeded, carrying the count and a summary
-/// message.  This is not a std::exception subclass; it is caught specially
-/// by the top-level error handler.
+/// Read up to @p len bytes of @p file starting at @p pos (fewer at end of
+/// file), decrypting the file first when it is GPG-encrypted.
+string read_source(const path& file, const std::istream::pos_type pos, const std::streamoff len);
+
+/// Thrown after parsing when any errors were reported (textual.cc),
+/// carrying their count and the last error's text, and by --version with a
+/// count of 0 to request an immediate exit.  This is not a std::exception
+/// subclass: main() catches it to set the exit status, and the Python
+/// module translates it into a Python exception.
 struct error_count {
   std::size_t count;   ///< Number of errors encountered
   std::string message; ///< Summary message

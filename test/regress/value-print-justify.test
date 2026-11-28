@@ -1,0 +1,36 @@
+; value_t::print pads a commodity to the width asked for once, and colors
+; each negative element of a sequence as it colors a lone negative value.
+; It used to set the stream's width before handing a commodity to
+; justify(), which pads by itself, so the field came out nearly twice as
+; wide; and it printed a sequence's elements without the caller's color.
+; `cat -v` shows ESC as ^[.
+
+2024/01/01 Purchase
+    Expenses             10 EUR
+    Assets
+
+test reg Expenses --format '[%10(commodity(amount))]|[%-10(commodity(amount))]|[%(commodity(amount))]\n'
+[       EUR]|[EUR       ]|[EUR]
+end test
+
+test eval '"[" + justify(commodity(10 EUR), 10, -1, true) + "]"'
+[       EUR]
+end test
+
+test eval '"[" + justify(commodity(10 EUR), 10, -1, false) + "]"'
+[EUR       ]
+end test
+
+; A width narrower than the symbol leaves the symbol whole.
+test eval '"[" + justify(commodity(10 EUR), 2, -1, true) + "]"'
+[EUR]
+end test
+
+test eval '"[" + justify((-1, $-2), 6, -1, true, true) + "]"' | cat -v
+[     (    ^[[31m-1^[[0m,    ^[[31m$-2^[[0m)]
+end test
+
+; Without color the elements print as before.
+test eval '"[" + justify((-1, $-2), 6, -1, true, false) + "]"' | cat -v
+[     (    -1,    $-2)]
+end test

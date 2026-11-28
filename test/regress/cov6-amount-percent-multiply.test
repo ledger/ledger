@@ -1,10 +1,12 @@
 ; Test percentage multiplication with bare number (no commodity)
 ; Covers amount.cc (propagate % commodity to result)
+; A bare number times a percentage stays a percentage of the product:
+; 100 * 19% is 1900% (that is, 19), the same as 19% * 100.
 
 2024/01/01 Test
     Expenses:Food    (100 * 19%)
     Assets:Cash
 
 test bal Expenses
-                 19%  Expenses:Food
+               1900%  Expenses:Food
 end test

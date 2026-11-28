@@ -1,0 +1,139 @@
+; Integer-valued options keep every value they accepted before: a plain
+; or signed (+1) whole number, a negative --tail, and a --seed above
+; INT_MAX or written as a negative number that wraps modulo 2^32 to the
+; same seed (3000000000 = 2^32 - 1294967296).  --depth +1 means
+; --depth 1 in every report, including the ones whose collapse stage
+; adds its own depth term, and --meta-width +5 (or --meta TAG:+5) means
+; --meta-width 5.  Reading such an option from a value expression yields an
+; integer, as the column-width options already did, so %(columns + 1)
+; and %(abbrev_len + 1) add instead of concatenating strings.
+; option-int-invalid.test holds the rejected values; the two files are
+; kept apart so that SemanticBisimulation replays this positive one.
+
+2024/01/05 Grocer
+    ; Category: Food
+    Expenses:Food:Groceries    $10.25
+    Assets:Cash
+
+2024/02/05 Diner
+    Expenses:Food:Dining       $20.00
+    Assets:Cash
+
+2024/03/05 Grocer
+    Expenses:Food:Groceries    $30.00
+    Assets:Cash
+
+test bal --depth 1
+             $-60.25  Assets
+              $60.25  Expenses
+--------------------
+                   0
+end test
+
+test bal --depth +1
+             $-60.25  Assets
+              $60.25  Expenses
+--------------------
+                   0
+end test
+
+test reg --depth 1
+24-Jan-05 Grocer                Expenses                     $10.25       $10.25
+                                Assets                      $-10.25            0
+24-Feb-05 Diner                 Expenses                     $20.00       $20.00
+                                Assets                      $-20.00            0
+24-Mar-05 Grocer                Expenses                     $30.00       $30.00
+                                Assets                      $-30.00            0
+end test
+
+test reg --depth +1
+24-Jan-05 Grocer                Expenses                     $10.25       $10.25
+                                Assets                      $-10.25            0
+24-Feb-05 Diner                 Expenses                     $20.00       $20.00
+                                Assets                      $-20.00            0
+24-Mar-05 Grocer                Expenses                     $30.00       $30.00
+                                Assets                      $-30.00            0
+end test
+
+test reg -M --depth +1
+24-Jan-01 - 24-Jan-31  Assets                        $-10.25      $-10.25
+                       Expenses                       $10.25            0
+24-Feb-01 - 24-Feb-29  Assets                        $-20.00      $-20.00
+                       Expenses                       $20.00            0
+24-Mar-01 - 24-Mar-31  Assets                        $-30.00      $-30.00
+                       Expenses                       $30.00            0
+end test
+
+test reg --meta Category --meta-width 5 --head 1
+Food 24-Jan-05 Grocer              Expens:Food:Groceries      $10.25      $10.25
+Food                               Assets:Cash               $-10.25           0
+end test
+
+test reg --meta Category --meta-width +5 --head 1
+Food 24-Jan-05 Grocer              Expens:Food:Groceries      $10.25      $10.25
+Food                               Assets:Cash               $-10.25           0
+end test
+
+test reg --meta Category:+5 --head 1
+Food 24-Jan-05 Grocer              Expens:Food:Groceries      $10.25      $10.25
+Food                               Assets:Cash               $-10.25           0
+end test
+
+test reg --tail=-2
+24-Jan-05 Grocer                Expense:Food:Groceries       $10.25       $10.25
+                                Assets:Cash                 $-10.25            0
+end test
+
+test reg -M --period-shift 15
+23-Dec-16 - 24-Jan-15  Assets:Cash                   $-10.25      $-10.25
+                       Expenses:Food:Groceries        $10.25            0
+24-Jan-16 - 24-Feb-15  Assets:Cash                   $-20.00      $-20.00
+                       Expenses:Food:Dining           $20.00            0
+24-Feb-16 - 24-Mar-15  Assets:Cash                   $-30.00      $-30.00
+                       Expenses:Food:Groceries        $30.00            0
+end test
+
+test bal --decimal-places 0
+                $-60  Assets:Cash
+                 $60  Expenses:Food
+                 $20    Dining
+                 $40    Groceries
+--------------------
+                   0
+end test
+
+test reg --columns=60 --format "%(columns + 1)\n" --head 1
+61
+61
+end test
+
+test reg --format "%(abbrev_len + 1)\n" --head 1
+3
+3
+end test
+
+test generate --seed 3000000000 --head 1
+2115/04/11 * (HPiH) XiV 5:2dL27FiR5:6jq78 s8w:oGxz48:Prp
+    Q:811Rd                                    1598.94 DN
+    [vqVXL1RtUg:T:fKC9 91hvSAq:Pn:ke3yhjii8]   jSJ8605.51 @@ mHqr3537.94
+    [w8Hz:73Z8HH 8b9s9qa2 fG04:R:0t0b3AS:I:H]  1549.43vtg @ 8863.78nu
+    k9                                         u -8259.92 @@ 265.162S
+    W:4f:3Sg8QiqAtDj45:L9336x5ZDzV1gR        xDQqEb2767.76 @ 2320.17ZL
+    ; L9ZQ15qJ87:P8y1lMr0
+    Bu276Qjb6121w 5Wo:F6100Ar5E5Q5L           5435.28WFWw @ rLdjf8491.42
+    I5J3B4Sdf9P
+    [Tj5nC:910lNpy:s7L6 2]
+end test
+
+test generate --seed -1294967296 --head 1
+2115/04/11 * (HPiH) XiV 5:2dL27FiR5:6jq78 s8w:oGxz48:Prp
+    Q:811Rd                                    1598.94 DN
+    [vqVXL1RtUg:T:fKC9 91hvSAq:Pn:ke3yhjii8]   jSJ8605.51 @@ mHqr3537.94
+    [w8Hz:73Z8HH 8b9s9qa2 fG04:R:0t0b3AS:I:H]  1549.43vtg @ 8863.78nu
+    k9                                         u -8259.92 @@ 265.162S
+    W:4f:3Sg8QiqAtDj45:L9336x5ZDzV1gR        xDQqEb2767.76 @ 2320.17ZL
+    ; L9ZQ15qJ87:P8y1lMr0
+    Bu276Qjb6121w 5Wo:F6100Ar5E5Q5L           5435.28WFWw @ rLdjf8491.42
+    I5J3B4Sdf9P
+    [Tj5nC:910lNpy:s7L6 2]
+end test

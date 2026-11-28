@@ -62,19 +62,14 @@ void export_expr() {
   class_<expr_t>("Expr")
       .def(init<string>())
 
-      .def("__nonzero__", &expr_t::operator bool)
+      .def("__bool__", &expr_t::operator bool)
       .def("text", &expr_t::text)
       .def("set_text", &expr_t::set_text)
 
-      //.def("parse", &expr_t::parse)
-
       .def("__call__", py_expr_call)
       .def("compile", &expr_t::compile)
-      //.def("calc", &expr_t::calc)
 
       .def("is_constant", &expr_t::is_constant)
-
-      //.def("constant_value", &expr_t::constant_value)
       ;
 }
 

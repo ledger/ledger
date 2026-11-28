@@ -8,6 +8,10 @@ assert floor($12.345 * 100 + $0.5)/100 == $12.35
     Equity:Opening
 
 test bal
+            $100.000  Assets:Test
+           $-100.000  Equity:Opening
+--------------------
+                   0
 end test
 
 test eval "floor(100.75)"

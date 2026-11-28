@@ -91,13 +91,23 @@ public:
   };
 
   /**
+   * @brief Borrowed view of a whole annotated_commodities key, for lookups
+   * that should not copy the symbol and annotation into a key_type.
+   */
+  struct annotation_key_view_t {
+    const string& symbol;
+    const annotation_t& details;
+  };
+
+  /**
    * @brief Ordering of annotated_commodities: base symbol, then the
    * annotation's shape, then its price value, then its semantic flags.
    *
    * Lots that differ only in price value are therefore adjacent, and the
    * transparent overloads let find_annotation_fuzzy() fetch exactly that
    * range with equal_range(annotation_shape_t) in logarithmic time rather
-   * than scanning every lot of the symbol.
+   * than scanning every lot of the symbol.  annotation_key_view_t looks up
+   * one whole key without copying it.
    */
   struct annotated_key_less {
     using is_transparent = void;
@@ -117,6 +127,16 @@ public:
       if (int cmp = lhs.symbol.compare(rhs.first))
         return cmp < 0;
       return annotation_t::compare_shape(lhs.details, rhs.second) < 0;
+    }
+    bool operator()(const key_type& lhs, const annotation_key_view_t& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.symbol))
+        return cmp < 0;
+      return lhs.second.compare(rhs.details) < 0;
+    }
+    bool operator()(const annotation_key_view_t& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.symbol.compare(rhs.first))
+        return cmp < 0;
+      return lhs.details.compare(rhs.second) < 0;
     }
   };
 
@@ -156,7 +176,9 @@ public:
   /// replaced (e.g., when an `alias` directive remaps a symbol that was
   /// created earlier by price-db parsing).  Keeping them alive here
   /// prevents dangling raw pointers in amount_t objects that still
-  /// reference the old commodity.
+  /// reference the old commodity.  Each one's graph_index names its
+  /// referent's vertex, it shares the referent's COMMODITY_PRIMARY
+  /// status, and no name in `commodities` maps to it.
   std::vector<std::shared_ptr<commodity_t>> retired_commodities;
 
   /// The directed price graph used for commodity conversions (--market,
@@ -168,9 +190,16 @@ public:
   /// an amount has no explicit commodity.
   commodity_t* null_commodity;
 
-  /// The commodity implied by the `D` directive.  When set, amounts
-  /// without an explicit commodity are displayed using this commodity's
-  /// formatting (decimal places, thousands separator, etc.).
+  /// The built-in "%" commodity, set by amount_t::initialize(); value
+  /// expressions read amounts in it as fractions (op.cc).
+  commodity_t* percent_commodity = nullptr;
+
+  /// The commodity named by the `D` directive (or by `commodity X` with a
+  /// `default` sub-directive).  It is the default target of find_price()
+  /// for -V, and the commodity that CSV import and the `xact` command give
+  /// to amounts written without one; Python exposes it read/write.  It
+  /// does not style bare amounts on display: after a bare `D 1.000,00`
+  /// that style comes from null_commodity via PARSE_APPLY_STYLE_TO_BARE.
   commodity_t* default_commodity;
 
   bool keep_base;          ///< When true (--base), display amounts in their base commodity.
@@ -219,7 +248,8 @@ public:
   /// @return The commodity if found, or nullptr.
   commodity_t* find(const string& name);
 
-  /// @brief Look up a commodity by symbol, creating it if it does not exist.
+  /// @brief Look up a commodity by symbol, creating it if it does not exist.  Never returns
+  /// nullptr: create() throws rather than fail.
   commodity_t* find_or_create(const string& symbol);
 
   /// @brief Register @p name as an alias for @p referent.
@@ -229,13 +259,18 @@ public:
   /// used for a different commodity (e.g., created implicitly by
   /// price-db parsing before an `alias` directive was processed),
   /// the old commodity is moved to retired_commodities to keep any
-  /// existing raw pointers valid, and its price history is transferred
-  /// to the referent.
+  /// existing raw pointers valid, and its prices join the referent's
+  /// own, which are kept.
   ///
   /// @param name     The alias symbol.
   /// @param referent The commodity that @p name should resolve to.
   /// @return Raw pointer to the aliased commodity.
   commodity_t* alias(const string& name, commodity_t& referent);
+
+  /// @brief Mark @p comm a price target (COMMODITY_PRIMARY), together with
+  /// every retired commodity that shares its graph vertex, so that amounts
+  /// posted before an alias value as the referent's do.
+  void mark_primary(commodity_t& comm);
 
   /// @}
 
@@ -297,6 +332,28 @@ public:
 
   /// @}
 
+  /// @name Report precision cap
+  /// @{
+
+  /// Lower every commodity's display precision to at most @p places and
+  /// stop parsed amounts from widening it (--decimal-places), recording
+  /// first the state each one had so that uncap_precision() can give it
+  /// back.
+  void cap_precision(amount_t::precision_t places);
+
+  /// Give every commodity cap_precision() lowered back the precision and
+  /// COMMODITY_STYLE_NO_MIGRATE state it had, and forget them.
+  void uncap_precision();
+
+  /// @}
+
+private:
+  /// Precision and NO_MIGRATE flag of each commodity base (where both live,
+  /// shared by a commodity's aliases and annotated forms) before
+  /// cap_precision() changed it.
+  std::map<commodity_t::base_t*, std::pair<amount_t::precision_t, bool>> uncapped_styles;
+
+public:
   /**
    * @brief Record a simple commodity exchange as a price in the history graph.
    *
@@ -364,7 +421,7 @@ public:
    * @param str        The price expression string.
    * @param add_prices Whether to record prices in the history graph.
    * @param moment     Timestamp for the recorded prices (default = now).
-   * @return The commodity on the left-hand side, or nullptr on failure.
+   * @return The commodity on the left-hand side (created if new); never nullptr.
    */
   commodity_t* parse_price_expression(const std::string& str, const bool add_prices = true,
                                       const std::optional<datetime_t>& moment = {});
@@ -372,15 +429,19 @@ public:
   /**
    * @brief Pre-fetch price quotes for all eligible commodities in batch.
    *
-   * Collects commodities that are candidates for downloading (not builtin,
-   * not flagged NOMARKET, and without a recent last_quote), groups them
-   * by their exchange commodity (inferred from the most recent price in the
-   * history graph), and invokes the batch quote callback once per group.
+   * Collects commodities that have a price of their own and are candidates
+   * for downloading (not builtin, not flagged NOMARKET, listed once even
+   * when aliased, and without a recent last_quote), groups them by the
+   * commodity of their latest own price at or before now, and invokes the
+   * batch quote callback once per group.
    *
    * This is called before report generation to avoid per-commodity script
    * invocations during the report (issue #588).
    */
   void prefetch_quotes();
+
+private:
+  void forget_price_lookups();
 };
 
 } // namespace ledger

@@ -1,0 +1,23 @@
+; An account directive whose sub-directives end an included file still
+; records where it ends, so an assertion it raises quotes it in the error
+; context.  The included file ends right after the `assert` line, with no
+; blank line, so the directive body stops at end of file.
+
+include account-assert-at-eof.dat
+
+2024/01/01 Payee
+    Assets:Cash                  $-10.00
+    Expenses:Food
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While applying automated transaction from "$sourcepath/test/regress/account-assert-at-eof.dat", lines 1-2:
+> account Assets:Cash
+>     assert amount > 0
+While extending transaction from "$FILE", lines 8-10:
+> 2024/01/01 Payee
+>     Assets:Cash                  $-10.00
+>     Expenses:Food
+Error: Transaction assertion failed: (amount > {0})
+end test

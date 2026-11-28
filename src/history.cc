@@ -78,11 +78,7 @@
 /// distance combiner in Dijkstra's algorithm so that the "distance" of
 /// a path equals the weight of its heaviest (oldest) edge.
 template <typename T>
-struct f_max
-#if __cplusplus < 201103L
-    : public std::binary_function<T, T, bool>
-#endif
-{
+struct f_max {
   T operator()(const T& x, const T& y) const { return std::max(x, y); }
 };
 
@@ -153,6 +149,8 @@ public:
   std::optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
                                           const datetime_t& moment,
                                           const datetime_t& oldest = datetime_t());
+
+  std::optional<vertex_descriptor> vertex_of(const commodity_t& comm) const;
 
   void alias_commodity(commodity_t& old_comm, commodity_t& new_comm);
 
@@ -333,19 +331,64 @@ void commodity_history_impl_t::add_commodity(commodity_t& comm) {
   }
 }
 
+/// The vertex that holds @p comm's prices, or nullopt when @p comm has no
+/// vertex in this graph.  A commodity's graph_index means something only in
+/// its own pool's graph: one kept from a replaced pool (Python can keep one
+/// across Amount.shutdown()/Amount.initialize()) may carry an index that is
+/// in range here but names another commodity's vertex.  A commodity retired
+/// by an alias shares its referent's vertex, which is in the same pool.
+std::optional<commodity_history_impl_t::vertex_descriptor>
+commodity_history_impl_t::vertex_of(const commodity_t& comm) const {
+  const optional<std::size_t> index = comm.graph_index();
+  if (!index || *index >= num_vertices(price_graph))
+    return std::nullopt;
+  const vertex_descriptor v = vertex(*index, price_graph);
+  if (&get(vertex_name, price_graph, v)->pool() != &comm.pool())
+    return std::nullopt;
+  return v;
+}
+
 void commodity_history_impl_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {
   if (!old_comm.graph_index())
     return;
   std::size_t old_index = *old_comm.graph_index();
   if (old_index >= num_vertices(price_graph))
     return;
-  // Update the vertex name to point to new_comm
+
+  // Every price on the alias's vertex is recorded again on the referent's,
+  // through add_price(), so it joins the referent's own history (a price
+  // at the same moment is replaced, as a later P directive replaces an
+  // earlier one).  A price stated in the alias's commodity is re-stated
+  // in the referent's; a price between the two names is dropped, since
+  // they now name one commodity.  The alias's vertex keeps its name and
+  // is left without edges.
+  vertex_descriptor old_v = vertex(old_index, price_graph);
+  vertex_descriptor new_v = vertex(*new_comm.graph_index(), price_graph);
   NameMap namemap = get(vertex_name, price_graph);
-  vertex_descriptor v = vertex(old_index, price_graph);
-  namemap[v] = &new_comm;
-  // Transfer the graph index to new_comm
-  // (new_comm's previous vertex, if any, becomes orphaned but had no edges)
-  new_comm.set_graph_index(old_index);
+
+  struct moved_price_t {
+    vertex_descriptor other; // the vertex at the edge's far end
+    datetime_t when;
+    amount_t price;
+    bool in_old; // the price is stated in old_comm (its vertex is old_v)
+  };
+  std::vector<moved_price_t> moved;
+  graph_traits<Graph>::out_edge_iterator ei, ei_end;
+  for (boost::tuples::tie(ei, ei_end) = out_edges(old_v, price_graph); ei != ei_end; ++ei) {
+    vertex_descriptor w = target(*ei, price_graph);
+    if (w == new_v)
+      continue;
+    for (const auto& [when, price] : get(ratiomap, *ei))
+      moved.push_back({w, when, price, *price.commodity().graph_index() == old_index});
+  }
+  clear_vertex(old_v, price_graph);
+
+  for (const moved_price_t& m : moved) {
+    if (m.in_old)
+      add_price(*namemap[m.other], m.when, m.price.with_commodity(new_comm));
+    else
+      add_price(new_comm, m.when, m.price);
+  }
 }
 
 void commodity_history_impl_t::add_price(const commodity_t& source, const datetime_t& when,
@@ -394,10 +437,10 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
                                           const datetime_t& oldest, bool bidirectionally) {
   DEBUG("history.map", "Mapping prices for source commodity: " << source);
 
-  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  if (!source_v)
     return;
-
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  const vertex_descriptor sv = *source_v;
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));
@@ -410,11 +453,11 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 
     const price_map_t& prices(get(ratiomap, edge_desc));
 
-    // The prices wanted form the [oldest, moment] range of the date-ordered
-    // map; walking the whole history made every revaluation cost as much
-    // as the edge has price points.  The upper bound is tested on each key
-    // rather than taken from upper_bound(moment), so the range stays
-    // well-formed even if a caller ever passed oldest > moment.
+    // Only the [oldest, moment] range of the date-ordered map is walked, so
+    // a revaluation costs the points in that range, not every point on the
+    // edge.  The upper bound is tested on each key rather than taken from
+    // upper_bound(moment), so the range stays well-formed even if a caller
+    // passes oldest > moment.
     for (auto it = oldest.is_not_a_date_time() ? prices.begin() : prices.lower_bound(oldest);
          it != prices.end() && it->first <= moment; ++it) {
       const datetime_t& when(it->first);
@@ -422,14 +465,11 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 
       DEBUG("history.map", "Price " << found << " on " << when);
 
-      if (found.commodity() == source) {
+      if (found.commodity() == *get(namemap, sv)) {
         if (bidirectionally) {
           amount_t price(found);
           price.in_place_invert();
-          if (source == *get(namemap, sv))
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-          else
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+          price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
           DEBUG("history.map", "Inverted price is " << price);
           DEBUG("history.map", "fn(" << when << ", " << price << ")");
           fn(when, price);
@@ -447,10 +487,10 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
                                                                   const datetime_t& moment,
                                                                   const datetime_t& oldest) {
-  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  if (!source_v)
     return std::nullopt;
-
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  const vertex_descriptor sv = *source_v;
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));
@@ -483,12 +523,9 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 
     DEBUG("history.find", "price was = " << price.unrounded());
 
-    if (price.commodity() == source) {
+    if (price.commodity() == *get(namemap, sv)) {
       price.in_place_invert();
-      if (source == *get(namemap, sv))
-        price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-      else
-        price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+      price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
     }
 
     DEBUG("history.find", "price is  = " << price.unrounded());
@@ -512,18 +549,18 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   if (source == target)
     return std::nullopt;
 
-  // Guard against cross-pool commodity lookups (e.g. after close_journal_files()
-  // a commodity from the old pool may carry a graph_index that is out of range
-  // for the new pool's price graph).  Treat such commodities as unresolvable
-  // rather than invoking undefined behaviour in Boost.Graph (issue #976).
-  std::size_t n = num_vertices(price_graph);
-  if (!source.graph_index() || *source.graph_index() >= n)
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  const std::optional<vertex_descriptor> target_v = vertex_of(target);
+  if (!source_v || !target_v)
     return std::nullopt;
-  if (!target.graph_index() || *target.graph_index() >= n)
-    return std::nullopt;
+  const vertex_descriptor sv = *source_v;
+  const vertex_descriptor tv = *target_v;
 
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
-  vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
+  // A retired commodity shares its referent's vertex (commodity_pool_t::
+  // alias): the two are one commodity, so one unit of either is one of
+  // the other.
+  if (sv == tv)
+    return price_point_t(moment, amount_t(1L).with_commodity(target));
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));
@@ -554,26 +591,20 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   datetime_t least_recent = moment;
   amount_t price;
 
-  const commodity_t* last_target = &target;
+  const commodity_t* last_target = get(namemap, tv);
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; u != v; v = u, u = predecessorMap[v]) {
-    auto [edge_uv, uv_exists] = edge(u, v, fg);
-    auto [edge_vu, vu_exists] = edge(v, u, fg);
-
-    if (!uv_exists || !vu_exists)
+    auto [e, exists] = edge(u, v, fg);
+    if (!exists)
       continue;
 
-    const price_point_t& point_uv(get(pricemap, edge_uv));
-    const price_point_t& point_vu(get(pricemap, edge_vu));
-
-    const price_point_t& point(point_vu.when > point_uv.when ? point_vu : point_uv);
+    const price_point_t& point(get(pricemap, e));
 
     const commodity_t* u_comm = get(namemap, u);
     const commodity_t* v_comm = get(namemap, v);
 
-    if (u_comm != last_target && v_comm != last_target)
-      return std::nullopt;
+    assert(u_comm == last_target || v_comm == last_target);
 
     bool first_run = false;
     if (price.is_null()) {

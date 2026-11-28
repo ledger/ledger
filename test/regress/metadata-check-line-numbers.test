@@ -1,0 +1,53 @@
+; --strict and --pedantic metadata checks cite the tagged item, and a failing
+; --pedantic check leaves the line numbers of later diagnostics intact.
+account Assets:Cash
+account Expenses:Food
+commodity $
+
+2024/01/20 Shop
+    ; BadTag: value
+    Expenses:Food       $35.00
+    Assets:Cash
+
+2024/01/21 Shop
+    Expenses:Food       $35.00
+    ; PostTag: value
+    Assets:Cash
+
+2024/01/22 Shop
+    Expenses:Unknown    $35.00
+    Assets:Cash
+
+test bal --strict
+            $-105.00  Assets:Cash
+             $105.00  Expenses
+              $70.00    Food
+              $35.00    Unknown
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 7: Unknown metadata tag 'BadTag'
+Warning: "$FILE", line 13: Unknown metadata tag 'PostTag'
+Warning: "$FILE", line 18: Unknown account 'Expenses:Unknown'
+end test
+
+test bal --pedantic -> 3
+__ERROR__
+While parsing file "$FILE", line 10:
+While checking transaction metadata from "$FILE", lines 7-10:
+> 2024/01/20 Shop
+>     ; BadTag: value
+>     Expenses:Food       $35.00
+>     Assets:Cash
+Error: Unknown metadata tag 'BadTag'
+While parsing file "$FILE", line 15:
+While checking posting metadata from "$FILE", lines 13-14:
+>     Expenses:Food       $35.00
+>     ; PostTag: value
+Error: Unknown metadata tag 'PostTag'
+While parsing file "$FILE", line 18:
+While parsing posting:
+  Expenses:Unknown    $35.00
+
+Error: Unknown account 'Expenses:Unknown'
+end test

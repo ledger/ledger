@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BENCHMARK_DAT="$SCRIPT_DIR/benchmark.dat"
+BENCHMARK_DAT="$SCRIPT_DIR/10k.journal"
 
 # These tools must be on PATH.  The Nix dev shell (flake.nix) provides them
 # via llvmPackages.  Outside Nix, install the llvm/clang package for your OS.
@@ -57,10 +57,12 @@ if [ ! -x "$LEDGER" ]; then
     exit 1
 fi
 
-# Generate benchmark data if needed
+# Generate the benchmark journal if it doesn't exist: hledger's 10k journal,
+# two thirds of whose transactions carry a cost and so become lots.
 if [ ! -f "$BENCHMARK_DAT" ]; then
     echo "Generating benchmark data..."
-    python3 "$SCRIPT_DIR/gen_benchmark.py"
+    python3 "$SCRIPT_DIR/../tools/bench/generate_journal.py" 10000 1000 10 > "$BENCHMARK_DAT.tmp"
+    mv "$BENCHMARK_DAT.tmp" "$BENCHMARK_DAT"
 fi
 
 case "$ACTION" in

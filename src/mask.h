@@ -53,8 +53,9 @@
  *   both the pattern and the text are normalized to ASCII equivalents
  *   before matching, so "cafe" matches "caf\xc3\xa9".
  * - Glob-to-regex conversion via `assign_glob()` for `!include` file
- *   patterns, which match exactly: case-sensitively, since filesystems
- *   are, and without diacritics folding.
+ *   patterns, which match exactly on every platform: case-sensitively
+ *   and without diacritics folding, so `include FOO.dat` never picks up
+ *   `foo.dat` even where the filesystem ignores case (issue #1660).
  * - Unicode-aware when built with `HAVE_BOOST_REGEX_UNICODE` (ICU).
  */
 #pragma once
@@ -89,8 +90,9 @@ extern bool ignore_diacritics;
  *
  * Patterns are always compiled with `perl | icase` flags for user-facing
  * queries.  The `assign_glob()` method compiles shell-style glob patterns
- * (used by `!include`) with case-sensitive matching instead, since file
- * paths are case-sensitive on most platforms.
+ * (used by `!include`) with exact, case-sensitive matching instead, on
+ * every platform, so that an include never picks a differently-cased file
+ * on a case-insensitive filesystem (issue #1660).
  *
  * When `ignore_diacritics` is true, both the pattern and match text are
  * folded to their ASCII base equivalents via `fold_diacritics()` before
@@ -133,26 +135,10 @@ public:
   /// Applies diacritics folding when `ignore_diacritics` is active,
   /// unless this mask is a glob.
   bool match(string_view text) const {
-#if HAVE_BOOST_REGEX_UNICODE
-    string match_text = folds() ? fold_diacritics(text) : string(text);
-    DEBUG("mask.match", "Matching: \""
-                            << match_text << "\" =~ /" << str() << "/ = "
-                            << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
-    return boost::u32regex_search(match_text, expr);
-#else
-    if (folds()) {
-      string match_text = fold_diacritics(text);
-      DEBUG("mask.match",
-            "Matching: \"" << match_text << "\" =~ /" << str()
-                           << "/ = " << (boost::regex_search(match_text, expr) ? "true" : "false"));
-      return boost::regex_search(match_text, expr);
-    }
-    DEBUG("mask.match", "Matching: \""
-                            << text << "\" =~ /" << str() << "/ = "
-                            << (boost::regex_search(text.begin(), text.end(), expr) ? "true"
-                                                                                    : "false"));
-    return boost::regex_search(text.begin(), text.end(), expr);
-#endif
+    const bool result = folds() ? search(fold_diacritics(text)) : search(text);
+    DEBUG("mask.match",
+          "Matching: \"" << text << "\" =~ /" << str() << "/ = " << (result ? "true" : "false"));
+    return result;
   }
 
   /// Return the number of marked subexpressions (capture groups) in the pattern.
@@ -163,10 +149,11 @@ public:
   /// On a successful match the returned vector has `mark_count() + 1`
   /// elements: index 0 is the entire match, indices 1..N are the captured
   /// groups.  An optional group that did not participate in the match is
-  /// represented as an empty string.
+  /// represented as an empty string.  Captures are substrings of @p text,
+  /// also when the search ran on its diacritic-folded copy.
   ///
-  /// Returns boost::none if the regex does not match.
-  boost::optional<std::vector<string>> match_groups(string_view text) const;
+  /// Returns std::nullopt if the regex does not match.
+  optional<std::vector<string>> match_groups(string_view text) const;
 
   bool empty() const { return expr.empty(); } ///< True if no pattern has been assigned
 
@@ -202,6 +189,25 @@ private:
 
   /// Whether match() and match_groups() fold the text they are given.
   bool folds() const { return ignore_diacritics && !glob; }
+
+  /// Search @p subject (UTF-8) for this mask's regex, with the regex
+  /// flavour of this build; the only place that chooses between them.
+  bool search(string_view subject) const {
+#if HAVE_BOOST_REGEX_UNICODE
+    return boost::u32regex_search(subject.data(), subject.data() + subject.size(), expr);
+#else
+    return boost::regex_search(subject.data(), subject.data() + subject.size(), expr);
+#endif
+  }
+
+  /// As search(string_view), recording the match and its groups in @p what.
+  bool search(string_view subject, boost::cmatch& what) const {
+#if HAVE_BOOST_REGEX_UNICODE
+    return boost::u32regex_search(subject.data(), subject.data() + subject.size(), what, expr);
+#else
+    return boost::regex_search(subject.data(), subject.data() + subject.size(), what, expr);
+#endif
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {

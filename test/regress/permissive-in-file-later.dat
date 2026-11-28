@@ -1,0 +1,5 @@
+; Read by permissive-in-file.test as a second -f file, after the file
+; whose --permissive line set the journal's checking style.
+2024/01/03 Later file
+    A                                      1 = 9
+    B

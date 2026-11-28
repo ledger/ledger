@@ -45,6 +45,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "post.h"
 #include "xact.h"
 
@@ -54,30 +55,6 @@ using namespace flags;
 using namespace boost::python;
 
 namespace {
-
-/*--- Tag Query Wrappers ---*/
-
-/// Overloads for has_tag/get_tag accepting string, mask, or mask+value_mask.
-bool py_has_tag_1s(post_t& post, const string& tag) {
-  return post.has_tag(tag);
-}
-bool py_has_tag_1m(post_t& post, const mask_t& tag_mask) {
-  return post.has_tag(tag_mask);
-}
-bool py_has_tag_2m(post_t& post, const mask_t& tag_mask, const std::optional<mask_t>& value_mask) {
-  return post.has_tag(tag_mask, value_mask);
-}
-
-std::optional<value_t> py_get_tag_1s(post_t& post, const string& tag) {
-  return post.get_tag(tag);
-}
-std::optional<value_t> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
-  return post.get_tag(tag_mask);
-}
-std::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
-                                     const std::optional<mask_t>& value_mask) {
-  return post.get_tag(tag_mask, value_mask);
-}
 
 /*--- XData and Account Wrappers ---*/
 
@@ -106,18 +83,10 @@ void export_post() {
   scope().attr("POST_EXT_SORT_CALC") = POST_EXT_SORT_CALC;
   scope().attr("POST_EXT_COMPOUND") = POST_EXT_COMPOUND;
   scope().attr("POST_EXT_VISITED") = POST_EXT_VISITED;
-  scope().attr("POST_EXT_MATCHES") = POST_EXT_MATCHES;
   scope().attr("POST_EXT_CONSIDERED") = POST_EXT_CONSIDERED;
 
   class_<post_t::xdata_t>("PostingXData")
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(python::flags_visitor<supports_flags<uint_least16_t>>())
 
       .add_property("visited_value", make_getter(&post_t::xdata_t::visited_value),
                     make_setter(&post_t::xdata_t::visited_value))
@@ -143,7 +112,6 @@ void export_post() {
   scope().attr("POST_COST_CALCULATED") = POST_COST_CALCULATED;
 
   class_<post_t, bases<item_t>>("Posting")
-      //.def(init<account_t *>())
 
       .def("id", &post_t::id)
       .def("seq", &post_t::seq)
@@ -162,13 +130,6 @@ void export_post() {
                     make_getter(&post_t::assigned_amount, return_value_policy<return_by_value>()),
                     make_setter(&post_t::assigned_amount, return_value_policy<return_by_value>()))
 
-      .def("has_tag", py_has_tag_1s)
-      .def("has_tag", py_has_tag_1m)
-      .def("has_tag", py_has_tag_2m)
-      .def("get_tag", py_get_tag_1s)
-      .def("get_tag", py_get_tag_1m)
-      .def("get_tag", py_get_tag_2m)
-
       .add_property("date", &post_t::date)
       .add_property("aux_date", &post_t::aux_date)
 
@@ -184,7 +145,6 @@ void export_post() {
       .def("clear_xdata", &post_t::clear_xdata)
       .def("xdata", py_xdata, return_internal_reference<>())
 
-      //.def("add_to_value", &post_t::add_to_value)
       .def("set_reported_account", &post_t::set_reported_account)
 
       .def("reported_account", py_reported_account, return_internal_reference<>());

@@ -1,0 +1,38 @@
+; truncated() cuts toward zero at the display precision; roundto() rounds
+; half away from zero at any signed number of places.  Both go through the
+; one scaled-quotient routine in amount.cc.  Each block runs alone, so
+; the truncation block keeps every literal at two decimals (the display
+; precision truncated() cuts at stays 2), and every check is an equality
+; so the result does not depend on how ties are displayed.
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval '(truncated($2.00/3) == $0.66, truncated(-$2.00/3) == -$0.66, truncated($6.00/3) == $2, truncated(-$200/3) == -$66.66, truncated($2.00/3) == $2.00/3)'
+(1, 1, 1, 1, 0)
+end test
+
+test eval '(roundto($2.00/3, 2) == $0.67, roundto(-$2.00/3, 2) == -$0.67, roundto($2.00/3, 0) == $1, roundto(-$2.00/3, 0) == -$1, roundto($0.49, 0) == $0)'
+(1, 1, 1, 1, 1)
+end test
+
+test eval '(roundto($1.25, 1) == $1.3, roundto(-$1.25, 1) == -$1.3, roundto($0.5, 0) == $1, roundto(-$0.5, 0) == -$1, roundto($1.24, 1) == $1.2)'
+(1, 1, 1, 1, 1)
+end test
+
+test eval '(roundto($250, -2) == $300, roundto(-$250, -2) == -$300, roundto($249.99, -2) == $200, roundto(-$249.99, -2) == -$200, roundto($49.99, -2) == $0, roundto($200/3, -1) == $70, roundto(-$200/3, -1) == -$70)'
+(1, 1, 1, 1, 1, 1, 1)
+end test
+
+test eval '(roundto(2/3, 3) == 0.667, roundto(-2/3, 3) == -0.667, roundto(1/3, 3) == 0.333)'
+(1, 1, 1)
+end test
+
+test eval '(roundto(-$0.004, 2) == $0, roundto(-$0.004, 2) < $0, roundto(-$0.005, 2) == -$0.01, roundto($0.005, 2) == $0.01, roundto($1.5, 2) == $1.5, roundto(0, 3) == 0)'
+(1, 0, 1, 1, 1, 1)
+end test
+
+test eval 'truncated(-2/3)'
+-0.666666
+end test

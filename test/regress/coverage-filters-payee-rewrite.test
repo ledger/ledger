@@ -8,5 +8,5 @@
 
 test reg --payee-rewrite 'WholeFoods=Whole Foods Market'
 24-Jan-01 Whole Foods Market    Expenses:Food                $10.00       $10.00
-24-Jan-01 Whole Foods Market    Assets:Cash                 $-10.00            0
+                                Assets:Cash                 $-10.00            0
 end test

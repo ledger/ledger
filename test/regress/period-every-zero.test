@@ -1,0 +1,14 @@
+; The largest number a period accepts still works.
+;
+; "every 0 months" and a period number above 65535 are now errors (see
+; period-every-zero-errors.test); the range check must not reject a count
+; that fits.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -p "every 65535 days" --now 2024/06/15
+24-Jan-01 - 03-Jun-06  Assets:Cash                   $-10.00      $-10.00
+                       Expenses:Food                  $10.00            0
+end test

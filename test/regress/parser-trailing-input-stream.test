@@ -1,0 +1,18 @@
+; Callers that parse an expression out of a longer stream (a posting's
+; parenthesized amount or cost, a format's %(...)) still stop where the
+; expression ends: text after it is not a parse error there.
+
+2024/01/05 Grocer
+    Expenses:Food                 ($5.00 * 3)  ; tripled
+    Assets:Cash
+
+2024/01/06 Broker
+    Assets:Shares                 2 ABC @ ($5.00 * 2)  ; doubled
+    Assets:Cash
+
+test reg --format '%(payee) %(amount)\n'
+Grocer $15.00
+Grocer $-15.00
+Broker 2 ABC {$10.00} [2024/01/06]
+Broker $-20.00
+end test

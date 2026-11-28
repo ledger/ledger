@@ -1,0 +1,14 @@
+; A value directive overrides --value-expr, and a later journal option line
+; does not bring the command-line expression back.
+
+value "26.00 EUR"
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+--day-break
+
+test bal assets:investments -V --value-expr "25.00 EUR"
+           52.00 EUR  Assets:Investments
+end test

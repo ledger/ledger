@@ -1,0 +1,25 @@
+; Under --effective, a balance assertion on a posting with an effective
+; date counts only postings whose effective date is on or before it
+; (#2071).  The running account total must order postings by the same
+; effective dates: the first transaction's posting takes effect in March,
+; after the January assertion and before the March one.
+
+2024/01/01=2024/03/01 Effective in March
+    Assets:Bank                         $100
+    Income:Salary
+
+2024/01/02=2024/01/02 Opening
+    Assets:Bank                          $10 = $10
+    Equity:Opening
+
+2024/01/03=2024/03/02 After March 1
+    Assets:Bank                           $1 = $111
+    Income:Interest
+
+test bal Assets --effective
+                $111  Assets:Bank
+end test
+
+test bal Assets --effective --verify
+                $111  Assets:Bank
+end test

@@ -1,0 +1,7 @@
+; Ends inside an `apply year` with no other apply open; see
+; apply-year-unclosed-eof.test.
+apply year 2020
+
+01/05 A
+    Expenses:Food    $10.00
+    Assets:Cash

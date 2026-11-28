@@ -52,7 +52,6 @@
 #include "journal.h"
 #include "format.h"
 #include "pool.h"
-#include "report.h"
 
 namespace ledger {
 
@@ -117,8 +116,9 @@ std::optional<value_t> post_t::get_tag(const mask_t& tag_mask,
 //   primary_date(): xdata override -> posting _date -> xact date -> CURRENT_DATE
 //   aux_date():  posting aux_date -> xact aux_date
 //
-// The xdata date override lets the reporting pipeline assign custom dates
-// (e.g., for --now or period-based reporting) without modifying the journal.
+// Reporting filters (e.g. handle_value, changed_value_posts in
+// filters.cc) set the xdata date overrides to date synthetic or
+// revalued postings without modifying the journal.
 // The --aux-date flag toggles use_aux_date, making auxiliary dates primary.
 
 /**
@@ -189,7 +189,9 @@ optional<date_t> post_t::aux_date() const {
 
 /*--- Payee Resolution ---*/
 // The payee for a posting is resolved through a three-level cascade:
-//   1. Explicit _payee set via set_payee() (used by automated transactions)
+//   1. Explicit _payee, set by the parser from the posting's Payee: tag
+//      (its own or inherited from the transaction) after payee aliases
+//      are applied (journal_t::validate_payee)
 //   2. A "Payee:" metadata tag on the posting or inherited from the transaction
 //   3. The parent transaction's payee field
 //
@@ -216,7 +218,7 @@ string post_t::payee() const {
   if (_payee)
     return *_payee;
 
-  string post_payee = payee_from_tag(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string post_payee = payee_from_tag();
 
   return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }
@@ -328,11 +330,8 @@ value_t get_use_direct_amount(post_t& post) {
 }
 
 /**
- * @brief Return the commodity of the posting amount.
- *
- * Accepts an optional amount argument; if provided, returns that amount's
- * commodity instead of the posting's.  Annotations are stripped to return
- * the base commodity symbol.
+ * @brief The commodity a posting reports: that of its compound value when
+ *        it has one that converts to a single amount, else post.amount's.
  *
  * When the posting has a compound value (e.g., budget display sequences like
  * "(actual, budget)"), and that compound value is a sequence, fall back to
@@ -346,6 +345,27 @@ value_t get_use_direct_amount(post_t& post) {
  * convert a balance with multiple commodities to an amount" (issue #763).
  * In that case fall back to post.amount's commodity, which reflects the
  * posting's actual commodity and matches what a -l filter sees.
+ *
+ * The commodity is pool-owned, so the reference outlives the temporary
+ * amount it is read from.
+ */
+commodity_t& reported_commodity(post_t& post) {
+  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
+      !post.xdata().compound_value.is_sequence()) {
+    const value_t& cv(post.xdata().compound_value);
+    if (!cv.is_balance() || cv.as_balance().single_amount())
+      return cv.to_amount().commodity();
+  }
+  return post.amount.commodity();
+}
+
+/**
+ * @brief Return the commodity of the posting amount.
+ *
+ * Accepts an optional amount argument; if provided, returns that amount's
+ * commodity instead of the posting's.  Annotations are stripped to return
+ * the base commodity symbol.  Without one, returns the posting's
+ * reported_commodity().
  */
 value_t get_commodity(call_scope_t& args) {
   if (args.has<amount_t>(0)) {
@@ -358,25 +378,12 @@ value_t get_commodity(call_scope_t& args) {
     }
     return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
   } else {
-    post_t& post(args.context<post_t>());
-    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
-        !post.xdata().compound_value.is_sequence()) {
-      const value_t& cv(post.xdata().compound_value);
-      if (!cv.is_balance() || cv.as_balance().single_amount())
-        return cv.to_amount().commodity().strip_annotations(keep_details_t{});
-    }
-    return post.amount.commodity().strip_annotations(keep_details_t{});
+    return reported_commodity(args.context<post_t>()).strip_annotations(keep_details_t{});
   }
 }
 
 value_t get_commodity_is_primary(post_t& post) {
-  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
-      !post.xdata().compound_value.is_sequence()) {
-    const value_t& cv(post.xdata().compound_value);
-    if (!cv.is_balance() || cv.as_balance().single_amount())
-      return cv.to_amount().commodity().has_flags(COMMODITY_PRIMARY);
-  }
-  return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
+  return reported_commodity(post).has_flags(COMMODITY_PRIMARY);
 }
 
 value_t get_has_cost(post_t& post) {
@@ -399,10 +406,12 @@ value_t get_has_cost(post_t& post) {
  */
 value_t get_cost(post_t& post) {
   if (post.cost) {
-    // When cost was auto-calculated between lots of the same base
-    // commodity (e.g., stock splits where Phase 3 computes a lot-to-lot
-    // "exchange rate"), prefer the annotation-derived cost which
-    // represents the true basis in the cost commodity.
+    // finalize()'s Phase 3 prices a conversion between two lots of one
+    // commodity (`same_base` in xact.cc) with a cost in that same
+    // commodity, e.g. 10 AAPL {$70} for 20 AAPL {35 EUR}.  That cost
+    // balances the transaction but is not a basis.  Phase 6 restates it
+    // in the lots' price currency when both lot prices share one
+    // (#3227); when they do not, the annotation price is the basis (#630).
     if (post.has_flags(POST_COST_CALCULATED) && post.amount.has_annotation() &&
         post.amount.annotation().price &&
         post.cost->commodity().referent() == post.amount.commodity().referent())
@@ -435,10 +444,10 @@ value_t get_cost(post_t& post) {
  * When the annotation price was itself computed from the @ cost
  * (ANNOTATION_PRICE_CALCULATED), there is no separate transaction
  * price to distinguish -- annotation and cost agree -- and we fall
- * back to `post.cost` (this preserves #3009's handling for @@ costs).
+ * back to `post.cost`, which is how an @@ cost on such an amount is priced (#3009).
  *
- * With no cost at all, returns the lot-basis total from the annotation,
- * matching the previous behavior for amounts like "10 AAPL {$5}".
+ * With no cost at all, returns the lot-basis total from the annotation
+ * ($50 for "10 AAPL {$5}").
  */
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
@@ -483,11 +492,7 @@ value_t get_capital_gain(post_t& post) {
     return 0L;
 
   // Use the posting's effective value_date for market price lookup.
-  date_t vdate;
-  if (post.has_xdata() && !post.xdata().value_date.is_not_a_date())
-    vdate = post.xdata().value_date;
-  else
-    vdate = post.date();
+  date_t vdate = post.value_date();
 
   // Look up the market value of the amount at vdate.
   std::optional<amount_t> market_opt = post.amount.value(datetime_t(vdate));
@@ -571,34 +576,6 @@ value_t get_account(call_scope_t& args) {
   return string_value(name);
 }
 
-/**
- * @brief Return the display account name, decorated with virtual indicators.
- *
- * Virtual postings are wrapped in parentheses, balanced virtual postings
- * in brackets, matching the journal syntax the user originally wrote.
- *
- * If --display-account is set, the user-supplied expression is evaluated
- * first to transform the account name (e.g., to drop a leading prefix);
- * the virtual-posting wrappers are then applied to the transformed name.
- */
-value_t get_display_account(call_scope_t& args) {
-  value_t acct;
-  if (report_t* report = search_scope<report_t>(&args))
-    acct = report->HANDLER(display_account_).expr.calc(args);
-  else
-    acct = get_account(args);
-  if (acct.is_string()) {
-    post_t& post(args.context<post_t>());
-    if (post.has_flags(POST_VIRTUAL)) {
-      if (post.must_balance())
-        acct = string_value(string("[") + acct.as_string() + "]");
-      else
-        acct = string_value(string("(") + acct.as_string() + ")");
-    }
-  }
-  return acct;
-}
-
 value_t get_account_id(post_t& post) {
   return static_cast<long>(post.account_id());
 }
@@ -612,12 +589,7 @@ value_t get_account_depth(post_t& post) {
 }
 
 value_t get_value_date(post_t& post) {
-  if (post.has_xdata()) {
-    post_t::xdata_t& xdata(post.xdata());
-    if (!xdata.value_date.is_not_a_date())
-      return xdata.value_date;
-  }
-  return post.date();
+  return post.value_date();
 }
 value_t get_datetime(post_t& post) {
   if (!post.xdata().datetime.is_not_a_date_time())
@@ -639,6 +611,61 @@ value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<post_t>(scope));
 }
 
+/// The functions post_t binds by name, besides the posting amount's names
+/// (expr_t::is_post_amount_ident); anything else falls through to item_t.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> post_functions[] = {
+    {"N", get_wrapper<&get_count>},
+    {"O", get_wrapper<&get_total>},
+    {"R", get_wrapper<&get_real>},
+    {"account", get_account},
+    {"account_base", get_wrapper<&get_account_base>},
+    {"account_id", get_wrapper<&get_account_id>},
+    {"all", &fn_post_all},
+    {"any", &fn_post_any},
+    {"b", get_wrapper<&get_cost>},
+    {"calculated", get_wrapper<&get_is_calculated>},
+    {"capital_gain", get_wrapper<&get_capital_gain>},
+    {"checkin", get_wrapper<&get_checkin>},
+    {"checkout", get_wrapper<&get_checkout>},
+    {"code", get_wrapper<&get_code>},
+    {"commodity", &get_commodity},
+    {"cost", get_wrapper<&get_cost>},
+    {"cost_calculated", get_wrapper<&get_is_cost_calculated>},
+    {"count", get_wrapper<&get_count>},
+    {"datetime", get_wrapper<&get_datetime>},
+    {"depth", get_wrapper<&get_account_depth>},
+    {"has_cost", get_wrapper<&get_has_cost>},
+    {"index", get_wrapper<&get_count>},
+    {"magnitude", get_wrapper<&get_magnitude>},
+    {"n", get_wrapper<&get_count>},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&get_xact>},
+    {"payee", get_wrapper<&get_payee>},
+    {"payee_changed", get_wrapper<&get_payee_changed>},
+    {"post", get_wrapper<&get_this>},
+    {"price", get_wrapper<&get_price>},
+    {"primary", get_wrapper<&get_commodity_is_primary>},
+    {"real", get_wrapper<&get_real>},
+    {"total", get_wrapper<&get_total>},
+    {"use_direct_amount", get_wrapper<&get_use_direct_amount>},
+    {"value_date", get_wrapper<&get_value_date>},
+    {"virtual", get_wrapper<&get_virtual>},
+    {"xact", get_wrapper<&get_xact>},
+    {"xact_id", get_wrapper<&get_xact_id>},
+};
+static_assert(symbol_table_sorted(post_functions), "post_functions must stay sorted");
+} // namespace
+
+value_t post_t::decorate_account_name(const value_t& name) const {
+  if (name.is_string() && has_flags(POST_VIRTUAL)) {
+    if (must_balance())
+      return string_value(string("[") + name.as_string() + "]");
+    else
+      return string_value(string("(") + name.as_string() + ")");
+  }
+  return name;
+}
+
 /**
  * @brief Test whether any posting in the same transaction satisfies an expression.
  *
@@ -650,7 +677,7 @@ value_t get_wrapper(call_scope_t& scope) {
  * consideration, which is useful for queries like "does any *other*
  * posting in this transaction match?"
  */
-value_t fn_any(call_scope_t& args) {
+value_t fn_post_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
@@ -673,13 +700,13 @@ value_t fn_any(call_scope_t& args) {
 /**
  * @brief Test whether all postings in the same transaction satisfy an expression.
  *
- * Like fn_any, but returns false as soon as any posting fails the test.
+ * Like fn_post_any, but returns false as soon as any posting fails the test.
  * Returns true if no transaction exists (vacuous truth).
  *
  * An optional second argument (false) excludes the current posting from
  * consideration.
  */
-value_t fn_all(call_scope_t& args) {
+value_t fn_post_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
@@ -689,7 +716,7 @@ value_t fn_all(call_scope_t& args) {
   for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (p == &post && args.has(1) && !args.get<bool>(1)) {
-      // If the user specifies any(EXPR, false), and the context is a
+      // If the user specifies all(EXPR, false), and the context is a
       // posting, then that posting isn't considered by the test.
       ; // skip it
     } else if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean()) {
@@ -698,13 +725,12 @@ value_t fn_all(call_scope_t& args) {
   }
   return true;
 }
-} // namespace
 
 /**
  * @brief Map expression names to getter implementations for the posting scope.
  *
  * This dispatch table maps expression identifiers to the appropriate getter
- * functions defined above.  It uses a first-character switch for fast lookup.
+ * functions defined above.  The names are the rows of post_functions.
  *
  * Single-character aliases (used in format strings and expressions):
  *   - `a` = amount
@@ -720,141 +746,12 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
 
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (name[0]) {
-  case 'a':
-    if (name[1] == '\0' || name == "amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
-    else if (name == "account")
-      return WRAP_FUNCTOR(get_account);
-    else if (name == "account_base")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (name == "account_id")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
-    else if (name == "any")
-      return WRAP_FUNCTOR(&fn_any);
-    else if (name == "all")
-      return WRAP_FUNCTOR(&fn_all);
-    break;
+  // The names the POST_AMOUNT fast path reads directly (see expr.h).
+  if (expr_t::is_post_amount_ident(name))
+    return WRAP_FUNCTOR(get_wrapper<&get_amount>);
 
-  case 'b':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    break;
-
-  case 'c':
-    if (name == "code")
-      return WRAP_FUNCTOR(get_wrapper<&get_code>);
-    else if (name == "cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    else if (name == "capital_gain")
-      return WRAP_FUNCTOR(get_wrapper<&get_capital_gain>);
-    else if (name == "cost_calculated")
-      return WRAP_FUNCTOR(get_wrapper<&get_is_cost_calculated>);
-    else if (name == "count")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (name == "calculated")
-      return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
-    else if (name == "commodity")
-      return WRAP_FUNCTOR(&get_commodity);
-    else if (name == "checkin")
-      return WRAP_FUNCTOR(get_wrapper<&get_checkin>);
-    else if (name == "checkout")
-      return WRAP_FUNCTOR(get_wrapper<&get_checkout>);
-    break;
-
-  case 'd':
-    if (name == "display_account")
-      return WRAP_FUNCTOR(get_display_account);
-    else if (name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
-    else if (name == "datetime")
-      return WRAP_FUNCTOR(get_wrapper<&get_datetime>);
-    break;
-
-  case 'h':
-    if (name == "has_cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_has_cost>);
-    break;
-
-  case 'i':
-    if (name == "index")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'm':
-    if (name == "magnitude")
-      return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
-    break;
-
-  case 'n':
-    if (name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    else if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'p':
-    if (name == "post")
-      return WRAP_FUNCTOR(get_wrapper<&get_this>);
-    else if (name == "payee")
-      return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-    else if (name == "payee_changed")
-      return WRAP_FUNCTOR(get_wrapper<&get_payee_changed>);
-    else if (name == "primary")
-      return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
-    else if (name == "price")
-      return WRAP_FUNCTOR(get_wrapper<&get_price>);
-    else if (name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact>);
-    break;
-
-  case 'r':
-    if (name == "real")
-      return WRAP_FUNCTOR(get_wrapper<&get_real>);
-    break;
-
-  case 't':
-    if (name == "total")
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'u':
-    if (name == "use_direct_amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_use_direct_amount>);
-    break;
-
-  case 'v':
-    if (name == "virtual")
-      return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
-    else if (name == "value_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_value_date>);
-    break;
-
-  case 'x':
-    if (name == "xact")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact>);
-    else if (name == "xact_id")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact_id>);
-    break;
-
-  case 'N':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'O':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'R':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_real>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (const auto* fn = find_symbol(post_functions, name))
+    return WRAP_FUNCTOR(*fn);
   return item_t::lookup(kind, name);
 }
 
@@ -907,6 +804,29 @@ std::size_t post_t::account_id() const {
   }
   assert(false && "Failed to find posting within its account");
   return 0;
+}
+
+void post_t::set_given_cost(amount_t written, bool in_full) {
+  if (written.sign() < 0)
+    throw parse_error(_("A posting's cost may not be negative"));
+
+  written.in_place_unround();
+
+  if (in_full) {
+    add_flags(POST_COST_IN_FULL);
+    if (amount.sign() < 0)
+      written.in_place_negate();
+  } else {
+    // For the sole case where the cost might be uncommoditized,
+    // guarantee that the commodity of the cost after multiplication
+    // is the same as it was before.
+    commodity_t& cost_commodity(written.commodity());
+    written *= amount;
+    written.set_commodity(cost_commodity);
+  }
+
+  given_cost = written;
+  cost = std::move(written);
 }
 
 /**
@@ -974,7 +894,7 @@ bool post_t::valid() const {
  * @param value  The accumulator to add this posting's value to.
  * @param expr   Optional expression to evaluate (e.g., `amount` or `cost`).
  */
-void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
+void post_t::add_to_value(value_t& value, expr_t* expr) const {
   // NOLINTBEGIN(bugprone-branch-clone)
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
     if (!xdata_->compound_value.is_null())
@@ -992,18 +912,8 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
     } else {
       scope_t* ctx = expr->get_context();
       bind_scope_t bound_scope(*ctx, const_cast<post_t&>(*this));
-#if 1
       value_t temp(expr->calc(bound_scope));
       add_or_set_value(value, temp);
-      expr->set_context(ctx);
-#else
-      if (!xdata_)
-        xdata_ = xdata_t();
-      xdata_->value = expr->calc(bound_scope);
-      xdata_->add_flags(POST_EXT_COMPOUND);
-
-      add_or_set_value(value, xdata_->value);
-#endif
     }
   } else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) && !xdata_->visited_value.is_null()) {
     add_or_set_value(value, xdata_->visited_value);
@@ -1172,10 +1082,11 @@ void put_post(property_tree::ptree& st, const post_t& post) {
     put_amount(st.put("cost", ""), *post.cost);
 
   if (post.assigned_amount) {
+    // A calculated amount came from "= BALANCE", as print.cc decides.
     if (post.has_flags(POST_CALCULATED))
-      put_amount(st.put("balance-assertion", ""), *post.assigned_amount);
-    else
       put_amount(st.put("balance-assignment", ""), *post.assigned_amount);
+    else
+      put_amount(st.put("balance-assertion", ""), *post.assigned_amount);
   }
 
   if (post.note)

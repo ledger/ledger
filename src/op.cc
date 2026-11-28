@@ -75,30 +75,29 @@ void intrusive_ptr_release(const expr_t::op_t* op) {
 
 /*--- O_CONS Flattening ---*/
 
+namespace {
+/// @brief Call @p fn on each element of a right-leaning chain of @p kind
+/// links (O_CONS or O_SEQ): the left child of every link, then the final
+/// non-link tail if there is one.  A link with no right child ends it.
+template <typename F>
+void for_each_in_chain(expr_t::ptr_op_t link, const expr_t::op_t::kind_t kind, F fn) {
+  for (; link && link->kind == kind; link = link->right())
+    fn(link->left());
+  if (link)
+    fn(link);
+}
+} // namespace
+
 value_t split_cons_expr(const expr_t::ptr_op_t& op) {
   if (!op) {
     return value_t();
   }
   if (op->kind == expr_t::op_t::O_CONS) {
     value_t seq;
-    if (op->left()) {
-      seq.push_back(expr_value(op->left()));
-    }
-
-    expr_t::ptr_op_t next = op->right();
-    while (next) {
-      expr_t::ptr_op_t value_op;
-      if (next->kind == expr_t::op_t::O_CONS) {
-        value_op = next->left();
-        next = next->has_right() ? next->right() : nullptr;
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      if (value_op) {
-        seq.push_back(expr_value(value_op));
-      }
-    }
+    for_each_in_chain(op, expr_t::op_t::O_CONS, [&](const expr_t::ptr_op_t& elem) {
+      if (elem)
+        seq.push_back(expr_value(elem));
+    });
     return seq;
   } else {
     return expr_value(op);
@@ -161,45 +160,29 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
 
   if (is_ident()) {
     DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
-    ptr_op_t def;
-    bool from_param = false;
-    if (param_scope) {
-      def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
-      if (def)
-        from_param = true;
-    }
-    if (!def)
-      def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
+    // Inside a function body (param_scope is non-null) no identifier is
+    // inlined: parameters are bound only when the function is called, and
+    // any other name (payee, amount, a global define) must resolve in the
+    // calling scope (e.g. post_t), not the compilation scope (e.g. report_t),
+    // where "payee" names an option handler.
+    ptr_op_t def = param_scope ? ptr_op_t() : scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
     if (def && def->kind != PLUG) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
-      // not be found there.  We skip PLUG sentinels here so that
-      // identifiers declared by O_DEFINE (which temporarily store PLUG
-      // during compilation to prevent recursion) remain as dynamic
-      // IDENT nodes that do a fresh scope lookup at runtime.  This
-      // allows accumulator patterns like biggest=max(amount,biggest);biggest
-      // to read the running accumulated value each time rather than
-      // always returning NULL (the value of PLUG).
-      //
-      // When compiling inside a lambda/function body (param_scope is
-      // non-null), only inline identifiers found in the parameter scope.
-      // Non-parameter identifiers (like "payee", "amount", etc.) must
-      // remain as unresolved IDENT nodes for runtime lookup, because
-      // the correct definition depends on the calling scope (e.g.,
-      // post_t), not the compilation scope (e.g., report_t).  Without
-      // this guard, identifiers like "payee" are incorrectly resolved
-      // to option handlers at compile time (fixes #953).
-      if (from_param || !param_scope) {
+      // not be found there.  We skip PLUG sentinels here -- the ones
+      // declared for accumulators (a self-referential O_DEFINE) -- so
+      // that those identifiers remain dynamic IDENT nodes that do a
+      // fresh scope lookup at runtime.  This allows accumulator patterns
+      // like biggest=max(amount,biggest);biggest to read the running
+      // accumulated value each time rather than always returning NULL
+      // (the value of PLUG).
 #if DEBUG_ON
-        if (SHOW_DEBUG("expr.compile")) {
-          DEBUG("expr.compile", "Found definition:");
-          def->dump(*_log_stream, 0);
-        }
-#endif // DEBUG_ON
-        result = copy(def);
-      } else {
-        result = this;
+      if (SHOW_DEBUG("expr.compile")) {
+        DEBUG("expr.compile", "Found definition:");
+        def->dump(*_log_stream, 0);
       }
+#endif // DEBUG_ON
+      result = copy(def);
     } else if (left()) {
       result = copy();
     } else {
@@ -229,7 +212,11 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         // IDENT.  This is the accumulator pattern (e.g. biggest=max(a,biggest)).
         // Store a PLUG sentinel so that first-use returns NULL (pre-accumulation)
         // and keep the O_DEFINE node alive so it evaluates the RHS and stores
-        // the updated value each time this expression is evaluated.
+        // the updated value each time this expression is evaluated.  The
+        // PLUG goes wherever the compile scope sends a sentinel:
+        // expr_t::compile hands over a scope that sends it to the
+        // expression's own accumulator scope, so it never reaches the
+        // caller's scope and no other expression can see the name.
         DEBUG("expr.compile",
               "Declaring (PLUG, self-referential) " << var_name << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, var_name, new op_t(PLUG));
@@ -238,8 +225,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         // Non-self-referential: standard define.  Store the compiled RHS as
         // the variable definition so that subsequent IDENT references to this
         // variable can be resolved (and potentially inlined) at compile time.
-        // The O_DEFINE node is replaced by NULL_VALUE at runtime (no side
-        // effect needed since the value is captured at compile time).
+        // The O_DEFINE node is replaced by NULL_VALUE here at compile time;
+        // the definition is the side effect.
         DEBUG("expr.compile", "Defining " << var_name << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, var_name, rhs);
         // result stays null -> will be wrapped as NULL_VALUE at the end
@@ -269,9 +256,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   } else if (kind == O_LAMBDA) {
     symbol_scope_t params(param_scope ? *param_scope : *scope_t::empty_scope);
 
-    for (ptr_op_t sym = left(); sym; sym = sym->has_right() ? sym->right() : nullptr) {
-      ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
-
+    for_each_in_chain(left(), O_CONS, [&](const ptr_op_t& varname) {
       if (!varname->is_ident()) {
         std::ostringstream buf;
         varname->dump(buf, 0);
@@ -280,7 +265,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         DEBUG("expr.compile", "Defining function parameter " << varname->as_ident());
         params.define(symbol_t::FUNCTION, varname->as_ident(), new op_t(PLUG));
       }
-    }
+    });
 
     ptr_op_t rhs(right()->compile(*scope_ptr, depth + 1, &params));
     if (rhs == right())
@@ -351,11 +336,25 @@ expr_t::ptr_op_t lookup_ident(const expr_t::ptr_op_t& op, scope_t& scope) {
     throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
   return def;
 }
+
+/// @brief Whether @p val is an amount in the built-in "%" commodity.
+///
+/// The referent keeps an annotated "%" counting as "%".
+bool is_percent(const value_t& val) {
+  return val.is_amount() && val.as_amount().has_commodity() &&
+         &val.as_amount().commodity().referent() ==
+             val.as_amount().commodity().pool().percent_commodity;
+}
+
+/// @brief Whether @p val carries a commodity: an amount in one, or a balance.
+bool carries_commodity(const value_t& val) {
+  return val.is_balance() || (val.is_amount() && val.as_amount().has_commodity());
+}
 } // namespace
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
-  if (depth > 1024)
-    throw_(calc_error, _("Expression evaluation depth limit exceeded"));
+  if (depth > MAX_EXPR_DEPTH)
+    throw_(recursion_error, _("Expression evaluation depth limit exceeded"));
 
   try {
 
@@ -420,16 +419,12 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
       break;
     }
 
-    case SCOPE:
+    case SCOPE: {
       assert(!is_scope_unset());
-      if (is_scope_unset()) {
-        symbol_scope_t subscope(scope);
-        result = left()->calc(subscope, locus, depth + 1);
-      } else {
-        bind_scope_t bound_scope(scope, *as_scope());
-        result = left()->calc(bound_scope, locus, depth + 1);
-      }
+      bind_scope_t bound_scope(scope, *as_scope());
+      result = left()->calc(bound_scope, locus, depth + 1);
       break;
+    }
 
     case O_LOOKUP: {
       context_scope_t context_scope(scope, value_t::SCOPE);
@@ -505,12 +500,39 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
     case O_SUB:
       result = (left()->calc(scope, locus, depth + 1) - right()->calc(scope, locus, depth + 1));
       break;
-    case O_MUL:
-      result = (left()->calc(scope, locus, depth + 1) * right()->calc(scope, locus, depth + 1));
+    case O_MUL: {
+      // In a value expression a "%" amount is a fraction of an operand that
+      // carries a commodity (an amount in one, or a balance), on either
+      // side: "$1000 * 19%" and "19% * $1000" are both "$190", and
+      // "19% * 19%" is "3.61%".  The product is that other operand scaled by
+      // the fraction, whichever side the "%" stands on, so the two orders
+      // are one computation.  Times a bare number "%" stays a percentage
+      // ("10 * 19%" is "190%"), which the budget format's
+      // "100% * quantity(...)" relies on.  Amount arithmetic treats "%" as a
+      // plain commodity, so a price or a quantity in "%" multiplies at face
+      // value.
+      value_t lhs(left()->calc(scope, locus, depth + 1));
+      value_t rhs(right()->calc(scope, locus, depth + 1));
+      if (is_percent(lhs) && carries_commodity(rhs))
+        result = rhs * value_t(lhs.as_amount().percent_fraction());
+      else if (is_percent(rhs) && carries_commodity(lhs))
+        result = lhs * value_t(rhs.as_amount().percent_fraction());
+      else
+        result = lhs * rhs;
       break;
-    case O_DIV:
-      result = (left()->calc(scope, locus, depth + 1) / right()->calc(scope, locus, depth + 1));
+    }
+    case O_DIV: {
+      // Dividing by N% divides by N/100, whatever the dividend.  Dividing by
+      // N and then multiplying by 100 keeps the quotient's precision what it
+      // was when amount_t::operator/= did this.
+      value_t lhs(left()->calc(scope, locus, depth + 1));
+      value_t rhs(right()->calc(scope, locus, depth + 1));
+      if (is_percent(rhs))
+        result = (lhs / value_t(rhs.as_amount().number())) * value_t(amount_t(100L));
+      else
+        result = lhs / rhs;
       break;
+    }
 
     case O_NEG:
       result = left()->calc(scope, locus, depth + 1).negated();
@@ -594,7 +616,7 @@ expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope, expr_t::pt
     return op;
 
   if (recursion_depth > 256)
-    throw_(value_error, _("Function recursion_depth too deep (> 256)"));
+    throw_(recursion_error, _("Function recursion_depth too deep (> 256)"));
 
   // If it's an identifier, look up its definition and see if it's a
   // function.
@@ -629,8 +651,7 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
 
   symbol_scope_t args_scope(*scope_t::empty_scope);
 
-  for (expr_t::ptr_op_t sym = func->left(); sym; sym = sym->has_right() ? sym->right() : nullptr) {
-    expr_t::ptr_op_t varname = sym->kind == expr_t::op_t::O_CONS ? sym->left() : sym;
+  for_each_in_chain(func->left(), expr_t::op_t::O_CONS, [&](const expr_t::ptr_op_t& varname) {
     if (!varname->is_ident()) {
       throw_(calc_error, _("Invalid function definition"));
     } else if (args_index == args_count) {
@@ -642,11 +663,11 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
       args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
                         expr_t::op_t::wrap_value(call_args[args_index++]));
     }
-  }
+  });
 
   if (args_index < args_count)
-    throw_(calc_error, _f("Too few arguments in function call (saw %1%, wanted %2%)") % args_count %
-                           args_index);
+    throw_(calc_error, _f("Too many arguments in function call (saw %1%, wanted %2%)") %
+                           args_count % args_index);
 
   if (func->right()->is_scope()) {
     bind_scope_t outer_scope(scope, *func->right()->as_scope());
@@ -701,91 +722,108 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t* locus, const int depth
 
 value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t* locus, const int depth) {
   value_t result = left()->calc(scope, locus, depth + 1);
-  if (has_right()) {
-    value_t temp;
-    temp.push_back(result);
+  if (!has_right())
+    return result;
 
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_CONS) {
-        value_op = next->left();
-        next = next->has_right() ? next->right() : nullptr;
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      temp.push_back(value_op->calc(scope, locus, depth + 1));
-    }
-    result = temp;
-  }
-  return result;
+  value_t list;
+  list.push_back(result);
+  for_each_in_chain(right(), O_CONS, [&](const ptr_op_t& elem) {
+    list.push_back(elem->calc(scope, locus, depth + 1));
+  });
+  return list;
 }
 
 value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth) {
   // An O_SEQ is very similar to an O_CONS except that only the last
   // result value in the series is kept.  O_CONS builds up a list.
   //
-  // Another feature of O_SEQ is that it pushes a new symbol scope onto
-  // the stack.  We evaluate the left side here to catch any
-  // side-effects, such as definitions in the case of 'x = 1; x'.
+  // Every statement is evaluated in the caller's scope; no new symbol
+  // scope is pushed.  Definitions made by earlier statements, as in
+  // 'x = 1; x', are therefore visible to later ones.
   value_t result = left()->calc(scope, locus, depth + 1);
-  if (has_right()) {
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_SEQ) {
-        value_op = next->left();
-        next = next->right();
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      result = value_op->calc(scope, locus, depth + 1);
-    }
-  }
+  for_each_in_chain(right(), O_SEQ,
+                    [&](const ptr_op_t& stmt) { result = stmt->calc(scope, locus, depth + 1); });
   return result;
 }
 
 /*--- Pretty-Printing ---*/
 
 namespace {
-/// @brief Recursively print a comma-separated O_CONS chain.
-bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t& op,
-                const expr_t::op_t::context_t& context) {
-  bool found = false;
+/// @brief Per-kind spelling shared by op_t::print() and op_t::dump().
+struct op_info_t {
+  expr_t::op_t::kind_t kind; ///< The row's own kind; rows are in enum order.
+  const char* name;          ///< dump() label; "" for the range sentinels.
+  const char* infix;         ///< print() prefix (unary) or separator (binary);
+                             ///< nullptr when print() spells the kind itself.
+};
 
-  assert(op->left());
-  if (op->left()->print(out, context))
-    found = true;
+using op_t = expr_t::op_t;
 
-  if (op->has_right()) {
-    out << ", ";
-    if (op->right()->kind == expr_t::op_t::O_CONS)
-      found = print_cons(out, op->right(), context);
-    else if (op->right()->print(out, context))
-      found = true;
-  }
-  return found;
+constexpr op_info_t op_info[] = {
+    {op_t::PLUG, "PLUG", nullptr},
+    {op_t::VALUE, "VALUE", nullptr},
+    {op_t::IDENT, "IDENT", nullptr},
+    {op_t::CONSTANTS, "", nullptr},
+    {op_t::FUNCTION, "FUNCTION", nullptr},
+    {op_t::SCOPE, "SCOPE", nullptr},
+    {op_t::TERMINALS, "", nullptr},
+    {op_t::O_NOT, "O_NOT", "! "},
+    {op_t::O_NEG, "O_NEG", "- "},
+    {op_t::UNARY_OPERATORS, "", nullptr},
+    {op_t::O_EQ, "O_EQ", " == "},
+    {op_t::O_LT, "O_LT", " < "},
+    {op_t::O_LTE, "O_LTE", " <= "},
+    {op_t::O_GT, "O_GT", " > "},
+    {op_t::O_GTE, "O_GTE", " >= "},
+    {op_t::O_AND, "O_AND", " & "},
+    {op_t::O_OR, "O_OR", " | "},
+    {op_t::O_ADD, "O_ADD", " + "},
+    {op_t::O_SUB, "O_SUB", " - "},
+    {op_t::O_MUL, "O_MUL", " * "},
+    {op_t::O_DIV, "O_DIV", " / "},
+    {op_t::O_QUERY, "O_QUERY", " ? "},
+    {op_t::O_COLON, "O_COLON", " : "},
+    {op_t::O_CONS, "O_CONS", ", "},
+    {op_t::O_SEQ, "O_SEQ", "; "},
+    {op_t::O_DEFINE, "O_DEFINE", " = "},
+    {op_t::O_LOOKUP, "O_LOOKUP", "."},
+    {op_t::O_LAMBDA, "O_LAMBDA", " -> "},
+    {op_t::O_CALL, "O_CALL", nullptr},
+    {op_t::O_MATCH, "O_MATCH", " =~ "},
+    {op_t::O_EMATCH, "O_EMATCH", " ==~ "},
+    {op_t::BINARY_OPERATORS, "", nullptr},
+    {op_t::OPERATORS, "", nullptr},
+    {op_t::UNKNOWN, "", nullptr},
+    {op_t::LAST, "", nullptr},
+};
+
+constexpr bool op_info_matches_kind_t() {
+  if (std::size(op_info) != static_cast<std::size_t>(op_t::LAST) + 1)
+    return false;
+  for (std::size_t i = 0; i < std::size(op_info); ++i)
+    if (static_cast<std::size_t>(op_info[i].kind) != i)
+      return false;
+  return true;
 }
+static_assert(op_info_matches_kind_t(),
+              "op_info must have one row per op_t::kind_t enumerator, in order");
 
-/// @brief Recursively print a semicolon-separated O_SEQ chain.
-bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t& op,
-               const expr_t::op_t::context_t& context) {
+/// @brief Print an O_CONS or O_SEQ chain flat: a right child of the same
+/// kind continues the list instead of printing as a parenthesized node.
+bool print_list(std::ostream& out, const op_t& list, const op_t::context_t& context) {
   bool found = false;
+  const char* separator = op_info[list.kind].infix;
 
-  assert(op->left());
-  if (op->left()->print(out, context))
+  assert(list.left());
+  if (list.left()->print(out, context))
     found = true;
 
-  if (op->has_right()) {
-    out << "; ";
-    if (op->right()->kind == expr_t::op_t::O_SEQ)
-      found = print_seq(out, op->right(), context);
-    else if (op->right()->print(out, context))
+  for_each_in_chain(list.right(), list.kind, [&](const expr_t::ptr_op_t& element) {
+    out << separator;
+    assert(element);
+    if (element->print(out, context))
       found = true;
-  }
-
+  });
   return found;
 }
 } // namespace
@@ -799,12 +837,19 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     found = true;
   }
 
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
-
-  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+  // O_COLON is printed bare: it only ever appears as the right child of
+  // O_QUERY, whose own parentheses already enclose "cond ? a : b", and
+  // the parser does not accept a parenthesized "(a : b)" there.
+  const bool parenthesize =
+      kind > TERMINALS && kind != O_CALL && kind != O_DEFINE && kind != O_COLON;
+  if (parenthesize)
     out << '(';
 
   switch (kind) {
+  case PLUG:
+    // PLUG is an internal sentinel; it has no printable representation.
+    break;
+
   case VALUE:
     as_value().dump(out, context.relaxed);
     break;
@@ -823,141 +868,15 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     break;
 
   case O_NOT:
-    out << "! ";
-    if (left() && left()->print(out, context))
-      found = true;
-    break;
   case O_NEG:
-    out << "- ";
+    out << op_info[kind].infix;
     if (left() && left()->print(out, context))
-      found = true;
-    break;
-
-  case O_ADD:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " + ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_SUB:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " - ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_MUL:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " * ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_DIV:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " / ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_EQ:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " == ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_LT:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " < ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_LTE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " <= ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_GT:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " > ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_GTE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " >= ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_AND:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " & ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_OR:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " | ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_QUERY:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " ? ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_COLON:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " : ";
-    if (has_right() && right()->print(out, context))
       found = true;
     break;
 
   case O_CONS:
-    found = print_cons(out, this, context);
-    break;
   case O_SEQ:
-    found = print_seq(out, this, context);
-    break;
-
-  case O_DEFINE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " = ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_LOOKUP:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << ".";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_LAMBDA:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " -> ";
-    if (has_right() && right()->print(out, context))
-      found = true;
+    found = print_list(out, *this, context);
     break;
 
   case O_CALL:
@@ -969,7 +888,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
           found = true;
       } else {
         out << "(";
-        if (has_right() && right()->print(out, context))
+        if (right()->print(out, context))
           found = true;
         out << ")";
       }
@@ -978,40 +897,29 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     }
     break;
 
-  case O_MATCH:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " =~ ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_EMATCH:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " ==~ ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case PLUG:
-    // PLUG is an internal sentinel; it has no printable representation.
-    break;
-
+  case CONSTANTS:
+  case TERMINALS:
+  case UNARY_OPERATORS:
+  case BINARY_OPERATORS:
+  case OPERATORS:
+  case UNKNOWN:
   case LAST:
-  default:
     assert(false);
     break;
+
+  default:
+    // Every other binary operator prints as "left infix right".
+    assert(op_info[kind].infix);
+    if (left() && left()->print(out, context))
+      found = true;
+    out << op_info[kind].infix;
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
   }
 
-  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+  if (parenthesize)
     out << ')';
-
-  if (!symbol.empty()) {
-    if (commodity_pool_t::current_pool->find(symbol))
-      out << '@';
-    out << symbol;
-  }
 
   if (context.end_pos && this == context.op_to_find) {
     *context.end_pos = out.tellp();
@@ -1031,112 +939,20 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const {
   for (int i = 0; i < depth; i++)
     out << " ";
 
-  switch (kind) {
-  case PLUG:
-    out << "PLUG";
-    break;
+  assert(kind < LAST && *op_info[kind].name);
+  out << op_info[kind].name;
 
-  case VALUE:
-    out << "VALUE: ";
+  if (kind == VALUE) {
+    out << ": ";
     as_value().dump(out);
-    break;
-
-  case IDENT:
-    out << "IDENT: " << as_ident();
-    break;
-
-  case FUNCTION:
-    out << "FUNCTION";
-    break;
-
-  case SCOPE:
-    out << "SCOPE: ";
+  } else if (kind == IDENT) {
+    out << ": " << as_ident();
+  } else if (kind == SCOPE) {
+    out << ": ";
     if (is_scope_unset())
       out << "null";
     else
       out << as_scope().get();
-    break;
-
-  case O_DEFINE:
-    out << "O_DEFINE";
-    break;
-  case O_LOOKUP:
-    out << "O_LOOKUP";
-    break;
-  case O_LAMBDA:
-    out << "O_LAMBDA";
-    break;
-  case O_CALL:
-    out << "O_CALL";
-    break;
-  case O_MATCH:
-    out << "O_MATCH";
-    break;
-  case O_EMATCH:
-    out << "O_EMATCH";
-    break;
-
-  case O_NOT:
-    out << "O_NOT";
-    break;
-  case O_NEG:
-    out << "O_NEG";
-    break;
-
-  case O_ADD:
-    out << "O_ADD";
-    break;
-  case O_SUB:
-    out << "O_SUB";
-    break;
-  case O_MUL:
-    out << "O_MUL";
-    break;
-  case O_DIV:
-    out << "O_DIV";
-    break;
-
-  case O_EQ:
-    out << "O_EQ";
-    break;
-  case O_LT:
-    out << "O_LT";
-    break;
-  case O_LTE:
-    out << "O_LTE";
-    break;
-  case O_GT:
-    out << "O_GT";
-    break;
-  case O_GTE:
-    out << "O_GTE";
-    break;
-
-  case O_AND:
-    out << "O_AND";
-    break;
-  case O_OR:
-    out << "O_OR";
-    break;
-
-  case O_QUERY:
-    out << "O_QUERY";
-    break;
-  case O_COLON:
-    out << "O_COLON";
-    break;
-
-  case O_CONS:
-    out << "O_CONS";
-    break;
-  case O_SEQ:
-    out << "O_SEQ";
-    break;
-
-  case LAST:
-  default:
-    assert(false);
-    break;
   }
 
   out << " (" << refc << ')' << '\n';

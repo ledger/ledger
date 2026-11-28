@@ -1,6 +1,5 @@
-; Coverage tests for format.cc (colorize/ansify_if in format elements)
-; Uses --bold-if to trigger the colorize_op code path in format element construction
-; Uses --no-color to suppress actual ANSI output so test output matches cleanly
+; Coverage for --bold-if: the register format wraps its fields in
+; ansify_if(..., bold if should_bold), and --bold-if sets should_bold.
 
 2024/01/01 Payee
     Expenses:Food    $10.00
@@ -10,8 +9,7 @@
     Expenses:Food    $25.00
     Assets:Cash
 
-; This exercises format.cc 361-380: the bold_if format expression gets parsed
-; into an ansify_if call wrapping the format element
+; Neither posting matches amount>100, so no line is bolded.
 test reg --bold-if "amount>100" Expenses
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Groceries             Expenses:Food                $25.00       $35.00

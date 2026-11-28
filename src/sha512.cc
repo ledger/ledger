@@ -45,7 +45,9 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-extern "C" {
+#include "sha512.h"
+
+namespace {
 
 /* do we have sha512 header defs */
 #ifndef SHA512_DIGEST_LENGTH
@@ -58,11 +60,6 @@ using SHA512_CTX = struct _SHA512_CTX {
   uint8_t buffer[SHA512_BLOCK_LENGTH];
 };
 #endif /* do we have sha512 header defs */
-
-void SHA512_Init(SHA512_CTX*);
-void SHA512_Update(SHA512_CTX*, void*, size_t);
-void SHA512_Final(uint8_t[SHA512_DIGEST_LENGTH], SHA512_CTX*);
-unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
 
 /*** SHA-256/384/512 Machine Architecture Definitions *****************/
 /*
@@ -316,9 +313,9 @@ static void SHA512_Transform(SHA512_CTX* context, const sha2_word64* data) {
   a = b = c = d = e = f = g = h = T1 = T2 = 0;
 }
 
-void SHA512_Update(SHA512_CTX* context, void* datain, size_t len) {
+void SHA512_Update(SHA512_CTX* context, const void* datain, size_t len) {
   size_t freespace, usedspace;
-  const sha2_byte* data = (const sha2_byte*)datain;
+  const sha2_byte* data = static_cast<const sha2_byte*>(datain);
 
   if (len == 0) {
     /* Calling with no data is valid - we do nothing */
@@ -437,11 +434,15 @@ void SHA512_Final(sha2_byte digest[], SHA512_CTX* context) {
   MEMSET_BZERO(context, sizeof(SHA512_CTX));
 }
 
-unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest) {
+} // namespace
+
+namespace ledger {
+
+void sha512(const void* data, std::size_t len, unsigned char digest[64]) {
   SHA512_CTX ctx;
   SHA512_Init(&ctx);
-  SHA512_Update(&ctx, data, data_len);
+  SHA512_Update(&ctx, data, len);
   SHA512_Final(digest, &ctx);
-  return digest;
 }
-}
+
+} // namespace ledger

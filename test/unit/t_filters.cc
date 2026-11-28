@@ -269,9 +269,11 @@ BOOST_AUTO_TEST_CASE(testFilterPostsByAccount)
   BOOST_CHECK(collector->posts[0] == p_exp);
 }
 
-BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
+BOOST_AUTO_TEST_CASE(testFilterPostsLeavesXdataUnallocated)
 {
-  // Posts that match the filter predicate should have POST_EXT_MATCHES set
+  // filter_posts forwards a matching posting without touching its xdata:
+  // no handler reads a per-posting "matched" flag, so none is set and no
+  // xdata is allocated for it.
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
@@ -282,8 +284,8 @@ BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
 
   filter(*post);
 
-  BOOST_CHECK(post->has_xdata());
-  BOOST_CHECK(post->xdata().has_flags(POST_EXT_MATCHES));
+  BOOST_CHECK_EQUAL(1u, collector->length());
+  BOOST_CHECK(!post->has_xdata());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -484,7 +486,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAccountChanged)
   // After anonymization, the post's account name should differ from
   // the original
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Food:Groceries");
   account_t* assets = make_account("Assets:Cash");
@@ -512,7 +514,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsPayeeChanged)
   // After anonymization, the transaction payee should differ from
   // the original
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Dining");
   account_t* assets = make_account("Assets:Cash");
@@ -536,7 +538,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsFlagSet)
 {
   // Anonymized posts should have the POST_ANONYMIZED flag set
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Transport");
   account_t* assets = make_account("Assets:Cash");
@@ -549,30 +551,6 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsFlagSet)
 
   BOOST_CHECK_EQUAL(1u, collector->length());
   BOOST_CHECK(collector->posts[0]->has_flags(POST_ANONYMIZED));
-}
-
-//////////////////////////////////////////////////////////////////////
-//
-// push_to_posts_list tests
-//
-
-BOOST_AUTO_TEST_CASE(testPushToPostsList)
-{
-  // push_to_posts_list should add posts to an external posts_list
-  posts_list external_list;
-  push_to_posts_list pusher(external_list);
-
-  account_t* acct = make_account("Expenses");
-  xact_t* xact = make_xact("Test", date_t(2024, 7, 1));
-  post_t* p1 = make_post(xact, acct, amount_t(10L));
-  post_t* p2 = make_post(xact, acct, amount_t(20L));
-
-  pusher(*p1);
-  pusher(*p2);
-
-  BOOST_CHECK_EQUAL(2u, external_list.size());
-  BOOST_CHECK(external_list.front() == p1);
-  BOOST_CHECK(external_list.back() == p2);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -625,12 +603,12 @@ BOOST_AUTO_TEST_CASE(testSortThenFilterThenCollect)
 
 //////////////////////////////////////////////////////////////////////
 //
-// post_splitter tests (covers filters.h lines 294-298)
+// post_splitter tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPostSplitterClear)
 {
-  // Cover post_splitter::clear() (filters.h lines 294-298)
+  // Cover post_splitter::clear() (filters.h)
   // We can't easily construct a full post_splitter without the report
   // chain, but we can test clear() on a simpler handler chain that
   // exercises the virtual clear method through the base class.
@@ -649,12 +627,12 @@ BOOST_AUTO_TEST_CASE(testPostSplitterClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// truncate_xacts clear() tests (covers filters.h lines 392-399)
+// truncate_xacts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testTruncateXactsClear)
 {
-  // Cover truncate_xacts::clear() (filters.h lines 392-399)
+  // Cover truncate_xacts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/1, /*tail_count=*/0);
 
@@ -674,12 +652,12 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// sort_xacts_by_post_amount tests (covers filters.h lines 470-475)
+// sort_xacts_by_post_amount tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testSortXactsByPostAmountClear)
 {
-  // Cover sort_xacts_by_post_amount::clear() (filters.h lines 470-475)
+  // Cover sort_xacts_by_post_amount::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_xacts sorter(collector, expr_t("amount"), report);
 
@@ -703,12 +681,12 @@ BOOST_AUTO_TEST_CASE(testSortXactsByPostAmountClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// filter_posts clear() tests (covers filters.h lines 499-502)
+// filter_posts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testFilterPostsClear)
 {
-  // Cover filter_posts::clear() (filters.h lines 499-502)
+  // Cover filter_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
@@ -731,14 +709,14 @@ BOOST_AUTO_TEST_CASE(testFilterPostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// anonymize_posts clear() tests (covers filters.h lines 535-541)
+// anonymize_posts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsClear)
 {
-  // Cover anonymize_posts::clear() (filters.h lines 535-541)
+  // Cover anonymize_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Food");
   account_t* assets = make_account("Assets:Cash");
@@ -765,12 +743,12 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// calc_posts tests (covers filters.cc lines 279-298)
+// calc_posts tests (covers filters.cc)
 //
 
 BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotal)
 {
-  // Cover calc_posts operator() (filters.cc lines 279-298)
+  // Cover calc_posts operator() (filters.cc)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   calc_posts calc(collector, amount_expr, /*calc_running_total=*/true);
@@ -801,7 +779,7 @@ BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotal)
 
 BOOST_AUTO_TEST_CASE(testRelatedPosts)
 {
-  // Cover related_posts (filters.h line 642-660)
+  // Cover related_posts (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   related_posts related(collector, /*also_matching=*/false);
 
@@ -842,12 +820,12 @@ BOOST_AUTO_TEST_CASE(testRelatedPostsAlsoMatching)
 
 //////////////////////////////////////////////////////////////////////
 //
-// subtotal_posts / collapse_posts tests (covers filters.h lines 623-639)
+// subtotal_posts / collapse_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsClear)
 {
-  // Cover subtotal_posts::clear() (filters.h lines 623-639)
+  // Cover subtotal_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   collapse_posts collapser(collector, report, amount_expr,
@@ -867,12 +845,12 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// interval_posts tests (covers filters.h line 881)
+// interval_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsWithDuration)
 {
-  // Cover interval_posts::operator() with duration (filter line 881)
+  // Cover interval_posts::operator() with duration (filters.cc)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   date_interval_t interval("monthly from 2024/01/01");
 
@@ -882,21 +860,31 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsWithDuration)
   account_t* acct = make_account("Expenses:Food");
   xact_t* xact = make_xact("Store", date_t(2024, 1, 15));
   post_t* p1 = make_post(xact, acct, amount_t("$10.00"));
+  xact_t* xact2 = make_xact("Store", date_t(2024, 2, 10));
+  post_t* p2 = make_post(xact2, acct, amount_t("$5.00"));
 
   ip(*p1);
+  ip(*p2);
   ip.flush();
 
-  BOOST_CHECK(true);
+  // One subtotal per month, dated at the period start, as
+  // `reg --period "monthly from 2024/01/01"` shows
+  BOOST_REQUIRE_EQUAL(2u, collector->length());
+  BOOST_CHECK(collector->posts[0]->account == acct);
+  BOOST_CHECK(collector->posts[0]->amount == amount_t("$10.00"));
+  BOOST_CHECK(collector->posts[0]->date() == date_t(2024, 1, 1));
+  BOOST_CHECK(collector->posts[1]->amount == amount_t("$5.00"));
+  BOOST_CHECK(collector->posts[1]->date() == date_t(2024, 2, 1));
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// by_payee_posts tests (covers filters.h lines 957-962)
+// by_payee_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testByPayeePostsClear)
 {
-  // Cover by_payee_posts::clear() (filters.h lines 957-962)
+  // Cover by_payee_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   by_payee_posts byp(collector, amount_expr);
@@ -914,16 +902,16 @@ BOOST_AUTO_TEST_CASE(testByPayeePostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// transfer_details tests (covers filters.h lines 989-994)
+// transfer_details tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
 {
-  // Cover transfer_details::clear() (filters.h lines 989-994)
+  // Cover transfer_details::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t expr("'Transferred'");
-  transfer_details td(collector, transfer_details::SET_PAYEE,
-                      root, expr, report);
+  transfer_details td(collector, transfer_details::SET_PAYEE, expr,
+    report, report.temp_accounts());
 
   account_t* acct = make_account("Expenses:Food");
   xact_with_posts xwp = make_balanced_xact(
@@ -931,20 +919,22 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
     acct, make_account("Assets:Cash"), amount_t("$10.00"));
 
   td(*xwp.debit);
-  td.clear();
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+  BOOST_CHECK_EQUAL(collector->posts[0]->xact->payee, "Transferred");
+  BOOST_CHECK_EQUAL(xwp.xact->payee, "Store"); // the original is untouched
 
-  // After clear, no crash
-  BOOST_CHECK(true);
+  td.clear();
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// day_of_week_posts tests (covers filters.h lines 1014-1019)
+// day_of_week_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsClear)
 {
-  // Cover day_of_week_posts::clear() (filters.h lines 1014-1019)
+  // Cover day_of_week_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   day_of_week_posts dowp(collector, amount_expr);
@@ -955,49 +945,72 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsClear)
 
   dowp(*p1);
   dowp.clear();
+  dowp.flush();
 
-  BOOST_CHECK(true);
+  // Without clear(), flush() would emit one subtotal (see testDayOfWeekPostsW8)
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// generate_posts tests (covers filters.h lines 1046-1051)
+// generate_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testGeneratePostsClear)
 {
-  // Cover generate_posts::clear() (filters.h lines 1046-1051)
+  // Cover generate_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   budget_posts bp(collector, date_t(2025, 1, 1));
 
+  account_t* acct = make_account("Expenses:Food");
+  xact_t* xact = make_xact("Budget", date_t(2024, 1, 1));
+  post_t* p1 = make_post(xact, acct, amount_t("$10.00"));
+  bp.add_post(date_interval_t("monthly from 2024/01/01"), *p1);
+
   bp.clear();
-  BOOST_CHECK(true);
+  bp.flush();
+
+  // Without clear(), flush() would report 13 monthly budget postings
+  // (2024/01 through 2025/01); clear() drops the pending one
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// forecast_posts tests (covers filters.h lines 1095-1098)
+// forecast_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testForecastPostsClear)
 {
-  // Cover forecast_posts::clear() (filters.h lines 1095-1098)
+  // Cover forecast_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   forecast_posts fp(collector, pred, report, 5);
 
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+
   fp.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
+
+// Records whether clear() reached the end of an account handler chain
+struct clear_recording_account_handler : public item_handler<account_t> {
+  bool cleared = false;
+  void clear() override { cleared = true; }
+};
 
 //////////////////////////////////////////////////////////////////////
 //
-// pass_down_accounts tests (covers filters.h lines 1154-1159)
+// pass_down_accounts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
 {
-  // Cover pass_down_accounts::clear() (filters.h lines 1154-1159)
+  // Cover pass_down_accounts::clear() (filters.h)
   // We need to construct and clear a pass_down_accounts with a predicate
 
   // Create some accounts with xdata
@@ -1008,42 +1021,52 @@ BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
   acct2->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
   // Use basic_accounts_iterator
-  std::shared_ptr<item_handler<account_t>> collector(new item_handler<account_t>());
+  std::shared_ptr<clear_recording_account_handler> recorder(new clear_recording_account_handler);
   basic_accounts_iterator iter(*root);
   predicate_t pred("total", keep_details_t());
 
-  pass_down_accounts<basic_accounts_iterator> pda(collector, iter, pred, report);
+  pass_down_accounts<basic_accounts_iterator> pda(recorder, iter, pred, &report);
 
+  BOOST_CHECK(!recorder->cleared);
   pda.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK(recorder->cleared);
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// posts_as_equity tests (covers filters.h lines 931-935)
+// posts_as_equity tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityClear)
 {
-  // Cover posts_as_equity::clear() (filters.h lines 931-935)
+  // Cover posts_as_equity::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   posts_as_equity pae(collector, report, amount_expr, false);
 
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  pae(*xwp.debit);
+
   pae.clear();
-  BOOST_CHECK(true);
+  pae.flush();
+
+  // Without clear(), flush() would emit Expenses:Food $10.00 and
+  // Equity:Opening Balances $-10.00
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: anonymize_posts (lines 266-274)
+// anonymize_posts
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsW7)
 {
   // Cover anonymize_posts rendering
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1059,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: calc_posts with calc_running_total (lines 279-318)
+// calc_posts with calc_running_total
 //
 
 BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotalW7)
@@ -1085,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotalW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: collapse_posts (lines 397-425)
+// collapse_posts
 //
 
 BOOST_AUTO_TEST_CASE(testCollapsePostsW7)
@@ -1111,7 +1134,7 @@ BOOST_AUTO_TEST_CASE(testCollapsePostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: display_filter_posts (lines 217-218)
+// display_filter_posts
 //
 
 BOOST_AUTO_TEST_CASE(testDisplayFilterPostsW7)
@@ -1136,7 +1159,7 @@ BOOST_AUTO_TEST_CASE(testDisplayFilterPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: interval_posts (lines 1014-1032)
+// interval_posts
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsW7)
@@ -1165,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: sort_posts (lines 1108-1120)
+// sort_posts
 //
 
 BOOST_AUTO_TEST_CASE(testSortPostsW7)
@@ -1190,7 +1213,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: truncate_xacts (line 1193)
+// truncate_xacts
 //
 
 BOOST_AUTO_TEST_CASE(testTruncateXactsW7)
@@ -1218,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: related_posts (line 1232)
+// related_posts
 //
 
 BOOST_AUTO_TEST_CASE(testRelatedPostsW7)
@@ -1240,7 +1263,7 @@ BOOST_AUTO_TEST_CASE(testRelatedPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: day_of_week_posts (line 1306-1308)
+// day_of_week_posts
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW7)
@@ -1263,7 +1286,7 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: subtotal_posts (line 1383)
+// subtotal_posts
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsW7)
@@ -1289,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: generate_posts (line 1436)
+// generate_posts
 //
 
 BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
@@ -1298,34 +1321,45 @@ BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
   date_t terminus = parse_date("2024/12/31");
   budget_posts budget(collector, terminus, BUDGET_BUDGETED);
 
-  // Just exercise clear
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+
   budget.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: inject_posts (line 1484-1485)
+// inject_posts
 //
 
 BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  inject_posts inject(collector, "amount", root);
+  inject_posts inject(collector, "amount", root, report.temp_accounts());
+
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
 
   inject.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts render_commodity with annotation (lines 265-268)
+// anonymize_posts render_commodity with annotation
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1343,18 +1377,18 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
 
   BOOST_CHECK(!collector->posts.empty());
   // The anonymized post should have its annotation price also rendered
-  // This covers lines 217, 265-269
+  // This covers the annotation path of anonymize_posts::render_commodity
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts with cost (line 271-272)
+// anonymize_posts with cost
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1373,13 +1407,13 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts with assigned_amount (line 273-274)
+// anonymize_posts with assigned_amount
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1398,7 +1432,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: subtotal_posts virtual/non-virtual mix (issue #2051)
+// subtotal_posts virtual/non-virtual mix (issue #2051)
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
@@ -1431,7 +1465,7 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: interval_posts without duration (lines 1013-1015)
+// interval_posts without duration
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
@@ -1441,7 +1475,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
 
   // Create interval with just a start date, no duration.
   // This exercises the non-duration path in interval_posts::operator()
-  // (lines 1013-1015) and flush (lines 1019-1021).
+  // and flush.
   date_interval_t interval("from 2024/01/01");
   interval_posts ival(collector, amount_expr, interval);
 
@@ -1455,14 +1489,18 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
   ival(*result.debit);
   ival.flush();
 
-  // The post may or may not be collected depending on find_period behavior;
-  // the key coverage target is the non-duration code path itself.
-  BOOST_CHECK(true);
+  // Without a duration, find_period() has no end_of_duration and answers
+  // false (times.cc find_period), so nothing passes.  The CLI never builds
+  // this filter without a duration: report_t::normalize_period() turns
+  // --period off and moves its range into --limit.  (The comment in
+  // interval_posts::operator() says a bare range forwards the postings
+  // inside it; this case pins what the code does today.)
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: interval_posts flush without duration (lines 1019-1021)
+// interval_posts flush without duration
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsFlushNoDurationW8)
@@ -1476,12 +1514,12 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsFlushNoDurationW8)
 
   // Just flush with no posts
   ival.flush();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: day_of_week_posts flush (line 1246-1255)
+// day_of_week_posts flush
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW8)
@@ -1505,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: generate_posts::add_period_xacts (line 1257-1265)
+// generate_posts::add_period_xacts
 //
 
 BOOST_AUTO_TEST_CASE(testGeneratePostsAddPeriodXactsW8)
@@ -1514,23 +1552,33 @@ BOOST_AUTO_TEST_CASE(testGeneratePostsAddPeriodXactsW8)
   date_t terminus = parse_date("2024/12/31");
   budget_posts budget(collector, terminus, BUDGET_BUDGETED);
 
-  // With empty period_xacts list, nothing should crash
-  period_xacts_list empty_list;
-  budget.add_period_xacts(empty_list);
-  BOOST_CHECK(true);
+  period_xact_t pxact("monthly from 2024/01/01");
+  pxact.add_post(new post_t(make_account("Expenses:Food"), amount_t("$10.00")));
+  period_xacts_list period_xacts;
+  period_xacts.push_back(&pxact);
+
+  budget.add_period_xacts(period_xacts);
+  budget.flush();
+
+  // One negated budget posting per month through the 2024/12/31 terminus
+  BOOST_REQUIRE_EQUAL(12u, collector->length());
+  BOOST_CHECK_EQUAL(collector->posts.front()->xact->payee, "Budget transaction");
+  BOOST_CHECK(collector->posts.front()->amount == amount_t("$-10.00"));
+  BOOST_CHECK(collector->posts.front()->date() == date_t(2024, 1, 1));
+  BOOST_CHECK(collector->posts.back()->date() == date_t(2024, 12, 1));
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: transfer_details SET_PAYEE (line 1237-1238)
+// transfer_details SET_PAYEE
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t payee_expr("'NewPayee'");
-  transfer_details xfer(collector, transfer_details::SET_PAYEE,
-                        root, payee_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_PAYEE, payee_expr,
+    report, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1546,15 +1594,15 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: transfer_details SET_DATE (line 1212-1213)
+// transfer_details SET_DATE
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t date_expr("[2025/01/01]");
-  transfer_details xfer(collector, transfer_details::SET_DATE,
-                        root, date_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_DATE, date_expr,
+    report, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1570,7 +1618,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: collapse_posts report_subtotal (line 397+)
+// collapse_posts report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testCollapsePostsSubtotalW8)
@@ -1598,7 +1646,7 @@ BOOST_AUTO_TEST_CASE(testCollapsePostsSubtotalW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: posts_as_equity report_subtotal (line 1116-1173)
+// posts_as_equity report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityW8)
@@ -1622,7 +1670,7 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: by_payee_posts (line 1184-1198)
+// by_payee_posts
 //
 
 BOOST_AUTO_TEST_CASE(testByPayeePostsW8)
@@ -1651,7 +1699,8 @@ BOOST_AUTO_TEST_CASE(testByPayeePostsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: create_post_from_amount zero amount (line 1107-1108)
+// zero amount in the balancing-post lambda in
+// posts_as_equity::report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityZeroW8)
@@ -1674,7 +1723,49 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityZeroW8)
   equity_posts(*result2.debit);
   equity_posts.flush();
 
-  // Should still produce output (at least the credit postings)
+  // The account nets to $0, so equity emits neither a posting for it nor a
+  // balancing Equity:Opening Balances posting (`ledger equity` prints nothing)
+  BOOST_CHECK_EQUAL(0u, collector->length());
+}
+
+BOOST_AUTO_TEST_CASE(testReportAccountsPoolIsSharedAndReleased)
+{
+  // One pool per journal: every holder gets the same one, it ends with its
+  // last holder, and the next holder starts a new one.
+  journal_t other;
+  std::shared_ptr<temporaries_t> first = other.report_accounts_pool();
+  BOOST_REQUIRE(first);
+  BOOST_CHECK(first == other.report_accounts_pool());
+
+  std::weak_ptr<temporaries_t> watch(first);
+  first.reset();
+  BOOST_CHECK(watch.expired());
+  BOOST_CHECK(other.report_accounts_pool());
+}
+
+BOOST_AUTO_TEST_CASE(testReportTempAccountsComeFromTheJournal)
+{
+  // A report and its copies (the REPL's push_report, Python's query) hold
+  // the journal's pool, so they hold the same one.
+  temporaries_t& pool = report.temp_accounts();
+  BOOST_CHECK(&pool == journal->report_accounts_pool().get());
+
+  report_t copy(report);
+  BOOST_CHECK(&copy.temp_accounts() == &pool);
+}
+
+BOOST_AUTO_TEST_CASE(testJournalDestructionTakesReportAccountsOut)
+{
+  // A report can hold the pool past the journal (the session closes its
+  // journal while the last report lives): the journal takes the accounts out
+  // of its tree first, so releasing the pool afterwards touches no freed
+  // parent.  Observable under Guard Malloc or a sanitizer.
+  std::unique_ptr<journal_t> doomed(new journal_t);
+  std::shared_ptr<temporaries_t> pool = doomed->report_accounts_pool();
+  pool->create_account("Brand", doomed->master);
+
+  doomed.reset();
+  pool.reset();
   BOOST_CHECK(true);
 }
 

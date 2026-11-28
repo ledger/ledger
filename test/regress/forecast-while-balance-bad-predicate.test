@@ -1,0 +1,23 @@
+; An invalid --forecast-while predicate in a balance report is still
+; reported when the report's chain no longer evaluates it for real
+; postings: forecast_posts evaluates it on the first forecast group.
+; The error is raised in forecast_posts::flush, outside the per-posting
+; "While handling posting" context, so a balance report's diagnostic no
+; longer points at a journal line.  The register report still evaluates
+; the predicate on each posting and keeps that line pointer.
+
+2030/03/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+~ Monthly from 2030/06/01
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test bal --forecast-while Food --now 2030/06/15 -> 1
+__ERROR__
+While evaluating value expression:
+  Food
+  ^^^^
+Error: Unknown identifier 'Food'
+end test

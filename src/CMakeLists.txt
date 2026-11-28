@@ -68,7 +68,6 @@ if(HAVE_BOOST_PYTHON)
     py_balance.cc
     py_commodity.cc
     py_expr.cc
-    py_format.cc
     py_item.cc
     py_journal.cc
     py_post.cc
@@ -135,6 +134,7 @@ set(LEDGER_INCLUDES
   timelog.h
   times.h
   token.h
+  types.h
   unistring.h
   utils.h
   value.h
@@ -153,18 +153,6 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
-      # -Weverything
-      # -Wno-disabled-macro-expansion
-      # -Wno-padded
-      # -Wno-weak-vtables
-      # -Wno-exit-time-destructors
-      # -Wno-global-constructors
-      # -Wno-switch-enum
-      # -Wno-missing-prototypes
-      # -Wno-missing-noreturn
-      # -Wno-unused-parameter
-      # -Wno-c++98-compat
-      # -fno-limit-debug-info
       -Wno-\#pragma-messages
       -Wno-unused-local-typedef
       --system-header-prefix=include/boost/
@@ -251,10 +239,13 @@ if(USE_PYTHON)
     set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
       "Directory to install the ledger Python module into")
 
-    # FIXME: symlink would be sufficient:
-    # maybe using install(CODE "...") and
-    # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
-    # Windows will need a special case due to not supporting symlinks.
+    # The module is libledger itself, copied under the module's name.
+    # Its init function, PyInit_ledger, is defined in libledger by
+    # pyledger.cc's BOOST_PYTHON_MODULE, and pyinterp.cc declares and
+    # registers that same function for the embedded interpreter, so the
+    # module cannot be a target of its own unless libledger exports a
+    # separate init for it to forward to.  The copy carries libledger's
+    # build-tree RUNPATH, which the #3229 step below sanitizes.
     add_custom_command(
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -266,17 +257,19 @@ if(USE_PYTHON)
     # install(TARGETS ...).  The build-tree RPATH -- which CMake pads with empty
     # entries to reserve room for the longer install RPATH -- would otherwise
     # leak into the installed module, and ELF loaders treat an empty
-    # RPATH/RUNPATH element as the current working directory.  Strip the RPATH
-    # from the copied module so the installed artifact cannot be hijacked by a
-    # library planted in CWD.  ELF-only: macOS (Mach-O) and Windows (PE) use
-    # different mechanisms and are not affected.
+    # RPATH/RUNPATH element as the current working directory.  Remove the empty
+    # elements from the copied module's RPATH/RUNPATH and keep its genuine
+    # directories (Nix, Homebrew or a custom prefix need them to find Boost, GMP
+    # and Python), so the installed artifact cannot be hijacked by a library
+    # planted in CWD.  ELF-only: macOS (Mach-O) and Windows (PE) use different
+    # mechanisms and are not affected.
     if(UNIX AND NOT APPLE)
       add_custom_command(
         TARGET libledger POST_BUILD
         COMMAND ${CMAKE_COMMAND}
           "-DLEDGER_PYTHON_MODULE=${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
           -P "${CMAKE_SOURCE_DIR}/cmake/SanitizeModuleRPath.cmake"
-        COMMENT "Stripping insecure RPATH from ledger Python module (#3229)")
+        COMMENT "Removing empty RPATH/RUNPATH elements from ledger Python module (#3229)")
     endif()
 
     # Use PROGRAMS (not FILES) so the installed Python extension module has

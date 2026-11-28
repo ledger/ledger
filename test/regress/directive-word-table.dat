@@ -1,0 +1,44 @@
+year 2023
+define tax_rate=0.5
+def double(x)=x*2
+expr 1
+eval 1
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+
+account-rewrite ^Personal:Groceries$   Expenses:Food
+payee-rewrite ^GROCER.*   Grocery Store
+alias cash=Assets:Cash
+bucket Assets:Cash
+
+tag Receipt
+
+payee Bakery
+
+comment
+This block is skipped.
+end comment
+
+test
+So is this one.
+end test
+
+assert 1 == 1
+check 1 == 1
+
+value market
+
+apply account Personal
+01/02 GROCER 42
+    ; Receipt: 7
+    Groceries    $10.00
+    cash
+end apply account
+
+!apply account Business
+01/03 Bakery
+    Expenses:Food    $4.00
+end apply

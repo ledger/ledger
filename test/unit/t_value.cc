@@ -665,11 +665,11 @@ BOOST_AUTO_TEST_CASE(testDivision)
   v5 /= value_t(2L);
   BOOST_CHECK_EQUAL(v5, value_t(4L));
   v5 /= value_t(amount_t("8"));
-  BOOST_CHECK_EQUAL(v5, value_t(amount_t("2")));
+  BOOST_CHECK_EQUAL(v5, value_t(amount_t("0.5"))); // 4 / 8, not 8 / 4
 
   v16 /= value_t(2L);
-  v16 /= value_t(amount_t("2"));
-  BOOST_CHECK_EQUAL(v5, v16);
+  v16 /= value_t(amount_t("8"));
+  BOOST_CHECK_EQUAL(v5, v16); // 8 / 2 / 8
 
   v8 /= v9;
   v8 /= value_t(balance_t(2L));
@@ -997,9 +997,9 @@ BOOST_AUTO_TEST_CASE(testLogging)
   log.str("");
 
   BOOST_CHECK(value_context(v1) ==
-    "                                      $");
+    "                   $");
   BOOST_CHECK(value_context(value_t(amount_t("USD1").commodity())) ==
-    "                                      $");
+    "                   $");
 
   BOOST_CHECK(v1.valid());
 }
@@ -2310,6 +2310,55 @@ BOOST_AUTO_TEST_CASE(testSubtractNullIsNoop)
   BOOST_CHECK_EQUAL(v1, value_t(42L));
 }
 
+// VOID is the identity for + and -, -VOID and abs(VOID) are VOID, and
+// VOID - x is -x.  a1cff3ce3 (#1590) and 055f8fbec (#2262) added these
+// rules; each site in value.cc says why.  Removing them is an owner
+// decision (review T0304).
+BOOST_AUTO_TEST_CASE(testVoidIsArithmeticIdentity)
+{
+  const value_t amt("$1.00");
+  value_t bal(amt);
+  bal += value_t("3 EUR");
+  BOOST_REQUIRE(bal.is_balance());
+
+  // x + VOID == x and x - VOID == x, type preserved.
+  for (const value_t& x : {amt, bal}) {
+    value_t sum(x);
+    sum += value_t();
+    BOOST_CHECK(sum.type() == x.type());
+    BOOST_CHECK_EQUAL(sum, x);
+
+    value_t diff(x);
+    diff -= value_t();
+    BOOST_CHECK(diff.type() == x.type());
+    BOOST_CHECK_EQUAL(diff, x);
+  }
+
+  // A sequence does not gain a VOID element.
+  value_t seq;
+  seq.push_back(amt);
+  seq += value_t();
+  BOOST_CHECK_EQUAL(seq.size(), 1U);
+
+  // VOID + x == x (the empty-accumulator idiom), VOID - x == -x,
+  // VOID + VOID == VOID.
+  value_t acc;
+  acc += bal;
+  BOOST_CHECK_EQUAL(acc, bal);
+
+  value_t neg;
+  neg -= bal;
+  BOOST_CHECK_EQUAL(neg, bal.negated());
+
+  value_t none;
+  none += value_t();
+  BOOST_CHECK(none.is_null());
+
+  // -VOID == VOID and abs(VOID) == VOID.
+  BOOST_CHECK(value_t().negated().is_null());
+  BOOST_CHECK(value_t().abs().is_null());
+}
+
 BOOST_AUTO_TEST_CASE(testAddAmountsDifferentCommodities)
 {
   value_t v1(amount_t("10 GBP"));
@@ -3182,8 +3231,18 @@ BOOST_AUTO_TEST_CASE(testExchangeCommoditiesStringThrows)
   BOOST_CHECK_THROW(v1.exchange_commodities("EUR"), value_error);
 }
 
+BOOST_AUTO_TEST_CASE(testExchangeCommoditiesForcedLoneTarget)
+{
+  value_t v1(amount_t("2 AAPL"));
+  // No price exists, so the plain target yields NULL_VALUE; a lone
+  // forced target must yield the same and must not create "USD!".
+  BOOST_CHECK(v1.exchange_commodities("USD").is_null());
+  BOOST_CHECK(v1.exchange_commodities("USD!").is_null());
+  BOOST_CHECK(commodity_pool_t::current_pool->find("USD!") == nullptr);
+}
+
 // ---------------------------------------------------------------------------
-// put_value XML output tests (covering lines 2192-2237 of value.cc)
+// put_value XML output tests (covering value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutValueVoid)
@@ -3898,7 +3957,7 @@ BOOST_AUTO_TEST_CASE(testBoolOperatorBalance)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than coverage (value.cc lines 1001-1136)
+// is_greater_than coverage (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanVoid)
@@ -4067,10 +4126,64 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsInteger)
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateDatetime)
 {
-  // INTEGER and DATETIME share the same case; only INTEGER is really exercised
+  // Only INTEGER negates a stored long; DATE/DATETIME throw (testInPlaceNegateDateIsValueError)
   value_t v1(42L);
   v1.in_place_negate();
   BOOST_CHECK_EQUAL(v1.as_long(), -42L);
+}
+
+BOOST_AUTO_TEST_CASE(testInPlaceNegateDateIsValueError)
+{
+  // A date has no long to negate: the failure is a value_error naming the
+  // type, and the value is left as it was.
+  value_t d(parse_date("2024/01/01"));
+  BOOST_CHECK_THROW(d.in_place_negate(), value_error);
+  BOOST_CHECK(d.is_date());
+
+  value_t dt(parse_datetime("2024/01/01 10:00:00"));
+  BOOST_CHECK_THROW(dt.in_place_negate(), value_error);
+  BOOST_CHECK(dt.is_datetime());
+}
+
+BOOST_AUTO_TEST_CASE(testInPlaceNotDateUsesValidity)
+{
+  // in_place_not (parser constant folding, Python) agrees with operator bool,
+  // which the evaluator's O_NOT uses: a valid date is true.
+  value_t d(parse_date("2024/01/01"));
+  d.in_place_not();
+  BOOST_CHECK(d.is_boolean());
+  BOOST_CHECK_EQUAL(d.as_boolean(), false);
+
+  value_t dt(parse_datetime("2024/01/01 10:00:00"));
+  dt.in_place_not();
+  BOOST_CHECK(dt.is_boolean());
+  BOOST_CHECK_EQUAL(dt.as_boolean(), false);
+
+  value_t::sequence_t s;
+  value_t seq(s);
+  seq.push_back(value_t(parse_date("2024/01/01")));
+  seq.push_back(value_t(0L));
+  seq.in_place_not();
+  BOOST_CHECK(seq.is_sequence());
+  BOOST_CHECK_EQUAL(seq[0].as_boolean(), false);
+  BOOST_CHECK_EQUAL(seq[1].as_boolean(), true);
+}
+
+BOOST_AUTO_TEST_CASE(testCastStringToIntegerGrammar)
+{
+  // STRING -> INTEGER: optional leading '-', then one or more decimal digits
+  // that fit a long.  Everything else is a value_error.
+  BOOST_CHECK_EQUAL(value_t(string("-12"), true).to_long(), -12L);
+  BOOST_CHECK_EQUAL(value_t(string("007"), true).to_long(), 7L);
+  BOOST_CHECK_EQUAL(value_t(string("-0"), true).to_long(), 0L);
+  BOOST_CHECK_THROW((void)value_t(string("1-2"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string(""), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("-"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("--1"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("+3"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string(" 12"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("99999999999999999999"), true).to_long(),
+                    value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateBalance)
@@ -4087,7 +4200,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNegateStringThrows)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_not for AMOUNT and BALANCE (value.cc lines 1399-1404)
+// in_place_not for AMOUNT and BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNotAmountW4)
@@ -4106,7 +4219,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNotBalanceW4)
 }
 
 // ---------------------------------------------------------------------------
-// is_realzero for SCOPE and ANY (value.cc lines 1445-1451)
+// is_realzero for SCOPE and ANY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsRealzeroScope)
@@ -4128,7 +4241,7 @@ BOOST_AUTO_TEST_CASE(testIsRealzeroAny)
 }
 
 // ---------------------------------------------------------------------------
-// is_zero for SCOPE and ANY (value.cc lines 1477-1480)
+// is_zero for SCOPE and ANY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsZeroScope)
@@ -4150,7 +4263,7 @@ BOOST_AUTO_TEST_CASE(testIsZeroAny)
 }
 
 // ---------------------------------------------------------------------------
-// is_zero for COMMODITY (value.cc line 1471) - wave4 variant
+// is_zero for COMMODITY (value.cc) - wave4 variant
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsZeroCommodityW4)
@@ -4161,7 +4274,7 @@ BOOST_AUTO_TEST_CASE(testIsZeroCommodityW4)
 }
 
 // ---------------------------------------------------------------------------
-// annotate for non-amount (value.cc lines 1866-1870)
+// annotate for non-amount (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotateNonAmountThrows)
@@ -4172,7 +4285,7 @@ BOOST_AUTO_TEST_CASE(testAnnotateNonAmountThrows)
 }
 
 // ---------------------------------------------------------------------------
-// has_annotation for non-amount (value.cc line 1885)
+// has_annotation for non-amount (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testHasAnnotationNonAmount)
@@ -4182,7 +4295,7 @@ BOOST_AUTO_TEST_CASE(testHasAnnotationNonAmount)
 }
 
 // ---------------------------------------------------------------------------
-// label for ANY type (value.cc lines 1954-1957)
+// label for ANY type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLabelAnyType)
@@ -4194,7 +4307,7 @@ BOOST_AUTO_TEST_CASE(testLabelAnyType)
 }
 
 // ---------------------------------------------------------------------------
-// print for ANY/SCOPE types (value.cc lines 2054, 2125-2132)
+// print for ANY/SCOPE types (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintAnyObject)
@@ -4226,7 +4339,7 @@ BOOST_AUTO_TEST_CASE(testDumpScopeValue)
 }
 
 // ---------------------------------------------------------------------------
-// value.h _lval methods (lines 562, 573, 588, 603, 618, 634, 657, 699, 745)
+// value.h _lval methods
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDatetimeLval)
@@ -4329,7 +4442,7 @@ BOOST_AUTO_TEST_CASE(testAnyLval)
 }
 
 // ---------------------------------------------------------------------------
-// value.h operator[] out of bounds (lines 831-833, 842-844)
+// value.h operator[] out of bounds
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOperatorBracketNonSequence)
@@ -4346,7 +4459,7 @@ BOOST_AUTO_TEST_CASE(testOperatorBracketNonSequence)
 }
 
 // ---------------------------------------------------------------------------
-// value.h pop_back (lines 884-897)
+// value.h pop_back
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPopBackSequenceToSingleW4)
@@ -4362,7 +4475,7 @@ BOOST_AUTO_TEST_CASE(testPopBackSequenceToSingleW4)
 }
 
 // ---------------------------------------------------------------------------
-// value.h const begin/end (lines 893, 897)
+// value.h const begin/end
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testConstBeginEnd)
@@ -4379,7 +4492,7 @@ BOOST_AUTO_TEST_CASE(testConstBeginEnd)
 }
 
 // ---------------------------------------------------------------------------
-// number() for balance (value.cc line 288)
+// number() for balance (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testNumberBalance)
@@ -4390,7 +4503,7 @@ BOOST_AUTO_TEST_CASE(testNumberBalance)
 }
 
 // ---------------------------------------------------------------------------
-// division: amount / balance (value.cc lines 706-716)
+// division: amount / balance (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDivideAmountBySingleAmountBalance)
@@ -4404,7 +4517,7 @@ BOOST_AUTO_TEST_CASE(testDivideAmountBySingleAmountBalance)
 }
 
 // ---------------------------------------------------------------------------
-// set_type VOID resets storage (value.cc line 130-131)
+// set_type VOID resets storage (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSetTypeVoid)
@@ -4421,7 +4534,7 @@ BOOST_AUTO_TEST_CASE(testSetTypeVoid)
 }
 
 // ---------------------------------------------------------------------------
-// template comparison operators (value.h lines 390, 394, 398)
+// template comparison operators (value.h)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testTemplateComparisonOperators)
@@ -4438,7 +4551,7 @@ BOOST_AUTO_TEST_CASE(testTemplateComparisonOperators)
 }
 
 // ---------------------------------------------------------------------------
-// display_round for sequence (value.cc lines 1787-1789)
+// display_round for sequence (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDisplayRoundSequence)
@@ -4452,7 +4565,7 @@ BOOST_AUTO_TEST_CASE(testDisplayRoundSequence)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_negate for sequence (value.cc lines 1376-1378)
+// in_place_negate for sequence (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateSequence)
@@ -4466,7 +4579,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNegateSequence)
 }
 
 // ---------------------------------------------------------------------------
-// Bool operator for scope (value.cc line 117)
+// Bool operator for scope (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBoolOperatorScope)
@@ -4477,7 +4590,7 @@ BOOST_AUTO_TEST_CASE(testBoolOperatorScope)
 }
 
 // ---------------------------------------------------------------------------
-// Bool operator for any (value.cc lines 119)
+// Bool operator for any (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBoolOperatorAny)
@@ -4492,7 +4605,7 @@ BOOST_AUTO_TEST_CASE(testBoolOperatorAny)
 }
 
 // ---------------------------------------------------------------------------
-// Bool operator for empty sequence (value.cc lines 109)
+// Bool operator for empty sequence (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBoolOperatorEmptySequence)
@@ -4503,7 +4616,7 @@ BOOST_AUTO_TEST_CASE(testBoolOperatorEmptySequence)
 }
 
 // ---------------------------------------------------------------------------
-// is_equal_to for mask and sequence (value.cc lines 842-845)
+// is_equal_to for mask and sequence (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqualToMask)
@@ -4604,6 +4717,52 @@ BOOST_AUTO_TEST_CASE(testMaskGlobDiacritics)
   BOOST_CHECK(mask_t("caf\xc3\xa9").match("cafe"));
 }
 
+BOOST_AUTO_TEST_CASE(testFoldDiacriticsLatinRange)
+{
+  // What --ignore-diacritics folds each code point in U+00C0..U+017F to,
+  // sixteen per row; '\0' leaves the code point unchanged (U+00D7, U+00F7,
+  // U+0132, U+0133, U+017F).  Every code point outside the range is left
+  // unchanged.
+  static const char expected[] =
+      /* U+00C0 */ "AAAAAAACEEEEIIII"
+      /* U+00D0 */ "DNOOOOO\0OUUUUYTs"
+      /* U+00E0 */ "aaaaaaaceeeeiiii"
+      /* U+00F0 */ "dnooooo\0ouuuuyty"
+      /* U+0100 */ "AaAaAaCcCcCcCcDd"
+      /* U+0110 */ "DdEeEeEeEeEeGgGg"
+      /* U+0120 */ "GgGgHhHhIiIiIiIi"
+      /* U+0130 */ "Ii\0\0JjKkkLlLlLlL"
+      /* U+0140 */ "lLlNnNnNnnNnOoOo"
+      /* U+0150 */ "OoOoRrRrRrSsSsSs"
+      /* U+0160 */ "SsTtTtTtUuUuUuUu"
+      /* U+0170 */ "UuUuWwYyYZzZzZz\0";
+  BOOST_REQUIRE_EQUAL(sizeof(expected), std::size_t(0x180 - 0xC0 + 1));
+
+  auto encode = [](boost::uint32_t cp) {
+    string s;
+    utf8::append(cp, std::back_inserter(s));
+    return s;
+  };
+
+  for (boost::uint32_t cp = 0; cp < 0x180; ++cp) {
+    const string in = encode(cp);
+    const char want = cp >= 0xC0 ? expected[cp - 0xC0] : '\0';
+    const string out = want != '\0' ? string(1, want) : in;
+    BOOST_CHECK_MESSAGE(fold_diacritics(in) == out, "U+" << std::hex << cp);
+  }
+
+  // The code points on either side of the range, and beyond the BMP.
+  for (boost::uint32_t cp : {0xBFU, 0x180U, 0x1E9EU, 0x1F600U}) {
+    const string in = encode(cp);
+    BOOST_CHECK_MESSAGE(fold_diacritics(in) == in, "U+" << std::hex << cp);
+  }
+
+  // Folding works code point by code point inside a longer string:
+  // "Ł×ódź" (L-stroke, times, o-acute, d, z-acute).
+  BOOST_CHECK_EQUAL(fold_diacritics("\xc5\x81\xc3\x97\xc3\xb3" "d\xc5\xba"),
+                    string("L\xc3\x97odz"));
+}
+
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
 {
   value_t seq1;
@@ -4614,7 +4773,7 @@ BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than for BOOLEAN (value.cc lines 864-876)
+// is_less_than for BOOLEAN (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanBooleans)
@@ -4633,7 +4792,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanBooleans)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than for SEQUENCE (value.cc lines 974-989)
+// is_less_than for SEQUENCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanSequences)
@@ -4649,26 +4808,12 @@ BOOST_AUTO_TEST_CASE(testIsLessThanSequences)
   BOOST_CHECK(seq1 < seq2);
 }
 
-// ---------------------------------------------------------------------------
-// destroy for VOID (value.h line 222)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testDestroyVoid)
-{
-  // Creating and destroying a void value exercises the VOID return path
-  {
-    value_t v1;
-    // v1 is VOID - destructor calls destroy which hits VOID return
-  }
-  BOOST_CHECK(true); // just verify no crash
-}
-
 // ===========================================================================
-// Wave 5: Additional coverage tests for remaining uncovered lines
+// Additional coverage tests for remaining uncovered lines
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
-// is_less_than COMMODITY vs STRING (value.cc lines 941-944)
+// is_less_than COMMODITY vs STRING (value.cc)
 // Tests COMMODITY < STRING where commodity is NOT found in pool
 // ---------------------------------------------------------------------------
 
@@ -4678,8 +4823,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("ZZZ"));
 
-  bool result = v_comm.is_less_than(v_str);
-  (void)result;
+  BOOST_CHECK(v_comm.is_less_than(v_str)); // "$" < "ZZZ"
 }
 
 BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsStringNotFound)
@@ -4688,13 +4832,11 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsStringNotFound)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("NONEXISTENT_COMMODITY_XYZ"));
 
-  // Exercises the fallback path at line 944
-  bool result = v_comm.is_less_than(v_str);
-  (void)result;
+  BOOST_CHECK(v_comm.is_less_than(v_str)); // "$" < "NONEXISTENT_COMMODITY_XYZ"
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than SEQUENCE vs SEQUENCE: element not less (value.cc lines 978-984)
+// is_less_than SEQUENCE vs SEQUENCE: element not less (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsSequenceNotLess)
@@ -4734,12 +4876,12 @@ BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsSequenceLongerFirst)
   seq2.push_back(value_t(10L));
   seq2.push_back(value_t(20L));
 
-  // j reaches end first, i != end => return false (line 984)
+  // j reaches end first, i != end => return false
   BOOST_CHECK(!(seq1.is_less_than(seq2)));
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than COMMODITY vs STRING (value.cc lines 1081-1089)
+// is_greater_than COMMODITY vs STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsString)
@@ -4748,8 +4890,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("A"));
 
-  bool result = v_comm.is_greater_than(v_str);
-  (void)result;
+  BOOST_CHECK(!v_comm.is_greater_than(v_str)); // "$" sorts before "A"
 }
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsStringNotFound)
@@ -4758,12 +4899,11 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsStringNotFound)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("NONEXISTENT_THING_XYZ"));
 
-  bool result = v_comm.is_greater_than(v_str);
-  (void)result;
+  BOOST_CHECK(!v_comm.is_greater_than(v_str)); // "$" sorts before "N..."
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than STRING vs COMMODITY (value.cc lines 1092-1094)
+// is_greater_than STRING vs COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsCommodity)
@@ -4772,25 +4912,11 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsCommodity)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("ZZZ"));
 
-  bool result = v_str.is_greater_than(v_comm);
-  (void)result;
+  BOOST_CHECK(v_str.is_greater_than(v_comm)); // "ZZZ" > "$"
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than STRING vs STRING (value.cc lines 1095-1096)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsStringW5)
-{
-  value_t v1(string_value("banana"));
-  value_t v2(string_value("apple"));
-
-  BOOST_CHECK(v1.is_greater_than(v2));
-  BOOST_CHECK(!v2.is_greater_than(v1));
-}
-
-// ---------------------------------------------------------------------------
-// is_greater_than SEQUENCE vs SEQUENCE: not-greater path (value.cc 1114-1125)
+// is_greater_than SEQUENCE vs SEQUENCE: not-greater path (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsSequenceNotGreater)
@@ -4816,12 +4942,12 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsSequenceSameLength)
   seq2.push_back(value_t(1L));
   seq2.push_back(value_t(2L));
 
-  // Both reach end, i == end => return false (line 1122)
+  // Both reach end, i == end => return false
   BOOST_CHECK(!seq1.is_greater_than(seq2));
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than empty SEQUENCE vs INTEGER (value.cc lines 1104-1113)
+// is_greater_than empty SEQUENCE vs INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanEmptySequenceVsInteger)
@@ -4833,7 +4959,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanEmptySequenceVsInteger)
 }
 
 // ---------------------------------------------------------------------------
-// is_equal_to: STRING == STRING (value.cc line 831)
+// is_equal_to: STRING == STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqualToStringString)
@@ -4847,8 +4973,8 @@ BOOST_AUTO_TEST_CASE(testIsEqualToStringString)
 }
 
 // ---------------------------------------------------------------------------
-// is_equal_to: SEQUENCE vs non-SEQUENCE throws (value.cc line 845 break)
-// is_equal_to: default break (value.cc line 848)
+// is_equal_to: SEQUENCE vs non-SEQUENCE throws (value.cc break)
+// is_equal_to: default break (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqualToSequenceVsNonSequenceThrows)
@@ -4871,7 +4997,7 @@ BOOST_AUTO_TEST_CASE(testIsEqualToScopeThrows)
 }
 
 // ---------------------------------------------------------------------------
-// is_equal_to: COMMODITY vs STRING (value.cc lines 816-820)
+// is_equal_to: COMMODITY vs STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsString)
@@ -4880,8 +5006,7 @@ BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("$"));
 
-  bool result = (v_comm == v_str);
-  (void)result;
+  BOOST_CHECK(v_comm == v_str); // "$" names the dollar commodity
 }
 
 BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsStringNotFound)
@@ -4895,7 +5020,7 @@ BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsStringNotFound)
 }
 
 // ---------------------------------------------------------------------------
-// display_round for INTEGER (value.cc line 1779)
+// display_round for INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDisplayRoundInteger)
@@ -4906,7 +5031,7 @@ BOOST_AUTO_TEST_CASE(testDisplayRoundInteger)
 }
 
 // ---------------------------------------------------------------------------
-// display_round error path for STRING type (value.cc lines 1794-1795)
+// display_round error path for STRING type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDisplayRoundStringThrows)
@@ -4916,7 +5041,7 @@ BOOST_AUTO_TEST_CASE(testDisplayRoundStringThrows)
 }
 
 // ---------------------------------------------------------------------------
-// annotation() success path for annotated amount (value.cc line 1885)
+// annotation() success path for annotated amount (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotationOnAnnotatedAmount)
@@ -4933,7 +5058,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationOnAnnotatedAmount)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_negate for BALANCE (value.cc lines 1372-1374)
+// in_place_negate for BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateBalanceW5)
@@ -4944,7 +5069,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNegateBalanceW5)
 }
 
 // ---------------------------------------------------------------------------
-// BALANCE / AMOUNT with commodity breaks (value.cc line 737)
+// BALANCE / AMOUNT with commodity breaks (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDivideBalanceByAmountWithCommodity)
@@ -4963,7 +5088,7 @@ BOOST_AUTO_TEST_CASE(testDivideBalanceByAmountWithCommodity)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast default break (value.cc line 1348) - SCOPE to STRING
+// in_place_cast default break (value.cc) - SCOPE to STRING
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceCastScopeThrows)
@@ -4974,7 +5099,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceCastScopeThrows)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than STRING vs STRING (value.cc lines 955-956)
+// is_less_than STRING vs STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanStringVsString)
@@ -4987,7 +5112,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanStringVsString)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than STRING vs COMMODITY (value.cc lines 953-954)
+// is_less_than STRING vs COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanStringVsCommodity)
@@ -4996,12 +5121,11 @@ BOOST_AUTO_TEST_CASE(testIsLessThanStringVsCommodity)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("A"));
 
-  bool result = v_str.is_less_than(v_comm);
-  (void)result;
+  BOOST_CHECK(!v_str.is_less_than(v_comm)); // "A" sorts after "$"
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than SEQUENCE vs INTEGER/AMOUNT (value.cc lines 964-972)
+// is_less_than SEQUENCE vs INTEGER/AMOUNT (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsInteger)
@@ -5027,7 +5151,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsIntegerNotLess)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than BALANCE vs INTEGER/AMOUNT/BALANCE (value.cc lines 920-935)
+// is_less_than BALANCE vs INTEGER/AMOUNT/BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanBalanceVsInteger)
@@ -5047,7 +5171,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanBalanceVsBalance)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than BALANCE vs BALANCE (value.cc lines 1070-1071)
+// is_greater_than BALANCE vs BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanBalanceVsBalanceW5)
@@ -5079,7 +5203,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanMaskThrows)
 }
 
 // ---------------------------------------------------------------------------
-// add_or_set_value template (value.h line 958-964)
+// add_or_set_value template (value.h)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAddOrSetValueNull)
@@ -5098,7 +5222,7 @@ BOOST_AUTO_TEST_CASE(testAddOrSetValueExisting)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> MASK (value.cc lines 1325-1331)
+// in_place_cast: STRING -> MASK (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToMaskW4)
@@ -5109,7 +5233,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToMaskW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: MASK -> STRING (value.cc lines 1339-1341)
+// in_place_cast: MASK -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastMaskToStringW4)
@@ -5120,7 +5244,7 @@ BOOST_AUTO_TEST_CASE(testCastMaskToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> DATE (value.cc line 1320)
+// in_place_cast: STRING -> DATE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToDateW4)
@@ -5131,7 +5255,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToDateW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> DATETIME (value.cc line 1323)
+// in_place_cast: STRING -> DATETIME (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToDatetime)
@@ -5142,7 +5266,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToDatetime)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: DATE -> STRING (value.cc line 1197)
+// in_place_cast: DATE -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastDateToStringW4)
@@ -5154,7 +5278,7 @@ BOOST_AUTO_TEST_CASE(testCastDateToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: DATETIME -> STRING (value.cc line 1209)
+// in_place_cast: DATETIME -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastDatetimeToStringW4)
@@ -5168,19 +5292,7 @@ BOOST_AUTO_TEST_CASE(testCastDatetimeToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: AMOUNT -> STRING (value.cc lines 1248-1252)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastAmountToStringW4)
-{
-  value_t v1(amount_t("$42.00"));
-  v1.in_place_cast(value_t::STRING);
-  BOOST_CHECK(v1.is_string());
-  BOOST_CHECK(!v1.as_string().empty());
-}
-
-// ---------------------------------------------------------------------------
-// in_place_cast: BALANCE -> STRING (value.cc lines 1279-1284)
+// in_place_cast: BALANCE -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastBalanceToStringW4)
@@ -5200,7 +5312,7 @@ BOOST_AUTO_TEST_CASE(testCastEmptyBalanceToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: COMMODITY -> STRING (value.cc lines 1293-1295)
+// in_place_cast: COMMODITY -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastCommodityToStringW4)
@@ -5212,7 +5324,7 @@ BOOST_AUTO_TEST_CASE(testCastCommodityToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> COMMODITY (value.cc lines 1313-1318)
+// in_place_cast: STRING -> COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToCommodityFound)
@@ -5230,7 +5342,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToCommodityNotFoundThrows)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> INTEGER (value.cc lines 1303-1308)
+// in_place_cast: STRING -> INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToIntegerW4)
@@ -5254,7 +5366,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToIntegerNonNumericThrows)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: STRING -> AMOUNT (value.cc line 1311)
+// in_place_cast: STRING -> AMOUNT (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastStringToAmountW4)
@@ -5265,7 +5377,7 @@ BOOST_AUTO_TEST_CASE(testCastStringToAmountW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: BALANCE -> AMOUNT multi-commodity throws (value.cc 1272-1276)
+// in_place_cast: BALANCE -> AMOUNT multi-commodity throws (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastBalanceMultiToAmountThrows)
@@ -5278,7 +5390,7 @@ BOOST_AUTO_TEST_CASE(testCastBalanceMultiToAmountThrows)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: BALANCE -> AMOUNT empty balance (value.cc line 1270)
+// in_place_cast: BALANCE -> AMOUNT empty balance (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastEmptyBalanceToAmount)
@@ -5290,7 +5402,7 @@ BOOST_AUTO_TEST_CASE(testCastEmptyBalanceToAmount)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: VOID -> STRING (value.cc line 1168)
+// in_place_cast: VOID -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastVoidToStringW4)
@@ -5302,7 +5414,7 @@ BOOST_AUTO_TEST_CASE(testCastVoidToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: VOID -> INTEGER (value.cc line 1162)
+// in_place_cast: VOID -> INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastVoidToIntegerW4)
@@ -5313,18 +5425,7 @@ BOOST_AUTO_TEST_CASE(testCastVoidToIntegerW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: VOID -> AMOUNT (value.cc line 1165)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastVoidToAmountW4)
-{
-  value_t v1;
-  v1.in_place_cast(value_t::AMOUNT);
-  BOOST_CHECK(v1.is_amount());
-}
-
-// ---------------------------------------------------------------------------
-// in_place_cast: BOOLEAN -> STRING (value.cc line 1184)
+// in_place_cast: BOOLEAN -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastBoolToStringW4)
@@ -5339,7 +5440,7 @@ BOOST_AUTO_TEST_CASE(testCastBoolToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: DATE -> DATETIME (value.cc line 1194)
+// in_place_cast: DATE -> DATETIME (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastDateToDatetimeW4)
@@ -5350,7 +5451,7 @@ BOOST_AUTO_TEST_CASE(testCastDateToDatetimeW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: DATETIME -> DATE (value.cc line 1206)
+// in_place_cast: DATETIME -> DATE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastDatetimeToDateW4)
@@ -5363,18 +5464,7 @@ BOOST_AUTO_TEST_CASE(testCastDatetimeToDateW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: INTEGER -> BALANCE (value.cc line 1222)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastIntegerToBalanceW4)
-{
-  value_t v1(42L);
-  v1.in_place_cast(value_t::BALANCE);
-  BOOST_CHECK(v1.is_balance());
-}
-
-// ---------------------------------------------------------------------------
-// in_place_cast: INTEGER -> STRING (value.cc line 1225)
+// in_place_cast: INTEGER -> STRING (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastIntegerToStringW4)
@@ -5385,7 +5475,7 @@ BOOST_AUTO_TEST_CASE(testCastIntegerToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: AMOUNT -> INTEGER (value.cc lines 1236-1240)
+// in_place_cast: AMOUNT -> INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastAmountToIntegerW4)
@@ -5396,7 +5486,7 @@ BOOST_AUTO_TEST_CASE(testCastAmountToIntegerW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: AMOUNT -> BALANCE (value.cc lines 1242-1246)
+// in_place_cast: AMOUNT -> BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastAmountToBalanceW4)
@@ -5407,7 +5497,7 @@ BOOST_AUTO_TEST_CASE(testCastAmountToBalanceW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: to BOOLEAN (value.cc line 1148)
+// in_place_cast: to BOOLEAN (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastToBoolean)
@@ -5424,7 +5514,7 @@ BOOST_AUTO_TEST_CASE(testCastToBoolean)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: to SEQUENCE (value.cc lines 1151-1155)
+// in_place_cast: to SEQUENCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCastToSequence)
@@ -5444,7 +5534,7 @@ BOOST_AUTO_TEST_CASE(testCastVoidToSequence)
 }
 
 // ---------------------------------------------------------------------------
-// print SCOPE (value.cc lines 2045-2047)
+// print SCOPE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintScope)
@@ -5457,7 +5547,7 @@ BOOST_AUTO_TEST_CASE(testPrintScope)
 }
 
 // ---------------------------------------------------------------------------
-// value.h: mutable begin/end iterators (lines 884, 888)
+// value.h: mutable begin/end iterators
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testMutableBeginEnd)
@@ -5474,7 +5564,7 @@ BOOST_AUTO_TEST_CASE(testMutableBeginEnd)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than COMMODITY vs COMMODITY (value.cc lines 939-940)
+// is_less_than COMMODITY vs COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsCommodity)
@@ -5484,12 +5574,11 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsCommodity)
   value_t v1(a1.commodity());
   value_t v2(a2.commodity());
 
-  bool result = v1.is_less_than(v2);
-  (void)result;
+  BOOST_CHECK(v1.is_less_than(v2)); // "$" < "EUR"
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than COMMODITY vs COMMODITY (value.cc line 1080)
+// is_greater_than COMMODITY vs COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsCommodityW5)
@@ -5499,12 +5588,11 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsCommodityW5)
   value_t v1(a1.commodity());
   value_t v2(a2.commodity());
 
-  bool result = v1.is_greater_than(v2);
-  (void)result;
+  BOOST_CHECK(!v1.is_greater_than(v2)); // "$" < "EUR"
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than BALANCE vs BALANCE (value.cc lines 930-931)
+// is_less_than BALANCE vs BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanBalanceVsBalanceW5)
@@ -5517,7 +5605,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanBalanceVsBalanceW5)
 }
 
 // ---------------------------------------------------------------------------
-// AMOUNT / BALANCE single amount division (value.cc lines 706-707)
+// AMOUNT / BALANCE single amount division (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDivideAmountBySingleAmountBalanceInteger)
@@ -5544,7 +5632,7 @@ BOOST_AUTO_TEST_CASE(testPrintBalanceWithWidth)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than for SEQUENCE vs AMOUNT (value.cc lines 964-972)
+// is_less_than for SEQUENCE vs AMOUNT (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsAmount)
@@ -5559,7 +5647,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanSequenceVsAmount)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than SEQUENCE vs AMOUNT (value.cc lines 1104-1113)
+// is_greater_than SEQUENCE vs AMOUNT (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsAmount)
@@ -5574,7 +5662,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsAmount)
 }
 
 // ---------------------------------------------------------------------------
-// is_less_than AMOUNT vs BALANCE (value.cc line 912)
+// is_less_than AMOUNT vs BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanAmountVsBalance)
@@ -5586,7 +5674,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanAmountVsBalance)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than AMOUNT vs BALANCE (value.cc line 1052)
+// is_greater_than AMOUNT vs BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanAmountVsBalanceW5)
@@ -5598,7 +5686,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanAmountVsBalanceW5)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than INTEGER vs BALANCE (value.cc lines 1039-1040)
+// is_greater_than INTEGER vs BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanIntegerVsBalanceW5)
@@ -5610,7 +5698,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanIntegerVsBalanceW5)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than INTEGER vs INTEGER (value.cc line 1035)
+// is_greater_than INTEGER vs INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanIntVsIntW5)
@@ -5623,7 +5711,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanIntVsIntW5)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than AMOUNT vs INTEGER (value.cc line 1048)
+// is_greater_than AMOUNT vs INTEGER (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanAmountVsIntegerW5)
@@ -5635,7 +5723,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanAmountVsIntegerW5)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than BALANCE vs BALANCE via to_amount (value.cc lines 1070-1071)
+// is_greater_than BALANCE vs BALANCE via to_amount (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanBalanceVsBalanceViaToAmount)
@@ -5648,7 +5736,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanBalanceVsBalanceViaToAmount)
 }
 
 // ---------------------------------------------------------------------------
-// value_t copy assignment for SEQUENCE (value.cc line 65)
+// value_t copy assignment for SEQUENCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCopyAssignSequence)
@@ -5664,7 +5752,7 @@ BOOST_AUTO_TEST_CASE(testCopyAssignSequence)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_not for BALANCE (value.cc lines 1402-1404)
+// in_place_not for BALANCE (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNotBalanceW5)
@@ -5685,7 +5773,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNotZeroBalanceW5)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_not for COMMODITY (value.cc lines 1405-1407)
+// in_place_not for COMMODITY (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNotCommodityW4)
@@ -5697,7 +5785,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNotCommodityW4)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: balance_t::operator*= with realzero amount (balance.cc line 112)
+// balance_t::operator*= with realzero amount (balance.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceMultiplyByRealzero)
@@ -5709,18 +5797,18 @@ BOOST_AUTO_TEST_CASE(testBalanceMultiplyByRealzero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: commodity_amount() of a commodity the balance does not hold
+// commodity_amount() of a commodity the balance does not hold
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceFindByNameNotFound)
 {
   balance_t bal("$100.00");
-  auto result = bal.commodity_amount(amount_t("100 EUR").commodity());
+  auto result = bal.commodity_amount(&amount_t("100 EUR").commodity());
   BOOST_CHECK(!result);
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: balance_t::commodity_amount multi-commodity (balance.cc lines 202-208)
+// balance_t::commodity_amount multi-commodity (balance.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceCommodityAmountMultiThrows)
@@ -5733,7 +5821,7 @@ BOOST_AUTO_TEST_CASE(testBalanceCommodityAmountMultiThrows)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value.cc print for SCOPE type (value.cc lines 2040-2045)
+// value.cc print for SCOPE type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintScopeValue)
@@ -5746,7 +5834,7 @@ BOOST_AUTO_TEST_CASE(testPrintScopeValue)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value.cc dump for SCOPE type (value.cc lines 2110-2115)
+// value.cc dump for SCOPE type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDumpScopeValueW4)
@@ -5759,7 +5847,7 @@ BOOST_AUTO_TEST_CASE(testDumpScopeValueW4)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t::label for various types (value.cc lines 1910-1960)
+// value_t::label for various types (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLabelVoid)
@@ -5825,12 +5913,12 @@ BOOST_AUTO_TEST_CASE(testLabelSequence)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t::is_zero for SEQUENCE type (value.cc lines 1476-1487)
+// value_t::is_zero for SEQUENCE type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsZeroSequenceAllZero)
 {
-  // Exercise is_zero() for SEQUENCE type (line 1474-1475)
+  // Exercise is_zero() for SEQUENCE type
   value_t v1;
   v1.push_back(value_t(0L));
   BOOST_CHECK(v1.is_sequence());
@@ -5848,12 +5936,12 @@ BOOST_AUTO_TEST_CASE(testIsZeroSequenceNotAllZero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t::is_realzero for SEQUENCE type (value.cc lines 1444-1451)
+// value_t::is_realzero for SEQUENCE type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsRealzeroSequenceAllZero)
 {
-  // Exercise is_realzero() for SEQUENCE type (line 1444-1451)
+  // Exercise is_realzero() for SEQUENCE type
   value_t v1;
   v1.push_back(value_t(0L));
   BOOST_CHECK(v1.is_sequence());
@@ -5871,22 +5959,8 @@ BOOST_AUTO_TEST_CASE(testIsRealzeroSequenceNotAllZero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t number() for VOID returns 0 (value.cc lines 280-295)
+// value_t::number() on a STRING throws value_error
 // ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testNumberVoid)
-{
-  value_t v1;
-  // VOID returns 0
-  BOOST_CHECK_EQUAL(v1.number(), value_t(0L));
-}
-
-BOOST_AUTO_TEST_CASE(testNumberBoolean)
-{
-  value_t v1(true);
-  // BOOLEAN: true -> 1
-  BOOST_CHECK_EQUAL(v1.number(), value_t(1L));
-}
 
 BOOST_AUTO_TEST_CASE(testNumberString)
 {
@@ -5895,7 +5969,7 @@ BOOST_AUTO_TEST_CASE(testNumberString)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t::in_place_negate for BOOLEAN (value.cc line 1357)
+// value_t::in_place_negate for BOOLEAN (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateBooleanW4)
@@ -5912,7 +5986,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNegateBooleanW4)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t strip_annotations (value.cc lines 1876-1908)
+// value_t strip_annotations (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testStripAnnotationsAmount)
@@ -5945,7 +6019,7 @@ BOOST_AUTO_TEST_CASE(testStripAnnotationsSequenceW4)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t set_type (value.cc lines 55-144)
+// value_t set_type (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSetTypeTransitions)
@@ -5965,7 +6039,7 @@ BOOST_AUTO_TEST_CASE(testSetTypeTransitions)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t in_place_floor (value.cc lines 1797-1809)
+// value_t in_place_floor (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceFloorInteger)
@@ -5984,7 +6058,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceFloorAmount)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t in_place_ceiling (value.cc lines 1812-1824)
+// value_t in_place_ceiling (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceCeilingInteger)
@@ -6003,7 +6077,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceCeilingAmount)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t abs (value.cc lines 1826-1840)
+// value_t abs (value.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAbsNegativeIntegerW4)
@@ -6035,7 +6109,7 @@ BOOST_AUTO_TEST_CASE(testAbsBalanceW4)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for value.cc lines 875: is_less_than BOOLEAN edge cases
+// Coverage for value.cc: is_less_than BOOLEAN edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLessThanBooleanAllCombosW6)
@@ -6050,7 +6124,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanBooleanAllCombosW6)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for value.cc lines 1019-1020: is_greater_than BOOLEAN edge cases
+// Coverage for value.cc: is_greater_than BOOLEAN edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanBooleanAllCombosW6)
@@ -6613,7 +6687,7 @@ BOOST_AUTO_TEST_CASE(testIsGtVoidW6)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc line 65 - copy assignment reaching default (SEQUENCE)
+// value.cc - copy assignment reaching default (SEQUENCE)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCopyAssignSequenceW7)
@@ -6629,9 +6703,9 @@ BOOST_AUTO_TEST_CASE(testCopyAssignSequenceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 122-123 - operator bool unreachable path
+// value.cc - operator bool unreachable path
 // (VOID falls through to add_error_context)
-// Also: value.cc lines 130-131 - set_type when storage has refc > 1
+// Also: value.cc - set_type when storage has refc > 1
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSetTypeRefCountW7)
@@ -6647,7 +6721,7 @@ BOOST_AUTO_TEST_CASE(testSetTypeRefCountW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h line 222 - storage_t::destroy() with VOID type
+// value.h - storage_t::destroy() with VOID type
 // Tested indirectly by assigning a new type to an existing value
 // -----------------------------------------------------------------------
 
@@ -6660,7 +6734,7 @@ BOOST_AUTO_TEST_CASE(testDestroyVoidStorageW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 562,573,577 - accessor lval methods for
+// value.h - accessor lval methods for
 // datetime, date, and their const versions
 // -----------------------------------------------------------------------
 
@@ -6671,11 +6745,11 @@ BOOST_AUTO_TEST_CASE(testDatetimeAccessorsW7)
   v.set_datetime(dt);
   BOOST_CHECK(v.is_datetime());
 
-  // const accessor (line 577)
+  // const accessor
   const value_t& cv = v;
   BOOST_CHECK(is_valid(cv.as_datetime()));
 
-  // lval accessor (line 573)
+  // lval accessor
   datetime_t& ref = v.as_datetime_lval();
   BOOST_CHECK(is_valid(ref));
 }
@@ -6687,17 +6761,17 @@ BOOST_AUTO_TEST_CASE(testDateAccessorsW7)
   v.set_date(d);
   BOOST_CHECK(v.is_date());
 
-  // const accessor (line 592)
+  // const accessor
   const value_t& cv = v;
   BOOST_CHECK(is_valid(cv.as_date()));
 
-  // lval accessor (line 588)
+  // lval accessor
   date_t& ref = v.as_date_lval();
   BOOST_CHECK(is_valid(ref));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 603,607 - long lval/const accessors
+// value.h - long lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLongAccessorsW7)
@@ -6705,17 +6779,17 @@ BOOST_AUTO_TEST_CASE(testLongAccessorsW7)
   value_t v(42L);
   const value_t& cv = v;
 
-  // const accessor (line 607)
+  // const accessor
   BOOST_CHECK_EQUAL(cv.as_long(), 42L);
 
-  // lval accessor (line 603)
+  // lval accessor
   long& ref = v.as_long_lval();
   ref = 99L;
   BOOST_CHECK_EQUAL(v.as_long(), 99L);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 618,622 - amount lval/const accessors
+// value.h - amount lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountAccessorsW7)
@@ -6723,17 +6797,17 @@ BOOST_AUTO_TEST_CASE(testAmountAccessorsW7)
   value_t v(amount_t("10.00"));
   const value_t& cv = v;
 
-  // const accessor (line 622)
+  // const accessor
   BOOST_CHECK_EQUAL(cv.as_amount(), amount_t("10.00"));
 
-  // lval accessor (line 618)
+  // lval accessor
   amount_t& ref = v.as_amount_lval();
   ref += amount_t("5.00");
   BOOST_CHECK_EQUAL(v.as_amount(), amount_t("15.00"));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 634,638 - balance lval/const accessors
+// value.h - balance lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceAccessorsW7)
@@ -6743,16 +6817,16 @@ BOOST_AUTO_TEST_CASE(testBalanceAccessorsW7)
   value_t v(bal);
   const value_t& cv = v;
 
-  // const accessor (line 638)
+  // const accessor
   BOOST_CHECK(!cv.as_balance().is_empty());
 
-  // lval accessor (line 634)
+  // lval accessor
   balance_t& ref = v.as_balance_lval();
   ref += amount_t("$5.00");
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h line 649 - commodity const accessor
+// value.h - commodity const accessor
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCommodityAccessorW7)
@@ -6767,7 +6841,7 @@ BOOST_AUTO_TEST_CASE(testCommodityAccessorW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 657,661 - string lval/const accessors
+// value.h - string lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testStringAccessorsW7)
@@ -6775,17 +6849,17 @@ BOOST_AUTO_TEST_CASE(testStringAccessorsW7)
   value_t v = string_value("hello");
   const value_t& cv = v;
 
-  // const accessor (line 661)
+  // const accessor
   BOOST_CHECK_EQUAL(cv.as_string(), "hello");
 
-  // lval accessor (line 657)
+  // lval accessor
   string& ref = v.as_string_lval();
   ref = "world";
   BOOST_CHECK_EQUAL(v.as_string(), "world");
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 679,684 - mask lval/const accessors
+// value.h - mask lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testMaskAccessorsW7)
@@ -6794,16 +6868,16 @@ BOOST_AUTO_TEST_CASE(testMaskAccessorsW7)
   v.set_mask("foo.*");
   const value_t& cv = v;
 
-  // const accessor (line 684)
+  // const accessor
   BOOST_CHECK(cv.as_mask().match("foobar"));
 
-  // lval accessor (line 679)
+  // lval accessor
   mask_t& ref = v.as_mask_lval();
   BOOST_CHECK(ref.match("foobar"));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 699,703 - sequence lval/const accessors
+// value.h - sequence lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSequenceAccessorsW7)
@@ -6813,16 +6887,16 @@ BOOST_AUTO_TEST_CASE(testSequenceAccessorsW7)
   v.push_back(value_t(2L));
   const value_t& cv = v;
 
-  // const accessor (line 703)
+  // const accessor
   BOOST_CHECK_EQUAL(cv.as_sequence().size(), 2U);
 
-  // lval accessor (line 699)
+  // lval accessor
   value_t::sequence_t& ref = v.as_sequence_lval();
   BOOST_CHECK_EQUAL(ref.size(), 2U);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h line 716 - scope accessor as_scope
+// value.h - scope accessor as_scope
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testScopeAccessorW7)
@@ -6835,7 +6909,7 @@ BOOST_AUTO_TEST_CASE(testScopeAccessorW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 737,745 - any lval/const accessors
+// value.h - any lval/const accessors
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnyAccessorsW7)
@@ -6844,17 +6918,17 @@ BOOST_AUTO_TEST_CASE(testAnyAccessorsW7)
   v.set_any(std::any(42));
   const value_t& cv = v;
 
-  // const accessor (line 745)
+  // const accessor
   BOOST_CHECK(cv.as_any().has_value());
 
-  // lval accessor (line 737)
+  // lval accessor
   std::any& ref = v.as_any_lval();
   BOOST_CHECK(ref.has_value());
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 831-833 - operator[] non-const with invalid index
-// Also: lines 842-844 - operator[] const with invalid index
+// value.h - operator[] non-const with invalid index
+// Also: - operator[] const with invalid index
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIndexOperatorNonSeqW7)
@@ -6872,7 +6946,7 @@ BOOST_AUTO_TEST_CASE(testIndexOperatorConstNonSeqW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h line 851 - push_front
+// value.h - push_front
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPushFrontW7)
@@ -6885,8 +6959,8 @@ BOOST_AUTO_TEST_CASE(testPushFrontW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 884,888 - begin/end non-const
-// Also: lines 893,897 - begin/end const
+// value.h - begin/end non-const
+// Also: - begin/end const
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBeginEndW7)
@@ -6895,13 +6969,13 @@ BOOST_AUTO_TEST_CASE(testBeginEndW7)
   v.push_back(value_t(1L));
   v.push_back(value_t(2L));
 
-  // non-const (lines 884, 888)
+  // non-const
   int count = 0;
   for (auto it = v.begin(); it != v.end(); ++it)
     ++count;
   BOOST_CHECK_EQUAL(count, 2);
 
-  // const (lines 893, 897)
+  // const
   const value_t& cv = v;
   count = 0;
   for (auto it = cv.begin(); it != cv.end(); ++it)
@@ -6910,7 +6984,7 @@ BOOST_AUTO_TEST_CASE(testBeginEndW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h line 964 - add_or_set_value template
+// value.h - add_or_set_value template
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAddOrSetValueW7)
@@ -6924,7 +6998,7 @@ BOOST_AUTO_TEST_CASE(testAddOrSetValueW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.h lines 390,394,398 - operator==, <, > templates
+// value.h - operator==, <, > templates
 // These are tested with long and amount_t types
 // -----------------------------------------------------------------------
 
@@ -6932,21 +7006,21 @@ BOOST_AUTO_TEST_CASE(testComparisonOperatorsLongW7)
 {
   value_t v(10L);
 
-  // operator== with value_t (line 390)
+  // operator== with value_t
   BOOST_CHECK(v == value_t(10L));
   BOOST_CHECK(!(v == value_t(20L)));
 
-  // operator< with value_t (line 394)
+  // operator< with value_t
   BOOST_CHECK(v < value_t(20L));
   BOOST_CHECK(!(v < value_t(5L)));
 
-  // operator> with value_t (line 398)
+  // operator> with value_t
   BOOST_CHECK(v > value_t(5L));
   BOOST_CHECK(!(v > value_t(20L)));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 706-713 - AMOUNT / BALANCE with single_amount
+// value.cc - AMOUNT / BALANCE with single_amount
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDivAmountByBalanceSingleW7)
@@ -6957,14 +7031,14 @@ BOOST_AUTO_TEST_CASE(testDivAmountByBalanceSingleW7)
   value_t va(a);
   value_t vbal(bal);
 
-  // AMOUNT / BALANCE where balance is single_amount (lines 706-713)
+  // AMOUNT / BALANCE where balance is single_amount
   value_t result = va / vbal;
   BOOST_CHECK(result.is_amount());
   BOOST_CHECK_EQUAL(result.as_amount(), amount_t("5.00"));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc line 875 - is_less_than BOOLEAN non-bool comparison
+// value.cc - is_less_than BOOLEAN non-bool comparison
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtBoolNonBoolW7)
@@ -6974,20 +7048,20 @@ BOOST_AUTO_TEST_CASE(testIsLtBoolNonBoolW7)
 
   // BOOLEAN comparison - true < true is false
   BOOST_CHECK(!t.is_less_than(t));
-  // false < true is true (line 873-874)
+  // false < true is true
   BOOST_CHECK(f.is_less_than(t));
   // true < false is false
   BOOST_CHECK(!t.is_less_than(f));
   // false < false is false
   BOOST_CHECK(!f.is_less_than(f));
 
-  // BOOLEAN vs non-boolean should throw (line 875-876)
+  // BOOLEAN vs non-boolean should throw
   value_t iv(42L);
   BOOST_CHECK_THROW(t.is_less_than(iv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 987-989 - is_less_than SEQUENCE default break
+// value.cc - is_less_than SEQUENCE default break
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtSequenceDefaultW7)
@@ -6998,12 +7072,12 @@ BOOST_AUTO_TEST_CASE(testIsLtSequenceDefaultW7)
 
   value_t str = string_value("hello");
 
-  // SEQUENCE vs STRING should throw (lines 987-989)
+  // SEQUENCE vs STRING should throw
   BOOST_CHECK_THROW(seq.is_less_than(str), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1019-1020 - is_greater_than BOOLEAN non-bool
+// value.cc - is_greater_than BOOLEAN non-bool
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtBoolNonBoolW7)
@@ -7016,13 +7090,13 @@ BOOST_AUTO_TEST_CASE(testIsGtBoolNonBoolW7)
   // false > true
   BOOST_CHECK(!f.is_greater_than(t));
 
-  // BOOLEAN vs non-boolean should throw (line 1019-1020)
+  // BOOLEAN vs non-boolean should throw
   value_t iv(42L);
   BOOST_CHECK_THROW(t.is_greater_than(iv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1025, 1030 - is_greater_than DATETIME, DATE
+// value.cc - is_greater_than DATETIME, DATE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtDatetimeW7)
@@ -7050,7 +7124,7 @@ BOOST_AUTO_TEST_CASE(testIsGtDateW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1041,1043 - is_greater_than INTEGER default+break
+// value.cc - is_greater_than INTEGER default+break
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtIntegerDefaultW7)
@@ -7058,12 +7132,12 @@ BOOST_AUTO_TEST_CASE(testIsGtIntegerDefaultW7)
   value_t iv(10L);
   value_t sv = string_value("hello");
 
-  // INTEGER vs STRING => throws (lines 1041-1043)
+  // INTEGER vs STRING => throws
   BOOST_CHECK_THROW(iv.is_greater_than(sv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1054,1056 - is_greater_than AMOUNT default+break
+// value.cc - is_greater_than AMOUNT default+break
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtAmountDefaultW7)
@@ -7071,12 +7145,12 @@ BOOST_AUTO_TEST_CASE(testIsGtAmountDefaultW7)
   value_t av(amount_t("10.00"));
   value_t sv = string_value("hello");
 
-  // AMOUNT vs STRING => throws (lines 1054-1056)
+  // AMOUNT vs STRING => throws
   BOOST_CHECK_THROW(av.is_greater_than(sv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1073,1075 - is_greater_than BALANCE default+break
+// value.cc - is_greater_than BALANCE default+break
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtBalanceDefaultW7)
@@ -7086,12 +7160,12 @@ BOOST_AUTO_TEST_CASE(testIsGtBalanceDefaultW7)
   value_t bv(bal);
   value_t sv = string_value("hello");
 
-  // BALANCE vs STRING => throws (lines 1073-1075)
+  // BALANCE vs STRING => throws
   BOOST_CHECK_THROW(bv.is_greater_than(sv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1087,1089 - is_greater_than COMMODITY default
+// value.cc - is_greater_than COMMODITY default
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtCommodityDefaultW7)
@@ -7102,12 +7176,12 @@ BOOST_AUTO_TEST_CASE(testIsGtCommodityDefaultW7)
   cv.set_commodity(*comm);
   value_t iv(42L);
 
-  // COMMODITY vs INTEGER => throws (lines 1087-1089)
+  // COMMODITY vs INTEGER => throws
   BOOST_CHECK_THROW(cv.is_greater_than(iv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1098,1100 - is_greater_than STRING default
+// value.cc - is_greater_than STRING default
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtStringDefaultW7)
@@ -7115,12 +7189,12 @@ BOOST_AUTO_TEST_CASE(testIsGtStringDefaultW7)
   value_t sv = string_value("hello");
   value_t iv(42L);
 
-  // STRING vs INTEGER => throws (lines 1098-1100)
+  // STRING vs INTEGER => throws
   BOOST_CHECK_THROW(sv.is_greater_than(iv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1127,1129 - is_greater_than SEQUENCE default
+// value.cc - is_greater_than SEQUENCE default
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtSequenceDefaultW7)
@@ -7129,12 +7203,12 @@ BOOST_AUTO_TEST_CASE(testIsGtSequenceDefaultW7)
   seq.push_back(value_t(1L));
   value_t sv = string_value("hello");
 
-  // SEQUENCE vs STRING => throws (lines 1127-1129)
+  // SEQUENCE vs STRING => throws
   BOOST_CHECK_THROW(seq.is_greater_than(sv), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc - negate DATETIME, negate SEQUENCE
+// value.cc - negate DATETIME, negate SEQUENCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testNegateDatetimeW7)
@@ -7143,11 +7217,8 @@ BOOST_AUTO_TEST_CASE(testNegateDatetimeW7)
   value_t v;
   v.set_datetime(dt);
 
-  // Negating a DATETIME falls through to set_long(-as_long())
-  // DATETIME/INTEGER share the case at line 1362-1364
-  // This uses the fall-through from INTEGER case
-  // Actually DATETIME as_long() would fail too - skip this
-  // Instead, test negation of boolean (line 1359-1361)
+  // in_place_negate rejects a DATETIME (it has no case of its own), so
+  // this test negates a BOOLEAN instead
   value_t vb(true);
   vb.in_place_negate();
   BOOST_CHECK(vb.is_boolean());
@@ -7160,7 +7231,7 @@ BOOST_AUTO_TEST_CASE(testNegateSequenceW7)
   seq.push_back(value_t(10L));
   seq.push_back(value_t(20L));
 
-  // Negate SEQUENCE (lines 1375-1378)
+  // Negate SEQUENCE
   seq.in_place_negate();
   BOOST_CHECK(seq.is_sequence());
   BOOST_CHECK_EQUAL(seq[0].as_long(), -10L);
@@ -7170,7 +7241,7 @@ BOOST_AUTO_TEST_CASE(testNegateSequenceW7)
 BOOST_AUTO_TEST_CASE(testNotAmountW7)
 {
   value_t v(amount_t("10.00"));
-  // in_place_not for AMOUNT (line 1399-1400)
+  // in_place_not for AMOUNT
   v.in_place_not();
   BOOST_CHECK(v.is_boolean());
   BOOST_CHECK(!v.as_boolean());
@@ -7182,13 +7253,13 @@ BOOST_AUTO_TEST_CASE(testNotSequenceW7)
   seq.push_back(value_t(true));
   seq.push_back(value_t(false));
 
-  // in_place_not for SEQUENCE (lines 1411-1413)
+  // in_place_not for SEQUENCE
   seq.in_place_not();
   BOOST_CHECK(seq.is_sequence());
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1450-1451 - is_realzero default (throws)
+// value.cc - is_realzero default (throws)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsRealzeroDefaultW7)
@@ -7196,17 +7267,17 @@ BOOST_AUTO_TEST_CASE(testIsRealzeroDefaultW7)
   value_t v;
   v.set_mask("foo");
 
-  // MASK has no is_realzero path => throws (lines 1450-1451)
+  // MASK has no is_realzero path => throws
   BOOST_CHECK_THROW((void)v.is_realzero(), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc line 1571 - is_zero SCOPE check
+// value.cc - is_zero SCOPE check
 // (Actually, is_zero for SCOPE returns as_scope() == NULL)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1866-1867 - annotate non-amount throws
+// value.cc - annotate non-amount throws
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotateNonAmountW7)
@@ -7214,16 +7285,16 @@ BOOST_AUTO_TEST_CASE(testAnnotateNonAmountW7)
   value_t v(42L);
 
   annotation_t ann;
-  // Annotating an integer should throw (lines 1866-1867)
+  // Annotating an integer should throw
   BOOST_CHECK_THROW(v.annotate(ann), value_error);
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1923-1924 - strip_annotations unreachable assert
+// value.cc - strip_annotations unreachable assert
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 1955,1959-1960 - label for ANY type
+// value.cc - label for ANY type
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLabelAnyW7)
@@ -7233,7 +7304,7 @@ BOOST_AUTO_TEST_CASE(testLabelAnyW7)
   op->set_value(value_t(42L));
   v.set_any(op);
 
-  // label() for ANY with ptr_op_t should return "an expr" (line 1955)
+  // label() for ANY with ptr_op_t should return "an expr"
   string lbl = v.label();
   BOOST_CHECK_EQUAL(lbl, "an expr");
 }
@@ -7243,13 +7314,13 @@ BOOST_AUTO_TEST_CASE(testLabelAnyOtherW7)
   value_t v;
   v.set_any(std::any(42));
 
-  // label() for ANY with non-ptr_op_t type returns "an object" (line 1957)
+  // label() for ANY with non-ptr_op_t type returns "an object"
   string lbl = v.label();
   BOOST_CHECK_EQUAL(lbl, "an object");
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc line 2129 - dump ANY with expr ptr_op_t
+// value.cc - dump ANY with expr ptr_op_t
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDumpAnyExprW7)
@@ -7265,12 +7336,12 @@ BOOST_AUTO_TEST_CASE(testDumpAnyExprW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 2234-2235 - put_value SCOPE/ANY assert
+// value.cc - put_value SCOPE/ANY assert
 // (cannot test without triggering assert)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: value.cc lines 562-745 binary operator overloads
+// value.cc binary operator overloads
 // operator+(value_t, long), operator-(value_t, long), etc.
 // -----------------------------------------------------------------------
 
@@ -7303,8 +7374,8 @@ BOOST_AUTO_TEST_CASE(testBinaryOpDivLongW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than for INTEGER vs AMOUNT, BALANCE
-// (value.cc lines 1037-1039, 1047-1052)
+// is_greater_than for INTEGER vs AMOUNT, BALANCE
+// (value.cc)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtIntegerVsAmountW7)
@@ -7334,7 +7405,7 @@ BOOST_AUTO_TEST_CASE(testIsGtAmountVsAmountW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than BALANCE vs INTEGER/AMOUNT (lines 1060-1068)
+// is_greater_than BALANCE vs INTEGER/AMOUNT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtBalanceVsIntegerW7)
@@ -7359,7 +7430,7 @@ BOOST_AUTO_TEST_CASE(testIsGtBalanceVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than COMMODITY vs COMMODITY/STRING (1078-1085)
+// is_greater_than COMMODITY vs COMMODITY/STRING
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtCommodityVsCommodityW7)
@@ -7389,12 +7460,12 @@ BOOST_AUTO_TEST_CASE(testIsGtCommodityVsStringW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than STRING vs COMMODITY, STRING (1091-1097)
+// is_greater_than STRING vs COMMODITY, STRING
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtStringVsCommodityW7)
 {
-  // STRING vs COMMODITY uses val.is_less_than(*this) (line 1094)
+  // STRING vs COMMODITY uses val.is_less_than(*this)
   commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("AAA");
   BOOST_REQUIRE(c1);
   value_t sv = string_value("ZZZ");
@@ -7413,7 +7484,7 @@ BOOST_AUTO_TEST_CASE(testIsGtStringVsStringW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than SEQUENCE vs INTEGER/AMOUNT (1104-1112)
+// is_greater_than SEQUENCE vs INTEGER/AMOUNT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtSequenceVsIntegerW7)
@@ -7427,7 +7498,7 @@ BOOST_AUTO_TEST_CASE(testIsGtSequenceVsIntegerW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than SEQUENCE vs SEQUENCE (1114-1125)
+// is_greater_than SEQUENCE vs SEQUENCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtSequenceVsSequenceW7)
@@ -7446,7 +7517,7 @@ BOOST_AUTO_TEST_CASE(testIsGtSequenceVsSequenceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_less_than SEQUENCE vs SEQUENCE (974-984)
+// is_less_than SEQUENCE vs SEQUENCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtSequenceVsSequenceW7)
@@ -7465,7 +7536,7 @@ BOOST_AUTO_TEST_CASE(testIsLtSequenceVsSequenceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_less_than BALANCE vs INTEGER/AMOUNT, BALANCE (920-935)
+// is_less_than BALANCE vs INTEGER/AMOUNT, BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtBalanceVsIntegerW7)
@@ -7490,7 +7561,7 @@ BOOST_AUTO_TEST_CASE(testIsLtBalanceVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_less_than AMOUNT vs BALANCE (line 912)
+// is_less_than AMOUNT vs BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtAmountVsBalanceW7)
@@ -7504,7 +7575,7 @@ BOOST_AUTO_TEST_CASE(testIsLtAmountVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_less_than INTEGER vs BALANCE (line 895)
+// is_less_than INTEGER vs BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsLtIntegerVsBalanceW7)
@@ -7518,7 +7589,7 @@ BOOST_AUTO_TEST_CASE(testIsLtIntegerVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than AMOUNT vs BALANCE (line 1052)
+// is_greater_than AMOUNT vs BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtAmountVsBalanceW7)
@@ -7532,7 +7603,7 @@ BOOST_AUTO_TEST_CASE(testIsGtAmountVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_greater_than INTEGER vs BALANCE (line 1039)
+// is_greater_than INTEGER vs BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsGtIntegerVsBalanceW7)
@@ -7546,7 +7617,7 @@ BOOST_AUTO_TEST_CASE(testIsGtIntegerVsBalanceW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_equal_to BALANCE vs INTEGER, AMOUNT (lines 802, 804-805)
+// is_equal_to BALANCE vs INTEGER, AMOUNT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqBalanceVsIntegerW7)
@@ -7556,7 +7627,7 @@ BOOST_AUTO_TEST_CASE(testIsEqBalanceVsIntegerW7)
   value_t bv(bal);
   value_t iv(42L);
 
-  // BALANCE == INTEGER (line 802)
+  // BALANCE == INTEGER
   BOOST_CHECK(bv.is_equal_to(iv));
 }
 
@@ -7567,12 +7638,12 @@ BOOST_AUTO_TEST_CASE(testIsEqBalanceVsAmountW7)
   value_t bv(bal);
   value_t av(amount_t("42.00"));
 
-  // BALANCE == AMOUNT (line 804)
+  // BALANCE == AMOUNT
   BOOST_CHECK(bv.is_equal_to(av));
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: is_equal_to INTEGER vs BALANCE (line 780 not listed but nearby)
+// is_equal_to INTEGER vs BALANCE
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIsEqIntegerVsBalanceW7)
@@ -7582,12 +7653,12 @@ BOOST_AUTO_TEST_CASE(testIsEqIntegerVsBalanceW7)
   bal += amount_t("42.00");
   value_t bv(bal);
 
-  // INTEGER == BALANCE (line 780)
+  // INTEGER == BALANCE
   BOOST_CHECK(iv.is_equal_to(bv));
 }
 
 // =======================================================================
-// W8 Coverage: value.h - destroy() VOID return (line 222)
+// value.h - destroy() VOID return
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testDestroyVoidStorageW8)
@@ -7601,7 +7672,7 @@ BOOST_AUTO_TEST_CASE(testDestroyVoidStorageW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - template operator==, <, > (lines 388-398)
+// value.h - template operator==, <, >
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testTemplateComparisonOpsW8)
@@ -7614,7 +7685,7 @@ BOOST_AUTO_TEST_CASE(testTemplateComparisonOpsW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_boolean (line 562) and as_boolean_lval
+// value.h - as_boolean and as_boolean_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsBooleanLvalW8)
@@ -7629,7 +7700,7 @@ BOOST_AUTO_TEST_CASE(testAsBooleanLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_datetime_lval (line 573)
+// value.h - as_datetime_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsDatetimeLvalW8)
@@ -7647,7 +7718,7 @@ BOOST_AUTO_TEST_CASE(testAsDatetimeLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_date, as_date_lval (lines 588, 592)
+// value.h - as_date, as_date_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsDateLvalW8)
@@ -7665,7 +7736,7 @@ BOOST_AUTO_TEST_CASE(testAsDateLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_long_lval (line 603)
+// value.h - as_long_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsLongLvalW8)
@@ -7680,7 +7751,7 @@ BOOST_AUTO_TEST_CASE(testAsLongLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_amount_lval (line 618)
+// value.h - as_amount_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsAmountLvalW8)
@@ -7696,7 +7767,7 @@ BOOST_AUTO_TEST_CASE(testAsAmountLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_balance_lval (line 634)
+// value.h - as_balance_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsBalanceLvalW8)
@@ -7716,7 +7787,7 @@ BOOST_AUTO_TEST_CASE(testAsBalanceLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_commodity (line 649)
+// value.h - as_commodity
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsCommodityW8)
@@ -7730,7 +7801,7 @@ BOOST_AUTO_TEST_CASE(testAsCommodityW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_string_lval (line 657)
+// value.h - as_string_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsStringLvalW8)
@@ -7745,7 +7816,7 @@ BOOST_AUTO_TEST_CASE(testAsStringLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_mask, as_mask_lval (lines 679, 684)
+// value.h - as_mask, as_mask_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsMaskLvalW8)
@@ -7760,7 +7831,7 @@ BOOST_AUTO_TEST_CASE(testAsMaskLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_sequence_lval (line 699)
+// value.h - as_sequence_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsSequenceLvalW8)
@@ -7778,7 +7849,7 @@ BOOST_AUTO_TEST_CASE(testAsSequenceLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_scope (line 716)
+// value.h - as_scope
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsScopeW8)
@@ -7791,7 +7862,7 @@ BOOST_AUTO_TEST_CASE(testAsScopeW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - as_any, as_any_lval (lines 737, 745)
+// value.h - as_any, as_any_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsAnyLvalW8)
@@ -7810,7 +7881,7 @@ BOOST_AUTO_TEST_CASE(testAsAnyLvalW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - operator[] with index (lines 831-833, 842-844)
+// value.h - operator[] with index
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testOperatorBracketSingleW8)
@@ -7840,7 +7911,7 @@ BOOST_AUTO_TEST_CASE(testOperatorBracketSequenceW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - push_front (line 851)
+// value.h - push_front
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushFrontW8)
@@ -7855,7 +7926,7 @@ BOOST_AUTO_TEST_CASE(testPushFrontW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - begin/end mutable (lines 884, 888)
+// value.h - begin/end mutable
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testBeginEndMutableW8)
@@ -7873,7 +7944,7 @@ BOOST_AUTO_TEST_CASE(testBeginEndMutableW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - begin/end const (lines 893, 897)
+// value.h - begin/end const
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testBeginEndConstW8)
@@ -7892,7 +7963,7 @@ BOOST_AUTO_TEST_CASE(testBeginEndConstW8)
 }
 
 // =======================================================================
-// W8 Coverage: value.h - add_or_set_value (line 964)
+// value.h - add_or_set_value
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAddOrSetValueNullW8)
@@ -7910,7 +7981,7 @@ BOOST_AUTO_TEST_CASE(testAddOrSetValueNullW8)
 }
 
 // =======================================================================
-// Coverage: value.h - VOID destroy path (line 222)
+// Coverage: value.h - VOID destroy path
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testVoidDestroyPath)
@@ -7922,11 +7993,10 @@ BOOST_AUTO_TEST_CASE(testVoidDestroyPath)
     BOOST_CHECK(v.is_null());
     // v goes out of scope, destroying VOID storage
   }
-  BOOST_CHECK(true); // just confirm no crash
 }
 
 // =======================================================================
-// Coverage: value.h - template comparison operators with amount_t (lines 390, 394, 398)
+// Coverage: value.h - template comparison operators with amount_t
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testTemplateComparisonWithAmount)
@@ -7950,7 +8020,7 @@ BOOST_AUTO_TEST_CASE(testTemplateComparisonWithLong)
 }
 
 // =======================================================================
-// Coverage: value.h - push_front on non-sequence (line 851 in_place_cast)
+// Coverage: value.h - push_front on non-sequence (in_place_cast)
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushFrontOnNonSequence)
@@ -7981,7 +8051,7 @@ BOOST_AUTO_TEST_CASE(testPushFrontOnNullCov)
 }
 
 // =======================================================================
-// Coverage: value.h - pop_back to empty and single element (lines 863-877)
+// Coverage: value.h - pop_back to empty and single element
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPopBackToSingleElementCov)
@@ -8019,7 +8089,7 @@ BOOST_AUTO_TEST_CASE(testPopBackSequenceToEmptyCov)
 }
 
 // =======================================================================
-// Coverage: value.h - as_commodity (line 649)
+// Coverage: value.h - as_commodity
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsCommodityCov)
@@ -8032,7 +8102,7 @@ BOOST_AUTO_TEST_CASE(testAsCommodityCov)
 }
 
 // =======================================================================
-// Coverage: value.h - set_string with char* (line 667-671)
+// Coverage: value.h - set_string with char*
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testSetStringCharPtr)
@@ -8044,7 +8114,7 @@ BOOST_AUTO_TEST_CASE(testSetStringCharPtr)
 }
 
 // =======================================================================
-// Coverage: value.h - set_mask with mask_t (line 689-692)
+// Coverage: value.h - set_mask with mask_t
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testSetMaskWithMaskT)
@@ -8056,7 +8126,7 @@ BOOST_AUTO_TEST_CASE(testSetMaskWithMaskT)
 }
 
 // =======================================================================
-// Coverage: value.h - set_sequence (line 704-707)
+// Coverage: value.h - set_sequence
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testSetSequence)
@@ -8072,7 +8142,7 @@ BOOST_AUTO_TEST_CASE(testSetSequence)
 }
 
 // =======================================================================
-// Coverage: value.h - is_any<T> (line 730-732)
+// Coverage: value.h - is_any<T>
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testIsAnyTyped)
@@ -8085,75 +8155,168 @@ BOOST_AUTO_TEST_CASE(testIsAnyTyped)
 }
 
 // =======================================================================
-// Coverage: value.h lines 300-301, 304-305 - unsigned long and double ctors
+// in_place_cast on a value whose storage is shared must leave every other
+// holder of that storage untouched (set_type allocates fresh storage when
+// refc > 1; in_place_cast relies on that, not on a prior _dup()).
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testCastSharedStorageLeavesOriginal)
+{
+  // BALANCE -> AMOUNT (single commodity)
+  balance_t bal(amount_t("$1.00"));
+  value_t bal_orig(bal);
+  value_t bal_copy(bal_orig);
+  bal_copy.in_place_cast(value_t::type_t::AMOUNT);
+  BOOST_CHECK(bal_copy.is_amount());
+  BOOST_CHECK_EQUAL(bal_copy.as_amount(), amount_t("$1.00"));
+  BOOST_CHECK(bal_orig.is_balance());
+  BOOST_CHECK_EQUAL(bal_orig.as_balance(), bal);
+
+  // BALANCE -> STRING (two commodities)
+  balance_t multi(amount_t("$1.00"));
+  multi += amount_t("2 EUR");
+  const string multi_text = multi.to_string();
+  value_t multi_orig(multi);
+  value_t multi_copy(multi_orig);
+  multi_copy.in_place_cast(value_t::type_t::STRING);
+  BOOST_CHECK(multi_copy.is_string());
+  BOOST_CHECK_EQUAL(multi_copy.as_string(), multi_text);
+  BOOST_CHECK(multi_orig.is_balance());
+  BOOST_CHECK_EQUAL(multi_orig.as_balance(), multi);
+
+  // BALANCE via the to_*() helpers, which cast a temporary sharing *this
+  BOOST_CHECK_EQUAL(bal_orig.to_amount(), amount_t("$1.00"));
+  BOOST_CHECK(bal_orig.is_balance());
+
+  // SEQUENCE -> STRING
+  value_t::sequence_t seq;
+  seq.push_back(new value_t(1L));
+  seq.push_back(new value_t(2L));
+  value_t seq_orig(seq);
+  value_t seq_copy(seq_orig);
+  seq_copy.in_place_cast(value_t::type_t::STRING);
+  BOOST_CHECK(seq_copy.is_string());
+  BOOST_CHECK_EQUAL(seq_copy.as_string(), "(1, 2)");
+  BOOST_CHECK(seq_orig.is_sequence());
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence().size(), 2u);
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence()[0].as_long(), 1L);
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence()[1].as_long(), 2L);
+
+  // STRING -> MASK
+  value_t str_orig(string("ab.*"), true);
+  value_t str_copy(str_orig);
+  str_copy.in_place_cast(value_t::type_t::MASK);
+  BOOST_CHECK(str_copy.is_mask());
+  BOOST_CHECK_EQUAL(str_copy.as_mask().str(), "ab.*");
+  BOOST_CHECK(str_orig.is_string());
+  BOOST_CHECK_EQUAL(str_orig.as_string(), "ab.*");
+
+  // BOOLEAN -> INTEGER: every boolean shares the static true_value storage
+  value_t t1(true);
+  value_t t2(true);
+  t2.in_place_cast(value_t::type_t::INTEGER);
+  BOOST_CHECK(t2.is_long());
+  BOOST_CHECK_EQUAL(t2.as_long(), 1L);
+  BOOST_CHECK(t1.is_boolean());
+  BOOST_CHECK(t1.as_boolean());
+  BOOST_CHECK(value_t(true).is_boolean());
+  BOOST_CHECK(value_t(true).as_boolean());
+}
+
+// =======================================================================
+// print() of an ANY value distinguishes an embedded expression from any
+// other object (pins the is_any<expr_t::ptr_op_t>() test in print()).
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testPrintAnyExprAndObject)
+{
+  value_t e;
+  expr_t::ptr_op_t op(new expr_t::op_t(expr_t::op_t::VALUE));
+  op->set_value(value_t(42L));
+  e.set_any(op);
+  std::ostringstream e_out;
+  e.print(e_out);
+  BOOST_CHECK_EQUAL(e_out.str(), "<#EXPR 42>");
+  BOOST_CHECK(is_expr(e));
+
+  value_t o;
+  o.set_any(std::any(42));
+  std::ostringstream o_out;
+  o.print(o_out);
+  BOOST_CHECK_EQUAL(o_out.str(), "<#OBJECT>");
+  BOOST_CHECK(!is_expr(o));
+}
+
+// =======================================================================
+// Coverage: value.h - unsigned long and double ctors
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testUnsignedLongAndDoubleCtors)
 {
-  // Lines 300-301: value_t(const unsigned long val) calls set_amount
+  // value_t(const unsigned long val) calls set_amount
   value_t v_ul(4UL);
   BOOST_CHECK(v_ul.is_amount());
   BOOST_CHECK(v_ul.valid());
 
-  // Lines 304-305: value_t(const double val) calls set_amount
+  // value_t(const double val) calls set_amount
   value_t v_dbl(3.14);
   BOOST_CHECK(v_dbl.is_amount());
   BOOST_CHECK(v_dbl.valid());
 }
 
 // =======================================================================
-// Coverage: value.h line 336 - value_t(const char*, false) -> amount
+// Coverage: value.h - value_t(const char*, false) -> amount
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testCharPtrCtorAsAmount)
 {
-  // Line 336: value_t("2 CAD") with literal=false => set_amount
+  // value_t("2 CAD") with literal=false => set_amount
   value_t v("2 CAD");
   BOOST_CHECK(v.is_amount());
   BOOST_CHECK(v.valid());
 }
 
 // =======================================================================
-// Coverage: value.h lines 558-661 - const ref getters for all types
+// Coverage: value.h - const ref getters for all types
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testConstRefGetters)
 {
-  // as_boolean() const (line 558-562)
+  // as_boolean() const
   const value_t vb(true);
   BOOST_CHECK(vb.as_boolean() == true);
 
-  // as_datetime() const (line 573-577)
+  // as_datetime() const
   datetime_t dt = boost::posix_time::from_time_t(1000000);
   const value_t vdt(dt);
   BOOST_CHECK(vdt.as_datetime() == dt);
 
-  // as_date() const (line 588-592)
+  // as_date() const
   date_t d = parse_date("2024/01/15");
   const value_t vd(d);
   BOOST_CHECK(vd.as_date() == d);
 
-  // as_long() const (line 603-607)
+  // as_long() const
   const value_t vl(42L);
   BOOST_CHECK(vl.as_long() == 42L);
 
-  // as_amount() const (line 618-622)
+  // as_amount() const
   const value_t va(amount_t("10 USD"));
   BOOST_CHECK(va.as_amount() == amount_t("10 USD"));
 
-  // as_balance() const (line 634-638)
+  // as_balance() const
   const value_t vbal(balance_t("5 EUR"));
   BOOST_CHECK(vbal.as_balance() == balance_t("5 EUR"));
 
-  // as_string() const (line 649-661)
+  // as_string() const
   const value_t vs(string("hello"), true);
   BOOST_CHECK(vs.as_string() == "hello");
 
-  // as_mask() const (line 679-684)
+  // as_mask() const
   const value_t vm(mask_t("test.*"));
   BOOST_CHECK(vm.as_mask().str() == "test.*");
 
-  // as_sequence() const (line 699-703)
+  // as_sequence() const
   value_t::sequence_t seq;
   seq.push_back(new value_t(1L));
   const value_t vseq(seq);
@@ -8161,56 +8324,56 @@ BOOST_AUTO_TEST_CASE(testConstRefGetters)
 }
 
 // =======================================================================
-// Coverage: value.h lines 558,562,573,577 - lval getters
+// Coverage: value.h - lval getters
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testLvalGetters)
 {
-  // as_boolean_lval (line 554-558)
+  // as_boolean_lval
   value_t vb(true);
   vb.as_boolean_lval() = false;
   BOOST_CHECK(vb.as_boolean() == false);
 
-  // as_datetime_lval (line 569-573)
+  // as_datetime_lval
   datetime_t dt1 = boost::posix_time::from_time_t(1000000);
   datetime_t dt2 = boost::posix_time::from_time_t(2000000);
   value_t vdt(dt1);
   vdt.as_datetime_lval() = dt2;
   BOOST_CHECK(vdt.as_datetime() == dt2);
 
-  // as_date_lval (line 584-588)
+  // as_date_lval
   date_t d1 = parse_date("2024/01/15");
   date_t d2 = parse_date("2024/06/30");
   value_t vd(d1);
   vd.as_date_lval() = d2;
   BOOST_CHECK(vd.as_date() == d2);
 
-  // as_long_lval (line 599-603)
+  // as_long_lval
   value_t vl(10L);
   vl.as_long_lval() = 20L;
   BOOST_CHECK(vl.as_long() == 20L);
 
-  // as_amount_lval (line 614-618)
+  // as_amount_lval
   value_t va(amount_t("5 USD"));
   va.as_amount_lval() = amount_t("10 USD");
   BOOST_CHECK(va.as_amount() == amount_t("10 USD"));
 
-  // as_balance_lval (line 630-634)
+  // as_balance_lval
   value_t vbal(balance_t("3 EUR"));
   vbal.as_balance_lval() += amount_t("2 EUR");
   BOOST_CHECK(vbal.as_balance() == balance_t("5 EUR"));
 
-  // as_string_lval (line 653-657)
+  // as_string_lval
   value_t vs(string("hello"), true);
   vs.as_string_lval() = "world";
   BOOST_CHECK(vs.as_string() == "world");
 
-  // as_mask_lval (line 674-679)
+  // as_mask_lval
   value_t vm(mask_t("abc"));
   vm.as_mask_lval() = mask_t("xyz");
   BOOST_CHECK(vm.as_mask().str() == "xyz");
 
-  // as_sequence_lval (line 695-699)
+  // as_sequence_lval
   value_t::sequence_t seq;
   seq.push_back(new value_t(1L));
   value_t vseq(seq);
@@ -8302,7 +8465,7 @@ BOOST_AUTO_TEST_CASE(testStringComparisons)
 }
 
 // =======================================================================
-// Coverage: value.h lines 831-844 - push_back/pop_back on non-sequence
+// Coverage: value.h - push_back/pop_back on non-sequence
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushBackOnNonSequenceCov)
@@ -8332,7 +8495,7 @@ BOOST_AUTO_TEST_CASE(testPushBackOnNullCov)
 }
 
 // =======================================================================
-// Coverage: value.h lines 884,888,893,897 - iterator methods
+// Coverage: value.h - iterator methods
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testIteratorMethods)
@@ -8344,7 +8507,7 @@ BOOST_AUTO_TEST_CASE(testIteratorMethods)
 
   value_t v(seq);
 
-  // Mutable begin/end (lines 881-888)
+  // Mutable begin/end
   value_t::sequence_t::iterator it = v.begin();
   value_t::sequence_t::iterator end_it = v.end();
   int count = 0;
@@ -8352,7 +8515,7 @@ BOOST_AUTO_TEST_CASE(testIteratorMethods)
     count++;
   BOOST_CHECK_EQUAL(count, 3);
 
-  // Const begin/end (lines 890-897)
+  // Const begin/end
   const value_t cv(seq);
   value_t::sequence_t::const_iterator cit = cv.begin();
   value_t::sequence_t::const_iterator cend = cv.end();
@@ -8363,7 +8526,7 @@ BOOST_AUTO_TEST_CASE(testIteratorMethods)
 }
 
 // =======================================================================
-// Coverage: value.h line 964 - sort_value_t default constructor
+// Coverage: value.h - sort_value_t default constructor
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testSortValueT)
@@ -8387,7 +8550,7 @@ BOOST_AUTO_TEST_CASE(testSortValueT)
 }
 
 // =======================================================================
-// Coverage: value.h line 715-716 - as_scope() getter
+// Coverage: value.h - as_scope() getter
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testScopeValue)
@@ -8400,7 +8563,7 @@ BOOST_AUTO_TEST_CASE(testScopeValue)
 }
 
 // =======================================================================
-// Coverage: value.h - as_any const getter (line 737, 745)
+// Coverage: value.h - as_any const getter
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsAnyConst)
@@ -8418,7 +8581,7 @@ BOOST_AUTO_TEST_CASE(testAsAnyConst)
 }
 
 // =======================================================================
-// Coverage: value.h - as_any_lval (line 737)
+// Coverage: value.h - as_any_lval
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testAsAnyLval)
@@ -8562,6 +8725,437 @@ BOOST_AUTO_TEST_CASE(testNettedBalanceComparesAsZero)
   BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$5.00"))));
   BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-5.00"))));
   BOOST_CHECK(!v.is_less_than(value_t(amount_t("$-5.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testStringRepeatNonPositiveCount)
+{
+  value_t s(string("ab"), true);
+  BOOST_CHECK_EQUAL(s * value_t(3L), value_t(string("ababab"), true));
+  BOOST_CHECK_EQUAL(s * value_t(0L), value_t(string(""), true));
+  BOOST_CHECK_EQUAL(s * value_t(-1L), value_t(string(""), true));
+}
+
+BOOST_AUTO_TEST_CASE(testSubtractCommodityAmountFromIntegerKeepsCommodity)
+{
+  value_t v1(1L);
+  v1 -= value_t(amount_t("$5"));
+  BOOST_REQUIRE(v1.is_balance());
+  balance_t expected;
+  expected += amount_t(1L);
+  expected += amount_t("$-5");
+  BOOST_CHECK_EQUAL(v1.as_balance(), expected);
+
+  value_t v2(0L);
+  v2 -= value_t(amount_t("$3"));
+  BOOST_REQUIRE(v2.is_amount());
+  BOOST_CHECK_EQUAL(v2.as_amount(), amount_t("$-3"));
+}
+
+BOOST_AUTO_TEST_CASE(testDivideIntegerByAmount)
+{
+  value_t v1(10L);
+  v1 /= value_t(amount_t("2.5"));
+  BOOST_REQUIRE(v1.is_amount());
+  BOOST_CHECK_EQUAL(v1.as_amount(), amount_t("4"));
+
+  value_t v2(10L);
+  v2 /= value_t(amount_t("$2.5"));
+  BOOST_CHECK_EQUAL(v2, value_t(amount_t("10")) / value_t(amount_t("$2.5")));
+
+  BOOST_CHECK_THROW(value_t(10L) / value_t(amount_t(0L)), amount_error);
+}
+
+BOOST_AUTO_TEST_CASE(testMultiplyScalarByBalance)
+{
+  balance_t bal;
+  bal += amount_t("1 USD");
+  bal += amount_t("1 EUR");
+
+  value_t v1(2L);
+  v1 *= value_t(bal);
+  BOOST_CHECK_EQUAL(v1, value_t(bal) * value_t(2L));
+
+  value_t v2(amount_t("2"));
+  v2 *= value_t(bal);
+  BOOST_CHECK_EQUAL(v2, value_t(bal) * value_t(amount_t("2")));
+
+  // a commoditized amount still cannot scale a multi-commodity balance
+  BOOST_CHECK_THROW(value_t(amount_t("$2")) * value_t(bal), value_error);
+
+  // INTEGER / BALANCE acts as the bare amount: it divides by a balance
+  // that comes to one amount, and is an error otherwise
+  balance_t one_usd(bal);
+  one_usd += amount_t("-1 EUR"); // {1 USD, 0 EUR}
+  value_t v3(10L);
+  v3 /= value_t(one_usd);
+  BOOST_CHECK_EQUAL(v3, value_t(amount_t("10")) / value_t(amount_t("1 USD")));
+  BOOST_CHECK_THROW(value_t(10L) / value_t(bal), value_error);
+
+  // {0 USD, 0 EUR} has no sole amount: a bare scalar scales it, as the
+  // balance on the left does, but a commoditized amount still cannot
+  balance_t zeros(one_usd);
+  zeros += amount_t("-1 USD");
+  BOOST_REQUIRE(zeros.sole_amount() == nullptr);
+  BOOST_CHECK_EQUAL(value_t(2L) * value_t(zeros), value_t(zeros) * value_t(2L));
+  BOOST_CHECK_THROW(value_t(amount_t("$2")) * value_t(zeros), value_error);
+
+  // an empty balance: a bare scalar on the left leaves it empty, as the
+  // balance on the left always did
+  BOOST_CHECK_EQUAL(value_t(amount_t("2")) * value_t(balance_t()),
+                    value_t(balance_t()) * value_t(amount_t("2")));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceZeroComponentActsAsAbsent)
+{
+  // {1 USD, 0 EUR}: balance_t::operator+= keeps the cancelled EUR
+  balance_t bal;
+  bal += amount_t("1 USD");
+  bal += amount_t("1 EUR");
+  bal += amount_t("-1 EUR");
+  BOOST_REQUIRE(!bal.single_amount());
+  value_t v(bal);
+
+  BOOST_CHECK(v == value_t(amount_t("1 USD")));
+  BOOST_CHECK(value_t(amount_t("1 USD")) == v);
+  BOOST_CHECK(!(v == value_t(amount_t("1 EUR"))));
+  BOOST_CHECK(v == value_t(balance_t(amount_t("1 USD"))));
+  BOOST_CHECK_EQUAL(v.to_amount(), amount_t("1 USD"));
+  BOOST_CHECK(value_t(amount_t("0.5 USD")) < v); // what v > 0.5 USD runs
+
+  BOOST_CHECK_EQUAL(v * value_t(amount_t("2 USD")), value_t(amount_t("2 USD")));
+  BOOST_CHECK_EQUAL(value_t(amount_t("2 USD")) * v, value_t(amount_t("2 USD")));
+  BOOST_CHECK_EQUAL(v / value_t(amount_t("2 USD")), value_t(amount_t("0.5 USD")));
+  BOOST_CHECK_EQUAL(value_t(amount_t("2 USD")) / v, value_t(amount_t("2 USD")));
+
+  // {0 USD, 0 EUR} equals zero, as its value says
+  balance_t zeros(bal);
+  zeros += amount_t("-1 USD");
+  BOOST_CHECK(value_t(zeros) == value_t(0L));
+  BOOST_CHECK(value_t(zeros) == value_t(amount_t(0L)));
+  BOOST_CHECK_EQUAL(value_t(zeros).to_amount(), amount_t(0L));
+  BOOST_CHECK(value_t(amount_t("-1 USD")) < value_t(zeros)); // zeros > -1 USD
+
+  // balance_t itself still compares its entries structurally
+  // (t_balance.cc testEqaulity pins balance_t("0.00") != "0")
+  BOOST_CHECK(!(bal == amount_t("1 USD")));
+  BOOST_CHECK(!(balance_t("0.00") == amount_t("0")));
+  BOOST_CHECK(value_t(balance_t("0.00")) == value_t(0L));
+}
+
+BOOST_AUTO_TEST_CASE(testMultiplyDivideSingleZeroComponentBalance)
+{
+  // floor() rewrites components in place and keeps a zero one, so this is a
+  // BALANCE holding exactly {$0}.  simplified() would collapse it to INTEGER 0.
+  value_t zero(balance_t(amount_t("$0.50")));
+  zero.in_place_floor();
+  BOOST_REQUIRE(zero.is_balance());
+  BOOST_REQUIRE(zero.as_balance().single_amount());
+  BOOST_REQUIRE(zero.is_realzero());
+
+  value_t product(zero);
+  product *= value_t(amount_t("2"));
+  BOOST_CHECK(product.is_amount());
+  BOOST_CHECK(product.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(product.as_amount().commodity().symbol(), string("$"));
+
+  value_t reversed(amount_t("2"));
+  reversed *= zero;
+  BOOST_CHECK(reversed.is_amount());
+  BOOST_CHECK(reversed.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(reversed.as_amount().commodity().symbol(), string("$"));
+
+  value_t quotient(zero);
+  quotient /= value_t(amount_t("$2"));
+  BOOST_CHECK(quotient.is_amount());
+  BOOST_CHECK(quotient.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(quotient.as_amount().commodity().symbol(), string("$"));
+
+  value_t dividend(amount_t("$2"));
+  BOOST_CHECK_THROW(dividend /= zero, amount_error);
+
+  // A nonzero single component is unchanged by the rewrite.
+  value_t half(balance_t(amount_t("$0.50")));
+  value_t doubled(amount_t("2"));
+  doubled *= half;
+  BOOST_CHECK(doubled.is_amount());
+  BOOST_CHECK_EQUAL(doubled.as_amount(), amount_t("$1.00"));
+}
+
+BOOST_AUTO_TEST_CASE(testEqualityWithNullRightOperand)
+{
+  value_t date(date_t(parse_date("2024/01/01")));
+  BOOST_CHECK(!(date == value_t()));
+  BOOST_CHECK(!(value_t() == date));
+  BOOST_CHECK(value_t() == value_t());
+  BOOST_CHECK(!(value_t(amount_t("$1")) == value_t()));
+}
+
+BOOST_AUTO_TEST_CASE(testScalarComparesWithBalanceComponentwise)
+{
+  // A number or an amount on the left of a balance compares with each
+  // component, as it does on the right; the balance is never turned into
+  // a single amount.
+  balance_t mixed;
+  mixed += amount_t("$10.00");
+  mixed += amount_t("5 EUR");
+  value_t bal(mixed);
+  value_t zero(0L);
+
+  BOOST_CHECK(zero.is_less_than(bal));
+  BOOST_CHECK(!zero.is_greater_than(bal));
+  BOOST_CHECK(value_t(20L).is_greater_than(bal));
+  BOOST_CHECK(!value_t(20L).is_less_than(bal));
+  BOOST_CHECK(zero < bal);
+  BOOST_CHECK(bal > zero);
+  BOOST_CHECK(!(bal <= zero));
+  BOOST_CHECK(!(zero >= bal));
+
+  // A component that netted to zero in another commodity is left out of
+  // a comparison with an amount, from either side.
+  balance_t netted;
+  netted += amount_t("$5.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t wallet(netted);
+  value_t three(amount_t("$3.00"));
+  BOOST_CHECK(three.is_less_than(wallet));
+  BOOST_CHECK(!three.is_greater_than(wallet));
+  BOOST_CHECK(three < wallet);
+  BOOST_CHECK(wallet > three);
+
+  // A live component in another commodity is the same error from either
+  // side.
+  BOOST_CHECK_THROW(three.is_less_than(bal), amount_error);
+  BOOST_CHECK_THROW(three.is_greater_than(bal), amount_error);
+  BOOST_CHECK_THROW(bal.is_greater_than(three), amount_error);
+
+  // An empty balance compares false either way, as it does on the left.
+  value_t empty((balance_t()));
+  BOOST_CHECK(!zero.is_less_than(empty));
+  BOOST_CHECK(!zero.is_greater_than(empty));
+  BOOST_CHECK(!empty.is_less_than(zero));
+  BOOST_CHECK(!empty.is_greater_than(zero));
+}
+
+BOOST_AUTO_TEST_CASE(testOrderingDirectionsAgree)
+{
+  // is_greater_than() answers every pair as is_less_than() does with the
+  // operands swapped.  Amounts in two commodities order by commodity in
+  // both directions ('$' before 'EUR'; a lot at $1.00 before one at
+  // $2.00), so neither direction throws.
+  value_t dollars(amount_t("$10.00"));
+  value_t euros(amount_t("5 EUR"));
+  BOOST_CHECK(dollars.is_less_than(euros));
+  BOOST_CHECK(!euros.is_less_than(dollars));
+  BOOST_CHECK(euros.is_greater_than(dollars));
+  BOOST_CHECK(!dollars.is_greater_than(euros));
+
+  value_t cheap(amount_t("10 AAPL {$1.00}"));
+  value_t dear(amount_t("10 AAPL {$2.00}"));
+  BOOST_CHECK(cheap.is_less_than(dear));
+  BOOST_CHECK(dear.is_greater_than(cheap));
+  BOOST_CHECK(!cheap.is_greater_than(dear));
+
+  // A number, or an amount with no commodity, compares with an amount in
+  // any commodity by quantity.
+  value_t thirty(amount_t("30"));
+  BOOST_CHECK(thirty.is_greater_than(dollars));
+  BOOST_CHECK(!thirty.is_less_than(dollars));
+  BOOST_CHECK(value_t(30L).is_greater_than(dollars));
+  BOOST_CHECK(dollars.is_less_than(value_t(30L)));
+
+  // Null sorts first: nothing is less than it, and it is greater than
+  // nothing.
+  value_t null_value;
+  BOOST_CHECK(null_value.is_less_than(dollars));
+  BOOST_CHECK(!null_value.is_greater_than(dollars));
+  BOOST_CHECK(dollars.is_greater_than(null_value));
+  BOOST_CHECK(!dollars.is_less_than(null_value));
+  BOOST_CHECK(!null_value.is_less_than(null_value));
+  BOOST_CHECK(!null_value.is_greater_than(null_value));
+
+  // A component that netted to zero in another commodity takes no part,
+  // from either side and in either direction.
+  balance_t netted;
+  netted += amount_t("$1.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t wallet(netted);
+  value_t no_dollars(amount_t("$0.00"));
+  BOOST_CHECK(wallet.is_greater_than(no_dollars));
+  BOOST_CHECK(!wallet.is_less_than(no_dollars));
+  BOOST_CHECK(no_dollars.is_less_than(wallet));
+  BOOST_CHECK(!no_dollars.is_greater_than(wallet));
+  BOOST_CHECK(value_t(balance_t("$5.00")).is_greater_than(value_t(balance_t("$3.00"))));
+  BOOST_CHECK(!value_t(balance_t("$5.00")).is_less_than(value_t(balance_t("$3.00"))));
+
+  // Two balances compare as the one amount each comes to: a component
+  // that netted to zero is ignored, and a balance holding two live
+  // commodities comes to no one amount and cannot be compared.
+  balance_t five_netted;
+  five_netted += amount_t("$5.00");
+  five_netted += amount_t("10 EUR");
+  five_netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(five_netted.amounts.size(), 2U);
+  value_t three_bal((balance_t("$3.00")));
+  BOOST_CHECK(value_t(five_netted).is_greater_than(three_bal));
+  BOOST_CHECK(three_bal.is_less_than(value_t(five_netted)));
+  balance_t two_live;
+  two_live += amount_t("$5.00");
+  two_live += amount_t("10 EUR");
+  BOOST_CHECK_THROW(value_t(two_live).is_less_than(three_bal), value_error);
+  BOOST_CHECK_THROW(three_bal.is_greater_than(value_t(two_live)), value_error);
+
+  // An error names its operands as the comparison a > b == b < a makes
+  // them, in both directions: is_greater_than asks the right operand.
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  value_t dollar_bal((balance_t("$1.00")));
+  value_t euro_bal((balance_t("5 EUR")));
+  BOOST_CHECK_EXCEPTION(
+      dollar_bal.is_less_than(euro_bal), amount_error,
+      names("Cannot compare amounts with different commodities: '$' and 'EUR'"));
+  BOOST_CHECK_EXCEPTION(
+      dollar_bal.is_greater_than(euro_bal), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+  value_t uninitialized((amount_t()));
+  BOOST_REQUIRE(uninitialized.is_amount());
+  BOOST_CHECK_EXCEPTION(uninitialized.is_less_than(dollars), amount_error,
+                        names("Cannot compare an uninitialized amount to an amount"));
+  BOOST_CHECK_EXCEPTION(uninitialized.is_greater_than(dollars), amount_error,
+                        names("Cannot compare an amount to an uninitialized amount"));
+
+  // Two sequences compare pair by pair, not lexicographically: less when
+  // every pair is less and this sequence is no longer, greater when every
+  // pair is greater and this sequence is longer.  An empty sequence is
+  // neither less nor greater than a number.
+  auto sequence = [](std::initializer_list<long> numbers) {
+    value_t::sequence_t no_values;
+    value_t seq(no_values);
+    for (long number : numbers)
+      seq.push_back(value_t(number));
+    return seq;
+  };
+  BOOST_CHECK(!sequence({1, 2}).is_less_than(sequence({1, 3})));
+  BOOST_CHECK(sequence({1, 2}).is_less_than(sequence({2, 3})));
+  BOOST_CHECK(sequence({1, 2}).is_less_than(sequence({2, 3, 4})));
+  BOOST_CHECK(!sequence({2, 3}).is_greater_than(sequence({1, 5})));
+  BOOST_CHECK(!sequence({2, 3}).is_greater_than(sequence({1, 2})));
+  BOOST_CHECK(sequence({2, 3, 4}).is_greater_than(sequence({1, 2})));
+  BOOST_CHECK(!sequence({}).is_less_than(value_t(1L)));
+  BOOST_CHECK(!sequence({}).is_greater_than(value_t(1L)));
+
+  // Elements compare as a value expression compares two values, where
+  // a > b runs b < a.  (1) > (0) is false (equal lengths) but (0) < (1)
+  // is true, so ((1), (2), 3) is greater than ((0), (1)).
+  value_t::sequence_t no_values;
+  value_t outer_left(no_values);
+  outer_left.push_back(sequence({1}));
+  outer_left.push_back(sequence({2}));
+  outer_left.push_back(value_t(3L));
+  value_t outer_right(no_values);
+  outer_right.push_back(sequence({0}));
+  outer_right.push_back(sequence({1}));
+  BOOST_CHECK(!sequence({1}).is_greater_than(sequence({0})));
+  BOOST_CHECK(outer_left.is_greater_than(outer_right));
+}
+
+BOOST_AUTO_TEST_CASE(testMoveTransfersStorage)
+{
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<value_t>);
+  BOOST_CHECK(std::is_nothrow_move_assignable_v<value_t>);
+
+  value_t source(amount_t("$1.00"));
+  const amount_t* held = &source.as_amount();
+
+  value_t moved(std::move(source));
+  BOOST_CHECK(source.is_null()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK(&moved.as_amount() == held);
+
+  value_t target(2L);
+  target = std::move(moved);
+  BOOST_CHECK(moved.is_null()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK(&target.as_amount() == held);
+
+  // A moved-from value is VOID and can be assigned again.
+  source = value_t(3L);
+  BOOST_CHECK_EQUAL(source.as_long(), 3L);
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceStorageCopyOnWrite)
+{
+  balance_t bal;
+  bal += amount_t("$1.00");
+  bal += amount_t("EUR 2");
+  const value_t original(bal);
+  value_t copy(original);
+
+  copy.as_balance_lval() += amount_t("GBP 3");
+  BOOST_CHECK_EQUAL(original.as_balance().commodity_count(), 2U);
+  BOOST_CHECK_EQUAL(copy.as_balance().commodity_count(), 3U);
+  BOOST_CHECK(original.as_balance() == bal);
+
+  copy = value_t(amount_t("$5.00"));
+  BOOST_CHECK(copy.is_amount());
+  copy.in_place_cast(value_t::BALANCE);
+  BOOST_CHECK(copy.is_balance());
+  BOOST_CHECK_EQUAL(copy.as_balance().commodity_count(), 1U);
+  BOOST_CHECK(original.as_balance() == bal);
+}
+
+BOOST_AUTO_TEST_CASE(testAnnotationReadKeepsStorageShared)
+{
+  // The annotation lives in the pooled commodity, not in the value's
+  // storage, so reading it -- through either overload -- must not give
+  // a value that shares its storage a private copy.
+  const value_t original(amount_t("10 AAPL {$50.00}"));
+  value_t copy(original);
+  BOOST_REQUIRE(&copy.as_amount() == &original.as_amount());
+
+  const value_t& const_copy(copy);
+  BOOST_CHECK_EQUAL(*const_copy.annotation().price, amount_t("$50.00"));
+  BOOST_CHECK(&copy.as_amount() == &original.as_amount());
+
+  BOOST_CHECK_EQUAL(*copy.annotation().price, amount_t("$50.00"));
+  BOOST_CHECK(&copy.as_amount() == &original.as_amount());
+}
+
+BOOST_AUTO_TEST_CASE(testRoundingFamilyNonNumericRules)
+{
+  // An INTEGER is already integral: all ten operations leave it alone.
+  value_t seven(7L);
+  BOOST_CHECK(seven.rounded() == seven);
+  BOOST_CHECK(seven.roundto(2) == seven);
+  BOOST_CHECK(seven.truncated() == seven);
+  BOOST_CHECK(seven.display_rounded() == seven);
+  BOOST_CHECK(seven.rounded_to_commodity_precision() == seven);
+  BOOST_CHECK(seven.floored() == seven);
+  BOOST_CHECK(seven.ceilinged() == seven);
+  BOOST_CHECK(seven.unrounded() == seven);
+  BOOST_CHECK(seven.reduced() == seven);
+  BOOST_CHECK(seven.unreduced() == seven);
+
+  // roundto, reduce and unreduce pass any other value through unchanged;
+  // the other seven operations reject it.
+  const value_t others[] = {value_t(string("abc"), true),
+                            value_t(date_t(parse_date("2024/01/01"))), value_t()};
+  for (const value_t& v : others) {
+    BOOST_CHECK(v.roundto(2).type() == v.type());
+    BOOST_CHECK(v.reduced().type() == v.type());
+    BOOST_CHECK(v.unreduced().type() == v.type());
+    BOOST_CHECK_THROW((void)v.rounded(), value_error);
+    BOOST_CHECK_THROW((void)v.truncated(), value_error);
+    BOOST_CHECK_THROW((void)v.display_rounded(), value_error);
+    BOOST_CHECK_THROW((void)v.rounded_to_commodity_precision(), value_error);
+    BOOST_CHECK_THROW((void)v.floored(), value_error);
+    BOOST_CHECK_THROW((void)v.ceilinged(), value_error);
+    BOOST_CHECK_THROW((void)v.unrounded(), value_error);
+  }
+  BOOST_CHECK(value_t(string("abc"), true).roundto(2) == value_t(string("abc"), true));
+  BOOST_CHECK(value_t(string("abc"), true).unreduced() == value_t(string("abc"), true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,63 @@
+; A remainder smaller than one unit of a cost commodity whose display
+; precision is still 0 is reported at the precision the balance check
+; used, not rounded to 0, whether finalize() or, after an automated
+; transaction has added postings, verify() finds it.  EUR appears only
+; in costs, so no amount teaches it a precision or a style.
+
+= /^Expenses/
+    [E]     1 FOO @ 1.03 EUR
+    [F]    -1 FOO @ 1.01 EUR
+
+2024/01/01 Real
+    C     1 FOO @ 1.03 EUR
+    D    -1 FOO @ 1.01 EUR
+
+2024/01/02 Bracketed
+    [C]   1 FOO @ 1.03 EUR
+    [D]  -1 FOO @ 1.01 EUR
+
+2024/01/03 Automated
+    Expenses:Food    $1
+    Assets:Cash
+
+test bal -> 3
+__ERROR__
+While parsing file "$FILE", line 13:
+While balancing transaction from "$FILE", lines 11-13:
+> 2024/01/01 Real
+>     C     1 FOO @ 1.03 EUR
+>     D    -1 FOO @ 1.01 EUR
+Unbalanced remainder is:
+             EUR0.02
+Amount to balance against:
+             EUR1.03
+Error: Transaction does not balance
+While parsing file "$FILE", line 17:
+While balancing transaction from "$FILE", lines 15-17:
+> 2024/01/02 Bracketed
+>     [C]   1 FOO @ 1.03 EUR
+>     [D]  -1 FOO @ 1.01 EUR
+Unbalanced remainder of balanced virtual postings is:
+             EUR0.02
+Amount to balance against:
+             EUR1.03
+Error: Transaction does not balance
+While parsing file "$FILE", line 21:
+While balancing transaction from "$FILE", lines 19-21:
+> 2024/01/03 Automated
+>     Expenses:Food    $1
+>     Assets:Cash
+Unbalanced remainder of balanced virtual postings is:
+             EUR0.02
+Amount to balance against:
+             EUR1.03
+While applying automated transaction from "$FILE", lines 7-9:
+> = /^Expenses/
+>     [E]     1 FOO @ 1.03 EUR
+>     [F]    -1 FOO @ 1.01 EUR
+While extending transaction from "$FILE", lines 19-21:
+> 2024/01/03 Automated
+>     Expenses:Food    $1
+>     Assets:Cash
+Error: Transaction does not balance
+end test

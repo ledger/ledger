@@ -1,7 +1,7 @@
-; Coverage for value.cc
-; Calling rounded() on a multi-commodity balance goes through the BALANCE
-; case in value_t::in_place_round_to_commodity_precision, which dispatches
-; to balance_t::in_place_round_to_commodity_precision.
+; Coverage for value.cc: rounded() on a multi-commodity balance runs
+; report_t::fn_rounded -> value_t::rounded -> the BALANCE case of
+; value_t::in_place_round -> balance_t::in_place_round, which applies
+; amount_t::in_place_round (display-only rounding) to each component.
 
 2024/01/01 Test
     Expenses:Food    $100.00

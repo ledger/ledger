@@ -1,0 +1,44 @@
+; Comment lines are accepted inside every block directive, whatever
+; comment character starts them and whether or not a space follows it
+; (issue #3260).  They used to be split into a keyword and an argument
+; like a sub-directive, so `; text` passed only as an unknown keyword,
+; which was ignored, while `;text` or a bare `;` was rejected as a
+; keyword missing its argument.  The sub-directives around them still
+; take effect, and under an account directive a `%` line carries
+; metadata tags just as the other comment characters do.
+
+commodity $
+    ; a spaced comment
+    ;unspaced
+    ;
+    #pound
+    %percent
+    *asterisk
+    |bar
+    format $1,000.00
+
+account Assets:Checking
+    %Purpose: Daily spending
+    alias checking
+
+payee Grocery Store
+    ;matches the bank's spelling
+    alias ^GROCER
+
+tag Receipt
+    ;receipts are numbered
+    check value =~ /^[0-9]+$/
+
+2024-01-01 GROCER #12
+    ; Receipt: 1234
+    Expenses:Food    $1234.5
+    checking
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food             $1,234.50    $1,234.50
+                                Assets:Checking          $-1,234.50            0
+end test
+
+test bal --no-total --balance-format "%(partial_account)  %(tag(\"Purpose\"))\n" Checking
+Assets:Checking  Daily spending
+end test

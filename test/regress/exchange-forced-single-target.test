@@ -1,0 +1,72 @@
+; A lone forced -X target ('$!') converts exactly what the same target
+; without the '!' converts: with no other target listed, forcing only
+; adds amounts already in the target, which convert to themselves.  The
+; '!' used to reach the single-commodity shortcut unstripped, which made
+; and priced into a commodity named '$!' and so converted nothing.  A
+; bare '!' names no target and converts nothing.
+
+P 2024/01/01 EUR $2
+P 2024/01/01 GBP $3
+P 2024/01/01 AAPL $100
+
+2024/01/05 Opening
+    Wallet:A                  10 EUR
+    Wallet:A                  $5
+    Wallet:B                  5 GBP
+    Equity
+
+2024/01/06 Buy
+    Broker                    2 AAPL {$90} @ $90
+    Broker                    $20
+    Funding
+
+test bal Wallet -X '$'
+                 $40  Wallet
+                 $25    A
+                 $15    B
+--------------------
+                 $40
+end test
+
+test bal Wallet -X '$!'
+                 $40  Wallet
+                 $25    A
+                 $15    B
+--------------------
+                 $40
+end test
+
+test reg Wallet:A -X '$!'
+24-Jan-05 Opening               Wallet:A                        $20          $20
+                                Wallet:A                         $5          $25
+end test
+
+test bal Wallet -X 'EUR!'
+              20 EUR  Wallet
+              13 EUR    A
+               8 EUR    B
+--------------------
+              20 EUR
+end test
+
+test bal Broker -X '$!'
+                $200  Broker
+end test
+
+test reg Broker -X '$!'
+24-Jan-06 Buy                   Broker                         $180         $180
+                                Broker                          $20         $200
+end test
+
+test bal Wallet -X '!'
+                  $5
+              10 EUR
+               5 GBP  Wallet
+                  $5
+              10 EUR    A
+               5 GBP    B
+--------------------
+                  $5
+              10 EUR
+               5 GBP
+end test

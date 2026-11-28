@@ -10,3 +10,4 @@ lot-annotated-completion	test/regress/1998.test
 lot-annotated-completion	test/regress/coverage-wave7-xact-edge.test
 lot-annotated-completion	test/regress/3314_lot_gains.test
 lot-annotated-completion	test/regress/3314_swap_total.test
+lot-annotated-completion	test/regress/lot-matching-cross-account.test

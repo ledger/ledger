@@ -51,13 +51,11 @@ BOOST_AUTO_TEST_CASE(testParser)
 
   BOOST_CHECK_EQUAL(amount_t::precision_t(2), x12.commodity().precision());
 
-#ifndef NOT_FOR_PYTHON
   string buf("$100...");
   std::istringstream input(buf);
   amount_t x13;
   (void)x13.parse(input);
   BOOST_CHECK_EQUAL(x12, x13);
-#endif // NOT_FOR_PYTHON
 
   amount_t x14;
   BOOST_CHECK_THROW((void)x14.parse("DM"), amount_error);
@@ -220,8 +218,6 @@ BOOST_AUTO_TEST_CASE(testCommodityConstructors)
   BOOST_CHECK(x10.valid());
 }
 
-#ifndef NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testAssignment)
 {
   amount_t x0;
@@ -328,8 +324,6 @@ BOOST_AUTO_TEST_CASE(testCommodityAssignment)
   BOOST_CHECK(x10.valid());
 }
 
-#endif // NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testEquality)
 {
   amount_t x1(123456L);
@@ -433,10 +427,8 @@ BOOST_AUTO_TEST_CASE(testComparisons)
   BOOST_CHECK(100L > x1);
   BOOST_CHECK(x1 < 100UL);
   BOOST_CHECK(100UL > x1);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(x1 < 100.0);
   BOOST_CHECK(100.0 > x1);
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x0.valid());
   BOOST_CHECK(x1.valid());
@@ -461,14 +453,10 @@ BOOST_AUTO_TEST_CASE(testCommodityComparisons)
   BOOST_CHECK(x3 <= x5);
   BOOST_CHECK(x3 < x5);
   BOOST_CHECK(x3 <= x5);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x3 == x5));
-#endif
   BOOST_CHECK(x3 < x1);
   BOOST_CHECK(x3 < x4);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x6 == x7));
-#endif
   BOOST_CHECK_THROW(x6 < x7, amount_error);
 
   BOOST_CHECK(x1.valid());
@@ -477,6 +465,47 @@ BOOST_AUTO_TEST_CASE(testCommodityComparisons)
   BOOST_CHECK(x4.valid());
   BOOST_CHECK(x5.valid());
   BOOST_CHECK(x6.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testMixedCommodityArithmetic)
+{
+  // compare(), operator+= and operator-= throw only when both amounts carry
+  // a commodity and the two differ; a plain amount mixes with any commodity.
+  BOOST_CHECK_NO_THROW(amount_t("$1.57").compare(amount_t("1")));
+  BOOST_CHECK(amount_t("$1.57").compare(amount_t("1")) > 0);
+  BOOST_CHECK(amount_t("1").compare(amount_t("$1.57")) < 0);
+  BOOST_CHECK_THROW(amount_t("$1.57").compare(amount_t("DM 1")), amount_error);
+
+  amount_t x1("$1.57");
+  BOOST_CHECK_NO_THROW(x1 += amount_t("1"));
+  BOOST_CHECK_EQUAL(amount_t("$2.57"), x1);
+
+  amount_t x2("$1.57");
+  BOOST_CHECK_NO_THROW(x2 -= amount_t("1"));
+  BOOST_CHECK_EQUAL(amount_t("$0.57"), x2);
+
+  // The left operand keeps its commodity, or its lack of one.
+  amount_t x3("1");
+  x3 += amount_t("$1.57");
+  BOOST_CHECK(!x3.has_commodity());
+  BOOST_CHECK_EQUAL(internalAmount("2.57"), x3);
+
+  // The precision becomes the larger of the two only when both amounts
+  // carry a commodity or neither does.
+  amount_t x4("$1.57");
+  x4 += amount_t("0.001");
+  BOOST_CHECK_EQUAL(amount_t::precision_t(2), x4.precision());
+  BOOST_CHECK_EQUAL(internalAmount("$1.571"), x4);
+
+  amount_t x5("1.5");
+  x5 += amount_t("0.001");
+  BOOST_CHECK_EQUAL(amount_t::precision_t(3), x5.precision());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+  BOOST_CHECK(x4.valid());
+  BOOST_CHECK(x5.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testIntegerAddition)
@@ -554,9 +583,7 @@ BOOST_AUTO_TEST_CASE(testCommodityAddition)
   BOOST_CHECK_THROW(x1 + x4, amount_error);
   BOOST_CHECK_THROW(x1 + x5, amount_error);
   BOOST_CHECK_EQUAL(string("$246.90"), (x1 + x6).to_string());
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$246.90"), (x1 + 123.45).to_string());
-#endif // NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$246.45"), (x1 + 123L).to_string());
 
   BOOST_CHECK_EQUAL(amount_t("DM 246.90"), x3 + x3);
@@ -670,9 +697,7 @@ BOOST_AUTO_TEST_CASE(testCommoditySubtraction)
   BOOST_CHECK_THROW(x1 - x4, amount_error);
   BOOST_CHECK_THROW(x1 - x5, amount_error);
   BOOST_CHECK_EQUAL(string("$0.00"), (x1 - x6).to_string());
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$-0.00"), (x1 - 123.45).to_string());
-#endif // NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$0.45"), (x1 - 123L).to_string());
 
   BOOST_CHECK_EQUAL(amount_t("DM 0.00"), x3 - x3);
@@ -1187,34 +1212,6 @@ BOOST_AUTO_TEST_CASE(testRoundto)
   BOOST_CHECK_EQUAL(amount_t("-3.25001").roundto(1), amount_t("-3.3"));
 }
 
-#ifndef NOT_FOR_PYTHON
-#if 0
-BOOST_AUTO_TEST_CASE(testReduction)
-{
-  amount_t x0;
-  amount_t x1("60s");
-  amount_t x2("600s");
-  amount_t x3("6000s");
-  amount_t x4("360000s");
-  amount_t x5("10m");           // 600s
-  amount_t x6("100m");          // 6000s
-  amount_t x7("1000m");         // 60000s
-  amount_t x8("10000m");        // 600000s
-  amount_t x9("10h");           // 36000s
-  amount_t x10("100h");         // 360000s
-  amount_t x11("1000h");        // 3600000s
-  amount_t x12("10000h");       // 36000000s
-
-  BOOST_CHECK_THROW(x0.reduce(), amount_error);
-  BOOST_CHECK_THROW(x0.unreduce(), amount_error);
-  BOOST_CHECK_EQUAL(x2, x5.reduce());
-  BOOST_CHECK_EQUAL(x3, x6.reduce());
-  BOOST_CHECK_EQUAL(x10, x4.reduce());
-  BOOST_CHECK_EQUAL(string("100.0h"), x4.unreduce().to_string());
-}
-#endif
-#endif // NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testSign)
 {
   amount_t x0;
@@ -1260,9 +1257,7 @@ BOOST_AUTO_TEST_CASE(testTruth)
   amount_t x1("1234");
   amount_t x2("1234.56");
 
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_THROW(x0.operator bool(), amount_error);
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x1);
   BOOST_CHECK(x2);
@@ -1277,11 +1272,8 @@ BOOST_AUTO_TEST_CASE(testCommodityTruth)
   amount_t x1("$1234");
   amount_t x2("$1234.56");
 
-  if (x1)
-    BOOST_CHECK(true);
-
-  if (x2)
-    BOOST_CHECK(true);
+  BOOST_CHECK(x1);
+  BOOST_CHECK(x2);
 
   BOOST_CHECK(x1.valid());
   BOOST_CHECK(x2.valid());
@@ -1321,6 +1313,7 @@ BOOST_AUTO_TEST_CASE(testIntegerConversion)
 
   BOOST_CHECK_THROW((void)x0.to_long(), amount_error);
   BOOST_CHECK_THROW((void)x0.to_double(), amount_error);
+  BOOST_CHECK_THROW((void)x0.fits_in_long(), amount_error);
   BOOST_CHECK(! x2.fits_in_long());
   BOOST_CHECK_EQUAL(123456L, x1.to_long());
   BOOST_CHECK_EQUAL(123456.0, x1.to_double());
@@ -1354,8 +1347,6 @@ BOOST_AUTO_TEST_CASE(testCommodityConversion)
 
   BOOST_CHECK(x1.valid());
 }
-
-#ifndef NOT_FOR_PYTHON
 
 BOOST_AUTO_TEST_CASE(testPrinting)
 {
@@ -1543,8 +1534,6 @@ BOOST_AUTO_TEST_CASE(testAnnotationWithDate)
   BOOST_CHECK(x4.valid());
 }
 
-#endif // NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testDisplayPrecision)
 {
   amount_t x1("$1.00");
@@ -1611,7 +1600,7 @@ BOOST_AUTO_TEST_CASE(testClearCommodity)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 526-540: precision/keep_precision/set_keep_precision
+// Cover amount.cc: precision/keep_precision/set_keep_precision
 // on uninitialized amounts
 // ---------------------------------------------------------------------------
 
@@ -1640,7 +1629,7 @@ BOOST_AUTO_TEST_CASE(testDisplayPrecisionUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 571: in_place_invert uninitialized
+// Cover amount.cc: in_place_invert uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceInvertUninitialized)
@@ -1650,7 +1639,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceInvertUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 581: in_place_round uninitialized
+// Cover amount.cc: in_place_round uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceRoundUninitialized)
@@ -1660,7 +1649,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceRoundUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 591: in_place_truncate uninitialized
+// Cover amount.cc: in_place_truncate uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceTruncateUninitialized)
@@ -1670,7 +1659,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceTruncateUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc lines 609-625: in_place_floor/ceiling uninitialized
+// Cover amount.cc: in_place_floor/ceiling uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceFloorUninitialized)
@@ -1686,7 +1675,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceCeilingUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 694: in_place_unround uninitialized
+// Cover amount.cc: in_place_unround uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceUnroundUninitialized)
@@ -1696,7 +1685,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceUnroundUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 707: in_place_reduce uninitialized
+// Cover amount.cc: in_place_reduce uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceReduceUninitialized)
@@ -1706,7 +1695,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceReduceUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 717: in_place_unreduce uninitialized
+// Cover amount.cc: in_place_unreduce uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceUnreduceUninitialized)
@@ -1716,7 +1705,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceUnreduceUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 894: annotate uninitialized
+// Cover amount.cc: annotate uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotateUninitialized)
@@ -1727,7 +1716,7 @@ BOOST_AUTO_TEST_CASE(testAnnotateUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 911/918: has_annotation/annotation uninitialized
+// Cover amount.cc: has_annotation/annotation uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testHasAnnotationUninitialized)
@@ -1743,7 +1732,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 927-931: annotation on unannotated amount
+// Cover amount.cc: annotation on unannotated amount
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotationUnannotated)
@@ -1754,7 +1743,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationUnannotated)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 939: strip_annotations uninitialized
+// Cover amount.cc: strip_annotations uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testStripAnnotationsUninitialized)
@@ -1765,7 +1754,7 @@ BOOST_AUTO_TEST_CASE(testStripAnnotationsUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 565: in_place_negate uninitialized
+// Cover amount.cc: in_place_negate uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateUninitialized)
@@ -1775,7 +1764,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceNegateUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 786/820: sign and is_zero on uninitialized
+// Cover amount.cc: sign and is_zero on uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSignUninitialized)
@@ -1791,7 +1780,7 @@ BOOST_AUTO_TEST_CASE(testIsZeroUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 992: to_long on uninitialized
+// Cover amount.cc: to_long on uninitialized
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testToLongUninitialized)
@@ -1801,7 +1790,7 @@ BOOST_AUTO_TEST_CASE(testToLongUninitialized)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc line 653: in_place_roundto with places
+// Cover amount.cc: in_place_roundto with places
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testInPlaceRoundto)
@@ -1812,7 +1801,7 @@ BOOST_AUTO_TEST_CASE(testInPlaceRoundto)
 }
 
 // ---------------------------------------------------------------------------
-// Cover amount.cc lines 1323-1333: valid() edge cases
+// Cover amount.cc: valid() edge cases
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testValidNull)
@@ -1825,14 +1814,14 @@ BOOST_AUTO_TEST_CASE(testValidNull)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 84-89: bigint_t::valid() edge cases
+// Coverage for amount.cc: bigint_t::valid() edge cases
 // Already implicitly tested through amount_t operations, but we ensure
 // the constructor paths are covered
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountDoubleConstructor)
 {
-  // Cover amount.cc line 339-343: amount_t(const double)
+  // Cover amount.cc: amount_t(const double)
   amount_t x1(3.14);
   BOOST_CHECK(!x1.is_null());
   // Double constructor sets precision to extend_by_digits
@@ -1840,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(testAmountDoubleConstructor)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 346-350: amount_t(const unsigned long)
+// Coverage for amount.cc: amount_t(const unsigned long)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountUnsignedLongConstructor)
@@ -1851,7 +1840,7 @@ BOOST_AUTO_TEST_CASE(testAmountUnsignedLongConstructor)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 358-366: operator= assignment
+// Coverage for amount.cc: operator= assignment
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountAssignment)
@@ -1875,8 +1864,8 @@ BOOST_AUTO_TEST_CASE(testAmountAssignment)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 288-289: _copy with BIGINT_BULK_ALLOC
-// Already tested implicitly but let's ensure _dup path is hit
+// amount_t::_copy / _dup: a copy shares the bigint_t until a mutation
+// forces a private copy
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountDup)
@@ -1890,7 +1879,7 @@ BOOST_AUTO_TEST_CASE(testAmountDup)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 318, 329: _clear and _release paths
+// Coverage for amount.cc: _clear and _release paths
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountClear)
@@ -1901,7 +1890,7 @@ BOOST_AUTO_TEST_CASE(testAmountClear)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 202, 211, 218, 226-229:
+// Coverage for amount.cc:
 // stream_out_mpq precision and zeros handling
 // -----------------------------------------------------------------------
 
@@ -1937,7 +1926,7 @@ BOOST_AUTO_TEST_CASE(testAmountPrintWithCommodity)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc line 136: amount constructor precision
+// Coverage for amount.cc: amount constructor precision
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountLongConstructor)
@@ -1949,12 +1938,12 @@ BOOST_AUTO_TEST_CASE(testAmountLongConstructor)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: amount_t constructor from double (lines 84-85, 339-344)
+// amount_t constructor from double
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountDoubleConstructorW7)
 {
-  // Lines 339-344: amount_t(const double val)
+  // amount_t(const double val)
   amount_t x1(3.14159);
   BOOST_CHECK(!x1.is_null());
   BOOST_CHECK(x1.valid());
@@ -1970,12 +1959,12 @@ BOOST_AUTO_TEST_CASE(testAmountDoubleConstructorW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: amount_t constructor from unsigned long (lines 346-350)
+// amount_t constructor from unsigned long
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountUnsignedLongConstructorW7)
 {
-  // Lines 346-350: amount_t(const unsigned long val)
+  // amount_t(const unsigned long val)
   amount_t x1(static_cast<unsigned long>(42));
   BOOST_CHECK(!x1.is_null());
   BOOST_CHECK(x1.valid());
@@ -1989,17 +1978,17 @@ BOOST_AUTO_TEST_CASE(testAmountUnsignedLongConstructorW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: amount_t assignment operator (lines 358-366)
+// amount_t assignment operator
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountAssignmentW7)
 {
-  // Test self-assignment (line 359: if (this != &amt))
+  // Test self-assignment (if (this != &amt))
   amount_t x1("$10.00");
   x1 = x1;  // self-assignment should be safe
   BOOST_CHECK_EQUAL(x1.to_string(), "$10.00");
 
-  // Test assignment from null amount (line 363: _clear())
+  // Test assignment from null amount (_clear())
   amount_t x2("$20.00");
   amount_t x3;  // null amount
   x2 = x3;
@@ -2013,29 +2002,29 @@ BOOST_AUTO_TEST_CASE(testAmountAssignmentW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: amount_t comparison operators (lines 288-329, 388-397)
+// amount_t comparison operators
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountComparisonEdgesW7)
 {
-  // Test operator== with one null operand (line 389-390)
+  // Test operator== with one null operand
   amount_t x1("$10.00");
   amount_t x2;
   BOOST_CHECK(!(x1 == x2));
   BOOST_CHECK(!(x2 == x1));
 
-  // Test operator== with both null (line 391-392)
+  // Test operator== with both null
   amount_t x3;
   BOOST_CHECK(x2 == x3);
 
-  // Test operator== with different commodities (line 393-394)
+  // Test operator== with different commodities
   amount_t x4("10 AAPL");
   amount_t x5("10 MSFT");
   BOOST_CHECK(!(x4 == x5));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: in_place_truncate with places < 0 (lines 608-610, 623-625)
+// in_place_truncate with places < 0
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountTruncateEdgesW7)
@@ -2049,7 +2038,7 @@ BOOST_AUTO_TEST_CASE(testAmountTruncateEdgesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: in_place_roundto with places == 0 (line 653)
+// in_place_roundto with places == 0
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountRoundtoEdgesW7)
@@ -2076,12 +2065,12 @@ BOOST_AUTO_TEST_CASE(testAmountRoundtoEdgesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: price() returning nullopt (line 820)
+// price() returning nullopt
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountPriceNulloptW7)
 {
-  // Line 820: price() returns nullopt when no annotation
+  // price() returns nullopt when no annotation
   amount_t x1("$10.00");
   std::optional<amount_t> p = x1.price();
   BOOST_CHECK(!p);
@@ -2121,12 +2110,12 @@ BOOST_AUTO_TEST_CASE(testAmountPriceKeepsPriceCommodity)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse with PARSE_NO_ANNOT (lines 1034, 1047)
+// parse with PARSE_NO_ANNOT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountParseNoAnnotW7)
 {
-  // Lines 1034, 1047: parse with PARSE_NO_ANNOT flag
+  // parse with PARSE_NO_ANNOT flag
   amount_t x1;
   (void)x1.parse("$10.00 {$11.00}", PARSE_NO_ANNOT);
   BOOST_CHECK_EQUAL(x1.to_string(), "$10.00");
@@ -2135,22 +2124,22 @@ BOOST_AUTO_TEST_CASE(testAmountParseNoAnnotW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: amount_t::valid() edge cases (lines 1322-1334)
+// amount_t::valid() edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountValidW7)
 {
-  // Line 1322-1324: amount with valid quantity
+  // amount with valid quantity
   amount_t x1("$10.00");
   BOOST_CHECK(x1.valid());
 
-  // Line 1331-1333: null amount is valid
+  // null amount is valid
   amount_t x2;
   BOOST_CHECK(x2.valid());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: print with AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES (line 1296)
+// print with AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountPrintElideCommodityQuotesW7)
@@ -2164,29 +2153,41 @@ BOOST_AUTO_TEST_CASE(testAmountPrintElideCommodityQuotesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: _copy with BIGINT_BULK_ALLOC (lines 287-289)
+// amount_t::_copy: copy construction and assignment share the bigint_t;
+// a later mutation must not reach the copies
 // -----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(testAmountCopyBulkAllocW7)
+BOOST_AUTO_TEST_CASE(testAmountCopySharesUntilMutation)
 {
-  // Create amounts and exercise the copy path
   amount_t x1("$10.00");
-  const amount_t& x2(x1);  // copy constructor
+  const amount_t x2(x1);  // copy constructor
   BOOST_CHECK_EQUAL(x1, x2);
 
   // Assign over an existing amount
   amount_t x3("$20.00");
   x3 = x1;
   BOOST_CHECK_EQUAL(x3, x1);
+
+  // Assign from an amount that already shares x3's bigint_t
+  x3 = x2;
+  BOOST_CHECK_EQUAL(x3, x2);
+
+  // x1, x2 and x3 share one bigint_t; mutating x1 must copy it first
+  x1 += amount_t("$1.00");
+  BOOST_CHECK_EQUAL(x1, amount_t("$11.00"));
+  BOOST_CHECK_EQUAL(x2, amount_t("$10.00"));
+  BOOST_CHECK_EQUAL(x3, amount_t("$10.00"));
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse negative amount with commodity prefix (line 1015-1018)
+// parse negative amount with commodity prefix
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountParseNegativePrefixW7)
 {
-  // Line 1015-1018: negative sign handling
+  // negative sign handling
   amount_t x1;
   (void)x1.parse("-$10.00");
   BOOST_CHECK(x1.sign() < 0);
@@ -2198,7 +2199,7 @@ BOOST_AUTO_TEST_CASE(testAmountParseNegativePrefixW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: in_place_multiply/divide edge cases (lines 472-478)
+// in_place_multiply/divide edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountMultiplyDivideEdgesW7)
@@ -2218,7 +2219,7 @@ BOOST_AUTO_TEST_CASE(testAmountMultiplyDivideEdgesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse with apostrophe separators (line 1191)
+// parse with apostrophe separators
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountParseApostropheSepW7)
@@ -2230,12 +2231,12 @@ BOOST_AUTO_TEST_CASE(testAmountParseApostropheSepW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse decimal comma edge cases (lines 1124-1175)
+// parse decimal comma edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountParseDecimalCommaEdgesW7)
 {
-  // Line 1126: incorrect use of thousand-mark period
+  // incorrect use of thousand-mark period
   // Create a commodity with decimal comma style
   amount_t setup("EUR 1.234,56");
   // Now parsing with EUR should use decimal comma style
@@ -2247,13 +2248,12 @@ BOOST_AUTO_TEST_CASE(testAmountParseDecimalCommaEdgesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: amount_t(double) constructor (lines 84-85, 88-89 not reachable
-// directly but line 339-343: double ctor)
+// amount_t(double) constructor
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDoubleConstructorW8)
 {
-  // Lines 339-343: amount_t(const double val)
+  // amount_t(const double val)
   amount_t x1(3.14);
   BOOST_CHECK(!x1.is_null());
   BOOST_CHECK(x1.valid());
@@ -2271,12 +2271,12 @@ BOOST_AUTO_TEST_CASE(testDoubleConstructorW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: amount_t(unsigned long) constructor (lines 346-349)
+// amount_t(unsigned long) constructor
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testUnsignedLongConstructorW8)
 {
-  // Lines 346-349: amount_t(const unsigned long val)
+  // amount_t(const unsigned long val)
   amount_t x1(42UL);
   BOOST_CHECK(!x1.is_null());
   BOOST_CHECK(x1.valid());
@@ -2289,8 +2289,7 @@ BOOST_AUTO_TEST_CASE(testUnsignedLongConstructorW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: copy constructor edge cases (lines 117-136: _copy with
-// BIGINT_BULK_ALLOC flag, line 288-289)
+// amount_t::_copy: copy constructor and assignment edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCopyEdgeCasesW8)
@@ -2305,7 +2304,7 @@ BOOST_AUTO_TEST_CASE(testCopyEdgeCasesW8)
   x1 = x1;
   BOOST_CHECK_EQUAL(x1, x2);
 
-  // Test assignment from uninitialized to initialized (line 362-363: _clear)
+  // Test assignment from uninitialized to initialized (_clear)
   amount_t x3("$200.00");
   amount_t x4;
   x3 = x4;
@@ -2313,7 +2312,7 @@ BOOST_AUTO_TEST_CASE(testCopyEdgeCasesW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: assignment operators (lines 202-257)
+// assignment operators
 // These include assignment from double/long, and _clear path
 // -----------------------------------------------------------------------
 
@@ -2337,7 +2336,7 @@ BOOST_AUTO_TEST_CASE(testAssignmentFromDoubleW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: Comparison operators with double (lines 288-289, 318, 329)
+// Comparison operators with double
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testComparisonWithDoubleW8)
@@ -2358,12 +2357,12 @@ BOOST_AUTO_TEST_CASE(testComparisonWithDoubleW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: in_place_truncate negative places (lines 609-610, 624-625)
+// in_place_truncate negative places
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testTruncateEdgeCasesW8)
 {
-  // in_place_truncate with places < 0 (line 608-610 and 623-625)
+  // in_place_truncate with places < 0
   amount_t x1("123.456");
   x1.set_keep_precision(true);
   amount_t x2(x1);
@@ -2377,12 +2376,12 @@ BOOST_AUTO_TEST_CASE(testTruncateEdgeCasesW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: in_place_roundto with 0 places (line 653)
+// in_place_roundto with 0 places
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testRoundtoZeroPlacesW8)
 {
-  // Line 653: throw for uninitialized
+  // throw for uninitialized
   amount_t x0;
   BOOST_CHECK_THROW(x0.in_place_roundto(2), amount_error);
 
@@ -2398,31 +2397,31 @@ BOOST_AUTO_TEST_CASE(testRoundtoZeroPlacesW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: annotate on commodity (line 911)
+// annotate on commodity
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAnnotateW8)
 {
-  // Line 911: annotate code path
+  // annotate code path
   amount_t x1("10 AAPL");
   annotation_t ann(amount_t("$50.00"));
   x1.annotate(ann);
   BOOST_CHECK(x1.has_annotation());
   BOOST_CHECK(x1.valid());
 
-  // Annotating an amount without commodity is a no-op (line 896)
+  // Annotating an amount without commodity is a no-op
   amount_t x2(100L);
   x2.annotate(ann);
   BOOST_CHECK(!x2.has_annotation());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse() with PARSE_NO_ANNOT flag (lines 1237-1240)
+// parse() with PARSE_NO_ANNOT flag
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseNoAnnotW8)
 {
-  // Lines 1034-1036 (PARSE_NO_ANNOT flag) - parse with annotation details
+  // parse() with the PARSE_NO_ANNOT flag and annotation details
   amount_t x1;
   (void)x1.parse("10 AAPL {$50.00}", PARSE_NO_ANNOT);
   BOOST_CHECK(x1.valid());
@@ -2436,44 +2435,42 @@ BOOST_AUTO_TEST_CASE(testParseNoAnnotW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse() negative amount with prefix commodity (lines 1126,
-// 1138, 1152, 1156, 1169, 1191)
+// parse() negative amount with prefix commodity
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseNegativePrefixW8)
 {
-  // Line 1015-1018: negative prefix parsing
+  // negative prefix parsing
   amount_t x1("- $100.00");
   BOOST_CHECK_EQUAL(x1.sign(), -1);
   BOOST_CHECK(x1.valid());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse() with comma-based amounts triggering error paths
-// (lines 1152, 1156)
+// parse() with comma-based amounts triggering error paths
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseCommaErrorsW8)
 {
-  // Line 1152: too many commas -- two commas confirm thousands, then
+  // too many commas -- two commas confirm thousands, then
   // a third period after is blocked
   BOOST_CHECK_THROW(amount_t("1,234,567,89.00"), amount_error);
 
-  // Line 1156: incorrect use of decimal comma
+  // incorrect use of decimal comma
   // Create a decimal comma commodity first
   amount_t setup("SEK 1,00");
-  // Now try period after comma in decimal comma style => line 1156
+  // Now try period after comma in decimal comma style: parse() rejects it
   BOOST_CHECK_THROW(amount_t("SEK 1.234,567,89"), amount_error);
   setup.commodity().drop_flags(COMMODITY_STYLE_DECIMAL_COMMA);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse() with thousand-mark period error (line 1126)
+// parse() with thousand-mark period error
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseThousandPeriodErrorW8)
 {
-  // Line 1126: incorrect use of thousand-mark period
+  // incorrect use of thousand-mark period
   // Create a decimal comma commodity
   amount_t setup2("NOK 1.234,56");
   // Try a period that doesn't sit on a 3-digit boundary
@@ -2482,19 +2479,19 @@ BOOST_AUTO_TEST_CASE(testParseThousandPeriodErrorW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse() with thousand-mark comma error (line 1169)
+// parse() with thousand-mark comma error
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseThousandCommaErrorW8)
 {
-  // Line 1169: incorrect use of thousand-mark comma
+  // incorrect use of thousand-mark comma
   // This happens when we have a previous comma or period and then
   // an incorrectly placed comma appears
   BOOST_CHECK_THROW(amount_t("1.234,56,78"), amount_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: print() with AMOUNT_PRINT_ELIDE_COMMODITY (lines 1323-1333)
+// print() with AMOUNT_PRINT_ELIDE_COMMODITY
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintElideCommodityW8)
@@ -2516,12 +2513,12 @@ BOOST_AUTO_TEST_CASE(testPrintElideCommodityW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: value() with price chain (line 786)
+// value() with price chain
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testValuePriceChainW8)
 {
-  // Exercise the value() method (line 786 area)
+  // Exercise the value() method
   amount_t x1("100 AAPL2");
   commodity_t& aapl(x1.commodity());
 
@@ -2534,7 +2531,7 @@ BOOST_AUTO_TEST_CASE(testValuePriceChainW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: parse with soft fail (line 992 - unget path)
+// parse with soft fail (unget path)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseSoftFailW8)
@@ -2547,7 +2544,7 @@ BOOST_AUTO_TEST_CASE(testParseSoftFailW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 84-85, 88-89 (bigint_t::valid)
+// amount.cc (bigint_t::valid)
 // These are only reachable through internal corruption, but we test
 // the valid() method indirectly through amount_t::valid()
 // -----------------------------------------------------------------------
@@ -2568,7 +2565,7 @@ BOOST_AUTO_TEST_CASE(testAmountValidW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 339-343 (amount from double)
+// amount.cc (amount from double)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountFromDoubleW11)
@@ -2588,7 +2585,7 @@ BOOST_AUTO_TEST_CASE(testAmountFromDoubleW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 226-229 (exception in stream_out_mpq)
+// amount.cc (exception in stream_out_mpq)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountDivisionW11)
@@ -2611,7 +2608,7 @@ BOOST_AUTO_TEST_CASE(testAmountDivisionW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 288-289 (copy with BIGINT_BULK_ALLOC)
+// amount_t::_copy: copy and assignment
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountCopyW11)
@@ -2631,7 +2628,7 @@ BOOST_AUTO_TEST_CASE(testAmountCopyW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 318, 329 (clear and release paths)
+// amount.cc (clear and release paths)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountClearW11)
@@ -2643,7 +2640,7 @@ BOOST_AUTO_TEST_CASE(testAmountClearW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 608-610, 624-625 (truncate with
+// amount.cc (truncate with
 // negative/zero display_precision)
 // -----------------------------------------------------------------------
 
@@ -2661,7 +2658,7 @@ BOOST_AUTO_TEST_CASE(testAmountTruncateW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc line 786 (amount print path)
+// amount.cc (amount print path)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountPrintCommodityW11)
@@ -2679,7 +2676,7 @@ BOOST_AUTO_TEST_CASE(testAmountPrintCommodityW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc line 911 (annotate assert false path)
+// amount.cc (annotate assert false path)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountAnnotateW11)
@@ -2693,7 +2690,7 @@ BOOST_AUTO_TEST_CASE(testAmountAnnotateW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc line 992 (stream parse path)
+// amount.cc (stream parse path)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountStreamParseW11)
@@ -2711,7 +2708,7 @@ BOOST_AUTO_TEST_CASE(testAmountStreamParseW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 1323-1324, 1328-1329, 1332-1333
+// amount.cc
 // (valid() error checks - these are internal validity checks)
 // -----------------------------------------------------------------------
 
@@ -2731,7 +2728,7 @@ BOOST_AUTO_TEST_CASE(testAmountValidChecksW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 105-108, 117, 126, 136
+// amount.cc
 // (stream_out_mpq precision paths)
 // -----------------------------------------------------------------------
 
@@ -2751,7 +2748,7 @@ BOOST_AUTO_TEST_CASE(testAmountPrecisionPathsW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc line 202, 211, 218 (arithmetic edge cases)
+// amount.cc (arithmetic edge cases)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountArithmeticEdgeCasesW11)
@@ -2782,7 +2779,7 @@ BOOST_AUTO_TEST_CASE(testAmountArithmeticEdgeCasesW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc comparison paths (line 288-289)
+// amount.cc comparison paths
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountCompareW11)
@@ -2806,6 +2803,124 @@ BOOST_AUTO_TEST_CASE(testAmountCompareW11)
   amount_t x7("$10.00");
   amount_t x8;
   BOOST_CHECK_THROW(x7.compare(x8), amount_error);
+}
+
+// set_precision_if_exact() gives an amount the precision of the written
+// amount it stands for, and never rounds: a share of a written cost.
+
+BOOST_AUTO_TEST_CASE(testSetPrecisionIfExact)
+{
+  amount_t x1("$2040.000");
+  x1.in_place_unround();
+  x1 *= amount_t("10") / amount_t("12.0");  // 10/12 of the total: 1700
+  BOOST_CHECK(x1.precision() > 3);
+
+  BOOST_CHECK(x1.set_precision_if_exact(2));
+  BOOST_CHECK_EQUAL(2, x1.precision());
+  BOOST_CHECK_EQUAL(amount_t("$1700"), x1);
+  BOOST_CHECK(x1.set_precision_if_exact(0)); // 1700 is exact at no decimals
+  BOOST_CHECK_EQUAL(0, x1.precision());
+
+  amount_t x2("$100.00");
+  x2.in_place_unround();
+  x2 /= amount_t("3");
+  const amount_t::precision_t prec = x2.precision();
+  const amount_t value(x2);
+  BOOST_CHECK(!x2.set_precision_if_exact(2)); // a third of $100 is not exact
+  BOOST_CHECK_EQUAL(prec, x2.precision());
+  BOOST_CHECK_EQUAL(value, x2);
+
+  amount_t x3("1.25");
+  BOOST_CHECK(!x3.set_precision_if_exact(1));
+  BOOST_CHECK_EQUAL(2, x3.precision());
+  BOOST_CHECK(x3.set_precision_if_exact(4)); // raising it is exact too
+  BOOST_CHECK_EQUAL(4, x3.precision());
+
+  amount_t x4;
+  BOOST_CHECK_THROW(x4.set_precision_if_exact(2), amount_error);
+}
+
+BOOST_AUTO_TEST_CASE(testAddSubtractErrorMessages)
+{
+  // operator+= and operator-= share one implementation.  Each error names
+  // its own operation and gives the operands in the order written:
+  // `x -= y` subtracts y from x.
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  const amount_t dollars("$1.00");
+  const amount_t euros("1.00 EUR");
+  const amount_t none;
+
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) += none, amount_error,
+                        names("Cannot add an uninitialized amount to an amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) += dollars, amount_error,
+                        names("Cannot add an amount to an uninitialized amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) += none, amount_error,
+                        names("Cannot add two uninitialized amounts"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) -= none, amount_error,
+                        names("Cannot subtract an uninitialized amount from an amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) -= dollars, amount_error,
+                        names("Cannot subtract an amount from an uninitialized amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) -= none, amount_error,
+                        names("Cannot subtract two uninitialized amounts"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) += euros, amount_error,
+                        names("Adding amounts with different commodities: '$' != 'EUR'"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) -= euros, amount_error,
+                        names("Subtracting amounts with different commodities: '$' != 'EUR'"));
+
+  // The sum and difference themselves.
+  BOOST_CHECK_EQUAL(amount_t("$3.50"), amount_t("$1.25") + amount_t("$2.25"));
+  BOOST_CHECK_EQUAL(amount_t("$-1.00"), amount_t("$1.25") - amount_t("$2.25"));
+}
+
+BOOST_AUTO_TEST_CASE(testIsZeroNegativeBeyondPrecision)
+{
+  // The fixture gives $ a precision of 2.  Each quotient carries more
+  // digits than that, so is_zero() decides at the commodity's precision.
+  const amount_t big = amount_t("$-10.00") / amount_t(3L);   // $-3.333...
+  const amount_t small = amount_t("$-0.03") / amount_t(5L);  // $-0.006 shows as $-0.01
+  const amount_t tiny = amount_t("$-0.01") / amount_t(4L);   // $-0.0025 shows as $-0.00
+  const amount_t one = amount_t("$-3.00") / amount_t(3L);    // $-1, |x| == 1 exactly
+
+  BOOST_CHECK(!big.is_zero());
+  BOOST_CHECK(!small.is_zero());
+  BOOST_CHECK(tiny.is_zero());
+  BOOST_CHECK(!one.is_zero());
+  BOOST_CHECK(!(-big).is_zero());
+  BOOST_CHECK(!(-small).is_zero());
+  BOOST_CHECK((-tiny).is_zero());
+}
+
+BOOST_AUTO_TEST_CASE(testConversionDocClaims)
+{
+  // to_long() rounds to nearest, ties to even (MPFR GMP_RNDN), and never
+  // throws for lost precision.
+  BOOST_CHECK_EQUAL(2L, amount_t("2.5").to_long());
+  BOOST_CHECK_EQUAL(4L, amount_t("3.5").to_long());
+  BOOST_CHECK_EQUAL(-3L, amount_t("-2.6").to_long());
+  BOOST_CHECK_EQUAL(2.5, amount_t("2.5").to_double());
+
+  // fits_in_long() tests range, not exactness.
+  BOOST_CHECK(amount_t("2.5").fits_in_long());
+
+  // to_string() rounds to the commodity's display precision ($ is 2 in
+  // this fixture); quantity_string() is number().to_string(), which no
+  // longer has the commodity's precision to round to.
+  amount_t x("$10.00");
+  x *= amount_t("0.3333");
+  BOOST_CHECK_EQUAL(string("$3.33"), x.to_string());
+  BOOST_CHECK_EQUAL(string("3.333"), x.quantity_string());
+  BOOST_CHECK_EQUAL(x.number().to_string(), x.quantity_string());
+
+  // An amount below the display precision: is_zero() tests the display
+  // value, while rounded() leaves the value intact, so rounded().sign()
+  // still reports it as positive.
+  amount_t tiny("$0.01");
+  tiny /= amount_t("1000");
+  BOOST_CHECK(tiny.is_zero());
+  BOOST_CHECK_EQUAL(1, tiny.sign());
+  BOOST_CHECK_EQUAL(1, tiny.rounded().sign());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

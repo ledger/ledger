@@ -52,8 +52,10 @@
  *   Push/pop entries on the apply stack to affect all subsequent items.
  *
  *   **Legacy single-character directives** -- `A`, `C`, `D`, `N`, `P`, `Y`
- *   Inherited from the original Ledger format; each has a word-based
- *   equivalent in the general_directive() dispatch table.
+ *   Inherited from the original Ledger format and dispatched by
+ *   read_next_directive().  A and Y also have keyword forms (`bucket`,
+ *   `year`); D and N overlap the `commodity` sub-directives `default` and
+ *   `nomarket`; C and P exist only in single-character form.
  *
  *   **File directives** -- `include`, `comment`/`test`, `--option`
  *   Control which files are parsed and how options are set.
@@ -68,8 +70,10 @@
  *   **Time tracking** -- `i`/`I` (clock-in), `o`/`O` (clock-out)
  *   Record time-log events that are converted to transactions.
  *
- * The general_directive() method is the main dispatch table, mapping
- * directive keywords to handler methods via a switch on the first character.
+ * The general_directive() method dispatches word directives through the
+ * word_directives table, which maps each keyword to its handler and says
+ * whether the keyword may stand alone; when it finds no match,
+ * read_next_directive() tries the legacy single-character directives.
  */
 
 #include "textual_internal.h"
@@ -77,19 +81,22 @@
 namespace ledger {
 
 using detail::application_t;
+using detail::directory_cache_t;
+using detail::directory_listing_t;
 using detail::fixed_rate_t;
 using detail::instance_t;
 
 /*--- Time Tracking Directives ---*/
 
-#if TIMELOG_SUPPORT
-
-void instance_t::clock_in_directive(char* line, bool capitalized) {
+time_xact_t instance_t::parse_clock_event(char* line, bool capitalized) {
   if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
-  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string datetime(line, 2, 19);
 
-  char* p = skip_ws(line + 22);
+  // line[21] ends the time: either the NUL of a bare "o DATE TIME" line or the
+  // separator before the account.  Never read past the NUL: the bytes beyond it
+  // belong to an earlier line in the reused line buffer.
+  char* p = line[21] != '\0' ? skip_ws(line + 22) : line + 21;
   char* n = next_element(p, true);
   char* end = n ? next_element(n, true) : nullptr;
 
@@ -107,42 +114,18 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
-                    n ? n : "", end ? end : "");
+  return time_xact_t(position, when, capitalized,
+                     line[21] != '\0' ? top_account()->find_account(p) : nullptr, n ? n : "",
+                     end ? end : "");
+}
 
-  timelog.clock_in(event);
+void instance_t::clock_in_directive(char* line, bool capitalized) {
+  timelog.clock_in(parse_clock_event(line, capitalized));
 }
 
 void instance_t::clock_out_directive(char* line, bool capitalized) {
-  if (std::strlen(line) < 21)
-    throw_(parse_error, _("Clock-in/out directive is too short"));
-  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
-
-  char* p = skip_ws(line + 22);
-  char* n = next_element(p, true);
-  char* end = n ? next_element(n, true) : nullptr;
-
-  if (end && *end == ';')
-    end = skip_ws(end + 1);
-  else
-    end = nullptr;
-
-  position_t position;
-  position.pathname = context.pathname_ref;
-  position.beg_pos = context.line_beg_pos;
-  position.beg_line = context.linenum;
-  position.end_pos = context.curr_pos;
-  position.end_line = context.linenum;
-  position.sequence = context.sequence++;
-
-  datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
-                    n ? n : "", end ? end : "");
-
-  context.count += timelog.clock_out(event);
+  context.count += timelog.clock_out(parse_clock_event(line, capitalized));
 }
-
-#endif // TIMELOG_SUPPORT
 
 /*--- Legacy Single-Character Directives ---*/
 
@@ -151,10 +134,12 @@ void instance_t::default_commodity_directive(char* line) {
   // like "D 1.000,00" (no commodity symbol) transfers its format
   // (thousands separator, decimal comma) and precision to
   // null_commodity.  This makes subsequent bare amounts display with
-  // the same format (issue #761).
+  // the same format (issue #761).  PARSE_DECLARES_STYLE says the
+  // directive declares the style, so a decimal comma that only its
+  // digits suggest is no conflict with an earlier decimal period.
   amount_t amt;
   std::istringstream stream(skip_ws(line + 1));
-  (void)amt.parse(stream, PARSE_APPLY_STYLE_TO_BARE);
+  (void)amt.parse(stream, PARSE_APPLY_STYLE_TO_BARE | PARSE_DECLARES_STYLE);
   VERIFY(amt.valid());
   commodity_pool_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
@@ -201,11 +186,11 @@ void instance_t::price_xact_directive(char* line) {
 
 void instance_t::nomarket_directive(char* line) {
   char* p = skip_ws(line + 1);
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string symbol;
   commodity_t::parse_symbol(p, symbol);
 
-  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol))
-    commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
+  commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
+  commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
 }
 
 /*--- File and Option Directives ---*/
@@ -248,27 +233,77 @@ void instance_t::option_directive(char* line) {
     p = const_cast<char*>(unquoted.c_str());
   }
 
-  if (!process_option(context.pathname.string(), line + 2, *context.scope, p, line))
+  if (!process_option(context.pathname().string(), line + 2, *context.scope, p, line))
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
 namespace {
 
+/// A listing taken this soon after its directory's modification time
+/// cannot be trusted: a file created within the same clock tick leaves the
+/// time unchanged, and some filesystems store it in two-second steps.
+const auto racy_window = std::chrono::seconds(2);
+
+/// Return the listing of @p dir, listing it when the cache has no
+/// listing that can be trusted.
+///
+/// A listing is reused while the directory's modification time is
+/// unchanged and old enough to be trusted; a parse-time writer (a `python`
+/// block) that adds a file changes the time, so the next include sees it.
+/// The time is read before the directory is listed, so a change that lands
+/// in between costs one extra listing, never a stale one.  The entries are
+/// full paths, sorted.  A directory that cannot be listed (one that may be
+/// searched but not read, say) is cached with its error and no entries; an
+/// error part-way through a listing counts as a failed listing.
+const directory_listing_t& list_directory(directory_cache_t& cache, const path& dir) {
+  std::error_code ec;
+  const auto stamp = std::filesystem::last_write_time(dir, ec);
+
+  directory_listing_t& element = cache[dir];
+  if (!ec && !element.racy && element.stamp == stamp)
+    return element;
+
+  element.entries.clear();
+  element.error.clear();
+  element.stamp = ec ? std::filesystem::file_time_type::min() : stamp;
+  element.racy = ec || std::filesystem::file_time_type::clock::now() - stamp < racy_window;
+
+  std::error_code list_ec;
+  std::filesystem::directory_iterator it(dir, list_ec);
+  for (; !list_ec && it != std::filesystem::directory_iterator(); it.increment(list_ec))
+    element.entries.push_back(it->path());
+  if (list_ec) {
+    element.entries.clear();
+    element.error = list_ec;
+  } else {
+    std::sort(element.entries.begin(), element.entries.end());
+  }
+  return element;
+}
+
 /// Recursively expand a glob path by walking its components.
 ///
-/// For each component we enumerate the current base directory and match
-/// entries against the component interpreted as a shell glob.  Using
-/// `mask_t::assign_glob` (which is case-sensitive) rather than a direct
-/// filesystem lookup ensures that `include FOO.dat` does not silently
-/// match a differently-cased `foo.dat` on case-insensitive filesystems
-/// (issue #1660).  Nor does `--ignore-diacritics` let `include cafe.dat`
-/// match `café.dat`.  Matched entries drive the next level of recursion;
-/// the final component contributes regular files to @p results.
+/// Each directory on the path is listed at most once per parse (see
+/// list_directory).  A component holding a glob metacharacter is matched
+/// against every entry of its directory as a shell glob; a component
+/// without one is looked up by exact name in that listing instead.  Both
+/// compare names exactly, using `mask_t::assign_glob` (which is
+/// case-sensitive) rather than a filesystem lookup, so `include FOO.dat`
+/// does not silently match a differently-cased `foo.dat` on
+/// case-insensitive filesystems (issue #1660).  Nor does
+/// `--ignore-diacritics` let `include cafe.dat` match `café.dat`.  A
+/// directory that cannot be listed (searchable but unreadable) still lets
+/// a component without glob characters through by direct lookup, so
+/// case-exactness is enforced only for directories ledger can list; a glob
+/// component under such a directory is a parse error.  Matched entries
+/// drive the next level of recursion; the final component contributes
+/// regular files to @p results.
 ///
 /// This allows patterns with glob metacharacters in any component --
 /// not just the filename -- to match across multiple directory levels
 /// (issue #1214).
-void expand_glob_path(const path& base, const std::vector<path>& components, std::size_t index,
+void expand_glob_path(directory_cache_t& cache, const path& base,
+                      const std::vector<path>& components, std::size_t index,
                       std::vector<path>& results) {
   if (index == components.size())
     return;
@@ -280,14 +315,28 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
   mask_t glob;
   glob.assign_glob(comp);
 
-  std::vector<path> sorted_entries;
-  std::copy(std::filesystem::directory_iterator(base), std::filesystem::directory_iterator(),
-            std::back_inserter(sorted_entries));
-  std::sort(sorted_entries.begin(), sorted_entries.end());
+  const directory_listing_t& listing = list_directory(cache, base);
+
+  // The characters mask_t::assign_glob treats specially.
+  const bool literal = comp.find_first_of("*?[\\") == string::npos;
+  std::vector<path> single;
+  const std::vector<path>* candidates = &listing.entries;
+  if (literal) {
+    // No glob character: the pattern matches exactly this name, so look it up
+    // instead of matching every entry.  A directory that could not be listed
+    // gets the same one candidate, which the loop below confirms on disk.
+    path wanted = base / comp;
+    if (listing.error || std::binary_search(listing.entries.begin(), listing.entries.end(), wanted))
+      single.push_back(wanted);
+    candidates = &single;
+  } else if (listing.error) {
+    throw_(parse_error, _f("Cannot list directory %1% to expand include pattern '%2%': %3%") %
+                            base.string() % comp % listing.error.message());
+  }
 
   const bool is_last = (index + 1 == components.size());
 
-  for (const path& entry : sorted_entries) {
+  for (const path& entry : *candidates) {
     string name = entry.filename().string();
     if (!utf8::is_valid(name.begin(), name.end())) {
       DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << name);
@@ -300,7 +349,7 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
       if (is_regular_file(entry))
         results.push_back(entry);
     } else if (is_directory(entry)) {
-      expand_glob_path(entry, components, index + 1, results);
+      expand_glob_path(cache, entry, components, index + 1, results);
     }
   }
 }
@@ -332,9 +381,11 @@ void split_glob_path(const path& filename, path& base, std::vector<path>& compon
  * component, not just the filename -- wildcards in parent directory
  * components are expanded as well, so a single directive can match
  * files across multiple directory levels.  Paths are resolved relative
- * to the directory of the current file.  Recursive includes are
- * detected and skipped; a hard depth limit of 100 prevents runaway
- * include chains.
+ * to the directory of the current file.  A match that is the including
+ * file itself is skipped, so a glob such as `include 1662*` does not
+ * re-read its own file; a literal self-include therefore finds no file
+ * and is reported as not found.  Longer include cycles are stopped by
+ * the hard depth limit of 100.
  *
  * For each matched file, a new instance_t is created and parsed.  The
  * parent file's year/epoch state is saved and restored after the
@@ -370,8 +421,8 @@ void instance_t::include_directive(char* line) {
   path include_path(line);
   if (line[0] != '/' && line[0] != '\\' && line[0] != '~' && !include_path.is_absolute()) {
     DEBUG("textual.include", "received a relative path");
-    DEBUG("textual.include", "parent file path: " << context.pathname);
-    path parent_path = context.pathname.parent_path();
+    DEBUG("textual.include", "parent file path: " << context.pathname());
+    path parent_path = context.pathname().parent_path();
     if (parent_path.empty()) {
       filename = context.current_directory / line;
     } else {
@@ -390,11 +441,11 @@ void instance_t::include_directive(char* line) {
   split_glob_path(filename, base, components);
 
   std::vector<path> matched_files;
-  expand_glob_path(base, components, 0, matched_files);
+  expand_glob_path(listing_cache(), base, components, 0, matched_files);
 
   bool files_found = false;
   for (const path& matched : matched_files) {
-    if (context.pathname == matched) {
+    if (context.pathname() == matched) {
       DEBUG("textual.include", "Avoiding recursive include of: " << matched);
       continue;
     }
@@ -402,56 +453,45 @@ void instance_t::include_directive(char* line) {
     journal_t* journal = context.journal;
     account_t* master = top_account();
     scope_t* scope = context.scope;
-    std::size_t& errors = context.errors;
-    std::size_t& count = context.count;
-    std::size_t& sequence = context.sequence;
 
     DEBUG("textual.include", "Including: " << matched);
     DEBUG("textual.include", "Master account: " << master->fullname());
 
-    context_stack.push(matched);
+    parse_context_stack_t::pushed_t pushed(context_stack, matched);
 
     context_stack.get_current().journal = journal;
     context_stack.get_current().master = master;
     context_stack.get_current().scope = scope;
 
-    parse_context_t* save_current_context = journal->current_context;
-    journal->current_context = &context_stack.get_current();
-
     // Save year state so that year/Y directives inside the included
     // file do not bleed back into the parent file after the include
     // returns.  This mirrors what end_apply_directive does for the
     // "apply year" / "end apply year" pair.
-    optional<datetime_t> saved_epoch = epoch;
-    optional<int> saved_year_directive_year = year_directive_year;
+    scoped_assign<optional<datetime_t>> epoch_guard(epoch);
+    scoped_assign<optional<int>> year_guard(year_directive_year);
 
-    try {
-      instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,
-                          hash_type);
-      instance.apply_stack.push_front(application_t("account", master));
-      instance.parse();
-    } catch (...) {
-      errors += context_stack.get_current().errors;
-      count += context_stack.get_current().count;
-      sequence += context_stack.get_current().sequence;
+    // Whether the included file parses or throws, fold its counts into this
+    // file's and make this file's context current again.  Declared after
+    // `pushed`, this runs first, while the included file's context is still
+    // on the stack.
+    struct restore_t {
+      parse_context_t& parent;
+      parse_context_t& child;
+      journal_t* journal;
+      parse_context_t* saved_current_context;
 
-      epoch = saved_epoch;
-      year_directive_year = saved_year_directive_year;
+      ~restore_t() {
+        parent.errors += child.errors;
+        parent.count += child.count;
+        parent.sequence += child.sequence;
+        journal->current_context = saved_current_context;
+      }
+    } restore{context, context_stack.get_current(), journal, journal->current_context};
 
-      journal->current_context = save_current_context;
-      context_stack.pop();
-      throw;
-    }
-
-    epoch = saved_epoch;
-    year_directive_year = saved_year_directive_year;
-
-    errors += context_stack.get_current().errors;
-    count += context_stack.get_current().count;
-    sequence += context_stack.get_current().sequence;
-
-    journal->current_context = save_current_context;
-    context_stack.pop();
+    journal->current_context = &context_stack.get_current();
+    instance_t instance(context_stack, context_stack.get_current(), this, hash_type);
+    instance.apply_stack.push_front(application_t("account", master));
+    instance.parse();
 
     files_found = true;
   }
@@ -465,22 +505,27 @@ void instance_t::include_directive(char* line) {
 void instance_t::apply_directive(char* line) {
   char* b = next_element(line);
   string keyword(line);
-  if (!b)
-    throw_(parse_error, _f("Directive 'apply %1%' requires an argument") % keyword);
+  // As in account_directive_body(), only a recognized keyword is checked
+  // for a missing argument.
+  auto argument = [&]() -> char* {
+    if (!b)
+      throw_(parse_error, _f("Directive 'apply %1%' requires an argument") % keyword);
+    return b;
+  };
+
   if (keyword == "account")
-    apply_account_directive(b);
+    apply_account_directive(argument());
   else if (keyword == "tag")
-    apply_tag_directive(b);
+    apply_tag_directive(argument());
   else if (keyword == "fixed" || keyword == "rate")
-    apply_rate_directive(b);
+    apply_rate_directive(argument());
   else if (keyword == "year")
-    apply_year_directive(b, true); // "apply year" uses apply_stack
+    apply_year_directive(argument(), true); // "apply year" uses apply_stack
+  else
+    throw_(parse_error, _f("Unrecognized directive 'apply %1%'") % keyword);
 }
 
 void instance_t::apply_account_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply account' requires an argument"));
-
   if (account_t* acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
   else
@@ -488,50 +533,19 @@ void instance_t::apply_account_directive(char* line) {
 }
 
 void instance_t::apply_tag_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply tag' requires an argument"));
-
   string tag(trim_ws(line));
-
-  // Register the tag name(s) as known so that --strict mode does not warn
-  // about them.  Using 'apply tag' is an explicit act that declares the tag.
-  // This mirrors what 'tag <name>' does via tag_directive.
-  if (tag.find(':') == string::npos) {
-    // Simple boolean tag (no colon): register it and wrap in colons.
-    context.journal->register_metadata(tag, NULL_VALUE, 0);
+  if (tag.find(':') == string::npos)
     tag = string(":") + tag + ":";
-  } else if (!tag.empty() && tag.front() == ':') {
-    // ":name1:name2:" format: register each tag name between colons.
-    string inner = tag.substr(1);
-    if (!inner.empty() && inner.back() == ':')
-      inner.pop_back();
-    string::size_type pos = 0;
-    while (pos <= inner.size()) {
-      string::size_type next = inner.find(':', pos);
-      if (next == string::npos)
-        next = inner.size();
-      string name = inner.substr(pos, next - pos);
-      trim(name);
-      if (!name.empty())
-        context.journal->register_metadata(name, NULL_VALUE, 0);
-      pos = next + 1;
-    }
-  } else {
-    // "tagname: value" format: register just the name before the colon.
-    string::size_type colon = tag.find(':');
-    string name = tag.substr(0, colon);
-    trim(name);
-    if (!name.empty())
-      context.journal->register_metadata(name, NULL_VALUE, 0);
-  }
+
+  // Declare the names the tag string applies, read by the same scanner that
+  // applies them to each transaction, so that --strict does not warn.
+  for (const metadata_t::parsed_tag_t& parsed : metadata_t::scan_metadata_tags(tag.c_str()))
+    context.journal->register_metadata(parsed.name, NULL_VALUE, 0);
 
   apply_stack.push_front(application_t("tag", tag));
 }
 
 void instance_t::apply_rate_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply fixed/rate' requires an argument"));
-
   if (std::optional<std::pair<commodity_t*, price_point_t>> price_point =
           commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true, true)) {
     apply_stack.push_front(
@@ -542,9 +556,6 @@ void instance_t::apply_rate_directive(char* line) {
 }
 
 void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply year' requires an argument"));
-
   try {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
     if (use_apply_stack) {
@@ -558,22 +569,39 @@ void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
 
     // Track the year directive separately
     year_directive_year = year;
-
-    // Only set epoch if it's not already set (e.g., by --now)
-    if (!epoch) {
-      // This must be set to the last day of the year, otherwise partial
-      // dates like "11/01" will refer to last year's November, not the
-      // current year.
-      epoch = datetime_t(date_t(year, 12, 31));
-    }
   } catch (bad_lexical_cast&) { // NOLINT(bugprone-empty-catch)
     throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
   }
 }
 
+void instance_t::pop_application() {
+  const application_t& entry = apply_stack.front();
+  if (std::holds_alternative<optional<datetime_t>>(entry.value)) {
+    epoch = std::get<optional<datetime_t>>(entry.value);
+    year_directive_year = entry.saved_year_directive;
+  }
+
+  apply_stack.pop_front();
+}
+
 void instance_t::end_apply_directive(char* kind) {
-  char* b = kind ? next_element(kind) : nullptr;
-  string name(b ? b : "");
+  // `kind` is the text after `end`.  Three forms close a block: `end`,
+  // `end apply [NAME]` and the older `end KEYWORD [NAME]`, which is
+  // checked like `end apply KEYWORD`.  NAME, when given, is the name the
+  // block is checked against.
+  string name;
+  if (kind && *kind) {
+    char* rest = next_element(kind);
+    string word(kind);
+    if (word == "apply") {
+      name = rest ? rest : "";
+    } else if (word == "account" || word == "tag" || word == "fixed" || word == "rate" ||
+               word == "year") {
+      name = rest && *rest ? rest : word;
+    } else {
+      throw_(parse_error, _f("Unrecognized directive 'end %1%'") % word);
+    }
+  }
 
   if (apply_stack.size() <= 1) {
     if (name.empty()) {
@@ -585,17 +613,85 @@ void instance_t::end_apply_directive(char* kind) {
     }
   }
 
-  if (!name.empty() && name != apply_stack.front().label)
+  // apply_rate_directive records both `apply rate` and `apply fixed` as
+  // "fixed", so either spelling closes either block.
+  if (!name.empty() && (name == "rate" ? string("fixed") : name) != apply_stack.front().label)
     throw_(std::runtime_error,
            _f("'end apply %1%' directive does not match 'apply %2%' directive") % name %
                apply_stack.front().label);
 
-  if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
-    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
-    year_directive_year = apply_stack.front().saved_year_directive;
-  }
+  pop_application();
+}
 
-  apply_stack.pop_front();
+/*--- Directive Blocks ---*/
+
+namespace {
+
+/// Return true if @p line, an indented line beneath an `account`,
+/// `commodity`, `payee` or `tag` directive with its leading whitespace
+/// skipped, is a comment rather than a sub-directive.  These are the
+/// characters that read_next_directive() treats as starting a comment at
+/// the beginning of a top-level line.
+bool is_block_comment(const char* line) {
+  switch (*line) {
+  case ';':
+  case '#':
+  case '%':
+  case '*':
+  case '|':
+    return true;
+  default:
+    return false;
+  }
+}
+
+} // namespace
+
+char* instance_t::subdirective_t::argument() const {
+  if (!arg) {
+    string name(kind);
+    name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+    throw_(parse_error, _f("%1% directive '%2%' requires an argument") % name % keyword);
+  }
+  return arg;
+}
+
+void instance_t::read_subdirectives(std::size_t outer_indent, const char* kind,
+                                    const std::function<bool(const subdirective_t&)>& on_keyword,
+                                    const std::function<void(char*)>& on_comment) {
+  while (true) {
+    // At top level a plain one-character look at the stream decides; the
+    // seek-and-restore of peek_line_indent() is needed only to compare the
+    // depth of a nested block against its parent's, before the line is read.
+    std::size_t indent = 0;
+    if (outer_indent == 0) {
+      if (!peek_whitespace_line())
+        break;
+    } else {
+      indent = peek_line_indent();
+      if (indent <= outer_indent) // 0 when the next line is not indented
+        break;
+    }
+
+    char* line;
+    read_line(line);
+    char* q = skip_ws(line);
+    if (outer_indent == 0)
+      indent = static_cast<std::size_t>(q - line); // same count peek_line_indent() makes
+    if (!*q)
+      break;
+
+    if (is_block_comment(q)) {
+      if (on_comment)
+        on_comment(skip_ws(q + 1));
+      continue;
+    }
+
+    char* arg = next_element(q); // terminates the keyword at q
+    subdirective_t sub{kind, q, arg, indent};
+    if (!on_keyword(sub))
+      throw_(parse_error, _f("Unrecognized %1% directive '%2%'") % kind % sub.keyword);
+  }
 }
 
 /*--- Account Directives ---*/
@@ -621,89 +717,66 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
     account->parse_tags(skip_ws(comment), *context.scope, true);
   unique_ptr<auto_xact_t> ae;
 
-  while (true) {
-    std::size_t next_indent = peek_line_indent();
-    if (next_indent == 0 || next_indent <= outer_indent)
-      break;
+  read_subdirectives(
+      outer_indent, "account",
+      [&](const subdirective_t& sub) -> bool {
+        if (sub.keyword == "alias") {
+          account_alias_directive(account, sub.argument());
+        } else if (sub.keyword == "payee") {
+          account_payee_directive(account, sub.argument());
+        } else if (sub.keyword == "value") {
+          account_value_directive(account, sub.argument());
+        } else if (sub.keyword == "default") {
+          account_default_directive(account);
+        } else if (sub.keyword == "account") {
+          // Nested account declaration (issue #877): register a child account
+          // using the enclosing account as its parent, avoiding the need to
+          // repeat the full colon-separated path.
+          account_directive_body(sub.argument(), account, sub.indent);
+        } else if (sub.keyword == "assert" || sub.keyword == "check") {
+          char* expr_str = sub.argument();
 
-    read_line(line);
-    char* q = skip_ws(line);
-    if (!*q)
-      break;
+          if (!ae.get()) {
+            // No predicate: apply_checks_to_post never evaluates one.
+            ae.reset(new auto_xact_t());
 
-    // A comment line under an account directive (e.g.
-    // `    ; Contribution: 12.97 EUR`) carries metadata tags for the
-    // account rather than a sub-directive.  Parsing it through
-    // account_t::parse_tags makes the `:tag:` and `Key: value` forms
-    // available to balance-format expressions such as
-    // `%(tag("Contribution"))` (issue #1681).
-    if (*q == ';' || *q == '#' || *q == '*' || *q == '|') {
-      char* body = skip_ws(q + 1);
-      account->parse_tags(body, *context.scope, true);
-      continue;
-    }
+            ae->pos = position_t();
+            ae->pos->pathname = context.pathname_ref;
+            ae->pos->beg_pos = beg_pos;
+            ae->pos->beg_line = beg_linenum;
+            ae->pos->sequence = context.sequence++;
+            ae->check_exprs = expr_t::check_expr_list();
+          }
 
-    char* b = next_element(q);
-    string keyword(q);
-    // Ensure there's an argument for the directives that need one.
-    if (!b && keyword != "default")
-      throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
-
-    if (keyword == "alias") {
-      account_alias_directive(account, b);
-    } else if (keyword == "payee") {
-      account_payee_directive(account, b);
-    } else if (keyword == "value") {
-      account_value_directive(account, b);
-    } else if (keyword == "default") {
-      account_default_directive(account);
-    } else if (keyword == "account") {
-      // Nested account declaration (issue #877): register a child account
-      // using the enclosing account as its parent, avoiding the need to
-      // repeat the full colon-separated path.
-      account_directive_body(b, account, next_indent);
-    } else if (keyword == "assert" || keyword == "check") {
-      keep_details_t keeper(true, true, true);
-      string safe_name = account->fullname();
-      boost::replace_all(safe_name, "\\", "\\\\");
-      boost::replace_all(safe_name, "\"", "\\\"");
-      expr_t expr(string("account == \"") + safe_name + "\"");
-      predicate_t pred(expr.get_op(), keeper);
-
-      if (!ae.get()) {
-        ae.reset(new auto_xact_t(pred));
-
-        ae->pos = position_t();
-        ae->pos->pathname = context.pathname_ref;
-        ae->pos->beg_pos = beg_pos;
-        ae->pos->beg_line = beg_linenum;
-        ae->pos->sequence = context.sequence++;
-        ae->check_exprs = expr_t::check_expr_list();
-      }
-
-      ae->check_exprs->push_back(expr_t::check_expr_pair(
-          expr_t(b), keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
-    } else if (keyword == "eval" || keyword == "expr") {
-      // jww (2012-02-27): Make account into symbol scopes so that this
-      // can be used to override definitions within the account.
-      bind_scope_t bound_scope(*context.scope, *account);
-      expr_t(b).calc(bound_scope);
-    } else if (keyword == "note") {
-      account->note = b;
-    }
-  }
+          ae->check_exprs->push_back(expr_t::check_expr_pair(
+              expr_t(expr_str),
+              sub.keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
+        } else if (sub.keyword == "eval" || sub.keyword == "expr") {
+          // jww (2012-02-27): Make account into symbol scopes so that this
+          // can be used to override definitions within the account.
+          bind_scope_t bound_scope(*context.scope, *account);
+          expr_t(sub.argument()).calc(bound_scope);
+        } else if (sub.keyword == "note") {
+          account->note = sub.argument();
+        } else {
+          return false;
+        }
+        return true;
+      },
+      // A comment line under an account directive (e.g.
+      // `    ; Contribution: 12.97 EUR`) carries metadata tags for the
+      // account rather than a sub-directive.  Parsing it through
+      // account_t::parse_tags makes the `:tag:` and `Key: value` forms
+      // available to balance-format expressions such as
+      // `%(tag("Contribution"))` (issue #1681).
+      [&](char* comment) { account->parse_tags(comment, *context.scope, true); });
 
   if (ae.get()) {
     ae->journal = context.journal;
-    ae->pos->end_pos = in.tellg();
+    ae->pos->end_pos = context.curr_pos;
     ae->pos->end_line = context.linenum;
-    // Mark this auto_xact as scoped to `account` and index it so that
-    // journal_t::extend_xact() can dispatch it via O(1) account lookup
-    // rather than scanning every auto_xact for every posting.  See #562.
-    ae->scoped_to_account = account;
-    auto_xact_t* ae_ptr = ae.get();
-    context.journal->auto_xacts.push_back(std::move(ae));
-    context.journal->account_check_xacts[account].push_back(ae_ptr);
+    // Indexed by account for journal_t::extend_xact() (#562).
+    context.journal->account_check_xacts[account].push_back(std::move(ae));
   }
 }
 
@@ -716,10 +789,7 @@ void instance_t::account_alias_directive(account_t* account, string alias) {
   if (alias == account->fullname()) {
     throw_(parse_error, _f("Illegal alias %1%=%2%") % alias % account->fullname());
   }
-  auto [iter, inserted] =
-      context.journal->account_aliases.insert(accounts_map::value_type(alias, account));
-  if (!inserted)
-    iter->second = account;
+  context.journal->account_aliases.insert_or_assign(alias, account);
 }
 
 void instance_t::alias_directive(char* line) {
@@ -754,22 +824,15 @@ void instance_t::account_value_directive(account_t* account, const string& expr_
 void instance_t::payee_directive(char* line) {
   string payee = context.journal->register_payee(line);
 
-  while (peek_whitespace_line()) {
-    read_line(line);
-    char* p = skip_ws(line);
-    if (!*p)
-      break;
-
-    char* b = next_element(p);
-    string keyword(p);
-    if (!b)
-      throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
-
-    if (keyword == "alias")
-      payee_alias_directive(payee, b);
-    else if (keyword == "uuid")
-      payee_uuid_directive(payee, b);
-  }
+  read_subdirectives(0, "payee", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword == "alias")
+      payee_alias_directive(payee, sub.argument());
+    else if (sub.keyword == "uuid")
+      payee_uuid_directive(payee, sub.argument());
+    else
+      return false;
+    return true;
+  });
 }
 
 void instance_t::payee_alias_directive(const string& payee, string alias) {
@@ -782,34 +845,36 @@ void instance_t::payee_uuid_directive(const string& payee, string uuid) {
   context.journal->payee_uuid_mappings[uuid] = payee;
 }
 
-void instance_t::payee_rewrite_directive(char* line) {
-  // Format: payee-rewrite PATTERN   REPLACEMENT
+namespace {
+
+/// Read the `PATTERN  REPLACEMENT` argument of a payee-rewrite or
+/// account-rewrite directive into the pattern mask and the trimmed
+/// replacement, throwing parse_error with @p missing_replacement_message
+/// when the replacement is missing.
+std::pair<mask_t, string> parse_rewrite_args(char* line, const char* missing_replacement_message) {
+  // Format: payee-rewrite|account-rewrite PATTERN   REPLACEMENT
   // The pattern and replacement are separated by two spaces or a tab.
   char* p = skip_ws(line);
   char* repl = next_element(p, true);
   if (!repl)
-    throw_(parse_error, _("payee-rewrite directive requires a pattern and a replacement"));
+    throw_(parse_error, missing_replacement_message);
   string pattern(p);
   trim(pattern);
   string replacement(repl);
   trim(replacement);
+  return {mask_t(pattern), replacement};
+}
+
+} // namespace
+
+void instance_t::payee_rewrite_directive(char* line) {
   context.journal->payee_rewrite_mappings.push_back(
-      payee_rewrite_mapping_t(mask_t(pattern), replacement));
+      parse_rewrite_args(line, _("payee-rewrite directive requires a pattern and a replacement")));
 }
 
 void instance_t::account_rewrite_directive(char* line) {
-  // Format: account-rewrite PATTERN   REPLACEMENT
-  // The pattern and replacement are separated by two spaces or a tab.
-  char* p = skip_ws(line);
-  char* repl = next_element(p, true);
-  if (!repl)
-    throw_(parse_error, _("account-rewrite directive requires a pattern and a replacement"));
-  string pattern(p);
-  trim(pattern);
-  string replacement(repl);
-  trim(replacement);
-  context.journal->account_rewrite_mappings.push_back(
-      account_rewrite_mapping_t(mask_t(pattern), replacement));
+  context.journal->account_rewrite_mappings.push_back(parse_rewrite_args(
+      line, _("account-rewrite directive requires a pattern and a replacement")));
 }
 
 /*--- Commodity Directives ---*/
@@ -841,38 +906,29 @@ void strip_commodity_comment(string& arg) {
 
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string symbol;
   commodity_t::parse_symbol(p, symbol);
 
-  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol)) {
-    context.journal->register_commodity(*commodity, 0);
+  commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
+  context.journal->register_commodity(*commodity, 0);
 
-    while (peek_whitespace_line()) {
-      read_line(line);
-      char* q = skip_ws(line);
-      if (!*q)
-        break;
-
-      char* b = next_element(q);
-      string keyword(q);
-      // Ensure there's an argument for the directives that need one.
-      if (!b && keyword != "nomarket" && keyword != "default")
-        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
-
-      if (keyword == "alias")
-        commodity_alias_directive(*commodity, b);
-      else if (keyword == "value")
-        commodity_value_directive(*commodity, b);
-      else if (keyword == "format")
-        commodity_format_directive(*commodity, b);
-      else if (keyword == "nomarket")
-        commodity_nomarket_directive(*commodity);
-      else if (keyword == "default")
-        commodity_default_directive(*commodity);
-      else if (keyword == "note")
-        commodity->set_note(string(b));
-    }
-  }
+  read_subdirectives(0, "commodity", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword == "alias")
+      commodity_alias_directive(*commodity, sub.argument());
+    else if (sub.keyword == "value")
+      commodity_value_directive(*commodity, sub.argument());
+    else if (sub.keyword == "format")
+      commodity_format_directive(*commodity, sub.argument());
+    else if (sub.keyword == "nomarket")
+      commodity_nomarket_directive(*commodity);
+    else if (sub.keyword == "default")
+      commodity_default_directive(*commodity);
+    else if (sub.keyword == "note")
+      commodity->set_note(string(sub.argument()));
+    else
+      return false;
+    return true;
+  });
 }
 
 void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
@@ -938,13 +994,14 @@ string quote_bare_symbol(const string& format, const string& symbol) {
 } // namespace
 
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
-  // jww (2012-02-27): A format specified this way should turn off
-  // observational formatting.
+  // The format declares the style (PARSE_DECLARES_STYLE), so a decimal
+  // comma that only its digits suggest is no conflict with an earlier
+  // decimal period.
   strip_commodity_comment(format);
   trim(format);
   amount_t amt;
   std::istringstream in(quote_bare_symbol(format, comm.base_symbol()));
-  (void)amt.parse(in, PARSE_NO_REDUCE);
+  (void)amt.parse(in, PARSE_NO_REDUCE | PARSE_DECLARES_STYLE);
   string trailing;
   if (in >> trailing)
     throw_(parse_error,
@@ -975,20 +1032,15 @@ void instance_t::tag_directive(char* line) {
   char* p = skip_ws(line);
   context.journal->register_metadata(p, NULL_VALUE, 0);
 
-  while (peek_whitespace_line()) {
-    read_line(line);
-    char* q = skip_ws(line);
-    if (!*q)
-      break;
-
-    char* b = next_element(q);
-    string keyword(q);
-    if (keyword == "assert" || keyword == "check") {
-      context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
-          string(p), expr_t::check_expr_pair(expr_t(b), keyword == "assert" ? expr_t::EXPR_ASSERTION
-                                                                            : expr_t::EXPR_CHECK)));
-    }
-  }
+  read_subdirectives(0, "tag", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword != "assert" && sub.keyword != "check")
+      return false;
+    context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
+        string(p), expr_t::check_expr_pair(expr_t(sub.argument()), sub.keyword == "assert"
+                                                                       ? expr_t::EXPR_ASSERTION
+                                                                       : expr_t::EXPR_CHECK)));
+    return true;
+  });
 }
 
 /*--- Expression and Assertion Directives ---*/
@@ -1026,7 +1078,7 @@ void instance_t::value_directive(char* line) {
 void instance_t::comment_directive(char* line) {
   while (in.good() && !in.eof()) {
     if (read_line(line) > 0) {
-      std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      std::string buf(line);
       if (starts_with(buf, "end comment") || starts_with(buf, "end test"))
         break;
     }
@@ -1079,7 +1131,7 @@ void instance_t::python_directive(char* line) {
 
   python_session->main_module->define_global(
       "journal", boost::python::object(boost::python::ptr(context.journal)));
-  python_session->eval(script.str(), python_interpreter_t::PY_EVAL_MULTI);
+  python_session->eval(script.str());
 }
 
 #else
@@ -1096,19 +1148,55 @@ void instance_t::python_directive(char*) {
 
 /*--- General Directive Dispatch ---*/
 
+namespace {
+
+/// A word directive: the keyword that begins its line, the handler that
+/// reads the rest of the line, and whether the keyword may stand alone.
+struct word_directive_t {
+  const char* keyword;
+  void (*handler)(instance_t& instance, char* arg);
+  bool bare_ok;
+};
+
+const word_directive_t word_directives[] = {
+    {"account", [](instance_t& in, char* arg) { in.account_directive(arg); }, false},
+    {"account-rewrite", [](instance_t& in, char* arg) { in.account_rewrite_directive(arg); },
+     false},
+    {"alias", [](instance_t& in, char* arg) { in.alias_directive(arg); }, false},
+    {"apply", [](instance_t& in, char* arg) { in.apply_directive(arg); }, false},
+    {"assert", [](instance_t& in, char* arg) { in.assert_directive(arg); }, false},
+    {"bucket", [](instance_t& in, char* arg) { in.default_account_directive(arg); }, false},
+    {"check", [](instance_t& in, char* arg) { in.check_directive(arg); }, false},
+    {"comment", [](instance_t& in, char* arg) { in.comment_directive(arg); }, true},
+    {"commodity", [](instance_t& in, char* arg) { in.commodity_directive(arg); }, false},
+    {"def", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"define", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"end", [](instance_t& in, char* arg) { in.end_apply_directive(arg); }, true},
+    {"eval", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"expr", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"import", [](instance_t& in, char* arg) { in.import_directive(arg); }, false},
+    {"include", [](instance_t& in, char* arg) { in.include_directive(arg); }, false},
+    {"payee", [](instance_t& in, char* arg) { in.payee_directive(arg); }, false},
+    {"payee-rewrite", [](instance_t& in, char* arg) { in.payee_rewrite_directive(arg); }, false},
+    {"python", [](instance_t& in, char* arg) { in.python_directive(arg); }, true},
+    {"tag", [](instance_t& in, char* arg) { in.tag_directive(arg); }, false},
+    {"test", [](instance_t& in, char* arg) { in.comment_directive(arg); }, true},
+    {"value", [](instance_t& in, char* arg) { in.value_directive(arg); }, false},
+    {"year", [](instance_t& in, char* arg) { in.apply_year_directive(arg); }, false},
+};
+
+} // namespace
+
 /**
- * @brief Main dispatch table for word-based directives.
+ * @brief Dispatch a word directive (account, commodity, include, ...)
+ *        through the word_directives table.
  *
- * The first character of the directive keyword is used as a fast switch
- * to narrow down candidates, then a full string comparison selects the
- * handler.  If no built-in directive matches, the method falls through
- * to a symbol lookup so that user-defined directives (registered via
- * Python or the expression engine) can be invoked.
- *
- * @return true if a directive was handled, false otherwise.
+ * @return true if the line's first word names a word directive, which has
+ *         then been handled; false otherwise, and the caller then tries the
+ *         legacy single-character directives.
  */
 bool instance_t::general_directive(char* line) {
-  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::string buf(line);
 
   char* p = &buf[0];
   char* arg = next_element(&buf[0]);
@@ -1116,128 +1204,25 @@ bool instance_t::general_directive(char* line) {
   if (*p == '@' || *p == '!')
     p++;
 
-  // Ensure there's an argument for all directives that need one.
-  if (!arg && std::strcmp(p, "comment") != 0 && std::strcmp(p, "end") != 0 &&
-      std::strcmp(p, "python") != 0 && std::strcmp(p, "test") != 0 && *p != 'Y') {
+  // Comparing the first character before calling strcmp() keeps the scan
+  // cheap for the legacy single-character directives, such as the `P` of a
+  // price history, whose letters begin no keyword.
+  const word_directive_t* const end = std::end(word_directives);
+  const word_directive_t* directive =
+      std::find_if(std::begin(word_directives), end, [p](const word_directive_t& d) {
+        return *p == *d.keyword && std::strcmp(p, d.keyword) == 0;
+      });
+
+  // Ensure there's an argument for all directives that need one.  This runs
+  // before the legacy single-character directives are tried, so a bare word
+  // that names no directive is reported here too; `Y2024` carries its year.
+  if (!arg && !(directive != end && directive->bare_ok) && *p != 'Y')
     throw_(parse_error, _f("Directive '%1%' requires an argument") % p);
-  }
 
-  switch (*p) {
-  case 'a':
-    if (std::strcmp(p, "account") == 0) {
-      account_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "account-rewrite") == 0) {
-      account_rewrite_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "alias") == 0) {
-      alias_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "apply") == 0) {
-      apply_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "assert") == 0) {
-      assert_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'b':
-    if (std::strcmp(p, "bucket") == 0) {
-      default_account_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'c':
-    if (std::strcmp(p, "check") == 0) {
-      check_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "comment") == 0) {
-      comment_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "commodity") == 0) {
-      commodity_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'd':
-    if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
-      eval_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'e':
-    if (std::strcmp(p, "end") == 0) {
-      end_apply_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "expr") == 0 || std::strcmp(p, "eval") == 0) {
-      eval_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'i':
-    if (std::strcmp(p, "include") == 0) {
-      include_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "import") == 0) {
-      import_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'p':
-    if (std::strcmp(p, "payee") == 0) {
-      payee_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "payee-rewrite") == 0) {
-      payee_rewrite_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "python") == 0) {
-      python_directive(arg);
-      return true;
-    }
-    break;
-
-  case 't':
-    if (std::strcmp(p, "tag") == 0) {
-      tag_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "test") == 0) {
-      comment_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'v':
-    if (std::strcmp(p, "value") == 0) {
-      value_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'y':
-    if (std::strcmp(p, "year") == 0) {
-      apply_year_directive(arg);
-      return true;
-    }
-    break;
-
-  default:
-    break;
-  }
-
-  if (expr_t::ptr_op_t op = lookup(symbol_t::DIRECTIVE, p)) {
-    call_scope_t args(*this);
-    args.push_back(string_value(p));
-    op->as_function()(args);
-    return true;
-  }
-
-  return false;
+  if (directive == end)
+    return false;
+  directive->handler(*this, arg);
+  return true;
 }
 
 } // namespace ledger

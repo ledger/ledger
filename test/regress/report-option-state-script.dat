@@ -1,0 +1,6 @@
+reg --payee-rewrite Foo=Bar Cash
+reg Cash
+bal --flat --account-rewrite Assets:Cash=Wallet
+bal --flat
+bal --decimal-places 1
+bal

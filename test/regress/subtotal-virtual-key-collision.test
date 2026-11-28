@@ -1,0 +1,28 @@
+; subtotal_posts (--subtotal, --monthly, equity) keeps virtual and real
+; postings to one account apart.  It used to do so by appending the byte
+; 0x01 to the account name of virtual postings, so a real account whose
+; name itself ends in 0x01 shared the key of the virtual postings to the
+; account without it, and the two were merged into one virtual line.  The
+; key now carries the virtual flag beside the account name.
+;
+; The journal lives in subtotal-virtual-key-collision.dat because it holds
+; a raw control byte; `cat -v` prints that byte as ^A.
+
+test -f test/regress/subtotal-virtual-key-collision.dat reg -s -F '%(display_account)|%(display_amount)\n' | cat -v
+(Assets:Bank)|$10.00
+Assets:Bank^A|$3.00
+Equity|$-3.00
+end test
+
+test -f test/regress/subtotal-virtual-key-collision.dat reg --yearly -F '%(display_account)|%(display_amount)\n' | cat -v
+(Assets:Bank)|$10.00
+Assets:Bank^A|$3.00
+Equity|$-3.00
+end test
+
+test -f test/regress/subtotal-virtual-key-collision.dat equity | cat -v
+2024/01/06 Opening Balances
+    (Assets:Bank)                             $10.00
+    Assets:Bank^A                               $3.00
+    Equity                                    $-3.00
+end test

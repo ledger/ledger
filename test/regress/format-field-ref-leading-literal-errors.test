@@ -1,0 +1,16 @@
+; %$N names the Nth expression element of the first-line format; literal
+; text before the first expression does not count.
+
+2024/01/01 Payee
+    Expenses:Food  $10
+    Equity
+
+test reg --format 'X>%(payee)|%(account)\n%/[%$3]\n' -> 1
+__ERROR__
+Error: %$ reference to a non-existent prior field
+end test
+
+test reg --format 'X>%(payee)|%(account)\n%/[%$0]\n' -> 1
+__ERROR__
+Error: %$ field reference must be a digit from 1-9 or a letter A-F
+end test

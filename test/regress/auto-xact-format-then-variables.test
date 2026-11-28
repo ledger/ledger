@@ -1,0 +1,22 @@
+; `%(expr)` in an automated posting's account is expanded before any
+; `$name`.  A template with no `$name` of its own keeps its `%(expr)`
+; output as written, as v3.4.1 did (P:).  In a template that has both,
+; a `$name` in the `%(expr)` output is replaced like one written in
+; the template (M:).
+
+= /^Expenses:Food/
+    (P:%(payee))                   1
+    (M:%(payee):$account_base)     1
+
+2024/01/03 Deli $account_base
+    Expenses:Food:Dining    $1.00
+    Assets:Cash
+
+test bal --flat
+              $-1.00  Assets:Cash
+               $1.00  Expenses:Food:Dining
+               $1.00  M:Deli Dining:Dining
+               $1.00  P:Deli $account_base
+--------------------
+               $2.00
+end test

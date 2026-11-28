@@ -54,7 +54,6 @@ void export_amount();
 void export_balance();
 void export_commodity();
 void export_expr();
-void export_format();
 void export_item();
 void export_session();
 void export_journal();
@@ -75,7 +74,6 @@ void initialize_for_python() {
   export_account();
   export_balance();
   export_expr();
-  export_format();
   export_item();
   export_post();
   export_xact();
@@ -87,9 +85,9 @@ struct python_run {
   object result;
 
   python_run(python_interpreter_t* interpreter, const string& str, int input_mode)
-      : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
-                                              interpreter->main_module->module_globals.ptr(),
-                                              interpreter->main_module->module_globals.ptr())))) {}
+      : result(handle<>(PyRun_String(str.c_str(), input_mode,
+                                     interpreter->main_module->module_globals.ptr(),
+                                     interpreter->main_module->module_globals.ptr()))) {}
   operator object() { return result; }
 };
 
@@ -169,8 +167,6 @@ void python_interpreter_t::initialize() {
 
     assert(Py_IsInitialized());
 
-    hack_system_paths();
-
     main_module = import_module("__main__");
     // PyImport_ImportModule returns the cached module if "ledger" is
     // already in sys.modules, so this does not re-run PyInit_ledger and
@@ -184,46 +180,6 @@ void python_interpreter_t::initialize() {
   }
 
   TRACE_FINISH(python_init, 1);
-}
-
-void python_interpreter_t::hack_system_paths() {
-  // Hack ledger.__path__ so it points to a real location
-  object sys_module = import("sys");
-  object sys_dict = sys_module.attr("__dict__");
-
-  list paths(sys_dict["path"]);
-
-#if DEBUG_ON
-  bool path_initialized = false;
-#endif
-  int n = extract<int>(paths.attr("__len__")());
-  for (int i = 0; i < n; i++) {
-    extract<std::string> str(paths[i]);
-    path pathname(str());
-    DEBUG("python.interp", "sys.path = " << pathname);
-
-    if (exists(pathname / "ledger" / "__init__.py")) {
-      if (object module_ledger = import("ledger")) {
-        DEBUG("python.interp", "Setting ledger.__path__ = " << (pathname / "ledger"));
-
-        object ledger_dict = module_ledger.attr("__dict__");
-        list temp_list;
-        temp_list.append((pathname / "ledger").string());
-
-        ledger_dict["__path__"] = temp_list;
-      } else {
-        throw_(std::runtime_error, _("Python failed to initialize (couldn't find ledger)"));
-      }
-#if DEBUG_ON
-      path_initialized = true;
-#endif
-      break;
-    }
-  }
-#if DEBUG_ON
-  if (!path_initialized)
-    DEBUG("python.init", "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
-#endif
 }
 
 object python_interpreter_t::import_option(const string& str) {
@@ -255,74 +211,17 @@ object python_interpreter_t::import_option(const string& str) {
   } catch (const error_already_set&) {
     PyErr_Print();
     throw_(std::runtime_error, _f("Python failed to import: %1%") % str);
-  } catch (...) {
-    throw;
   }
 
   return object();
 }
 
-object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode) {
-  bool first = true;
-  string buffer;
-  buffer.reserve(4096);
-
-  while (!in.eof()) {
-    char buf[256];
-    in.getline(buf, 255);
-    if (buf[0] == '!')
-      break;
-    if (first)
-      first = false;
-    else
-      buffer += "\n";
-    buffer += buf;
-  }
-
+object python_interpreter_t::eval(const string& str) {
   if (!is_initialized)
     initialize();
 
   try {
-    int input_mode = -1;
-    switch (mode) {
-    case PY_EVAL_EXPR:
-      input_mode = Py_eval_input;
-      break;
-    case PY_EVAL_STMT:
-      input_mode = Py_single_input;
-      break;
-    case PY_EVAL_MULTI:
-      input_mode = Py_file_input;
-      break;
-    }
-
-    return python_run(this, buffer, input_mode);
-  } catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(std::runtime_error, _("Failed to evaluate Python code"));
-  }
-  return object();
-}
-
-object python_interpreter_t::eval(const string& str, py_eval_mode_t mode) {
-  if (!is_initialized)
-    initialize();
-
-  try {
-    int input_mode = -1;
-    switch (mode) {
-    case PY_EVAL_EXPR:
-      input_mode = Py_eval_input;
-      break;
-    case PY_EVAL_STMT:
-      input_mode = Py_single_input;
-      break;
-    case PY_EVAL_MULTI:
-      input_mode = Py_file_input;
-      break;
-    }
-
-    return python_run(this, str, input_mode);
+    return python_run(this, str, Py_file_input);
   } catch (const error_already_set&) {
     PyErr_Print();
     throw_(std::runtime_error, _("Failed to evaluate Python code"));
@@ -486,6 +385,16 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind, const
 }
 
 namespace {
+/// Gives SIGINT its default disposition for the life of one call into
+/// Python, so Ctrl-C stops runaway Python code, and reinstalls Ledger's
+/// handler on every exit from the call, normal or exceptional.
+struct sigint_default_guard {
+  sigint_default_guard() { std::signal(SIGINT, SIG_DFL); }
+  ~sigint_default_guard() { std::signal(SIGINT, sigint_handler); }
+  sigint_default_guard(const sigint_default_guard&) = delete;
+  sigint_default_guard& operator=(const sigint_default_guard&) = delete;
+};
+
 object convert_value_to_python(const value_t& val) {
   switch (val.type()) {
   case value_t::VOID: // a null value (i.e., uninitialized)
@@ -505,7 +414,7 @@ object convert_value_to_python(const value_t& val) {
   case value_t::COMMODITY: // a ledger::commodity_t
     return object(val.as_commodity());
   case value_t::STRING: // a string object
-    return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
+    return object(handle<>(str_to_py_unicode(val.as_string())));
   case value_t::MASK: // a regular expression mask
     return object(val);
   case value_t::SEQUENCE: { // a vector of value_t objects
@@ -540,13 +449,11 @@ object convert_value_to_python(const value_t& val) {
 } // namespace
 
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
+  sigint_default_guard sigint_guard;
   try {
-    std::signal(SIGINT, SIG_DFL);
-
     if (!PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
       DEBUG("python.interp", "Value of Python '" << name << "': " << val);
-      std::signal(SIGINT, sigint_handler);
       if (val.check())
         return val();
       return NULL_VALUE;
@@ -571,7 +478,6 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
           Py_DECREF(val);
           return NULL_VALUE;
         }
-        std::signal(SIGINT, sigint_handler);
         return result;
       } else if (PyErr_Occurred()) {
         PyErr_Print();
@@ -580,18 +486,12 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
         assert(false);
       }
     } else {
-      std::signal(SIGINT, sigint_handler);
       return call<value_t>(func.ptr());
     }
   } catch (const error_already_set&) {
-    std::signal(SIGINT, sigint_handler);
     PyErr_Print();
     throw_(calc_error, _f("Failed call to Python function '%1%'") % name);
-  } catch (...) {
-    std::signal(SIGINT, sigint_handler);
-    throw;
   }
-  std::signal(SIGINT, sigint_handler);
 
   return NULL_VALUE;
 }

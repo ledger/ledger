@@ -1,6 +1,6 @@
 ; Test payee-rewrite directive
 ; Exercise the payee_rewrite_mappings flow
-; The rewrite applies at report time; each posting is in a separate xact
+; The rewrite applies at report time to one copy of the whole transaction
 
 payee-rewrite Groceries  Grocery Store
 
@@ -10,5 +10,5 @@ payee-rewrite Groceries  Grocery Store
 
 test reg
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
-24-Jan-01 Grocery Store         Assets:Cash                 $-10.00            0
+                                Assets:Cash                 $-10.00            0
 end test

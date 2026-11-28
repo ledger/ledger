@@ -76,6 +76,15 @@ namespace {
  * to full YYYY/MM/DD form.  Note dates must also be expanded so that
  * the output round-trips correctly (issue #622).
  *
+ * Only the spans that item_t::note_date_span recognizes are rewritten,
+ * the same rule the parser applies, and only on the line whose value
+ * the item kept: the primary date of the last line that set one, and
+ * the auxiliary date of the last line that set one.  Every other line
+ * is written verbatim, including an earlier line whose date a later
+ * line overrode.  Such a line can keep a short `[01/05]` written under
+ * `Y` unexpanded, and it still reads back the same, because the later
+ * line still wins.
+ *
  * Handles three bracket forms:
  *   - `[date]`         — primary date override
  *   - `[=auxdate]`     — auxiliary date only
@@ -83,47 +92,66 @@ namespace {
  */
 string rewrite_note_dates(const string& note, const item_t& item, format_type_t format_type,
                           const optional<const char*>& format) {
-  const char* p = note.c_str();
-  const char* b = std::strchr(p, '[');
-  if (!b || *(b + 1) == '\0' ||
-      (!std::isdigit(static_cast<unsigned char>(*(b + 1))) && *(b + 1) != '='))
-    return note;
-  const char* e = std::strchr(b, ']');
-  if (!e)
-    return note;
-
-  string result(p, static_cast<std::size_t>(b - p));
-  result += '[';
-
-  string content(b + 1, static_cast<std::size_t>(e - b - 1));
-  auto eq_pos = content.find('=');
-
-  if (content[0] == '=') {
-    result += '=';
-    if (item._date_aux)
-      result += format_date(*item._date_aux, format_type, format);
-    else
-      result += content.substr(1);
-  } else if (eq_pos != string::npos) {
-    if (item._date)
-      result += format_date(*item._date, format_type, format);
-    else
-      result += content.substr(0, eq_pos);
-    result += '=';
-    if (item._date_aux)
-      result += format_date(*item._date_aux, format_type, format);
-    else
-      result += content.substr(eq_pos + 1);
-  } else {
-    if (item._date)
-      result += format_date(*item._date, format_type, format);
-    else
-      result += content;
+  std::vector<string> lines;
+  for (std::size_t start = 0;;) {
+    std::size_t nl = note.find('\n', start);
+    lines.push_back(note.substr(start, nl == string::npos ? string::npos : nl - start));
+    if (nl == string::npos)
+      break;
+    start = nl + 1;
   }
 
-  result += ']';
-  result += string(e + 1);
+  // The parser applies lines in order, so the item kept the primary date of
+  // the last line whose span has text before any '=', and the aux date of
+  // the last line whose span contains '='.
+  std::vector<std::optional<std::pair<std::size_t, std::size_t>>> spans;
+  spans.reserve(lines.size());
+  std::optional<std::size_t> primary_line, aux_line;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    spans.push_back(item_t::note_date_span(lines[i].c_str()));
+    if (const auto& span = spans.back()) {
+      std::size_t eq = lines[i].find('=', span->first);
+      if (eq >= span->second)
+        eq = string::npos;
+      if (eq != span->first) // npos included: a span starts with a digit or '='
+        primary_line = i;
+      if (eq != string::npos)
+        aux_line = i;
+    }
+  }
+  if (!primary_line && !aux_line)
+    return note;
 
+  string result;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (i > 0)
+      result += '\n';
+    const string& line = lines[i];
+    const auto& span = spans[i];
+    if (!span || (i != primary_line && i != aux_line)) {
+      result += line;
+      continue;
+    }
+
+    std::size_t eq = line.find('=', span->first);
+    if (eq >= span->second)
+      eq = string::npos;
+    std::size_t primary_end = eq == string::npos ? span->second : eq;
+
+    result.append(line, 0, span->first);
+    if (i == primary_line && item._date)
+      result += format_date(*item._date, format_type, format);
+    else
+      result.append(line, span->first, primary_end - span->first);
+    if (eq != string::npos) {
+      result += '=';
+      if (i == aux_line && item._date_aux)
+        result += format_date(*item._date_aux, format_type, format);
+      else
+        result.append(line, eq + 1, span->second - eq - 1);
+    }
+    result.append(line, span->second, string::npos);
+  }
   return result;
 }
 
@@ -149,8 +177,9 @@ bool post_has_simple_amount(const post_t& post) {
   if (post.amount.is_null())
     return false;
 
-  // Is the amount a complex expression.  If so, the first 'if' should
-  // have triggered.
+  // Was the amount written as an expression?  Such a posting does not carry
+  // POST_CALCULATED, so test amount_expr itself: print shows the expression
+  // as written and must then keep the other posting's amount explicit.
   if (post.amount_expr)
     return false;
 
@@ -245,6 +274,81 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   return pbuf;
 }
 
+/**
+ * @brief Format an amount right-justified within @p width columns.
+ *
+ * Posting amounts and balance assignments share this formatter, so a
+ * zero amount keeps its commodity (`$0`, never a bare `0`) wherever
+ * print writes it.  @p prefix (` = ` for a balance assignment) is
+ * written ahead of the amount and justified with it as one string.
+ *
+ * The amount is written as its bare quantity and commodity followed by
+ * its lot annotations, as amount_t::print writes it; a non-null
+ * @p given_lot_total, the `{{total}}` the posting wrote, prints in place
+ * of the lot's per-unit price.
+ */
+string format_amount(const string& prefix, const amount_t& amount, uint_least8_t flags,
+                     std::size_t width, const amount_t* given_lot_total = nullptr) {
+  std::ostringstream buf;
+  buf << prefix;
+  if (!amount.is_null() && amount.has_annotation()) {
+    amount.strip_annotations(keep_details_t()).print(buf, flags);
+    amount.commodity().write_annotations(buf, (flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS) != 0,
+                                         given_lot_total);
+  } else {
+    amount.print(buf, flags);
+  }
+
+  std::ostringstream out;
+  justify(out, buf.str(), static_cast<int>(width), true);
+  return out.str();
+}
+
+/**
+ * @brief The report options that lay out a print, read once per report.
+ *
+ * hides() is the one test of which postings print leaves out, used both
+ * by the account-width scan and by the posting loop, so a hidden posting
+ * never widens the column of the ones shown.
+ */
+struct print_layout_t {
+  std::size_t columns;
+  std::size_t account_width;
+  std::size_t amount_width;
+  bool show_generated;
+  format_type_t format_type;
+  string format_str;
+
+  explicit print_layout_t(report_t& report)
+      : columns(report.HANDLED(columns_)
+                    ? static_cast<std::size_t>(report.HANDLER(columns_).as_int())
+                    : 80),
+        account_width(report.HANDLED(account_width_)
+                          ? static_cast<std::size_t>(report.HANDLER(account_width_).as_int())
+                          : 36),
+        amount_width(report.HANDLED(amount_width_)
+                         ? static_cast<std::size_t>(report.HANDLER(amount_width_).as_int())
+                         : 12),
+        show_generated(report.HANDLED(generated)),
+        format_type(report.HANDLED(date_format_) ? FMT_CUSTOM : FMT_WRITTEN),
+        format_str(report.HANDLED(date_format_) ? report.HANDLER(date_format_).str() : string()) {}
+
+  /// The custom date format, when --date-format gave one.
+  optional<const char*> date_format() const {
+    if (format_type == FMT_CUSTOM)
+      return format_str.c_str();
+    return std::nullopt;
+  }
+
+  /// Whether print leaves this posting out: a generated or temporary
+  /// posting, unless --generated was given or it stands in for a journal
+  /// posting.
+  bool hides(const post_t& post) const {
+    return !show_generated && post.has_flags(ITEM_TEMP | ITEM_GENERATED) &&
+           !post.has_flags(POST_ANONYMIZED);
+  }
+};
+
 /*--- Transaction Reconstruction ---*/
 
 /**
@@ -259,20 +363,13 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
  * simple amounts of the same commodity and both must balance, the second
  * posting's amount is omitted since Ledger can infer it.
  *
- * @param report  The report context (provides column widths, flags).
+ * @param layout  The report's layout options (column widths, flags).
  * @param out     The output stream.
  * @param xact    The transaction to print.
  */
-void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
-  format_type_t format_type = FMT_WRITTEN;
-  string format_str;
-  optional<const char*> format;
-
-  if (report.HANDLED(date_format_)) {
-    format_type = FMT_CUSTOM;
-    format_str = report.HANDLER(date_format_).str();
-    format = format_str.c_str();
-  }
+void print_xact(const print_layout_t& layout, std::ostream& out, xact_t& xact) {
+  const format_type_t format_type = layout.format_type;
+  const optional<const char*> format = layout.date_format();
 
   // Phase 1: Build the transaction header line (date, state, code, payee).
   std::ostringstream buf;
@@ -289,11 +386,10 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
   buf << xact.payee;
 
-  string leader = buf.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string leader = buf.str();
   out << leader;
 
-  std::size_t columns =
-      (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
+  const std::size_t columns = layout.columns;
 
   if (xact.note)
     print_note(out, rewrite_note_dates(*xact.note, xact, format_type, format),
@@ -318,56 +414,46 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   std::size_t count = xact.posts.size();
   std::size_t index = 0;
 
-  std::size_t account_width = (report.HANDLED(account_width_)
-                                   ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
-                                   : 36);
+  std::size_t account_width = layout.account_width;
 
-  // Find the longest account name to line up all amounts when account names
-  // are long
-  for (post_t* post : xact.posts) {
-    unistring name = format_account_name(xact, post).str();
-    if (account_width < name.length())
-      account_width = name.length();
+  // Format each shown posting's account name once, and widen the account
+  // column to the longest of them so that all amounts line up.
+  std::vector<unistring> names(xact.posts.size());
+  {
+    std::size_t i = 0;
+    for (post_t* post : xact.posts) {
+      if (!layout.hides(*post)) {
+        names[i] = unistring(format_account_name(xact, post).str());
+        if (account_width < names[i].length())
+          account_width = names[i].length();
+      }
+      ++i;
+    }
   }
 
+  std::size_t i = 0;
   for (post_t* post : xact.posts) {
     index++;
+    const unistring& name(names[i++]);
 
-    if (!report.HANDLED(generated) &&
-        (post->has_flags(ITEM_TEMP | ITEM_GENERATED) && !post->has_flags(POST_ANONYMIZED)))
+    if (layout.hides(*post))
       continue;
 
     out << "    ";
 
-    std::ostringstream pbuf = format_account_name(xact, post);
-
-    unistring name(pbuf.str());
-
     bool is_balance_assignment = post->has_flags(POST_CALCULATED) && post->assigned_amount;
 
-    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment || report.HANDLED(generated)) {
+    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment || layout.show_generated) {
       out << name.extract();
       std::string::size_type slip = (static_cast<std::string::size_type>(account_width) -
                                      static_cast<std::string::size_type>(name.length()));
 
-      std::size_t amount_width =
-          (report.HANDLED(amount_width_)
-               ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
-               : 12);
+      const std::size_t amount_width = layout.amount_width;
       string amt;
       if (is_balance_assignment) {
         // For balance assignments, format the = assignment right-justified
         // within amount_width to align with regular amounts.
-        std::ostringstream amt_str;
-        amt_str << " = ";
-        value_t(*post->assigned_amount).print(amt_str, -1, -1);
-        unistring assign_str(amt_str.str());
-        int padding = amount_width - assign_str.length();
-        if (padding > 0) {
-          amt = string(padding, ' ') + amt_str.str();
-        } else {
-          amt = amt_str.str();
-        }
+        amt = format_amount(" = ", *post->assigned_amount, AMOUNT_PRINT_NO_FLAGS, amount_width);
       } else if (post->amount_expr) {
         std::ostringstream amt_str;
         justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
@@ -381,23 +467,18 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // bother printing the second amount as it's always just an
         // inverse of the first.
       } else {
-        std::ostringstream amt_str;
         bool suppress_computed =
-            !report.HANDLED(generated) && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
-        // When printing user-annotated amounts, preserve {{total}} lot-price
-        // notation so that the output round-trips faithfully (issue #1033).
-        bool preserve_total = post->has_flags(POST_AMOUNT_USER_ANNOTATED);
+            !layout.show_generated && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         uint_least8_t flags = AMOUNT_PRINT_RIGHT_JUSTIFY |
-                              (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
-                              (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0);
-        if (post->amount.is_zero()) {
-          std::ostringstream buf;
-          post->amount.print(buf, flags);
-          justify(amt_str, buf.str(), boost::numeric_cast<int>(amount_width), true);
-        } else {
-          value_t(post->amount).print(amt_str, boost::numeric_cast<int>(amount_width), -1, flags);
-        }
-        amt = amt_str.str();
+                              (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0);
+        // A user-annotated amount prints the {{total}} lot price the posting
+        // wrote, so that the output round-trips faithfully (issue #1033).
+        // The lot itself keeps only the per-unit price.
+        const amount_t* lot_total =
+            post->has_flags(POST_AMOUNT_USER_ANNOTATED) && post->given_lot_total
+                ? &*post->given_lot_total
+                : nullptr;
+        amt = format_amount("", post->amount, flags, amount_width, lot_total);
       }
 
       string trimmed_amt(amt);
@@ -424,10 +505,34 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         if (post->has_flags(POST_COST_FIXATED))
           cost_op += "=";
 
-        if (post->has_flags(POST_COST_IN_FULL))
-          amtbuf << " " << cost_op << " " << post->given_cost->abs();
-        else
-          amtbuf << " " << cost_op << " " << (*post->given_cost / post->amount).abs();
+        // Write the cost with the decimals the journal gave it, trailing
+        // zeros included: they are the cost's precision, to which an
+        // inferred amount is displayed (#1151), so dropping them changes
+        // what the printed journal reports.  A per-unit cost was multiplied
+        // by the amount, which added the amount's decimals to the price's.
+        //
+        // A cost in a unit that a conversion reduces into (a `C` directive
+        // or the built-in h/m/s) may have been written in a larger unit
+        // (`@ 1.5h` is held as 5400s), and parsing multiplied it by each
+        // conversion step, whose decimals its precision then carries.  It
+        // holds no written decimals, so its zeros are trimmed as before.
+        // A bare cost counts as one: a `C` directive with a bare side
+        // reduces into no commodity, which records no larger unit.
+        const amount_t& given(*post->given_cost);
+        const commodity_t& cost_comm(given.commodity().referent());
+        const bool prec_is_written = cost_comm && !cost_comm.larger();
+        amtbuf << " " << cost_op << " ";
+        if (post->has_flags(POST_COST_IN_FULL)) {
+          given.abs().print_unpadded(amtbuf, AMOUNT_PRINT_NO_FLAGS,
+                                     prec_is_written ? given.precision() : 0);
+        } else {
+          const amount_t::precision_t amt_prec = post->amount.precision();
+          const amount_t::precision_t price_prec =
+              prec_is_written && given.precision() > amt_prec
+                  ? static_cast<amount_t::precision_t>(given.precision() - amt_prec)
+                  : 0;
+          (given / post->amount).abs().print_unpadded(amtbuf, AMOUNT_PRINT_NO_FLAGS, price_prec);
+        }
       }
 
       if (post->assigned_amount && !is_balance_assignment)
@@ -442,7 +547,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         out << trailer;
       }
     } else {
-      out << pbuf.str();
+      out << name.extract();
     }
 
     if (post->note)
@@ -467,6 +572,12 @@ void print_xacts::title(const string&) {
 void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
+  // The layout options are read once, and only for a structured print:
+  // --raw and an empty report parse no width options.
+  std::optional<print_layout_t> layout;
+  if (!print_raw && !xacts.empty())
+    layout.emplace(report);
+
   bool first = true;
   for (xact_t* xact : xacts) {
     if (first)
@@ -478,11 +589,18 @@ void print_xacts::flush() {
       print_item(out, *xact);
       out << '\n';
     } else {
-      print_xact(report, out, *xact);
+      print_xact(*layout, out, *xact);
     }
   }
 
   out.flush();
+
+  // Every queued transaction is printed.  Under --group-by-cumulative the
+  // splitter flushes this handler again for the next group without a
+  // clear(), so start that group with nothing queued, or it would print
+  // this group's transactions a second time.
+  xacts.clear();
+  xacts_present.clear();
 }
 
 void print_xacts::operator()(post_t& post) {

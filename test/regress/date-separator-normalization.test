@@ -1,0 +1,40 @@
+; Dates and timeclock datetimes accept '-' and '.' as separators: both are
+; rewritten to '/' before the input formats are tried, also for a date
+; without a year (whose year comes from --now).  The eval block pins the
+; upper edge of the 127-byte input buffer: a 127-byte datetime fits and
+; parses (strptime ignoring the trailing digits); date-input-errors.test
+; pins the 128-byte string that the length guard refuses.
+
+2024-01-15 Dashes
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024.01.20 Dots
+    Expenses:Food    $20.00
+    Assets:Cash
+
+01-25 Yearless
+    Expenses:Food    $5.00
+    Assets:Cash
+
+i 2024-01-22 08:30:00 Work
+o 2024.01.22 17:00:00
+
+test reg --now 2030/06/15
+24-Jan-15 Dashes                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-20 Dots                  Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+30-Jan-25 Yearless              Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+24-Jan-22                       Work                          8.50h        8.50h
+end test
+
+test reg --now 2030/06/15 --begin 2024.01.18 --end 2024-01-21
+24-Jan-20 Dots                  Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test eval 'to_datetime("2024-01-15 08:30:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")'
+2024/01/15 08:30:00
+end test

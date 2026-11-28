@@ -8,3 +8,13 @@ test pricedb --both-directions
 P 2024/01/01 00:00:00 EUR 1.20 USD
 P 2024/01/01 00:00:00 USD 0.83333333 EUR
 end test
+
+test pricedb --both-directions --monthly
+P 2024/01/01 00:00:00 EUR 1.20 USD
+P 2024/01/01 00:00:00 USD 0.83333333 EUR
+end test
+
+test pricedb --both-directions --latest
+P 2024/01/01 00:00:00 EUR 1.20 USD
+P 2024/01/01 00:00:00 USD 0.83333333 EUR
+end test

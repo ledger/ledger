@@ -1,7 +1,8 @@
-; Coverage for amount.cc
-; in_place_round_to_commodity_precision rounding path where the amount's
-; internal precision exceeds the commodity's display precision.
-; The rounded() function in a format expression triggers this path.
+; Coverage for amount.cc: rounded() in a format expression runs
+; report_t::fn_rounded -> value_t::rounded -> value_t::in_place_round ->
+; amount_t::in_place_round (display-only rounding).  A parsed amount has
+; no keep_precision flag, so amount_t::in_place_round returns at once, and
+; the amount prints at the commodity's display precision either way.
 
 commodity $
     format $1,000.00

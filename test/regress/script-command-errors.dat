@@ -1,0 +1,4 @@
+; For script-command-errors-errors.test: line 3 fails, so line 4 must not run.
+print("before")
+1/0
+print("after")

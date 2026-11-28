@@ -83,12 +83,6 @@ else()
   set(NO_ASSERTS 0)
 endif()
 
-if(CLANG_GCOV)
-  set(USE_GCOV ON)
-  set(PROFILE_LIBS profile_rt)
-  set(CMAKE_REQUIRED_LIBRARIES ${PROFILE_LIBS})
-endif()
-
 if(USE_GCOV)
   add_compile_options(-fprofile-arcs -ftest-coverage)
   add_link_options(-fprofile-arcs -ftest-coverage)
@@ -130,8 +124,13 @@ if(USE_LLVM_COV)
       "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
       @ONLY
     )
+    set(_coverage_defs)
+    if(BUILD_LIBRARY)
+      # All of src/ except main.cc and global.cc is in the shared libledger.
+      set(_coverage_defs "-DLIBLEDGER_FILE=$<TARGET_FILE:libledger>")
+    endif()
     add_custom_target(coverage
-      COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
+      COMMAND "${CMAKE_COMMAND}" ${_coverage_defs} -P "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
       WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
       COMMENT "Generating LLVM code coverage report in coverage_html/"
       VERBATIM
@@ -150,6 +149,19 @@ endif()
 
 if(USE_SANITIZERS)
   add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address,undefined)
+endif()
+
+# Fuzz testing (requires Clang with libFuzzer).  Instrument every target,
+# libledger included, so libFuzzer sees the parser's edges and the
+# sanitizers check the parser itself; journal_fuzzer alone adds
+# -fsanitize=fuzzer, which links libFuzzer's main().
+option(ENABLE_FUZZING "Build fuzz testing targets (requires Clang)" OFF)
+if(ENABLE_FUZZING)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "Fuzzing requires Clang compiler")
+  endif()
+  add_compile_options(-fsanitize=fuzzer-no-link,address,undefined -fno-sanitize-recover=all)
   add_link_options(-fsanitize=address,undefined)
 endif()
 
@@ -194,7 +206,7 @@ endif()
 
 if(USE_PYTHON)
   if(NOT BUILD_LIBRARY)
-    message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
+    message(FATAL_ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
   if(PYTHON_REQUIRED_VERSION)
@@ -216,7 +228,9 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-# Set BOOST_ROOT to help CMake to find the right Boost version
+# Set Boost_ROOT (./acprep --boost=DIR) to help CMake find the right Boost.
+# find_package reads the upper-case BOOST_ROOT only under policy CMP0144
+# (CMake 3.27 and later), so the mixed-case name is the one that always works.
 find_package(Boost ${Required_Boost_Version}
   REQUIRED date_time iostreams regex
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide unit_test_framework
@@ -257,7 +271,6 @@ endif()
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
-include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 include(CMakePushCheckState)
@@ -267,47 +280,10 @@ check_function_exists(getpwnam HAVE_GETPWNAM)
 check_function_exists(ioctl HAVE_IOCTL)
 check_function_exists(isatty HAVE_ISATTY)
 
-check_c_source_compiles("
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
-int main() {
-  int status, pfd[2];
-  status = pipe(pfd);
-  status = fork();
-  if(status < 0) {
-    ;
-  } else if(status == 0) {
-    char *arg0 = NULL;
-
-    status = dup2(pfd[0], STDIN_FILENO);
-
-    close(pfd[1]);
-    close(pfd[0]);
-
-    execlp(\"\", arg0, (char *)0);
-    perror(\"execl\");
-    exit(1);
-  } else {
-    close(pfd[0]);
-  }
-  return 0;
-}" UNIX_PIPES_COMPILES)
-
-if(UNIX_PIPES_COMPILES)
-  set(HAVE_UNIX_PIPES 1)
-else()
-  set(HAVE_UNIX_PIPES 0)
-endif()
-
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -400,7 +376,7 @@ if(GMP_PATH AND EXISTS "${GMP_PATH}/gmp.h")
   unset(gmp_header_str)
   set(GMP_VERSION_STRING "${GMP_VERSION_MAJOR}.${GMP_VERSION_MINOR}.${GMP_VERSION_PATCH}")
   if("${GMP_VERSION_STRING}" VERSION_LESS ${Required_Gmp_Version})
-    message(FATAL_ERROR "Ledger requires GMP version ${Expected_Gmp_Version} or greater, but only GMP version ${GMP_VERSION_STRING} was found")
+    message(FATAL_ERROR "Ledger requires GMP version ${Required_Gmp_Version} or greater, but only GMP version ${GMP_VERSION_STRING} was found")
   endif()
 endif()
 
@@ -413,7 +389,7 @@ if(MPFR_PATH AND EXISTS "${MPFR_PATH}/mpfr.h")
   unset(mpfr_header_str)
   set(MPFR_VERSION_STRING "${MPFR_VERSION_MAJOR}.${MPFR_VERSION_MINOR}.${MPFR_VERSION_PATCH}")
   if("${MPFR_VERSION_STRING}" VERSION_LESS ${Required_Mpfr_Version})
-    message(FATAL_ERROR "Ledger requires MPFR version ${Expected_Mpfr_Version} or greater, but only MPFR version ${MPFR_VERSION_STRING} was found")
+    message(FATAL_ERROR "Ledger requires MPFR version ${Required_Mpfr_Version} or greater, but only MPFR version ${MPFR_VERSION_STRING} was found")
   endif()
 endif()
 
@@ -434,19 +410,6 @@ if(UNIX AND NOT APPLE)
   endif()
 endif()
 
-
-#find_package(Gettext)           # Used for running tests
-
-#if(GETTEXT_FOUND)
-#  set(HAVE_GETTEXT 1)
-#else()
-  set(HAVE_GETTEXT 0)
-#endif()
-
-#find_path(INTL_PATH libintl.h)
-#find_library(INTL_LIB intl)
-#include_directories(SYSTEM "${INTL_PATH}")
-
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
@@ -456,7 +419,6 @@ macro(add_ledger_library_dependencies _target)
   endif()
   target_link_libraries(${_target} ${GMP_LIB})
   target_link_libraries(${_target} ${MPFR_LIB})
-  target_link_libraries(${_target} ${PROFILE_LIBS})
   if(HAVE_CLOCK_GETTIME_IN_RT AND RT_LIBRARY)
     target_link_libraries(${_target} ${RT_LIBRARY})
   endif()
@@ -465,9 +427,6 @@ macro(add_ledger_library_dependencies _target)
   endif()
   if(HAVE_READLINE)
     target_link_libraries(${_target} ${READLINE_LIB})
-  endif()
-  if(HAVE_GETTEXT)
-    target_link_libraries(${_target} ${INTL_LIB})
   endif()
   if(HAVE_GPGME)
     target_link_libraries(${_target} Gpgmepp)
@@ -542,17 +501,10 @@ add_subdirectory(test)
 ########################################################################
 
 # Fuzz testing target (requires Clang with libFuzzer)
-option(ENABLE_FUZZING "Build fuzz testing targets (requires Clang)" OFF)
 if(ENABLE_FUZZING)
-  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(FATAL_ERROR "Fuzzing requires Clang compiler")
-  endif()
-
   add_executable(journal_fuzzer test/fuzz/journal_fuzzer.cc)
-  target_compile_options(journal_fuzzer PRIVATE
-    -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=all)
-  target_link_options(journal_fuzzer PRIVATE
-    -fsanitize=fuzzer,address,undefined)
+  target_compile_options(journal_fuzzer PRIVATE -fsanitize=fuzzer)
+  target_link_options(journal_fuzzer PRIVATE -fsanitize=fuzzer)
   target_include_directories(journal_fuzzer PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${PROJECT_BINARY_DIR})
   target_link_libraries(journal_fuzzer libledger)
@@ -619,13 +571,13 @@ if(CLANG_TIDY)
   # compiled as standalone translation units.
   set(_lint_cc_files ${ALL_CXX_SOURCE_FILES})
   list(FILTER _lint_cc_files INCLUDE REGEX "\\.cc$")
-  find_program(PYTHON3 python3)
-  if(PYTHON3)
+  find_package(Python COMPONENTS Interpreter)
+  if(Python_EXECUTABLE)
     set(_lint_db_dir  "${CMAKE_BINARY_DIR}/lint")
     set(_lint_db_file "${_lint_db_dir}/compile_commands.json")
     list(APPEND _lint_commands
       COMMAND ${CMAKE_COMMAND} -E make_directory "${_lint_db_dir}"
-      COMMAND ${PYTHON3}
+      COMMAND ${Python_EXECUTABLE}
         "${CMAKE_SOURCE_DIR}/cmake/strip_pch_flags.py"
         "${CMAKE_BINARY_DIR}/compile_commands.json"
         "${_lint_db_file}"
@@ -634,23 +586,22 @@ if(CLANG_TIDY)
         --quiet
         ${_lint_cc_files})
   else()
-    list(APPEND _lint_commands
-      COMMAND ${CLANG_TIDY}
-        -p "${CMAKE_BINARY_DIR}"
-        --quiet
-        ${_lint_cc_files})
+    message(STATUS
+      "lint: clang-tidy skipped (cmake/strip_pch_flags.py needs Python)")
   endif()
 endif()
 
 if(CPPCHECK)
   # --project feeds the compile_commands.json so cppcheck sees real include
-  # paths and defines; --suppress suppresses noise from system/Boost headers
+  # paths and defines; --suppress drops findings inside the generated
+  # precompiled header (system.hh in the build tree), which is Boost and
+  # standard-library includes rather than Ledger code.
   list(APPEND _lint_commands
     COMMAND ${CPPCHECK}
       --enable=all
       --inconclusive
       "--project=${CMAKE_BINARY_DIR}/compile_commands.json"
-      "--suppress=*:${CMAKE_SOURCE_DIR}/src/system.hh")
+      "--suppress=*:${PROJECT_BINARY_DIR}/system.hh")
 endif()
 
 if(NOT _lint_commands)

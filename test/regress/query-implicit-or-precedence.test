@@ -1,0 +1,52 @@
+; Adjacent query terms are implicitly ORed, and that implicit OR binds
+; more loosely than an explicit `and` or `or`, also inside parentheses.
+; This is the grammar documented at the top of src/query.cc.
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Food:Dining    $50.00
+    Assets:Checking
+
+; (Food & Dining) | Gas, not Food & Dining & Gas
+test reg Food and Dining Gas
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+end test
+
+; Gas | (Food & Dining): the explicit `and` groups first wherever it sits
+test reg Gas Food and Dining
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+end test
+
+; (Gas | Dining) & Expenses: adjacent terms inside parentheses are ORed too
+test reg '(' Gas Dining ')' and Expenses
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+end test
+
+; (not Food) | Gas: `not` takes one term, then the implicit OR applies
+test reg not Food Gas
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $15.00
+                                Assets:Checking             $-40.00      $-25.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00      $-75.00
+end test
+
+; A show section reads its terms by the same rule: (Food & Dining) | Gas
+test reg Expenses show Food and Dining Gas
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+end test
+
+; A period section may hold no words: `for` alone adds no period
+test reg Gas for
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+end test

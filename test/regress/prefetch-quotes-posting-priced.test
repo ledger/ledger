@@ -1,0 +1,12 @@
+; A stock priced by its purchase posting is fetched in the batch call.
+; Written stock first, the posting records AAPL's price in $; the base
+; read the inverted link "$ in AAPL" as an exchange and left AAPL out
+; of the batch (588.test's journal lost AAPL the same way).
+
+2024/01/15 Buy
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+test bal Assets:Brokerage --market --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+            $1500.00  Assets:Brokerage
+end test

@@ -9,5 +9,5 @@ payee-rewrite Restaurant  Dining Out
 
 test reg
 24-Jan-01 Dining Out            Expenses:Food                $50.00       $50.00
-24-Jan-01 Dining Out            Assets:Cash                 $-50.00            0
+                                Assets:Cash                 $-50.00            0
 end test

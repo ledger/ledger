@@ -1,0 +1,109 @@
+; --now, not a `year` or `apply year` directive, anchors today, yesterday
+; and tomorrow and their short forms, both in the `xact` command and in
+; period expressions (`today`, `since yesterday`, `since last month`).
+; On the command line the current date is always fixed (at launch, or by
+; --now), so a year directive supplies only the year of yearless dates;
+; it never moves "today".
+
+year 2020
+
+01/15 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+apply year 2019
+
+03/01 Bakery
+    Expenses:Food    $4.00
+    Assets:Cash
+
+end apply year
+
+test --now 2030/06/15 reg
+20-Jan-15 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+19-Mar-01 Bakery                Expenses:Food                 $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+end test
+
+test --now 2030/06/15 xact tday Grocery
+2030/06/15 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2030/06/15 xact yday Grocery
+2030/06/14 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2030/06/15 xact tmrw Grocery
+2030/06/16 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2030/01/01 xact yday Grocery
+2029/12/31 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2030/06/15 xact Grocery on yesterday
+2030/06/14 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2030/06/15 period today
+--- Period expression tokens ---
+TOK_TODAY: today
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2030 month Jun day 15
+
+--- After stabilization ---
+   range: in year 2030 month Jun day 15
+   start: 30-Jun-15
+  finish: 30-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15
+end test
+
+test --now 2030/06/15 period "since yesterday"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_YESTERDAY: yesterday
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2030 month Jun day 14
+
+--- After stabilization ---
+   range: from year 2030 month Jun day 14
+   start: 30-Jun-14
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-14
+end test
+
+test --now 2030/06/15 period "since last month"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_LAST: last
+TOK_MONTH: month
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2030 month May
+
+--- After stabilization ---
+   range: from year 2030 month May
+   start: 30-May-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-May-01
+end test

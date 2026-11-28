@@ -7,16 +7,17 @@
 ; --plopen makes the amount a pair of amount and cost, valued at today; a
 ; baseline of plain amounts cannot be added to that pair ("Cannot add
 ; sequences of different lengths").  -A displays a running average, which
-; divides the total by the number of postings, and seeds the running total
-; of the automated Expenses:Taxes and Assets:Checking postings from a
-; per-account accumulator; a baseline summed over every posting printed
-; Equity:Unrealized Losses as $10.06 instead of $5.00.  --deviation
+; divides the total by the number of postings (display_total/count), and
+; the revaluation between postings prices that average, so it is not the
+; sum over every posting that a baseline at cost would value (its two
+; reports have changed since, as the automated postings stopped taking
+; per-account running totals).  --deviation
 ; displays each amount less the total, which is no running total either; a
-; baseline printed Equity as -120 instead of -60.  Budget reports receive
-; budget postings whose amount is negated but whose cost is not; a
-; baseline read from those costs booked the budgeted purchases as a
-; $1160.00 loss, and the budget command, which pairs each amount with its
-; budget, failed ("Cannot compare an amount to a sequence").  Under
+; baseline printed Equity as -120 instead of -60.  Budget reports add
+; generated budget postings to the running total, which is then no sum
+; over the journal's postings, and the budget command, which pairs each
+; amount with its budget, failed under a baseline ("Cannot compare an
+; amount to a sequence").  Under
 ; --forecast the posting that ends the forecast enters the running total
 ; but is filtered out after the revaluation, so a revaluation at the
 ; terminus would include a gain that no displayed row carries.  Under -V
@@ -35,11 +36,12 @@
 ; its report has no unrealized row; on this journal a baseline at cost
 ; prints the same, and regress/1692 shows where it does not.  -G reports
 ; the gain itself, market value less cost; a baseline at cost booked its
-; unrealized row as $-120.00 instead of $-60.00.  --inject
-; adds a posting for the Fee tag of the purchase, and the posting it
-; generates keeps the $1500 cost of the posting it copies; a baseline read
-; from that cost printed Equity:Unrealized Losses $1375.00.  The last
-; report, with none of these options, values postings at cost and foots.
+; unrealized row as $-120.00 instead of $-60.00.  --inject adds a posting
+; for the Fee tag of the purchase, copied into a transaction of its own and
+; dated by the posting: the shape in which
+; regress/unrealized-footing-posting-date shows a baseline failing to foot.
+; The last report, with none of these options, values postings at cost and
+; foots.
 
 = Books
     Expenses:Taxes                0.05
@@ -76,34 +78,34 @@ end test
 test bal -V --unrealized -A --now 2024/04/01
               $24.92  Assets
              $510.00    Brokerage
-            $-217.62    Checking
-               $5.00  Equity:Unrealized Losses
+            $-217.63    Checking
+              $-6.67  Equity:Unrealized Gains
                $5.25  Expenses
               $10.00    Books
                $0.50    Taxes
              $-40.00  Income:Capital Gains
 --------------------
-              $12.50
+              $11.33
 end test
 
 test bal --exchange $ --unrealized -A --now 2024/04/01
               $24.92  Assets
              $510.00    Brokerage
-            $-217.62    Checking
-               $5.00  Equity:Unrealized Losses
+            $-217.63    Checking
+              $-6.67  Equity:Unrealized Gains
                $5.25  Expenses
               $10.00    Books
                $0.50    Taxes
              $-40.00  Income:Capital Gains
 --------------------
-              $12.50
+              $11.33
 end test
 
 test bal -V --unrealized --deviation --now 2024/04/01
             $-149.50  Assets
-                 -60  Equity
-                 -10  Expenses
-                  40  Income
+             $-60.00  Equity
+             $-10.50  Expenses
+              $40.00  Income
 --------------------
             $-180.00
 end test

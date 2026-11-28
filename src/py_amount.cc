@@ -57,29 +57,31 @@ using namespace boost::python;
 
 namespace {
 
+/*--- Lifecycle Wrapper ---*/
+
+/// Initializes the amount subsystem and rebinds ledger.commodities to the pool it creates.
+void py_amount_initialize() {
+  amount_t::initialize();
+  import("ledger").attr("commodities") = commodity_pool_t::current_pool;
+}
+
 /*--- Valuation Wrapper Overloads ---*/
 
-/// Wrappers that adapt amount_t::value() to Python by converting the
-/// optional return into std::optional, with overloads accepting different
-/// combinations of commodity and moment parameters.
+/// Overloads that supply the default moment and commodity for Python.
 
 std::optional<amount_t> py_value_0(const amount_t& amount) {
-  auto r = amount.value(CURRENT_TIME());
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(CURRENT_TIME());
 }
 std::optional<amount_t> py_value_1(const amount_t& amount, const commodity_t* in_terms_of) {
-  auto r = amount.value(CURRENT_TIME(), in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(CURRENT_TIME(), in_terms_of);
 }
 std::optional<amount_t> py_value_2(const amount_t& amount, const commodity_t* in_terms_of,
                                    const datetime_t& moment) {
-  auto r = amount.value(moment, in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(moment, in_terms_of);
 }
 std::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* in_terms_of,
                                     const date_t& moment) {
-  auto r = amount.value(datetime_t(moment), in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(datetime_t(moment), in_terms_of);
 }
 
 /*--- Parse Wrapper Overloads ---*/
@@ -90,18 +92,6 @@ void py_parse_str_1(amount_t& amount, const string& str) {
 void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
   (void)amount.parse(str, flags);
 }
-
-#if 0
-  void py_print(amount_t& amount, object out) {
-    if (PyFile_Check(out.ptr())) {
-      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-      amount.print(outstr);
-    } else {
-      PyErr_SetString(PyExc_IOError,
-                      _("Argument to amount.print_(file) is not a file object"));
-    }
-  }
-#endif
 
 /*--- Annotation and Strip Wrappers ---*/
 
@@ -116,21 +106,7 @@ amount_t py_strip_annotations_1(amount_t& amount, const keep_details_t& keep) {
   return amount.strip_annotations(keep);
 }
 
-/*--- String Conversion ---*/
-
-/// Returns a Python unicode object for __unicode__ support.
-PyObject* py_amount_unicode(amount_t& amount) {
-  return str_to_py_unicode(amount.to_string());
-}
-
 } // unnamed namespace
-
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(amount_error)
 
 /// @brief Registers the Amount class and ParseFlags enum with Boost.Python.
 ///
@@ -140,7 +116,7 @@ EXC_TRANSLATOR(amount_error)
 /// and conversions to Python numeric and string types.
 void export_amount() {
   class_<amount_t>("Amount")
-      .def("initialize", &amount_t::initialize) // only for the PyUnitTests
+      .def("initialize", &py_amount_initialize)
       .staticmethod("initialize")
       .def("shutdown", &amount_t::shutdown)
       .staticmethod("shutdown")
@@ -259,7 +235,6 @@ internal precision."))
       .def("price", &amount_t::price)
 
       .def("sign", &amount_t::sign)
-      .def("__nonzero__", &amount_t::is_nonzero)
       .def("is_nonzero", &amount_t::is_nonzero)
       .def("is_zero", &amount_t::is_zero)
       .def("is_realzero", &amount_t::is_realzero)
@@ -273,7 +248,6 @@ internal precision."))
 
       .def("__str__", &amount_t::to_string)
       .def("to_string", &amount_t::to_string)
-      .def("__unicode__", py_amount_unicode)
       .def("to_fullstring", &amount_t::to_fullstring)
       .def("__repr__", &amount_t::to_fullstring)
       .def("quantity_string", &amount_t::quantity_string)
@@ -316,9 +290,7 @@ internal precision."))
   implicitly_convertible<long, amount_t>();
   implicitly_convertible<string, amount_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(amount_error);
+  register_error_translator<amount_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

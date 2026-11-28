@@ -1,0 +1,26 @@
+; The accounts command lists accounts in the byte order of their full
+; names, so an account sorts before its siblings whose names extend it
+; with a space, a hyphen or a sub-account.
+
+2024/01/01 Test
+    Foo:Sub          $1
+    Foo-Baz          $1
+    Foo Bar          $1
+    Foo              $1
+    Income          $-4
+
+test accounts
+Foo
+Foo Bar
+Foo-Baz
+Foo:Sub
+Income
+end test
+
+test accounts --count
+1 Foo
+1 Foo Bar
+1 Foo-Baz
+1 Foo:Sub
+1 Income
+end test

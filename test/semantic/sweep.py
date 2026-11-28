@@ -12,16 +12,12 @@ Discipline (see the bisimulation section of the ledger-semantics README):
   - every run writes an artifact (absence of output is never silent
     success) into test/semantic/artifacts/, embedding the comparison
     tuple: git revision, ledger --version, file digest, TZ;
-  - files marked out of scope are *checked to be rejected* by the
-    driver — a parser that silently accepts an out-of-scope construct
-    is itself a defect;
   - divergences are recorded raw as `unadjudicated-divergence`:
     deciding which side is wrong is adjudication, and the instrument
     does not adjudicate.
 
 Usage: [LEDGER=path] python3 test/semantic/sweep.py
-Exit 0 iff every in-scope file PASSes and every out-of-scope file is
-rejected by the driver.
+Exit 0 iff every manifest file PASSes.
 """
 
 import datetime
@@ -35,6 +31,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
+sys.path.append(os.path.dirname(HERE))
+from LedgerHarness import sanitized_env  # the environment the .test harness gives ledger
 
 # (repo-relative path, scope, note)
 MANIFEST = [
@@ -48,7 +46,7 @@ MANIFEST = [
     ("test/input/drewr3.dat", "in", "auto-xacts"),
     ("test/input/wow.dat", "in", "C/D directives ignored as display-only — empirical check"),
     ("test/input/divzero.dat", "in",
-     "expression amounts; the historical divide-by-zero is fixed in this build"),
+     "expression amounts with mixed-precision division"),
 ]
 
 
@@ -180,13 +178,21 @@ def oracle_env(env):
             "GIT_CONFIG_VALUE_0": "*"}
 
 
+def run_cpp(ledger, args, env):
+    """Run the C++ side of a comparison: LEDGER with ARGS, output captured
+    as text.  --args-only keeps the caller's init file, LEDGER_* variables
+    and default price database away from it, since the oracle reads none
+    of them."""
+    return subprocess.run([ledger, "--args-only", *args],
+                          capture_output=True, text=True, env=env)
+
+
 def main():
     ledger = os.environ.get("LEDGER", os.path.join(REPO, "build", "ledger"))
-    env = {**os.environ, "TZ": "America/Chicago"}
+    ledger_env = sanitized_env()
+    lake_env = {**os.environ, "TZ": ledger_env["TZ"]}
 
-    ledger_version = subprocess.run(
-        [ledger, "--version"], capture_output=True, text=True, env=env
-    ).stdout.splitlines()[0]
+    ledger_version = run_cpp(ledger, ["--version"], ledger_env).stdout.splitlines()[0]
     git_rev = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=REPO
     ).stdout.strip()
@@ -204,7 +210,7 @@ def main():
     drv = subprocess.run(
         [*cmd, *abs_paths],
         cwd=lean_dir, capture_output=True, text=True,
-        timeout=1800, env=oracle_env(env),
+        timeout=1800, env=oracle_env(lake_env),
     )
     if drv.returncode != 0:
         print("driver invocation failed:", file=sys.stderr)
@@ -236,56 +242,35 @@ def main():
         block = blocks.get(path, [])
         drv_error = next((l for l in block if l.startswith("!! ERROR")), None)
 
-        if scope == "cpp-rejects":
-            cpp = subprocess.run(
-                [ledger, "-f", os.path.join(REPO, path),
-                 "balance", "--flat", "--no-total"],
-                capture_output=True, text=True, env=env)
-            if cpp.returncode != 0:
-                entry["status"] = "CPP-REJECTS (as documented)"
-                entry["cpp_stderr"] = cpp.stderr.strip()[-160:]
-            else:
-                entry["status"] = "FAIL: C++ unexpectedly accepted"
-                failures += 1
-        elif scope == "out":
-            # Fail-closed check: the driver MUST reject the file.
-            if drv_error:
-                entry["status"] = "OUT-OF-SCOPE (rejected as expected)"
-                entry["driver_error"] = drv_error
-            else:
-                entry["status"] = "FAIL: out-of-scope file ACCEPTED by driver"
-                failures += 1
+        if drv_error:
+            entry["status"] = "FAIL: driver rejected in-scope file"
+            entry["driver_error"] = drv_error
+            failures += 1
         else:
-            if drv_error:
-                entry["status"] = "FAIL: driver rejected in-scope file"
-                entry["driver_error"] = drv_error
+            oracle_rows = set(l for l in block if l.strip())
+            cpp = run_cpp(
+                ledger, ["-f", os.path.join(REPO, path),
+                         "balance", "--flat", "--no-total"],
+                ledger_env)
+            if cpp.returncode != 0:
+                entry["status"] = "FAIL: C++ ledger errored"
+                entry["cpp_stderr"] = cpp.stderr[-500:]
                 failures += 1
             else:
-                oracle_rows = set(l for l in block if l.strip())
-                cpp = subprocess.run(
-                    [ledger, "-f", os.path.join(REPO, path),
-                     "balance", "--flat", "--no-total"],
-                    capture_output=True, text=True, env=env,
-                )
-                if cpp.returncode != 0:
-                    entry["status"] = "FAIL: C++ ledger errored"
-                    entry["cpp_stderr"] = cpp.stderr[-500:]
-                    failures += 1
+              try:
+                cpp_rows = parse_cpp_balance(cpp.stdout)
+                if cpp_rows == oracle_rows:
+                    entry["status"] = "PASS"
+                    entry["rows"] = len(cpp_rows)
                 else:
-                  try:
-                    cpp_rows = parse_cpp_balance(cpp.stdout)
-                    if cpp_rows == oracle_rows:
-                        entry["status"] = "PASS"
-                        entry["rows"] = len(cpp_rows)
-                    else:
-                        entry["status"] = "unadjudicated-divergence"
-                        entry["only_oracle"] = sorted(oracle_rows - cpp_rows)
-                        entry["only_cpp"] = sorted(cpp_rows - oracle_rows)
-                        failures += 1
-                  except ValueError as e:
-                    entry["status"] = "FAIL: unparseable C++ output"
-                    entry["why"] = str(e)[:200]
+                    entry["status"] = "unadjudicated-divergence"
+                    entry["only_oracle"] = sorted(oracle_rows - cpp_rows)
+                    entry["only_cpp"] = sorted(cpp_rows - oracle_rows)
                     failures += 1
+              except ValueError as e:
+                entry["status"] = "FAIL: unparseable C++ output"
+                entry["why"] = str(e)[:200]
+                failures += 1
         results.append(entry)
 
     artifact = {

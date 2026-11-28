@@ -1,0 +1,143 @@
+; calc_posts gives a posting its own per-account running total under
+; --average only when a grouping filter (--monthly, --dow, --by-payee,
+; --subtotal) emitted it as one row of a group.  Budget, forecast,
+; automated and balance-split postings are generated too, but they are
+; ordinary register rows and continue the global running total.
+
+~ monthly
+    Expenses:Food                $100
+    Expenses:Rent                $500
+    Assets:Checking
+
+= /^Travel:Meals$/
+    Travel:Tip                    0.1
+    Travel:Tax                   0.05
+    Assets:Card                 -0.15
+
+2024/01/05 Grocer
+    Expenses:Food                 $50
+    Assets:Checking
+
+2024/01/10 Diner
+    Travel:Meals                  $60
+    Assets:Card
+
+2024/01/15 Exchange
+    Shopping:Books                $30
+    Shopping:Trip              60 EUR
+    Wallet:Cash
+
+2024/01/20 Bookshop
+    Shopping:Books                $90
+    Wallet:Cash
+
+2024/02/05 Grocer
+    Expenses:Food                 $80
+    Assets:Checking
+
+2024/02/10 Diner
+    Travel:Meals                 $100
+    Assets:Card
+
+test reg --budget Expenses -A -b 2024/01/01 -e 2024/03/01 --now 2024/03/01
+24-Jan-01 Budget transaction    Expenses:Food                 $-100        $-100
+24-Jan-01 Budget transaction    Expenses:Rent                 $-500        $-300
+24-Jan-05 Grocer                Expenses:Food                   $50        $-183
+24-Feb-01 Budget transaction    Expenses:Food                 $-100        $-163
+24-Feb-01 Budget transaction    Expenses:Rent                 $-500        $-230
+24-Feb-05 Grocer                Expenses:Food                   $80        $-178
+end test
+
+test reg Expenses -A --forecast 'd<[2024/04/01]' -b 2024/01/01 --now 2024/02/10
+24-Jan-05 Grocer                Expenses:Food                   $50          $50
+24-Feb-05 Grocer                Expenses:Food                   $80          $65
+24-Feb-01 Forecast transaction  Expenses:Food                  $100          $77
+24-Feb-01 Forecast transaction  Expenses:Rent                  $500         $183
+24-Mar-01 Forecast transaction  Expenses:Food                  $100         $166
+24-Mar-01 Forecast transaction  Expenses:Rent                  $500         $222
+end test
+
+test reg ^Travel -A
+24-Jan-10 Diner                 Travel:Meals                    $60          $60
+                                Travel:Tip                       $6          $33
+                                Travel:Tax                       $3          $23
+24-Feb-10 Diner                 Travel:Meals                   $100          $42
+                                Travel:Tip                      $10          $36
+                                Travel:Tax                       $5          $31
+end test
+
+test reg ^Travel --format '%(count) %(account)\n'
+1 Travel:Meals
+2 Travel:Tip
+3 Travel:Tax
+4 Travel:Meals
+5 Travel:Tip
+6 Travel:Tax
+end test
+
+test reg ^Wallet -A
+24-Jan-15 Exchange              Wallet:Cash                    $-30         $-30
+                                Wallet:Cash                 -60 EUR         $-15
+                                                                         -30 EUR
+24-Jan-20 Bookshop              Wallet:Cash                    $-90         $-40
+                                                                         -20 EUR
+end test
+
+test reg ^Expenses ^Travel -M -A
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $50          $50
+                       Travel:Meals                      $60          $60
+                       Travel:Tax                         $3           $3
+                       Travel:Tip                         $6           $6
+24-Feb-01 - 24-Feb-29  Expenses:Food                     $80          $65
+                       Travel:Meals                     $100          $80
+                       Travel:Tax                         $5           $4
+                       Travel:Tip                        $10           $8
+end test
+
+test reg ^Expenses ^Assets:Checking --depth 1 -A -e 2024/03/01
+24-Jan-05 Grocer                Expenses                        $50          $50
+                                Assets                         $-50            0
+24-Feb-05 Grocer                Expenses                        $80          $40
+                                Assets                         $-80            0
+end test
+
+test reg ^Expenses ^Assets:Checking --depth 1 -e 2024/03/01 --format '%(count) %(account)\n'
+1 Expenses
+1 Assets
+2 Expenses
+2 Assets
+end test
+
+test reg ^Travel --by-payee -A
+24-Jan-10 Diner                 Travel:Meals                   $160         $160
+                                Travel:Tax                       $8           $8
+                                Travel:Tip                      $16          $16
+end test
+
+test reg --budget Expenses -M -A -b 2024/01/01 -e 2024/03/01 --now 2024/03/01
+24-Jan-01 - 24-Jan-31  Expenses:Food                    $-50         $-50
+                       Expenses:Rent                   $-500        $-500
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $-20         $-35
+                       Expenses:Rent                   $-500        $-500
+end test
+
+test reg ^Travel ^Shopping --equity -A
+24-Feb-10 Opening Balances      Shopping:Books                 $120         $120
+                                Shopping:Trip                60 EUR       60 EUR
+                                Travel:Meals                   $160         $160
+                                Travel:Tax                       $8           $8
+                                Travel:Tip                      $16          $16
+                                Equit:Opening Balances        $-304        $-144
+                                Equit:Opening Balances      -60 EUR         $-96
+                                                                         -20 EUR
+end test
+
+test reg ^Travel ^Shopping --equity --format '%(count) %(account)\n'
+1 Shopping:Books
+1 Shopping:Trip
+1 Travel:Meals
+1 Travel:Tax
+1 Travel:Tip
+2 Equity:Opening Balances
+3 Equity:Opening Balances
+end test

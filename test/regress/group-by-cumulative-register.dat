@@ -1,0 +1,2 @@
+--no-pager --columns=80 reg --group-by payee --group-by-cumulative Expenses
+--no-pager --columns=80 reg Expenses

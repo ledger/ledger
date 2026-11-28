@@ -1,0 +1,38 @@
+; Identifiers inside a function body: a parameter shadows an outer
+; definition of the same name, and every other identifier (a global
+; define, or a posting value such as amount or payee) is looked up when
+; the function is called, not when it is compiled.
+
+define factor = 1000
+define scale(factor) = amount * factor
+define bump(x) = x + factor
+define tagged(p) = payee =~ p
+define twice(f, v) = f(f(v))
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --format '%(payee) %(factor) %(scale(2)) %(bump(1)) %(twice((y -> y * 10), 1)) %(twice((factor -> factor * 10), 1))\n'
+Grocery Store 1000 $100.00 1001 100 100
+Grocery Store 1000 $-100.00 1001 100 100
+Gas Station 1000 $60.00 1001 100 100
+Gas Station 1000 $-60.00 1001 100 100
+end test
+
+test reg --limit 'tagged(/Gas/)' --format '%(account) %(scale(3))\n'
+Expenses:Transport $90.00
+Assets:Checking $-90.00
+end test
+
+test eval 'k = 7; addk(x) = x + k; addk(1)'
+8
+end test
+
+test eval 'x = 5; dbl(x) = x * 2; dbl(3)'
+6
+end test

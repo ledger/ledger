@@ -1,0 +1,19 @@
+; Negating a date or a date/time is a value_error that names the type.
+
+test eval -- -[2024/01/01] -> 1
+__ERROR__
+While negating 2024/01/01:
+While parsing value expression:
+  -[2024/01/01]
+
+Error: Cannot negate a date
+end test
+
+test eval --now 2030/06/15 -- -now -> 1
+__ERROR__
+While evaluating value expression:
+  (- now)
+  ^^^^^^^
+While negating 2030/06/15 00:00:00:
+Error: Cannot negate a date/time
+end test

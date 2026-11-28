@@ -1,268 +1,172 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# CheckEnvVars.py - Test that LEDGER_* environment variables are honored.
+# CheckEnvVars.py - Test that LEDGER_* environment variables and init files
+# are honored.
 #
-# This test runs ledger directly (without --args-only) to verify that
-# environment variables like LEDGER_INIT_FILE are properly processed.
-# The standard test harness uses --args-only which skips env var processing,
-# so this script is needed for env var testing.
+# The .test harness always passes --args-only, which skips the environment
+# and every init file, so these cases run ledger themselves, without it, in a
+# scratch directory: with HOME pointing nowhere unless a case says otherwise,
+# and otherwise with the environment LedgerHarness gives every test.
 
 import argparse
-import os
 import pathlib
 import subprocess
-import sys
 import tempfile
 
-def parser():
-    p = argparse.ArgumentParser(add_help=False)
-    p.add_argument('-l', '--ledger', type=pathlib.Path, required=True)
-    p.add_argument('-s', '--sourcepath', type=pathlib.Path, required=True)
-    return p
+from LedgerHarness import LedgerHarness, sanitized_env
 
-args = parser().parse_args()
+JOURNAL = """\
+2024/01/01 Test payee
+    Expenses:Food    $25.00
+    Assets:Checking
+"""
 
-ledger = str(args.ledger.resolve())
+BALANCE = ('             $-25.00  Assets:Checking\n'
+           '              $25.00  Expenses:Food\n')
+TOTAL = ('--------------------\n'
+         '                   0\n')
+COLORED = ('             \033[38;5;196m$-25.00\033[0m'
+           '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
+           '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n')
 
-succeeded = 0
-failed = 0
+# A journal that defines a value, so that a case can tell whether it was read,
+# and one whose two transactions do not balance (two parse errors).
+MARKED = ('define journal_marker=7\n'
+          '2024/01/01 Test payee\n'
+          '    Expenses:Food    $25.00\n'
+          '    Assets:Checking\n')
+UNBALANCED = ('2024/01/01 X\n'
+              '    A  $1\n'
+              '    B  $2\n'
+              '\n'
+              '2024/01/02 Y\n'
+              '    A  $1\n'
+              '    B  $2\n')
 
-def run_test(description, env_vars, args_list, expected_output, expected_exit=0):
-    global succeeded, failed
+# Each case: (description, environment, init files {name: text}, arguments,
+# expected stdout, expected exit status).  In every string $DIR is the case's
+# own scratch directory (which holds its init files) and $JOURNAL the journal.
+CASES = [
+    ('LEDGER_INIT_FILE is honored (issue #1189)',
+     {'LEDGER_INIT_FILE': '$DIR/ledgerrc'},
+     {'ledgerrc': '--file $JOURNAL\n'},
+     ['bal'], BALANCE + TOTAL, 0),
+    ('Legacy LEDGER_INIT is honored',
+     {'LEDGER_INIT': '$DIR/ledgerrc'},
+     {'ledgerrc': '--file $JOURNAL\n'},
+     ['bal'], BALANCE + TOTAL, 0),
+    ('LEDGER_INIT_FILE takes priority over LEDGER_INIT',
+     {'LEDGER_INIT_FILE': '$DIR/init_a', 'LEDGER_INIT': '$DIR/init_b'},
+     {'init_a': '--file $JOURNAL\n--no-total\n', 'init_b': '--file $JOURNAL\n'},
+     ['bal'], BALANCE, 0),
+    ('LEDGER_COLORS is honored (issue #589)',
+     {'LEDGER_COLORS': 'blue=#5f87ff,red=196'}, {},
+     ['-f', '$JOURNAL', 'bal', '--force-color'], COLORED + TOTAL, 0),
+    # '#' does not start a comment in an init file, and --colors there adds
+    # up with --colors on the command line, which wins for red.
+    ('--colors in an init file is honored (issue #589)',
+     {'LEDGER_INIT_FILE': '$DIR/ledgerrc'},
+     {'ledgerrc': '--colors blue=#5f87ff\n--colors red=bold 33\n'},
+     ['-f', '$JOURNAL', 'bal', '--force-color', '--colors=red=196'],
+     COLORED + TOTAL, 0),
+    # In a double-quoted format, \" writes the expression's empty string "".
+    ('A quoted format in ~/.ledgerrc is honored (issue #1884)',
+     {'HOME': '$DIR'},
+     {'.ledgerrc':
+      r'--balance-format "%(justify(scrub(display_total), 20, -1, true, color))'
+      r'  %(!options.flat ? depth_spacer : \"\")'
+      r'%-(ansify_if(partial_account(options.flat), yellow if color))'
+      r'\n%/%$1\n%/--------------------\n"' '\n'},
+     ['-f', '$JOURNAL', 'bal', '--force-color'],
+     '             \033[31m$-25.00\033[0m  \033[33mAssets:Checking\033[0m\n'
+     '              $25.00  \033[33mExpenses:Food\033[0m\n' + TOTAL, 0),
+    # An account check is an automated check, which an init file must not
+    # hold.
+    ('An account check in the init file is rejected', {},
+     {'ledgerrc': 'account Assets:Checking\n    check amount < 1000\n'},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$JOURNAL', 'bal'], '', 1),
+    # In batch mode execute_command reads the journal only for a regular
+    # command.  A precommand (eval) runs after the init file has been read
+    # and without the journal; a precommand that needs the journal (source)
+    # reads it itself, and journal parse errors (error_count) set the exit
+    # status.  (Under --script and at the REPL main() reads the journal
+    # before the first command; these five rows are all batch runs.)
+    ('eval sees definitions from the init file', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'eval', 'init_marker'],
+     '42\n', 0),
+    ('eval runs without the journal being read', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'eval', 'journal_marker'],
+     '', 1),
+    ('eval ignores parse errors in an unread journal', {},
+     {'ledgerrc': 'define init_marker=42\n', 'unbalanced.dat': UNBALANCED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/unbalanced.dat', 'eval', 'init_marker'],
+     '42\n', 0),
+    ('source reads the journal itself; the exit status counts its errors', {},
+     {'ledgerrc': 'define init_marker=42\n', 'unbalanced.dat': UNBALANCED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/unbalanced.dat', 'source'],
+     '', 2),
+    ('A regular command reads the journal data files', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'bal',
+      '--format', '%(journal_marker)\n', '--no-total', '--flat'],
+     '7\n7\n', 0),
+]
+# Every documented way of naming an init file on the command line reads it,
+# and a missing one is an error.
+for form in (['--init-file', '$DIR/$NAME'], ['--init-file=$DIR/$NAME'],
+             ['-i', '$DIR/$NAME']):
+    flag = form[0].split('=')[0]
+    CASES.append((f'{flag} names the init file ({" ".join(form)})', {},
+                  {'ledgerrc': '--no-total\n'},
+                  [a.replace('$NAME', 'ledgerrc') for a in form]
+                  + ['-f', '$JOURNAL', 'bal'], BALANCE, 0))
+    CASES.append((f'A missing init file is an error ({" ".join(form)})', {}, {},
+                  [a.replace('$NAME', 'missing') for a in form]
+                  + ['-f', '$JOURNAL', 'bal'], '', 1))
 
-    env = {'TZ': 'America/Chicago', 'HOME': '/nonexistent'}
-    env.update(env_vars)
+args = argparse.ArgumentParser(prog='CheckEnvVars',
+                               parents=[LedgerHarness.parser()]).parse_args()
+harness = LedgerHarness(args.ledger, args.sourcepath, timeout=args.timeout)
 
-    try:
-        result = subprocess.run(
-            [ledger] + args_list,
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        actual = result.stdout
-        exit_code = result.returncode
-
-        if actual.strip() == expected_output.strip() and exit_code == expected_exit:
-            sys.stdout.write('.')
-            sys.stdout.flush()
-            succeeded += 1
-        else:
-            sys.stdout.write('E')
-            sys.stdout.flush()
-            failed += 1
-            print(f'\nFAILURE: {description}')
-            if actual.strip() != expected_output.strip():
-                print(f'  Expected output: {repr(expected_output.strip())}')
-                print(f'  Actual output:   {repr(actual.strip())}')
-            if exit_code != expected_exit:
-                print(f'  Expected exit: {expected_exit}, Actual exit: {exit_code}')
-            if result.stderr:
-                print(f'  Stderr: {result.stderr.strip()}')
-    except subprocess.TimeoutExpired:
-        sys.stdout.write('E')
-        sys.stdout.flush()
-        failed += 1
-        print(f'\nFAILURE: {description} (timeout)')
-
-# Test 1: LEDGER_INIT_FILE sets the init file path (issue #1189)
 with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-    init_file = os.path.join(tmpdir, 'ledgerrc')
+    journal = pathlib.Path(tmpdir) / 'journal.dat'
+    journal.write_text(JOURNAL)
+    for index, (description, env_vars, init_files, argv, expected,
+                expected_exit) in enumerate(CASES):
+        case_dir = pathlib.Path(tmpdir) / f'case{index}'
+        case_dir.mkdir()
 
-    with open(journal_file, 'w') as f:
-        f.write('2024/01/01 Test payee\n')
-        f.write('    Expenses:Food    $25.00\n')
-        f.write('    Assets:Checking\n')
+        def fill(text):
+            return text.replace('$DIR', str(case_dir)).replace('$JOURNAL', str(journal))
 
-    with open(init_file, 'w') as f:
-        f.write(f'--file {journal_file}\n')
+        for name, text in init_files.items():
+            (case_dir / name).write_text(fill(text))
+        env = sanitized_env()
+        env['HOME'] = '/nonexistent'
+        env.update({k: fill(v) for k, v in env_vars.items()})
+        try:
+            # The shared scratch directory holds no .ledgerrc, so ./.ledgerrc,
+            # ledger's last init-file fallback, is never read from the caller's.
+            result = subprocess.run([str(harness.ledger), *map(fill, argv), '--columns=80'],
+                                    env=env, cwd=tmpdir, capture_output=True, text=True,
+                                    timeout=harness.timeout)
+        except subprocess.TimeoutExpired:
+            harness.failure(description)
+            print(f'\n  timed out after {harness.timeout}s')
+            continue
+        if result.stdout == expected and result.returncode == expected_exit:
+            harness.success()
+            continue
+        harness.failure(description)
+        if result.stdout != expected:
+            print(f'\n  Expected output: {expected!r}')
+            print(f'  Actual output:   {result.stdout!r}')
+        if result.returncode != expected_exit:
+            print(f'  Expected exit: {expected_exit}, Actual exit: {result.returncode}')
+        if result.stderr:
+            print(f'  Stderr: {result.stderr.strip()}')
 
-    run_test(
-        'LEDGER_INIT_FILE is honored (issue #1189)',
-        {'LEDGER_INIT_FILE': init_file},
-        ['bal', '--columns=80'],
-            '             $-25.00  Assets:Checking\n'
-            '              $25.00  Expenses:Food\n'
-            '--------------------\n'
-            '                   0',
-        expected_exit=0
-    )
-
-# Test 2: Legacy LEDGER_INIT also sets the init file path
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-    init_file = os.path.join(tmpdir, 'ledgerrc')
-
-    with open(journal_file, 'w') as f:
-        f.write('2024/06/01 Coffee shop\n')
-        f.write('    Expenses:Coffee    $5.50\n')
-        f.write('    Assets:Cash\n')
-
-    with open(init_file, 'w') as f:
-        f.write(f'--file {journal_file}\n')
-
-    run_test(
-        'Legacy LEDGER_INIT is honored',
-        {'LEDGER_INIT': init_file},
-        ['bal', '--columns=80'],
-            '              $-5.50  Assets:Cash\n'
-            '               $5.50  Expenses:Coffee\n'
-            '--------------------\n'
-            '                   0',
-        expected_exit=0
-    )
-
-# Test 3: LEDGER_INIT_FILE takes priority over LEDGER_INIT
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_a = os.path.join(tmpdir, 'journal_a.dat')
-    journal_b = os.path.join(tmpdir, 'journal_b.dat')
-    init_a = os.path.join(tmpdir, 'init_a.ledgerrc')
-    init_b = os.path.join(tmpdir, 'init_b.ledgerrc')
-
-    with open(journal_a, 'w') as f:
-        f.write('2024/01/01 From A\n')
-        f.write('    Expenses:A    $10.00\n')
-        f.write('    Assets:Cash\n')
-
-    with open(journal_b, 'w') as f:
-        f.write('2024/01/01 From B\n')
-        f.write('    Expenses:B    $20.00\n')
-        f.write('    Assets:Cash\n')
-
-    with open(init_a, 'w') as f:
-        f.write(f'--file {journal_a}\n')
-
-    with open(init_b, 'w') as f:
-        f.write(f'--file {journal_b}\n')
-
-    run_test(
-        'LEDGER_INIT_FILE takes priority over LEDGER_INIT',
-        {'LEDGER_INIT_FILE': init_a, 'LEDGER_INIT': init_b},
-        ['bal', 'Expenses:A', '--columns=80'],
-            '              $10.00  Expenses:A',
-        expected_exit=0
-    )
-
-# Test 4: LEDGER_COLORS sets --colors (issue #589)
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-
-    with open(journal_file, 'w') as f:
-        f.write('2024/01/01 Test payee\n')
-        f.write('    Expenses:Food    $25.00\n')
-        f.write('    Assets:Checking\n')
-
-    run_test(
-        'LEDGER_COLORS is honored (issue #589)',
-        {'LEDGER_COLORS': 'blue=#5f87ff,red=196'},
-        ['-f', journal_file, 'bal', '--force-color', '--columns=80'],
-            '             \033[38;5;196m$-25.00\033[0m'
-            '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
-            '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n'
-            '--------------------\n'
-            '                   0',
-        expected_exit=0
-    )
-
-# Test 5: --colors in an init file, where '#' does not start a comment,
-# adds up with --colors on the command line, which wins for red (#589)
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-    init_file = os.path.join(tmpdir, 'ledgerrc')
-
-    with open(journal_file, 'w') as f:
-        f.write('2024/01/01 Test payee\n')
-        f.write('    Expenses:Food    $25.00\n')
-        f.write('    Assets:Checking\n')
-
-    with open(init_file, 'w') as f:
-        f.write('--colors blue=#5f87ff\n')
-        f.write('--colors red=bold 33\n')
-
-    run_test(
-        '--colors in an init file is honored (issue #589)',
-        {'LEDGER_INIT_FILE': init_file},
-        ['-f', journal_file, 'bal', '--force-color', '--colors=red=196',
-         '--columns=80'],
-            '             \033[38;5;196m$-25.00\033[0m'
-            '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
-            '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n'
-            '--------------------\n'
-            '                   0',
-        expected_exit=0
-    )
-
-# Test 6: a double-quoted format in ~/.ledgerrc, where \" writes the
-# expression's empty string "" (issue #1884)
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-
-    with open(journal_file, 'w') as f:
-        f.write('2024/01/01 Test payee\n')
-        f.write('    Expenses:Food    $25.00\n')
-        f.write('    Assets:Checking\n')
-
-    with open(os.path.join(tmpdir, '.ledgerrc'), 'w') as f:
-        f.write(r'--balance-format "%(justify(scrub(display_total), 20, -1, true, color))'
-                r'  %(!options.flat ? depth_spacer : \"\")'
-                r'%-(ansify_if(partial_account(options.flat), yellow if color))'
-                r'\n%/%$1\n%/--------------------\n"' '\n')
-
-    run_test(
-        'A quoted format in ~/.ledgerrc is honored (issue #1884)',
-        {'HOME': tmpdir},
-        ['-f', journal_file, 'bal', '--force-color', '--columns=80'],
-            '             \033[31m$-25.00\033[0m  \033[33mAssets:Checking\033[0m\n'
-            '              $25.00  \033[33mExpenses:Food\033[0m\n'
-            '--------------------\n'
-            '                   0',
-        expected_exit=0
-    )
-
-# Test 7: every documented way of naming an init file on the command line
-# reads it, and a missing one is an error
-with tempfile.TemporaryDirectory() as tmpdir:
-    journal_file = os.path.join(tmpdir, 'journal.dat')
-    init_file = os.path.join(tmpdir, 'ledgerrc')
-    missing_file = os.path.join(tmpdir, 'missing')
-
-    with open(journal_file, 'w') as f:
-        f.write('2024/01/01 Test payee\n')
-        f.write('    Expenses:Food    $25.00\n')
-        f.write('    Assets:Checking\n')
-
-    with open(init_file, 'w') as f:
-        f.write('--no-total\n')
-
-    for form in (['--init-file', init_file], [f'--init-file={init_file}'],
-                 ['-i', init_file]):
-        run_test(
-            f'{form[0].split("=")[0]} names the init file ({" ".join(form)})',
-            {},
-            form + ['-f', journal_file, 'bal', '--columns=80'],
-                '             $-25.00  Assets:Checking\n'
-                '              $25.00  Expenses:Food',
-            expected_exit=0
-        )
-
-    for form in (['--init-file', missing_file],
-                 [f'--init-file={missing_file}'], ['-i', missing_file]):
-        run_test(
-            f'A missing init file is an error ({" ".join(form)})',
-            {},
-            form + ['-f', journal_file, 'bal', '--columns=80'],
-            '',
-            expected_exit=1
-        )
-
-print()
-if succeeded > 0:
-    print(f'OK ({succeeded})')
-if failed > 0:
-    print(f'FAILED ({failed})')
-print()
-
-sys.exit(failed)
+harness.exit()

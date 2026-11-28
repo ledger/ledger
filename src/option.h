@@ -103,8 +103,7 @@
  * |-------|-----------|---------|
  * | `BEGIN(type, name)` | `struct name##option_t : public option_t<type>` | Opens the option struct
  * declaration | | `CTOR(type, name)` | `name##option_t() : option_t<type>(#name)` | Basic
- * constructor | | `CTOR_(type, name, base)` | `name##option_t() : option_t<type>(#name), base` |
- * Constructor with extra member initializer | | `DECL1(type, name, vartype, var, value)` | declares
+ * constructor | | `DECL1(type, name, vartype, var, value)` | declares
  * `vartype var;` + constructor | Adds an extra member variable to the option struct | | `END(name)`
  * | `name##handler` | Closes the struct and declares the member instance |
  *
@@ -113,8 +112,8 @@
  * | Macro | Expansion | Purpose |
  * |-------|-----------|---------|
  * | `DO()` | `void handler_thunk(whence) override` | Override for boolean (no-arg) options |
- * | `DO_(var)` | `void handler_thunk(whence, var) override` | Override for options taking an
- * argument |
+ * | `DO_()` | `void handler_thunk(whence, str) override` | Override for options taking an
+ * argument, which the body reads as `str` |
  *
  * @subsection opt_convenience Convenience Declaration Macros
  *
@@ -125,8 +124,12 @@
  * | `OPTION(type, name)` | `OPTION(report_t, color);` | Simple option, no custom handler logic |
  * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom
  * DO()/DO_() handler | | `OPTION_CTOR(type, name, body)` | `OPTION_CTOR(report_t, amount_,
- * DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and
+ * DECL1(...) { } DO_() { ... });` | Fully custom body with extra members, custom CTOR, and
  * handler |
+ * | `OPTION_INT(type, name)` / `OPTION_INT_(type, name, body)` | `OPTION_INT(report_t, head_);` |
+ * Integer option: argument validated when set, read with as_int() |
+ * | `OPTION_INT_CTOR(type, int_type, name, body)` | `OPTION_INT_CTOR(report_t, unsigned int,
+ * seed_, ...);` | Integer option with its own constructor or parse type |
  *
  * @subsection opt_lookup Lookup Macros (used in lookup_option)
  *
@@ -147,8 +150,7 @@
  * | `HANDLER(name)` | `name##handler` | Access the option's member instance |
  * | `HANDLED(name)` | `name##handler` | Same; tests if option is set (via bool conversion) |
  * | `OTHER(name)` | `parent->HANDLER(name)` | Access another option on the same parent; used in
- * DO()/DO_() bodies for cross-option side effects | | `COPY_OPT(name, other)` | copy constructor
- * helper | Copies one option's handler from another instance |
+ * DO()/DO_() bodies for cross-option side effects |
  *
  * @subsection opt_factory Factory Macros
  *
@@ -178,7 +180,7 @@
  * @code
  *   // In report_t's member declarations:
  *   OPTION_(report_t, my_filter_,
- *     DO_(str) {
+ *     DO_() {
  *       // Custom handler: also activate --limit with a predicate
  *       OTHER(limit_).on(whence, string("account=~/") + str + "/");
  *     });
@@ -186,15 +188,15 @@
  * This expands to a struct `my_filter_option_t` with an instance
  * `my_filter_handler` as a member of report_t.
  *
- * **Step 2.** Register the option in report_t::lookup_option() (report.cc):
+ * **Step 2.** Register the option in report_t::lookup_option() (report.cc),
+ * under the `case` for its first letter:
  * @code
- *   OPT(my_filter_);
+ *   case 'm':
+ *     OPT(my_filter_);
  * @endcode
- * Or, to also support `-m` as a shortcut, use:
- * @code
- *   OPT_(my_filter_);
- *   // and set ch='m' via a custom CTOR if desired.
- * @endcode
+ * To also accept `-m`, write OPT_(my_filter_) there instead: OPT_ matches a
+ * one-letter name purely by the `case` it sits under, so it must sit under
+ * `case 'm':`.  OPT_CH matches only the one-letter name.
  *
  * **Step 3.** (Optional) If you need a filter handler in the pipeline,
  * add it to chain_pre_post_handlers() or chain_post_handlers() in chain.cc:
@@ -264,7 +266,7 @@ public:
 
   /// @brief Construct an option with the given internal name and optional shortcut.
   /// @param _name  Internal name string (e.g., "sort_all_"); trailing '_' sets wants_arg.
-  /// @param _ch    Single-character CLI shortcut (e.g., 'S'), or '\0' for none.
+  /// @param _ch    Shortcut letter that desc() appends as " (-ch)"; no option passes one.
   option_t(const char* _name, const char _ch = '\0')
       : name(_name), name_len(std::strlen(name)), ch(_ch), handled(false), parent(nullptr), value(),
         wants_arg(name_len > 0 ? name[name_len - 1] == '_' : false) {
@@ -297,8 +299,9 @@ public:
     }
   }
 
-  /// @brief Return the CLI display form (e.g., "--sort-all (-S)").
-  /// Converts internal underscores to hyphens and appends the shortcut if present.
+  /// @brief Return the CLI display form (e.g., "--sort-all").
+  /// Converts internal underscores to hyphens, drops a trailing one, and appends
+  /// " (-ch)" when the option was constructed with a shortcut letter (none is).
   string desc() const {
     std::ostringstream out;
     out << "--";
@@ -318,19 +321,27 @@ public:
   /// @brief Test whether this option has been activated.
   operator bool() const { return handled; }
 
+  /// @brief Return @a arg, throwing the "No argument provided" error when it is empty.
+  /// For DO_() bodies that must reject an empty argument at option time, the check
+  /// str() makes when the value is read later.
+  /// @throws std::runtime_error if @a arg is empty.
+  const string& require_arg(const string& arg) const {
+    if (arg.empty())
+      throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
+    return arg;
+  }
+
   /// @brief Return the option's string value.  Asserts that the option is handled.
   /// @throws std::runtime_error if the value is empty (no argument was provided).
   string str() const {
     assert(handled);
-    if (value.empty())
-      throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
-    return value;
+    return require_arg(value);
   }
 
   /// @brief Activate a boolean (no-argument) option.
   /// Calls handler_thunk(whence) for subclass-specific side effects, then marks
   /// the option as handled and records the source.
-  /// @param whence  Describes who set this option (e.g., "--actual", "$LEDGER_ACTUAL").
+  /// @param whence  Describes who set this option (e.g., "--actual", "$actual").
   void on(const char* whence) { on(string(whence)); }
   void on(const optional<string>& whence) {
     handler_thunk(whence);
@@ -346,7 +357,9 @@ public:
   /// @param str     The argument value (e.g., "monthly", "amount > 100").
   void on(const char* whence, const string& str) { on(string(whence), str); }
   void on(const optional<string>& whence, const string& str) {
-    string before = value; // NOLINT(bugprone-unused-local-non-trivial-variable)
+    validate_argument(str);
+
+    string before = value;
 
     handler_thunk(whence, str);
 
@@ -361,13 +374,16 @@ public:
   void off() {
     handled = false;
     value = "";
-    source = none;
+    source = std::nullopt;
   }
 
   /// @brief Override point for boolean option side effects (called by on(whence)).
   virtual void handler_thunk(const optional<string>&) {}
   /// @brief Override point for argument option side effects (called by on(whence, str)).
   virtual void handler_thunk(const optional<string>&, const string&) {}
+  /// @brief Override point to reject a malformed argument before on() applies it (throws
+  /// option_error).
+  virtual void validate_argument(const string&) const {}
 
   /// @brief Entry point when the option is invoked via the expression engine.
   /// Validates argument count and types, then delegates to on().
@@ -414,8 +430,6 @@ public:
 #define BEGIN(type, name) struct name##option_t : public option_t<type> ///< Opens the option struct
 
 #define CTOR(type, name) name##option_t() : option_t<type>(#name) ///< Basic constructor
-#define CTOR_(type, name, base)                                                                    \
-  name##option_t() : option_t<type>(#name), base ///< Ctor with extra init
 #define DECL1(type, name, vartype, var, value)                                                     \
   vartype var;                                                                                     \
   name##option_t() : option_t<type>(#name), var value ///< Declares extra member var + constructor
@@ -430,12 +444,9 @@ public:
                              [[maybe_unused]] const string& str)                                   \
       override ///< Override for options taking an argument
 
-/*--- Instance and Copy Macros ---*/
+/*--- Instance Macros ---*/
 
 #define END(name) name##handler ///< Closes the struct and declares the member instance
-
-#define COPY_OPT(name, other)                                                                      \
-  name##handler((other).name##handler) ///< Copy one option's handler from another instance
 
 /*--- Factory Macros (wrap option methods as expression functors) ---*/
 
@@ -493,25 +504,26 @@ inline bool is_eq(const char* p, const char* n) {
   }                                                                                                \
   END(name)
 
-/// @brief Declare a numeric option that returns an integer value to the expression engine.
-/// Like OPTION, but overrides operator() so that querying the option from an expression
-/// yields an INTEGER value_t rather than a STRING.  This allows arithmetic like
-/// `4 + total_width` without requiring an explicit int() cast.
+/// @brief Declare an option whose argument must be a whole decimal int (see int_option_t).
+/// The argument is checked when the option is set, HANDLER(name).as_int() reads it, and
+/// querying the option from an expression yields an INTEGER value_t, so `4 + total_width`
+/// works without an explicit int() cast.
 #define OPTION_INT(type, name)                                                                     \
-  BEGIN(type, name) {                                                                              \
-    CTOR(type, name) {}                                                                            \
-    value_t operator()(call_scope_t& args) override {                                              \
-      if (!args.empty()) {                                                                         \
-        args.push_front(string_value("?expr"));                                                    \
-        return handler(args);                                                                      \
-      } else if (wants_arg) {                                                                      \
-        return value.empty() ? value_t(0L) : value_t(std::stol(value));                            \
-      } else {                                                                                     \
-        return handled;                                                                            \
-      }                                                                                            \
-    }                                                                                              \
-  }                                                                                                \
-  END(name)
+  struct name##option_t : public int_option_t<type> {                                              \
+    name##option_t() : int_option_t<type>(#name) {}                                                \
+  } END(name)
+
+/// @brief Like OPTION_INT, with a custom body (e.g., a DO_() handler); the body may call
+/// parse_int(str) and invalid(str).
+#define OPTION_INT_(type, name, ...)                                                               \
+  struct name##option_t                                                                            \
+      : public int_option_t<type>{name##option_t() :                                               \
+                                      int_option_t<type>(#name){} __VA_ARGS__} END(name)
+
+/// @brief Like OPTION_CTOR for an integer option parsed as @a int_type (e.g., unsigned int);
+/// the body supplies the constructor, which names int_option_t<type, int_type>.
+#define OPTION_INT_CTOR(type, int_type, name, ...)                                                 \
+  struct name##option_t : public int_option_t<type, int_type>{__VA_ARGS__} END(name)
 
 /// @brief Declare an option with a custom DO()/DO_() handler body.
 #define OPTION_(type, name, ...) BEGIN(type, name){CTOR(type, name){} __VA_ARGS__} END(name)
@@ -527,7 +539,7 @@ inline bool is_eq(const char* p, const char* n) {
   parent->HANDLER(name)
 
 /// @brief Look up and invoke a named option in the given scope.
-/// @param whence  Source description for provenance tracking (e.g., "--limit", "$LEDGER_LIMIT").
+/// @param whence  Source description for provenance tracking (e.g., "--limit", "$limit").
 /// @param name    Option name (hyphens, no leading dashes) to look up.
 /// @param scope   The scope to search for the option handler.
 /// @param arg     The option's argument value, or nullptr for boolean flags.
@@ -557,6 +569,41 @@ class option_error : public std::runtime_error {
 public:
   explicit option_error(const string& why) noexcept : std::runtime_error(why) {}
   ~option_error() noexcept override {}
+};
+
+/// @brief An option whose argument is a whole decimal number of type Int, checked once when
+/// the option is set.
+template <typename T, typename Int = int>
+class int_option_t : public option_t<T> {
+public:
+  explicit int_option_t(const char* _name) : option_t<T>(_name) {}
+
+  /// @brief The option's validated value in its parse type; 0 when the value is empty.
+  Int as_int() const { return this->value.empty() ? Int(0) : parse_int(this->value); }
+
+  /// @brief Query the option from an expression: an INTEGER value_t for an argument option.
+  value_t operator()(call_scope_t& args) override {
+    if (args.empty() && this->wants_arg)
+      return value_t(static_cast<long>(as_int()));
+    return option_t<T>::operator()(args);
+  }
+
+protected:
+  /// @brief Parse @a str as an Int, or reject it with invalid().
+  Int parse_int(const string& str) const {
+    try {
+      return lexical_cast<Int>(str);
+    } catch (const bad_lexical_cast&) {
+      invalid(str);
+    }
+  }
+
+  /// @brief Throw the option_error "Invalid value for --NAME: STR".
+  [[noreturn]] void invalid(const string& str) const {
+    throw_(option_error, _f("Invalid value for %1%: %2%") % this->desc() % str);
+  }
+
+  void validate_argument(const string& str) const override { (void)parse_int(str); }
 };
 
 } // namespace ledger

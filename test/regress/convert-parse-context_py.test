@@ -1,0 +1,46 @@
+; `convert` pushes the CSV file onto the session's parse-context stack.
+; It used to leave that context on the stack, so in a REPL or --script
+; session every later reader of the current context saw the CSV's
+; directory as the working directory: a relative `--import` path then
+; resolved under test/regress/ instead of the source root and failed with
+; "Python failed to import".  The context must be popped whether the
+; conversion succeeds or throws.
+
+account Assets:Checking
+account Expenses:Unknown
+
+; Success path: two conversions in one script, then a relative --import.
+test --script test/regress/convert-parse-context.dat
+2024/01/05 * Grocer
+    Expenses:Unknown                       12.50 USD
+    Assets:Checking
+
+2024/01/06 * Bakery
+    Expenses:Unknown                        4.25 USD
+    Assets:Checking
+2024/01/05 * Grocer
+    Expenses:Unknown                       12.50 USD
+    Assets:Checking
+
+2024/01/06 * Bakery
+    Expenses:Unknown                        4.25 USD
+    Assets:Checking
+          -33.50 USD  Assets:Checking
+           33.50 USD  Expenses:Unknown
+--------------------
+                   0
+end test
+
+; Error path: a conversion that throws, then a relative --import.  The
+; REPL (stdin) keeps going after an error, unlike --script; only the
+; error lines are kept so the banner does not enter the expectation.
+test -f $FILE < test/regress/convert-parse-context-error.dat 2>&1 | grep '^Error'
+Error: No quantity specified for amount
+end test
+
+; A CSV that cannot be opened throws from the push itself: nothing was
+; pushed, so nothing may be popped (popping would remove the session's
+; own base context).
+test -f $FILE < test/regress/convert-parse-context-missing.dat 2>&1 | grep '^Error' | sed 's|".*/|"|'
+Error: Cannot read journal file "convert-parse-context-missing.csv"
+end test

@@ -1,0 +1,26 @@
+; --forecast-while bounds the generated forecast postings of a balance
+; report, never its real postings: the real 2030/03/01 posting fails the
+; predicate yet still counts.  Accounts reports install no forecast-while
+; filter_posts; forecast_posts::flush withholds a failing forecast group
+; from the account totals by dropping POST_EXT_VISITED (#1605).
+
+2030/03/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+~ Monthly from 2030/06/01
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test bal --forecast 'date>=[2030/04/01] & date<[2030/08/01]' --now 2030/06/15
+           $-1010.00  Assets:Cash
+            $1010.00  Expenses
+              $10.00    Food
+            $1000.00    Rent
+--------------------
+                   0
+end test
+
+test bal --flat --forecast 'date>=[2030/04/01] & date<[2030/08/01]' --now 2030/06/15 Rent
+            $1000.00  Expenses:Rent
+end test

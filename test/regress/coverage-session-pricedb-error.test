@@ -7,5 +7,5 @@
 
 test -f "$FILE" --price-db /tmp/nonexistent_price_db_file_for_coverage_test.db bal -> 1
 __ERROR__
-Error: Could not find specified price-db file  "/tmp/nonexistent_price_db_file_for_coverage_test.db"
+Error: Could not find specified price-db file "/tmp/nonexistent_price_db_file_for_coverage_test.db"
 end test

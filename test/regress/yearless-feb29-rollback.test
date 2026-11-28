@@ -1,0 +1,12 @@
+; A yearless 02/29 read in January 2029 means 2028/02/29, the most recent
+; Feb 29 whose month is not ahead of today; 2029 has no Feb 29.
+
+02/29 leap day
+    Expenses:Food    $1
+    Assets:Cash
+
+test print --now 2029/01/15
+2028/02/29 leap day
+    Expenses:Food                                 $1
+    Assets:Cash
+end test

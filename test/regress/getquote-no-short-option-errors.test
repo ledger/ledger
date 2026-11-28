@@ -1,0 +1,21 @@
+; --getquote has no short form: neither -g nor --g names it.
+; The positive --getquote block lives in getquote-no-short-option.test.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -g /bin/echo -> 1
+__ERROR__
+Error: Illegal option -g
+end test
+
+test bal -Vg /bin/echo -> 1
+__ERROR__
+Error: Illegal option -g
+end test
+
+test bal --g /bin/echo -> 1
+__ERROR__
+Error: Illegal option --g
+end test

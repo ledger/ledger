@@ -5,4 +5,5 @@
     Assets:Cash
 
 test reg Expenses --format "%(get_at(to_sequence(amount), 5))\n"
+
 end test

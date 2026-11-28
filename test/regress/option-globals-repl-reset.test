@@ -1,0 +1,54 @@
+; Report options that act through process globals (--ignore-diacritics,
+; --start-of-week, --period-shift, --truncate) hold for the command that
+; gives them and no longer leak into later --script or REPL commands, and
+; neither does the clock a command's --now sets (read by --current).
+; Options given before --script, --now included, still reach every command.
+
+2024/01/01 Foo
+    Expenses:Café                            $10.555
+    Assets:Cash
+
+2024/01/10 Bookshop
+    Expenses:Books:Paperbacks                 $20.00
+    Assets:Cash
+
+2024/02/10 Bookshop
+    Expenses:Books:Paperbacks                 $30.00
+    Assets:Cash
+
+test --now 2030/06/15 --script test/regress/option-globals-repl-reset.dat
+24-Jan-01 Foo                   Expenses:Café               $10.555      $10.555
+24-Jan-08 - 24-Jan-14  Expense:Books:Paperbacks      $20.000      $20.000
+24-Feb-05 - 24-Feb-11  Expense:Books:Paperbacks      $30.000      $50.000
+24-Jan-07 - 24-Jan-13  Expense:Books:Paperbacks      $20.000      $20.000
+24-Feb-04 - 24-Feb-10  Expense:Books:Paperbacks      $30.000      $50.000
+24-Jan-06 - 24-Feb-05  Expense:Books:Paperbacks      $20.000      $20.000
+24-Feb-06 - 24-Mar-05  Expense:Books:Paperbacks      $30.000      $50.000
+24-Jan-01 - 24-Jan-31  Expense:Books:Paperbacks      $20.000      $20.000
+24-Feb-01 - 24-Feb-29  Expense:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 ..shop ..enses:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 ..shop ..enses:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 Book.. Expense:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 Book.. Expense:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 Bookshop              Expen:Books:Paperbacks      $20.000      $20.000
+24-Jan-10 Bookshop              Expen:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 Bookshop              Expen:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 Bookshop              Expen:Books:Paperbacks      $20.000      $20.000
+24-Jan-10 Bookshop              Expen:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 Bookshop              Expen:Books:Paperbacks      $30.000      $50.000
+end test
+
+test --truncate leading --start-of-week monday --ignore-diacritics --now 2024/01/20 --script test/regress/option-globals-repl-reset-outer.dat
+24-Jan-10 ..shop ..enses:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 ..shop ..enses:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 Bo..op Expenses:Bo..:Paperbacks      $20.000      $20.000
+24-Feb-10 Bo..op Expenses:Bo..:Paperbacks      $30.000      $50.000
+24-Jan-10 ..shop ..enses:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 ..shop ..enses:Books:Paperbacks      $30.000      $50.000
+24-Jan-08 - 24-Jan-14  ..enses:Books:Paperbacks      $20.000      $20.000
+24-Feb-05 - 24-Feb-11  ..enses:Books:Paperbacks      $30.000      $50.000
+24-Jan-01 Foo                   Expenses:Café               $10.555      $10.555
+24-Jan-10 Bookshop              ..ses:Books:Paperbacks      $20.000      $20.000
+24-Feb-10 Bookshop              ..ses:Books:Paperbacks      $30.000      $50.000
+24-Jan-10 Bookshop              ..ses:Books:Paperbacks      $20.000      $20.000
+end test

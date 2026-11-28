@@ -1,0 +1,28 @@
+; -X converts through a chain of prices: AAA is quoted in BBB, and CCC
+; is quoted in BBB, so converting AAA to CCC takes one hop forward and
+; one hop backward.  Each hop uses its latest price on or before the
+; valuation date, and a hop with no price by then cuts the chain,
+; leaving the amount unconverted.
+
+commodity CCC
+    format 1.00 CCC
+
+P 2024/01/01 AAA 2.00 BBB
+P 2024/03/01 AAA 3.00 BBB
+P 2024/02/15 CCC 0.25 BBB
+
+2024/01/01 Opening
+    Assets:Cash      1 AAA
+    Equity:Opening
+
+test bal Assets -X CCC --now 2024/02/20
+            8.00 CCC  Assets:Cash
+end test
+
+test bal Assets -X CCC --now 2024/06/01
+           12.00 CCC  Assets:Cash
+end test
+
+test bal Assets -X CCC --now 2024/02/01
+               1 AAA  Assets:Cash
+end test

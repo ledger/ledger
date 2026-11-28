@@ -1,0 +1,14 @@
+; xact.any() and xact.all() are the posting-scope any() and all(): a
+; second argument of false leaves the current posting out of the test,
+; and a second argument of true keeps it in.
+
+2024/01/01 Split
+    A    $1
+    B    $2
+    C   $-3
+
+test reg --format "%(account) %(xact.all(amount > 0, false)) %(all(amount > 0, false)) %(xact.any(amount < 0, false)) %(any(amount < 0, false)) %(xact.any(amount < 0, true)) %(any(amount < 0))\n"
+A false false true true true true
+B false false true true true true
+C true true false false true true
+end test

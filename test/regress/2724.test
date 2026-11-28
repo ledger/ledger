@@ -41,3 +41,92 @@ test reg --columns 80 -b 2024/01/02
                                 Assets:Checking           $-1000.00            0
                                 (Liabilities:VAT)           $190.00      $190.00
 end test
+
+; --- Tests 4-18: the percentage may be either operand ---
+;
+; In a value expression a "%" amount is a fraction whenever the other
+; operand carries a commodity (an amount in one, or a balance), on
+; whichever side it stands, and the product takes that other commodity,
+; so the two orders agree.  Times a bare number, "%" stays a percentage
+; of the product in either order: 10 * 19% is 190% (that is, 1.9), the
+; reading the budget report's 100% * quantity(...) column relies on.
+; Dividing by N% divides by N/100 whatever the dividend.
+
+test eval '19% * $1000'
+$190
+end test
+
+test eval '$1000 * 19%'
+$190
+end test
+
+test eval '(19% * $1000) == ($1000 * 19%)'
+1
+end test
+
+test eval '2.5% * $1000'
+$25
+end test
+
+test eval '$1000 * 2.5%'
+$25
+end test
+
+test eval '$1000 / 2.5%'
+$40000
+end test
+
+test eval '100 / 19%'
+526.315789
+end test
+
+test eval '10 * 19%'
+190%
+end test
+
+test eval '19% * 10'
+190%
+end test
+
+test eval '0.5 * 100.00%'
+50.00%
+end test
+
+test eval '100.00% * 0.5'
+50.00%
+end test
+
+test eval '($10 + 10 EUR) * 50%'
+$5
+5 EUR
+end test
+
+test eval '50% * ($10 + 10 EUR)'
+$5
+5 EUR
+end test
+
+test eval '(50% * ($10 + 10 EUR)) == (($10 + 10 EUR) * 50%)'
+1
+end test
+
+test eval '($10 + 10 EUR) / 50%'
+$20
+20 EUR
+end test
+
+; --- Test 19: an automated transaction that writes the rate first ---
+
+= /Expenses:Consulting/
+    (Liabilities:VAT)             (tag("VAT") * amount)
+
+2023/12/31 VAT First
+    ; VAT:: 19%
+    Expenses:Consulting          $500.00
+    Assets:Checking
+
+test reg --columns 80 -e 2024/01/01
+23-Dec-31 VAT First             Expenses:Consulting         $500.00      $500.00
+                                Assets:Checking            $-500.00            0
+                                (Liabilities:VAT)            $95.00       $95.00
+end test

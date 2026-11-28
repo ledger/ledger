@@ -1,0 +1,5 @@
+test python test/regress/commodity-symbol-accessors.py
+EUR|EUR|EUR|str
+"A1 B"|A1 B|"A1 B"|str
+AAPL|AAPL|AAPL|str
+end test

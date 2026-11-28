@@ -1,0 +1,93 @@
+; payee-rewrite and account-rewrite rules replace names at report time.
+; Every report, print included, must show one transaction per journal
+; transaction, carrying all of its postings, under the rewritten payee and
+; account names: print used to write a bare header once per posting and
+; drop the postings, and register repeated the payee on every line.
+; The expected output of each block is the output the same command gives
+; on this journal with the rules applied by hand.
+
+payee-rewrite Grocer  Supermarket
+account-rewrite Food  Expenses:Groceries
+
+= /Food|Groceries/
+    (Budget:Meals)    -1
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/03 * (17) Corner Shop  ; trip
+    ; Visit: one
+    Food    $4.00
+    Assets:Cash    $-4.00  ; [2024/01/05]
+
+test print
+2024/01/01 Supermarket
+    Expenses:Groceries                        $10.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Expenses:Rent                            $500.00
+    Assets:Cash
+
+2024/01/03 * (17) Corner Shop
+    ; trip
+    ; Visit: one
+    Expenses:Groceries                         $4.00
+    Assets:Cash                               $-4.00  ; [2024/01/05]
+end test
+
+; The query selects postings by their journal account; print still shows
+; each selected transaction whole.
+
+test print Food
+2024/01/01 Supermarket
+    Expenses:Groceries                        $10.00
+    Assets:Cash
+
+2024/01/03 * (17) Corner Shop
+    ; trip
+    ; Visit: one
+    Expenses:Groceries                         $4.00
+    Assets:Cash                               $-4.00  ; [2024/01/05]
+end test
+
+test reg
+24-Jan-01 Supermarket           Expenses:Groceries           $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Meals)              $-10.00      $-10.00
+24-Jan-02 Landlord              Expenses:Rent               $500.00      $490.00
+                                Assets:Cash                $-500.00      $-10.00
+24-Jan-03 Corner Shop           Expenses:Groceries            $4.00       $-6.00
+24-Jan-05 Corner Shop           Assets:Cash                  $-4.00      $-10.00
+24-Jan-03 Corner Shop           (Budget:Meals)               $-4.00      $-14.00
+end test
+
+; --related emits a transaction's other postings after the matching ones.
+
+test reg Food --related
+24-Jan-01 Supermarket           Assets:Cash                 $-10.00      $-10.00
+                                (Budget:Meals)              $-10.00      $-20.00
+24-Jan-05 Corner Shop           Assets:Cash                  $-4.00      $-24.00
+24-Jan-03 Corner Shop           (Budget:Meals)               $-4.00      $-28.00
+end test
+
+test bal
+            $-514.00  Assets:Cash
+             $-14.00  Budget:Meals
+             $514.00  Expenses
+              $14.00    Groceries
+             $500.00    Rent
+--------------------
+             $-14.00
+end test
+
+; A rule replaces the whole name; it is not a regex substitution.
+
+test reg Rent --payee-rewrite Land=XX --account-rewrite Rent=Housing
+24-Jan-02 XX                    Housing                     $500.00      $500.00
+end test

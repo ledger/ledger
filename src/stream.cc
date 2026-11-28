@@ -66,7 +66,7 @@ namespace {
  * This function returns only for the process that is still Ledger.
  *
  * @param os Pointer to the ostream pointer to be initialized
- * @param pager_path Path to the pager command.
+ * @param pager_path Shell command line that runs the pager.
  * @param pager_pid Pointer to store the PID of the pager process
  *
  * @return The file descriptor of the pipe to the pager.  The caller
@@ -97,25 +97,14 @@ int do_fork(std::ostream** os, const path& pager_path, pid_t* pager_pid) {
     close(pfd[1]);
     close(pfd[0]);
 
-    // Split pager_path into argv to avoid shell injection
-    string pager_str = pager_path.string();
-    std::vector<string> parts;
-    std::istringstream iss(pager_str);
-    string token;
-    while (iss >> token)
-      parts.push_back(token);
-
-    std::vector<const char*> argv;
-    argv.reserve(parts.size() + 1);
-    for (auto& s : parts)
-      argv.push_back(s.c_str());
-    argv.push_back(nullptr);
-
-    execvp(argv[0], const_cast<char* const*>(argv.data()));
+    // Run the pager as a shell command line, as git and man run $PAGER, so
+    // that quoting, variable assignments and pipes in it work.  The string
+    // comes from the user's own --pager, LEDGER_PAGER or PAGER.
+    execl("/bin/sh", "sh", "-c", pager_path.c_str(), static_cast<char*>(nullptr));
 
     // We should never, ever reach here
-    perror("execvp");
-    exit(1);
+    perror("execl");
+    _exit(127);
   } else { // parent
     close(pfd[0]);
     typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
@@ -138,8 +127,11 @@ void output_stream_t::initialize(const optional<path>& output_file,
 
   // NOLINTBEGIN(bugprone-branch-clone)
   if (output_file && *output_file != "-") {
-    os = new ofstream(*output_file);
-  } else if (pager_path) {
+    auto file = std::make_unique<ofstream>(*output_file);
+    if (!file->is_open())
+      throw_(std::runtime_error, _f("Cannot write to output file %1%") % *output_file);
+    os = file.release();
+  } else if (pager_path && pager_path->string().find_first_not_of(" \t\r\n") != string::npos) {
 #if !defined(_WIN32) && !defined(__CYGWIN__)
     pipe_to_pager_fd = do_fork(&os, *pager_path, &pager_pid);
 #endif
@@ -150,14 +142,14 @@ void output_stream_t::initialize(const optional<path>& output_file,
 }
 
 void output_stream_t::close() {
-  if (os == &std::cout)
+  if (os == &std::cout) {
     os->flush();
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-  if (os != &std::cout) {
+  } else {
     checked_delete(os);
     os = &std::cout;
   }
 
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   if (pipe_to_pager_fd != -1) {
     ::close(pipe_to_pager_fd);
     pipe_to_pager_fd = -1;

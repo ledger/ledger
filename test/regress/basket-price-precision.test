@@ -1,0 +1,52 @@
+; A P directive whose parenthesized price evaluates to several commodities
+; (a basket, see 1101.test) gives the commodity a value expression rebuilt
+; from that balance's components.  The components must keep their full
+; precision: Ledger used to print them at their commodity's display
+; precision, so EUR 1/4 (EUR shows no decimals here) was stored as EUR 0,
+; and GBP 0.12345 under `format GBP 1.00` as GBP 0.12, and every later -X
+; valuation of the basket was wrong.  EUR 1/3 keeps the six extra digits
+; that division gives (EUR 0.333333), as any amount in Ledger does.
+;
+; The rebuilt text is read without learning display styles from it, so
+; the full-precision components do not widen how EUR is shown elsewhere:
+; Assets:Cash still shows EUR 1.
+
+commodity GBP
+    format GBP 1.00
+
+P 2015-01-01 EUR $1.00
+P 2015-01-01 GBP $1.00
+P 2015-01-01 bicur (EUR 1/4 + $0.55)
+P 2015-01-01 tricur (EUR 1/3 + $0.55)
+P 2015-01-01 fmtcur (GBP 0.12345 + $0.55)
+
+2015/01/01 Baskets
+    Assets:Bicur       3000 bicur
+    Assets:Fmtcur      3000 fmtcur
+    Assets:Tricur      3000 tricur
+    Equity
+
+2015/01/01 Euros
+    Assets:Cash        EUR 1
+    Equity
+
+test bal Assets:Bicur Assets:Fmtcur Assets:Tricur -X $ --now 2015/02/01
+            $7070.35  Assets
+            $2400.00    Bicur
+            $2020.35    Fmtcur
+            $2650.00    Tricur
+--------------------
+            $7070.35
+end test
+
+test bal Assets:Cash
+               EUR 1  Assets:Cash
+end test
+
+test print Bicur
+2015/01/01 Baskets
+    Assets:Bicur                        3000 bicur ((({$0.55} + {EUR 0.25})))
+    Assets:Fmtcur                       3000 fmtcur ((({$0.55} + {GBP 0.12345})))
+    Assets:Tricur                       3000 tricur ((({$0.55} + {EUR 0.333333})))
+    Equity
+end test

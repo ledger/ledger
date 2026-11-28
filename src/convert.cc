@@ -78,22 +78,30 @@ value_t convert_command(call_scope_t& args) {
   path csv_file_path(args.get<string>(0));
 
   report.session.parsing_context.push(csv_file_path);
+
+  // RAII guard: point journal.current_context at the CSV's parse context
+  // so metadata checks and warnings have one, and on every exit path
+  // restore it and pop the CSV's context off the session's stack.  It is
+  // built only after the push succeeds, so a CSV that cannot be opened
+  // pops nothing.
+  struct csv_context_guard {
+    parse_context_stack_t& stack;
+    journal_t& journal;
+    parse_context_t* saved;
+    csv_context_guard(parse_context_stack_t& s, journal_t& j)
+        : stack(s), journal(j), saved(j.current_context) {
+      journal.current_context = &stack.get_current();
+    }
+    ~csv_context_guard() {
+      journal.current_context = saved;
+      stack.pop();
+    }
+  } guard(report.session.parsing_context, journal);
+
   parse_context_t& context(report.session.parsing_context.get_current());
   context.journal = &journal;
   context.master = bucket;
   context.scope = &report.session;
-
-  // RAII guard to set and restore journal.current_context during CSV parsing.
-  // This ensures metadata checks and warnings have a valid parse context.
-  struct current_context_guard {
-    journal_t& journal;
-    parse_context_t* saved;
-    current_context_guard(journal_t& j, parse_context_t* current)
-        : journal(j), saved(j.current_context) {
-      journal.current_context = current;
-    }
-    ~current_context_guard() { journal.current_context = saved; }
-  } guard(journal, &context);
 
   char separator = ',';
   if (report.HANDLED(csv_separator_)) {
@@ -111,13 +119,8 @@ value_t convert_command(call_scope_t& args) {
       // Step 1: Optionally negate amounts (--invert), useful for
       // credit-card CSVs where debits are positive.
       if (report.HANDLED(invert)) {
-        for (post_t* post : xact->posts) {
-          post->amount.in_place_negate();
-          if (post->cost)
-            post->cost->in_place_negate();
-          if (post->given_cost)
-            post->given_cost->in_place_negate();
-        }
+        for (post_t* post : xact->posts)
+          post->in_place_negate();
       }
 
       // Step 2: Compute a unique reference for duplicate detection.
@@ -148,14 +151,8 @@ value_t convert_command(call_scope_t& args) {
           // Re-apply payee-to-account mapping with the resolved payee name
           // so that `account` directives with a matching `payee` sub-directive
           // take effect even though the CSV reader ran before we knew the payee.
-          if (xact->posts.front()->account == nullptr) {
-            for (account_mapping_t& value : journal.payees_for_unknown_accounts) {
-              if (value.first.match(xact->payee)) {
-                xact->posts.front()->account = value.second;
-                break;
-              }
-            }
-          }
+          if (xact->posts.front()->account == nullptr)
+            xact->posts.front()->account = journal.account_for_payee(xact->payee);
         }
       }
 
@@ -190,13 +187,6 @@ value_t convert_command(call_scope_t& args) {
     add_error_context(line_context(reader.get_last_line()));
     throw;
   }
-
-  // If not, transform the payee according to regexps
-
-  // Set the account to a default value, then transform the account according
-  // to the payee
-
-  // Print out the final form of the transaction
 
   return true;
 }

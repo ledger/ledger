@@ -1,0 +1,93 @@
+; this/next/last <weekday> after since, until, from ... to, and in must
+; resolve the same weekday that a bare "last friday" does.  --now
+; 2024/01/10 is a Wednesday; the week starts on Sunday 2024/01/07, so
+; last friday = 2024/01/05, this monday = 2024/01/08 and next friday =
+; 2024/01/19.
+
+2024/01/04 Thursday
+    Expenses:A    $1.00
+    Assets:Cash
+
+2024/01/05 Friday
+    Expenses:B    $2.00
+    Assets:Cash
+
+2024/01/08 Monday
+    Expenses:C    $4.00
+    Assets:Cash
+
+2024/01/18 Thursday
+    Expenses:D    $8.00
+    Assets:Cash
+
+2024/01/19 Friday
+    Expenses:E    $16.00
+    Assets:Cash
+
+test reg --now 2024/01/10 -p "since last friday"
+24-Jan-05 Friday                Expenses:B                    $2.00        $2.00
+                                Assets:Cash                  $-2.00            0
+24-Jan-08 Monday                Expenses:C                    $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+24-Jan-18 Thursday              Expenses:D                    $8.00        $8.00
+                                Assets:Cash                  $-8.00            0
+24-Jan-19 Friday                Expenses:E                   $16.00       $16.00
+                                Assets:Cash                 $-16.00            0
+end test
+
+test reg --now 2024/01/10 -p "until next friday"
+24-Jan-04 Thursday              Expenses:A                    $1.00        $1.00
+                                Assets:Cash                  $-1.00            0
+24-Jan-05 Friday                Expenses:B                    $2.00        $2.00
+                                Assets:Cash                  $-2.00            0
+24-Jan-08 Monday                Expenses:C                    $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+24-Jan-18 Thursday              Expenses:D                    $8.00        $8.00
+                                Assets:Cash                  $-8.00            0
+end test
+
+test reg --now 2024/01/10 -p "from this monday to next friday"
+24-Jan-08 Monday                Expenses:C                    $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+24-Jan-18 Thursday              Expenses:D                    $8.00        $8.00
+                                Assets:Cash                  $-8.00            0
+end test
+
+test reg --now 2024/01/10 -p "in last friday"
+24-Jan-05 Friday                Expenses:B                    $2.00        $2.00
+                                Assets:Cash                  $-2.00            0
+end test
+
+test reg --now 2024/01/12 -p "since this friday"
+24-Jan-18 Thursday              Expenses:D                    $8.00        $8.00
+                                Assets:Cash                  $-8.00            0
+24-Jan-19 Friday                Expenses:E                   $16.00       $16.00
+                                Assets:Cash                 $-16.00            0
+end test
+
+test reg --now 2024/01/10 --start-of-week monday -p "since last sunday"
+24-Jan-08 Monday                Expenses:C                    $4.00        $4.00
+                                Assets:Cash                  $-4.00            0
+24-Jan-18 Thursday              Expenses:D                    $8.00        $8.00
+                                Assets:Cash                  $-8.00            0
+24-Jan-19 Friday                Expenses:E                   $16.00       $16.00
+                                Assets:Cash                 $-16.00            0
+end test
+
+test period --now 2024/01/10 "since this monday"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_THIS: this
+TOK_A_WDAY: Mon
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 8
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 8
+   start: 24-Jan-08
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-08
+end test

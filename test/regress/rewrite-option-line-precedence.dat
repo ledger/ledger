@@ -1,0 +1,9 @@
+account-rewrite Cash  Assets:Wallet
+payee-rewrite Shop  Grocer
+
+--account-rewrite Cash=Purse
+--payee-rewrite Shop=Market
+
+2024/01/05 Shop
+    Expenses:Food                             $12.00
+    Assets:Cash

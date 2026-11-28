@@ -1,0 +1,3 @@
+convert test/regress/convert-parse-context.csv --input-date-format "%Y-%m-%d" --account Assets:Checking
+convert test/regress/convert-parse-context.csv --input-date-format "%Y-%m-%d" --account Assets:Checking
+--import test/regress/convert_parse_context.py bal

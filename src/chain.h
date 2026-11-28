@@ -54,6 +54,10 @@
  *   chain_pre_post_handlers() (outer/upstream filters), both defined in
  *   chain.cc.
  *
+ * - **BUDGET_* flags**: The budget-mode bits of report_t::budget_flags and
+ *   budget_posts, defined here once so that report.h and filters.h share
+ *   them.
+ *
  * The concrete filter classes themselves are declared in filters.h; this
  * header is intentionally lightweight so that it can be included by any
  * module that needs to pass around handler pointers without pulling in the
@@ -148,16 +152,31 @@ using post_handler_ptr = std::shared_ptr<item_handler<post_t>>;
 /// Convenience alias for a shared pointer to an account handler.
 using acct_handler_ptr = std::shared_ptr<item_handler<account_t>>;
 
+/**
+ * @name Budget mode flags
+ *
+ * Bits of report_t::budget_flags and of budget_posts' flags.  The options set
+ * them (--budget: BUDGETED; --unbudgeted: UNBUDGETED; --add-budget: both; the
+ * budget command adds WRAP_VALUES, and BUDGETED when nothing else is set), and
+ * chain_pre_post_handlers() inserts budget_posts whenever any bit is set.
+ * @{
+ */
+#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default).
+#define BUDGET_BUDGETED 0x01    ///< Forward postings that match a budget account.
+#define BUDGET_UNBUDGETED 0x02  ///< Forward postings that match no budget account.
+#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) sequences for display.
+/** @} */
+
 class report_t;
+class predicate_t;
 
 /**
  * @brief Build the outer (upstream) portion of the posting filter chain.
  *
- * Wraps @p base_handler with filters that must execute before the core
- * pipeline: anonymization (--anon), the primary limit predicate (--limit),
- * and budget/forecast generation.  When budget or forecast handlers are
- * active, the limit predicate is re-applied so that only matching postings
- * contribute to budget calculations.
+ * Wraps @p base_handler with the filters that must see postings before the
+ * core pipeline: --limit, the --pivot/--pivot-only renames, budget/forecast
+ * generation and --anon.  Their order is given in the handler_ordering
+ * section of filters.h.
  *
  * @param base_handler  The handler chain built so far (from chain_post_handlers).
  * @param report        The report_t holding all parsed command-line options.
@@ -168,23 +187,59 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
 /**
  * @brief Build the inner (downstream) portion of the posting filter chain.
  *
- * Starting from the output handler, this function wraps it with filters in
- * inside-out order: inject, related, transfer_details, interval, aggregation,
- * collapse, sort, only-predicate, calc, changed_value, display filter,
- * truncation, and forecast-while.  Each filter is added conditionally based
- * on the options present in @p report.
+ * Starting from the output handler, this function wraps it with the inner
+ * filters, each added only when its option is present in @p report.  Their
+ * order is given in the handler_ordering section of filters.h.
  *
  * @param base_handler        The terminal output handler (e.g., format_posts).
  * @param report              The report_t holding all parsed command-line options.
- * @param for_accounts_report When true, several display-oriented filters
- *                            (truncation, display_filter, display predicate,
- *                            sort, collapse, subtotal/equity) are skipped
- *                            because the accounts report handles those concerns
- *                            differently.
+ * @param for_accounts_report When true, builds the accounts-report variant, which
+ *                            omits the display-oriented stages (see filters.h).
  * @return The new outermost handler in the chain.
+ *
+ * The selection filters (truncation, --display, --only) are built by
+ * chain_selection_handlers() and the outermost transfer/rewrite/related/inject
+ * filters by chain_transfer_handlers(); posts_report_quick() runs only those
+ * two stages.
  */
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report = false);
+
+/**
+ * @brief Wrap @p base_handler with the posting selection filters.
+ *
+ * The filters are those of --only, --display and --head/--tail.  Order: see
+ * the handler_ordering section of filters.h.
+ *
+ * @param base_handler       The handler chain built so far.
+ * @param report             The report_t holding all parsed command-line options.
+ * @param has_collapse_stage True when the caller runs collapse_posts upstream,
+ *                           which alone limits postings by depth, so the
+ *                           --display predicate gains --depth's `depth<=N` term
+ *                           only then.
+ * @param display_predicate  Receives the --display predicate; untouched when
+ *                           --display is off.
+ * @param only_predicate     Receives the --only predicate; untouched when
+ *                           --only is off.
+ * @return The new outermost handler in the chain.
+ */
+post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_t& report,
+                                          bool has_collapse_stage, predicate_t& display_predicate,
+                                          predicate_t& only_predicate);
+
+/**
+ * @brief Wrap @p base_handler with the filters that rename, relate or inject
+ * postings.
+ *
+ * The filters are those of --inject, --related, the payee-rewrite and
+ * account-rewrite directives and options, --payee, --account and --date.
+ * Order: see the handler_ordering section of filters.h.
+ *
+ * @param base_handler  The handler chain built so far.
+ * @param report        The report_t holding all parsed command-line options.
+ * @return The new outermost handler in the chain.
+ */
+post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t& report);
 
 /**
  * @brief Construct a complete posting filter chain from command-line options.

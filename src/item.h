@@ -64,6 +64,8 @@
 
 namespace ledger {
 
+class parse_context_t;
+
 /**
  * @brief Records the source file location of a parsed journal item.
  *
@@ -77,8 +79,8 @@ namespace ledger {
 struct position_t {
   /// Filesystem path of the journal file.  Held by shared_ptr so that all
   /// items parsed from the same file share a single allocation rather than
-  /// each carrying its own copy (issue: ~3 M redundant path copies for a
-  /// 1 M-xact journal).  Always non-null; defaults to empty_pathname_ptr().
+  /// each carrying its own copy.  Always non-null; defaults to
+  /// empty_pathname_ptr().
   std::shared_ptr<const path> pathname;
   /// Stream offsets are kept as std::streamoff rather than
   /// std::istream::pos_type: a pos_type carries a conversion state
@@ -147,8 +149,8 @@ public:
 #define ITEM_NOTE_ON_NEXT_LINE                                                                     \
   0x04 ///< Parser saw the note/comment on the line following the item, not on the same line.
 #define ITEM_INFERRED                                                                              \
-  0x08 ///< Item was inferred by the bucketing/balancing logic (e.g., a null-amount posting filled
-       ///< in by finalize).
+  0x08 ///< Posting added against journal_t::bucket to balance a single-posting transaction or
+       ///< a timelog entry.  Set only there; nothing reads it.
 
   /** @brief Clearing state for a journal item.
    *
@@ -170,15 +172,15 @@ public:
   bool defining_; ///< Re-entrancy guard for define(); prevents infinite recursion when setting tags
                   ///< triggers expression evaluation.
 
-  item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
+  item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = std::nullopt)
       : supports_flags<uint_least16_t>(_flags), parent(nullptr), _state(UNCLEARED), note(_note),
         defining_(false) {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
   item_t(const item_t& item)
-      : supports_flags<uint_least16_t>(item), metadata_t(item), scope_t(), parent(nullptr),
-        defining_(false) {
-    copy_details(item);
+      : supports_flags<uint_least16_t>(item), metadata_t(item), scope_t(), parent(item.parent),
+        _state(item.state()), _date(item._date), _date_aux(item._date_aux), note(item.note),
+        pos(item.pos), defining_(false) {
     TRACE_CTOR(item_t, "copy");
   }
   item_t& operator=(const item_t&) = default;
@@ -186,13 +188,13 @@ public:
 
   /** @brief Copy all mutable fields from another item.
    *
-   * Used by the copy constructor and by post_t when duplicating
-   * postings for automated transactions.  Does not copy the parent
-   * pointer (which is set separately by the owning transaction).
+   * Used by post_t when duplicating postings for automated
+   * transactions; the copy constructors initialize these fields
+   * directly.  Does not copy the parent pointer (which is set
+   * separately by the owning transaction).
    */
-  /// Backwards-compatible aliases.  metadata storage and types now live on
-  /// metadata_t; keeping these names available avoids touching every call
-  /// site that references `item_t::string_map` (Python bindings, etc.).
+  /// metadata_t's map types, still named through item_t at call sites
+  /// such as `item_t::string_map`.
   using string_map = metadata_t::string_map;
   using tag_data_t = metadata_t::tag_data_t;
 
@@ -234,22 +236,51 @@ public:
   std::size_t seq() const { return pos ? pos->sequence : 0L; }
 
   /**
+   * @brief Locate the `[date]` directive of one comment line.
+   *
+   * A `[date]`, `[date=auxdate]` or `[=auxdate]` bracketed override
+   * updates an item's primary and/or auxiliary date.  The override is
+   * the first bracketed group of the line and may follow free-form note
+   * text, but only while no colon precedes it: past a colon the metadata
+   * parser may own the text, as it does for the value of a `Key:` /
+   * `Key::` setting.  The group must begin with a digit or `=`, and a
+   * group of 256 characters or more is too long to be a date.  This is
+   * the one home of the rule: the parser applies it, and `print`
+   * rewrites only the spans it recognizes.
+   *
+   * @param line Raw comment text (without the leading `;`).
+   * @return The [begin, end) offsets, relative to @p line, of the text
+   *         between the brackets, or std::nullopt when the line holds no
+   *         date directive.
+   */
+  static std::optional<std::pair<std::size_t, std::size_t>> note_date_span(const char* line);
+
+  /**
    * @brief Parse metadata tags from a comment line.
    *
    * In addition to the `:tag:` and `Key:` / `Key::` forms handled by
-   * metadata_t, item_t recognizes a `[date]` or `[date=auxdate]`
-   * bracketed override that updates this item's primary and/or auxiliary
-   * date.  The override is the first bracketed group of the comment and
-   * may follow free-form note text, but only while no colon precedes it:
-   * past a colon the metadata parser may own the text, as it does for the
-   * value of a `Key:` / `Key::` setting.  Accounts do not have dates and
-   * therefore inherit metadata_t::parse_metadata_tags directly.
+   * metadata_t, item_t applies the `[date]` directive that
+   * note_date_span() recognizes, updating this item's primary and/or
+   * auxiliary date.  Accounts do not have dates and therefore inherit
+   * metadata_t::parse_metadata_tags directly.
    *
    * @param p                  Raw comment text (without the leading `;`).
    * @param scope              Scope for evaluating `Key::` expressions.
    * @param overwrite_existing Whether to overwrite tags that already exist.
    */
   virtual void parse_tags(const char* p, scope_t& scope, bool overwrite_existing = true);
+
+  /**
+   * @brief Apply only the `[DATE]` / `[=AUXDATE]` directive of a comment.
+   *
+   * The date half of parse_tags(), as note_date_span() recognizes it.
+   * The parser calls it on a posting's note before checking a balance
+   * assertion, so that post->date() is the posting's own date; the
+   * note's tags are parsed afterwards, once.
+   *
+   * @param p  Raw comment text (without the leading `;`).
+   */
+  void parse_bracket_dates(const char* p);
 
   /**
    * @brief Append text to this item's note and parse any embedded tags.
@@ -335,10 +366,10 @@ value_t get_comment(item_t& item);
 /**
  * @brief Print the source text of an item to an output stream.
  *
- * Re-reads the original bytes between pos->beg_pos and pos->end_pos
- * from the source file and writes them with an optional line prefix.
+ * Re-reads the original bytes between pos->beg_pos and pos->end_pos and
+ * writes them verbatim, without trailing newlines (print --raw).
  */
-void print_item(std::ostream& out, const item_t& item, const string& prefix = "");
+void print_item(std::ostream& out, const item_t& item);
 
 /**
  * @brief Build a human-readable error context string for an item.
@@ -347,5 +378,12 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix = ""
  * followed by the source text, for use in error reporting.
  */
 string item_context(const item_t& item, const string& desc);
+
+/// Location prefix ("file", line N: and a space) for a failed check or a
+/// --strict/--pedantic warning about @p item.  A location is cited only
+/// while parsing (@p context non-null): the item's own position if it has
+/// one, else the line being parsed.  Outside a parse (Python's add_xact,
+/// the xact command) it is empty, since positions there may be copies.
+string check_location(const item_t* item, const parse_context_t* context);
 
 } // namespace ledger

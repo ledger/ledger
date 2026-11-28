@@ -1,0 +1,33 @@
+; An injected posting is a copy of the tagged posting with its amount
+; replaced by the tag's value.  It must print the lot price of that
+; amount, never the {{total}} the tagged posting wrote.
+
+2024/01/01 Buy
+    Assets:Broker  3 ABC {{$99.99}}
+        ; Bonus: 6 ABC {$50}
+    Assets:Cash   $-99.99
+
+2024/02/01 Buy again
+    Assets:Broker  2 ABC {{$80.00}}
+    Assets:Cash   $-80.00
+        ; Bonus: 4 ABC {{$10}}
+
+test print --inject Bonus --generated
+2024/01/01 Buy
+    Bonus                               6 ABC {$50.00}
+    ; Bonus: 6 ABC {$50}
+
+2024/01/01 Buy
+    Assets:Broker                       3 ABC {{$99.99}}
+    ; Bonus: 6 ABC {$50}
+    Assets:Cash                              $-99.99
+
+2024/02/01 Buy again
+    Assets:Broker                       2 ABC {{$80.00}}
+    Assets:Cash                              $-80.00
+    ; Bonus: 4 ABC {{$10}}
+
+2024/02/01 Buy again
+    Bonus                               4 ABC {$2.50}
+    ; Bonus: 4 ABC {{$10}}
+end test

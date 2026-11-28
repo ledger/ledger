@@ -7,4 +7,5 @@
     Assets:Checking
 
 test reg --format '%(lot_price(amount))%(lot_date(amount))%(lot_tag(amount))\n' Expenses
+
 end test

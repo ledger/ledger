@@ -1,0 +1,58 @@
+; Journal.query()'s display_amounts hold the amounts `ledger reg` prints
+; for the same options (`reg -X $`, `reg -X $ -M`, `reg --tail 1 -X $`,
+; `reg --group-by payee -X $`), the <Revalued> posting included.  A
+; --display-amount that fails only on the <Revalued> posting makes
+; `ledger reg` (grouped or not) exit with "Unknown identifier 'nosuchfn'",
+; so the query must raise too rather than hand back the raw amounts, and
+; the journal stays usable for the next query.
+
+P 2024/01/01 EUR $1.10
+
+2024/01/05 Grocer
+    Expenses:Food               20 EUR
+    Assets:Checking
+
+2024/02/01 Broker
+    Assets:Brokerage            10 AAPL @ $100
+    Assets:Checking
+
+P 2024/03/01 AAPL $150
+
+2024/04/01 Grocer
+    Expenses:Food               $30.00
+    Assets:Checking
+
+test python test/regress/py-query-display-amounts.py
+-X $: 7 posts, 7 amounts
+  2024-01-05 Expenses:Food $22.00
+  2024-01-05 Assets:Checking $-22.00
+  2024-02-01 Assets:Brokerage $1000.00
+  2024-02-01 Assets:Checking $-1000.00
+  2024-03-01 <Revalued> $500.00
+  2024-04-01 Expenses:Food $30.00
+  2024-04-01 Assets:Checking $-30.00
+-X $ -M: 7 posts, 7 amounts
+  2024-01-01 Assets:Checking $-22.00
+  2024-01-01 Expenses:Food $22.00
+  2024-02-01 Assets:Brokerage $1000.00
+  2024-02-01 Assets:Checking $-1000.00
+  2024-03-01 <Revalued> $500.00
+  2024-04-01 Assets:Checking $-30.00
+  2024-04-01 Expenses:Food $30.00
+--tail 1 -X $: 2 posts, 2 amounts
+  2024-04-01 Expenses:Food $30.00
+  2024-04-01 Assets:Checking $-30.00
+--group-by payee -X $: 7 posts, 7 amounts
+  2024-02-01 Assets:Brokerage $1000.00
+  2024-02-01 Assets:Checking $-1000.00
+  2024-03-01 <Revalued> $500.00
+  2024-01-05 Expenses:Food $22.00
+  2024-01-05 Assets:Checking $-22.00
+  2024-04-01 Expenses:Food $30.00
+  2024-04-01 Assets:Checking $-30.00
+--group-by payee -V --no-rounding --display-amount 'account =~ /Revalued/ ? nosuchfn(amount) : market(amount, value_date, exchange)': RuntimeError: Unknown identifier 'nosuchfn'
+-V --no-rounding --display-amount 'account =~ /Revalued/ ? nosuchfn(amount) : market(amount, value_date, exchange)': RuntimeError: Unknown identifier 'nosuchfn'
+-X $ Expenses: 2 posts, 2 amounts
+  2024-01-05 Expenses:Food $22.00
+  2024-04-01 Expenses:Food $30.00
+end test

@@ -1,0 +1,5 @@
+xact 2024/06/15 Grocery to Expenses:Food @ $6.00 10 from Assets:Cash
+xact 2024/06/16 Grocery to Expenses:Food '20 AAPL' from Assets:Cash
+xact 2024/06/17 Broker to Assets:Brokerage 5 from Assets:Cash
+reg --format '%(date) %(account) %(amount) %(cost)\n'
+bal --flat --no-total --format '%(account) %(count)\n'

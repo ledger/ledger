@@ -1,0 +1,41 @@
+; A clock-in/clock-out line may end right after its time
+; ("o 2024/01/15 17:00:00", 21 characters).  Such a line names no
+; account, payee or note.  The parser reuses one line buffer, so the
+; bytes past the line's end belong to an earlier, longer line and
+; must never be read as this line's account, payee or note.
+
+; (a) A long comment between the check-in and a bare check-out.
+i 2024/01/15 09:00:00 Alpha
+; xxxxxxxxxxxxxxxxxxx Beta  stale note
+o 2024/01/15 17:00:00
+
+; (b) A check-out line whose trailing space the reader strips.
+i 2024/01/16 09:00:00 Gamma
+o 2024/01/16 17:00:00 
+
+; (c) The check-in carries a payee and a note, which the entry keeps.
+i 2024/01/17 09:00:00 Delta  Client call  ; billable
+o 2024/01/17 12:30:00
+
+; (d) A bare capital-O check-out after a long comment clears the entry.
+i 2024/01/19 09:00:00 Zeta
+; xxxxxxxxxxxxxxxxxxx Eta  another stale note
+O 2024/01/19 10:00:00
+
+test reg
+24-Jan-15                       Alpha                         8.00h        8.00h
+24-Jan-16                       Gamma                         8.00h       16.00h
+24-Jan-17 Client call           Delta                         3.50h       19.50h
+24-Jan-19                       Zeta                          1.00h       20.50h
+end test
+
+test reg --format "%(date)|%(code)|%(payee)|%(account)|%(note)|%(amount)\n"
+2024/01/15|||Alpha||28800s
+2024/01/16|||Gamma||28800s
+2024/01/17||Client call|Delta|billable|12600s
+2024/01/19|||Zeta||3600s
+end test
+
+test reg --cleared
+24-Jan-19                       Zeta                          1.00h        1.00h
+end test

@@ -1,0 +1,43 @@
+; A price or cost in "%" (a bond quoted as a percentage of par) is an
+; ordinary commodity in the arithmetic that turns a per-unit price into
+; a cost, a value or a lot gain: 10 BOND at 98.5% costs 985%, not
+; 9.85 BOND or 9.85%.  The fraction reading of "%" belongs to value
+; expressions only (see 2724.test).
+
+P 2024/01/10 BOND 98.5%
+
+2024/01/02 Bought at a percentage of par
+    Assets:Bonds    10 BOND @ 98.5%
+    Assets:Par
+
+2024/01/03 Cost inferred from the other posting
+    Assets:Bonds    10 BOND
+    Assets:Par      -985%
+
+2024/01/04 Lot priced at a percentage of par
+    Assets:Bonds    10 BOND {98.5%} @ 98.5%
+    Assets:Par
+
+2024/01/05 Lot sold above its price
+    Assets:Bonds    -10 BOND {98.5%} @ 99%
+    Assets:Par       990%
+    Income:Gain
+
+test reg -B Bonds
+24-Jan-02 Bought at a percent.. Assets:Bonds                 985.0%       985.0%
+24-Jan-03 Cost inferred from .. Assets:Bonds                 985.0%      1970.0%
+24-Jan-04 Lot priced at a per.. Assets:Bonds                 985.0%      2955.0%
+24-Jan-05 Lot sold above its .. Assets:Bonds                -985.0%      1970.0%
+end test
+
+test bal Par
+            -1965.0%  Assets:Par
+end test
+
+test reg Income
+24-Jan-05 Lot sold above its .. Income:Gain                   -5.0%        -5.0%
+end test
+
+test bal -V --now 2024/12/31 Bonds
+             1970.0%  Assets:Bonds
+end test

@@ -60,49 +60,31 @@ namespace {
 /*--- Valuation Wrapper Overloads ---*/
 
 std::optional<balance_t> py_value_0(const balance_t& balance) {
-  auto r = balance.value(CURRENT_TIME());
-  return r ? std::optional<balance_t>(*r) : std::nullopt;
+  return balance.value(CURRENT_TIME());
 }
 std::optional<balance_t> py_value_1(const balance_t& balance, const commodity_t* in_terms_of) {
-  auto r = balance.value(CURRENT_TIME(), in_terms_of);
-  return r ? std::optional<balance_t>(*r) : std::nullopt;
+  return balance.value(CURRENT_TIME(), in_terms_of);
 }
 std::optional<balance_t> py_value_2(const balance_t& balance, const commodity_t* in_terms_of,
                                     const datetime_t& moment) {
-  auto r = balance.value(moment, in_terms_of);
-  return r ? std::optional<balance_t>(*r) : std::nullopt;
+  return balance.value(moment, in_terms_of);
 }
 std::optional<balance_t> py_value_2d(const balance_t& balance, const commodity_t* in_terms_of,
                                      const date_t& moment) {
-  auto r = balance.value(datetime_t(moment), in_terms_of);
-  return r ? std::optional<balance_t>(*r) : std::nullopt;
+  return balance.value(datetime_t(moment), in_terms_of);
 }
 
 /*--- Commodity Amount Extraction ---*/
 
 /// Extract the amount for a specific (or sole) commodity in the balance.
 std::optional<amount_t> py_commodity_amount_0(const balance_t& balance) {
-  auto r = balance.commodity_amount();
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return balance.commodity_amount();
 }
 
 std::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
                                               const commodity_t& commodity) {
-  auto r = balance.commodity_amount(commodity);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return balance.commodity_amount(&commodity);
 }
-
-#if 0
-  void py_print(balance_t& balance, object out) {
-    if (PyFile_Check(out.ptr())) {
-      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-      balance.print(outstr);
-    } else {
-      PyErr_SetString(PyExc_IOError,
-                      _("Argument to balance.print_(file) is not a file object"));
-    }
-  }
-#endif
 
 /*--- Sequence Protocol ---*/
 
@@ -117,10 +99,9 @@ long balance_len(balance_t& bal) {
 object balance_iter(balance_t& bal) {
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  list items;
-  for (const amount_t* amount : sorted)
-    items.append(*amount);
-  return items.attr("__iter__")();
+  return to_py_list(sorted.begin(), sorted.end(),
+                    [](const amount_t* a) -> const amount_t& { return *a; })
+      .attr("__iter__")();
 }
 
 /// reversed() would otherwise call __getitem__ for every index, sorting
@@ -128,10 +109,9 @@ object balance_iter(balance_t& bal) {
 object balance_reversed(balance_t& bal) {
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  list items;
-  for (auto i = sorted.rbegin(); i != sorted.rend(); ++i)
-    items.append(**i);
-  return items.attr("__iter__")();
+  return to_py_list(sorted.rbegin(), sorted.rend(),
+                    [](const amount_t* a) -> const amount_t& { return *a; })
+      .attr("__iter__")();
 }
 
 amount_t balance_getitem(balance_t& bal, long i) {
@@ -139,18 +119,10 @@ amount_t balance_getitem(balance_t& bal, long i) {
   // map's own hash order, which differs from one run to the next.
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  long len = static_cast<long>(sorted.size());
-
-  if (i >= len || i < -len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  long x = i < 0 ? len + i : i;
-  return *sorted[static_cast<std::size_t>(x)];
+  return *sorted[py_sequence_index(i, sorted.size())];
 }
 
-/*--- Annotation Stripping and String Conversion ---*/
+/*--- Annotation Stripping ---*/
 
 balance_t py_strip_annotations_0(balance_t& balance) {
   return balance.strip_annotations(keep_details_t());
@@ -159,18 +131,7 @@ balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep)
   return balance.strip_annotations(keep);
 }
 
-PyObject* py_balance_unicode(balance_t& balance) {
-  return str_to_py_unicode(balance.to_string());
-}
-
 } // unnamed namespace
-
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(balance_error)
 
 void export_balance() {
   class_<balance_t>("Balance")
@@ -211,7 +172,6 @@ void export_balance() {
 
       .def("__str__", &balance_t::to_string)
       .def("to_string", &balance_t::to_string)
-      .def("__unicode__", py_balance_unicode)
 
       .def("negated", &balance_t::negated)
       .def("in_place_negate", &balance_t::in_place_negate, return_internal_reference<>())
@@ -251,7 +211,6 @@ void export_balance() {
       .def("value", py_value_2, args("in_terms_of", "moment"))
       .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-      .def("__nonzero__", &balance_t::is_nonzero)
       .def("is_nonzero", &balance_t::is_nonzero)
       .def("is_zero", &balance_t::is_zero)
       .def("is_realzero", &balance_t::is_realzero)
@@ -278,9 +237,7 @@ void export_balance() {
   implicitly_convertible<string, balance_t>();
   implicitly_convertible<amount_t, balance_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(balance_error);
+  register_error_translator<balance_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

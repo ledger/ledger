@@ -9,5 +9,5 @@
 
 test reg --format '%(account)\n%/x%$0y\n' -> 1
 __ERROR__
-Error: %$ field reference must be a digit from 1-9
+Error: %$ field reference must be a digit from 1-9 or a letter A-F
 end test

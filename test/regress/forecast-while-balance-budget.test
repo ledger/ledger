@@ -1,0 +1,22 @@
+; Under --budget a balance report chains budget_posts and no forecast_posts
+; (chain_pre_post_handlers takes the forecast branch only without --budget),
+; so --forecast-while is evaluated there only by the forecast-while
+; filter_posts of chain_post_handlers.  Accounts reports no longer install
+; that filter, so the budget balance is the plain one and an invalid
+; predicate (the bare word Food) goes unreported.  reg --budget still
+; evaluates the predicate on every posting.
+
+2030/07/01 Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+~ Monthly from 2030/06/01
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test bal --budget --forecast-while Food --now 2030/08/15
+            $1000.00  Assets:Cash
+           $-1000.00  Expenses:Rent
+--------------------
+                   0
+end test

@@ -1,0 +1,44 @@
+; A price directive, an N directive, a commodity directive and an
+; --exchange COMMODITY=PRICE expression each name a commodity no posting
+; has used yet; commodity_pool_t::find_or_create creates it on first use,
+; and the directive's effect lands on it.  (A basket price directive does
+; the same; value-expr-basket-order.test pins that one.)
+
+P 2024/01/01 ZZA 2.00 EUR
+N ZZD
+P 2024/01/01 ZZD 3.00 EUR
+P 2024/01/01 ZZF 5.00 EUR
+
+commodity ZZE
+    format 1.000 ZZE
+
+P 2024/01/01 ZZE 0.50 EUR
+
+2024/01/02 Buy
+    Assets:Broker      10 ZZA
+    Assets:Cash      5.00 EUR
+    Holdings:Other      2 ZZE
+    Equity:Opening
+
+test prices
+2024/01/01 ZZA          2.00 EUR
+2024/01/01 ZZE          0.50 EUR
+2024/01/01 ZZF          5.00 EUR
+end test
+
+test bal Assets -X EUR --now 2024/01/03
+           25.00 EUR  Assets
+           20.00 EUR    Broker
+            5.00 EUR    Cash
+--------------------
+           25.00 EUR
+end test
+
+test bal Holdings
+           2.000 ZZE  Holdings:Other
+end test
+
+test reg Broker --exchange 'ZZC=4.00 EUR' --now 2024/01/03
+24-Jan-02 Buy                   Assets:Broker                10 ZZA       10 ZZA
+24-Jan-03 Commodities revalued  <Revalued>                        0         ZZC5
+end test

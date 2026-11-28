@@ -51,28 +51,31 @@
  *    note), while the `expr` keyword passes raw expressions through.
  *
  * 3. **Section splitting** (parse_query_expr): After the main predicate,
- *    keywords like `show`, `only`, `bold`, and `for`/`since`/`until`
- *    start new sections, each producing a separate predicate stored in
- *    the query_map.
+ *    `show`, `only` and `bold` each start a section whose terms become a
+ *    separate predicate string, and `for`/`since`/`until` start a period
+ *    whose words are joined into one string; all are stored in query_map.
  *
  * ## EBNF Grammar
  *
  * The query sub-language parsed by the recursive-descent parser below:
  *
  * @verbatim
- *   query       = or_expr { section or_expr } ;
- *   section     = "show" | "only" | "bold" | "for" | "since" | "until" ;
+ *   query       = [ terms ] { section } ;
+ *   terms       = or_expr { or_expr } ;           (* adjacent or_exprs are implicitly ORed *)
+ *   section     = ( "show" | "only" | "bold" ) [ terms ]
+ *               | ( "for" | "since" | "until" ) { WORD }
+ *               ;                                 (* WORDs up to the next unquoted section
+ *                                                    keyword form one period string *)
  *
  *   or_expr     = and_expr { ( "or" | "|" ) and_expr } ;
- *   and_expr    = unary_expr { ( "and" | "&" ) unary_expr }
- *               | unary_expr unary_expr           (* implicit AND between adjacent terms *)
- *               ;
+ *   and_expr    = unary_expr { ( "and" | "&" ) unary_expr } ;
  *   unary_expr  = ( "not" | "!" ) term
  *               | term
  *               ;
  *
  *   term        = field_prefix term                (* changes matching context *)
- *               | "(" query ")"
+ *               | "(" [ terms ] ")"                (* no sections inside parentheses; *)
+ *                                                  (* an empty group ends the terms *)
  *               | TERM                             (* atom: pattern, comparison, or metadata *)
  *               ;
  *   field_prefix = "payee" | "desc" | "@"          (* sets context to payee *)
@@ -85,8 +88,8 @@
  *   (* TERM interpretation depends on the current context: *)
  *   (*   TOK_ACCOUNT / TOK_PAYEE / TOK_CODE / TOK_NOTE: *)
  *   (*     pattern → field =~ /pattern/  (O_MATCH node)  *)
- *   (*     except: if pattern contains ">["/"<[" or ends with ">","<" *)
- *   (*       followed by "=", it is parsed as a comparison expression.   *)
+ *   (*     except: an unquoted pattern holding "<" or ">" that parses as a *)
+ *   (*       whole <, <=, >, >= value expression, or an and/or/not of such, is that comparison. *)
  *   (*   TOK_META:                                                       *)
  *   (*     pattern                → has_tag(/pattern/)         (O_CALL node) *)
  *   (*     pattern TOK_EQ   value → has_tag(/pattern/, /value/) (O_CALL node) *)
@@ -98,13 +101,17 @@
  *   (*     text → parsed as a raw value expression                       *)
  * @endverbatim
  *
- * Operator precedence (lowest to highest): `or`, `and`/implicit, `not`, atoms.
+ * Operator precedence (lowest to highest): implicit OR of adjacent terms,
+ * `or`, `and`, `not`, atoms.  So `a and b c` is `(a & b) | c`, at the top
+ * level, inside a show/only/bold section, and inside parentheses alike.
  */
 
 #include <system.hh>
 
 #include "query.h"
 #include "op.h"
+#include "journal.h"
+#include "account.h"
 
 namespace ledger {
 
@@ -129,37 +136,23 @@ bool query_t::lexer_t::unbalanced_braces(const string& str) {
 /// `'`, `"`, `/`) is at *arg_i on entry; on return arg_i points past
 /// the closing delimiter.
 query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
-  string pat;
   char closing = *arg_i;
-  bool is_regex = (closing == '/');
-  bool found_closing = false;
-  for (++arg_i; arg_i != arg_end; ++arg_i) {
-    if (*arg_i == '\\') {
-      if (++arg_i == arg_end)
-        throw_(parse_error, _("Unexpected '\\' at end of pattern"));
-      if (is_regex && *arg_i == '\\') {
-        // Collapse \\\\ to \\ for backward compatibility: users who previously
-        // wrote \\\\* to get regex \\* (literal star) still get the same result
-        // (fixes #2946). Just emit the single backslash.
-      } else if (is_regex && *arg_i != closing) {
-        // For regex patterns /.../: preserve the backslash so the regex engine
-        // can interpret escape sequences (e.g., \| for literal pipe). Only
-        // \/ is consumed as a delimiter escape (backslash stripped).
-        pat.push_back('\\');
-      }
-    } else if (*arg_i == closing) {
-      ++arg_i;
-      found_closing = true;
-      break;
-    }
-    pat.push_back(*arg_i);
-  }
-  if (!found_closing)
-    throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+  string pat = scan_pattern_literal(++arg_i, arg_end, closing, closing == '/');
   if (pat.empty())
     throw_(parse_error, _("Match pattern is empty"));
 
-  return token_t(token_t::TERM, pat);
+  return token_t(token_t::TERM, pat, true);
+}
+
+/// True when a term read so far, ignoring trailing blanks, ends in a
+/// comparison operator: <, >, <= or >=.
+static bool ends_with_comparison(const string& ident) {
+  string::size_type end = ident.find_last_not_of(" \t\r\n");
+  if (end == string::npos)
+    return false;
+  if (ident[end] == '<' || ident[end] == '>')
+    return true;
+  return ident[end] == '=' && end > 0 && (ident[end - 1] == '<' || ident[end - 1] == '>');
 }
 
 /// Accumulate a bare-word identifier from arg_i until an operator boundary
@@ -168,16 +161,18 @@ query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
 /// @param tok_context  Determines which characters act as boundaries.
 ///                     In TOK_EXPR context, `(`, `&`, `|`, etc. are NOT
 ///                     boundaries (they're part of the expression).
-/// @param consume_next When true (set by `\\` escape), the next operator
-///                     character is consumed into the identifier instead
-///                     of acting as a boundary.
-/// @param hit_boundary Set to true if scanning stopped at an operator
-///                     boundary (arg_i points at the boundary char);
-///                     false if the entire argument was consumed.
-string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next,
-                                         bool& hit_boundary) {
+/// @param consume_next When true, every operator character for the rest of
+///                     this identifier is consumed into it instead of
+///                     ending it.  The caller sets it after a `\` escape,
+///                     and the scan sets it itself on reaching a `)` that
+///                     closes a `(` already in the identifier (only in
+///                     TOK_EXPR context, as in `expr foo(x)`, since
+///                     elsewhere `(` ends the identifier).  A `)` that
+///                     closes nothing ends the identifier.  The flag is
+///                     never cleared.
+string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next) {
   string ident;
-  hit_boundary = false;
+  bool hit_boundary = false;
 
   for (; arg_i != arg_end; ++arg_i) {
     switch (*arg_i) {
@@ -185,7 +180,8 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '\t':
     case '\n':
     case '\r':
-      if (!multiple_args && !consume_whitespace && !consume_next_arg)
+      if (!multiple_args && !consume_whitespace && !consume_next_arg &&
+          !(tok_context != token_t::TOK_META && ends_with_comparison(ident)))
         hit_boundary = true;
       else
         ident.push_back(*arg_i);
@@ -208,8 +204,21 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '@':
     case '#':
     case '%':
-    case '=':
       if (!consume_next && tok_context != token_t::TOK_EXPR) {
+        hit_boundary = true;
+      } else {
+        ident.push_back(*arg_i);
+      }
+      break;
+
+    case '=':
+      // In a pattern term, '=' after '<' or '>' belongs to the comparison
+      // operator ("amount>=20").  A metadata term never becomes a
+      // comparison, so there '=' always separates the tag from its value
+      // ("%Rate>=5" is tag /Rate>/ with value /5/).
+      if (!consume_next && tok_context != token_t::TOK_EXPR &&
+          (tok_context == token_t::TOK_META || ident.empty() ||
+           (ident.back() != '<' && ident.back() != '>'))) {
         hit_boundary = true;
       } else {
         ident.push_back(*arg_i);
@@ -239,59 +248,48 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
 
 /// Match a completed identifier string against known query keywords.
 /// If the identifier is a keyword, return the corresponding token;
-/// otherwise return a TERM token containing the identifier text.
+/// otherwise return a TERM token containing the identifier text.  When
+/// multiple_args is true and the identifier holds whitespace, only its
+/// first word is matched: if that word is a keyword, the keyword is
+/// returned and the rest of the identifier is scanned again as though it
+/// were the next argument.
 query_t::lexer_t::token_t query_t::lexer_t::match_keyword(const string& ident,
                                                           string::const_iterator ident_start) {
-  // When multiple_args is true, whitespace is included in identifiers, so
-  // "expr foo" may be read as a single token instead of recognizing "expr"
-  // as a keyword.  Detect this case and rewind arg_i to after the keyword
-  // so the remainder is consumed as the expression argument.
-  if (multiple_args && ident.size() > 4 && ident.substr(0, 4) == "expr" &&
-      (ident[4] == ' ' || ident[4] == '\t')) {
-    arg_i = ident_start + 4;
-    consume_next_arg = true;
-    return token_t(token_t::TOK_EXPR);
+  // When multiple_args is true, whitespace is part of an identifier, so a
+  // single argument such as "payee Book" arrives whole.  If its first word
+  // is a keyword, return that keyword and rewind arg_i to just after it so
+  // the rest is scanned as though it were the next argument.
+  if (multiple_args) {
+    const std::size_t word_end = ident.find_first_of(" \t\r\n");
+    if (word_end != string::npos) {
+      token_t tok = match_keyword(ident.substr(0, word_end), ident_start);
+      if (tok.kind != token_t::TERM) {
+        arg_i = ident_start + static_cast<std::ptrdiff_t>(word_end);
+        return tok;
+      }
+    }
   }
 
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (ident == "and")
-    return token_t(token_t::TOK_AND);
-  else if (ident == "or")
-    return token_t(token_t::TOK_OR);
-  else if (ident == "not")
-    return token_t(token_t::TOK_NOT);
-  else if (ident == "code")
-    return token_t(token_t::TOK_CODE);
-  else if (ident == "desc")
-    return token_t(token_t::TOK_PAYEE);
-  else if (ident == "payee")
-    return token_t(token_t::TOK_PAYEE);
-  else if (ident == "note")
-    return token_t(token_t::TOK_NOTE);
-  else if (ident == "tag")
-    return token_t(token_t::TOK_META);
-  else if (ident == "meta")
-    return token_t(token_t::TOK_META);
-  else if (ident == "data")
-    return token_t(token_t::TOK_META);
-  else if (ident == "show")
-    return token_t(token_t::TOK_SHOW);
-  else if (ident == "only")
-    return token_t(token_t::TOK_ONLY);
-  else if (ident == "bold")
-    return token_t(token_t::TOK_BOLD);
-  else if (ident == "for")
-    return token_t(token_t::TOK_FOR);
-  else if (ident == "since")
-    return token_t(token_t::TOK_SINCE);
-  else if (ident == "until")
-    return token_t(token_t::TOK_UNTIL);
-  else if (ident == "expr") {
-    consume_next_arg = true;
-    return token_t(token_t::TOK_EXPR);
-  } else
+  token_t::kind_t kind = keyword_kind(ident);
+  if (kind == token_t::TERM)
     return token_t(token_t::TERM, ident);
-  // NOLINTEND(bugprone-branch-clone)
+  if (kind == token_t::TOK_EXPR)
+    consume_next_arg = true;
+  return token_t(kind);
+}
+
+query_t::lexer_t::token_t::kind_t query_t::lexer_t::keyword_kind(const string& ident) {
+  static const std::pair<const char*, token_t::kind_t> keywords[] = {
+      {"and", token_t::TOK_AND},     {"or", token_t::TOK_OR},      {"not", token_t::TOK_NOT},
+      {"code", token_t::TOK_CODE},   {"desc", token_t::TOK_PAYEE}, {"payee", token_t::TOK_PAYEE},
+      {"note", token_t::TOK_NOTE},   {"tag", token_t::TOK_META},   {"meta", token_t::TOK_META},
+      {"data", token_t::TOK_META},   {"show", token_t::TOK_SHOW},  {"only", token_t::TOK_ONLY},
+      {"bold", token_t::TOK_BOLD},   {"for", token_t::TOK_FOR},    {"since", token_t::TOK_SINCE},
+      {"until", token_t::TOK_UNTIL}, {"expr", token_t::TOK_EXPR}};
+  for (const auto& [word, kind] : keywords)
+    if (ident == word)
+      return kind;
+  return token_t::TERM;
 }
 
 /*--- Lexer: Token Production ---*/
@@ -306,8 +304,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
   }
 
   // Main scanning loop: each iteration processes one character or advances
-  // to the next argument.  Whitespace is consumed by looping back to the
-  // top, replacing the former `goto resume`.
+  // to the next argument; whitespace is skipped by looping back to the top.
   while (true) {
     // Advance to the next argument string if the current one is exhausted.
     if (arg_i == arg_end) {
@@ -316,6 +313,9 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
       arg_i = (*begin).as_string().begin();
       arg_end = (*begin).as_string().end();
     }
+
+    // Record where this token starts so the parser can rewind to it.
+    prev_arg_i = arg_i;
 
     // Phase 1: Quoted/delimited patterns.
     if (*arg_i == '\'' || *arg_i == '"' || *arg_i == '/')
@@ -326,7 +326,6 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
     if (multiple_args && consume_next_arg) {
       consume_next_arg = false;
       token_t tok(token_t::TERM, string(arg_i, arg_end));
-      prev_arg_i = arg_i;
       arg_i = arg_end;
       return tok;
     }
@@ -377,9 +376,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
         return token_t(token_t::TOK_NOTE);
       }
       ++arg_i;
-      // Peek for a second '=' to produce the TOK_EQEQ token, so `==` is a
-      // single atomic token instead of two TOK_EQs requiring look-ahead hacks
-      // at the parser level.
+      // A second '=' makes the single TOK_EQEQ token (`==`).
       if (arg_i != arg_end && *arg_i == '=') {
         ++arg_i;
         return token_t(token_t::TOK_EQEQ);
@@ -396,8 +393,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
 
     // Phase 4: Accumulate an identifier and match against keywords.
     string::const_iterator ident_start = arg_i;
-    bool hit_boundary = false;
-    string ident = scan_identifier(tok_context, consume_next, hit_boundary);
+    string ident = scan_identifier(tok_context, consume_next);
     return match_keyword(ident, ident_start);
   }
 }
@@ -448,7 +444,10 @@ expr_t::ptr_op_t query_t::parser_t::make_meta_node(const string& tag_pattern,
   expr_t::ptr_op_t mask_arg = new expr_t::op_t(expr_t::op_t::VALUE);
   mask_arg->set_value(mask_t(tag_pattern));
 
-  lexer_t::token_t tok = lexer.peek_token(tok_context);
+  // The token after a metadata term belongs to whatever follows it, not to
+  // the metadata term: lex it in a pattern context so that a comparison
+  // such as "amount>=500" arrives whole (TOK_META would end it at the '=').
+  lexer_t::token_t tok = lexer.peek_token(lexer_t::token_t::TOK_ACCOUNT);
 
   if (tok.kind == lexer_t::token_t::TOK_EQEQ) {
     // `%name==value` -- exact string equality against tag value.
@@ -486,42 +485,72 @@ expr_t::ptr_op_t query_t::parser_t::make_meta_node(const string& tag_pattern,
 }
 
 /**
- * Try to parse a term as a comparison expression.
- *
- * Supports two forms:
- * - "d>" followed by TOK_EQ and a term → parse "d>=[date]" as expression
- * - "d>[date]" with embedded comparison → parse the whole term as expression
- *
- * @return The expression node, or nullptr if the term is not a comparison.
+ * True when @p op is <, <=, > or >=, or an and/or with at least one operand
+ * that is such a comparison tree, or a not of one.  An identifier, a lambda
+ * (the "->" of an account name) or any other root is not.  The other operand
+ * of an and/or may be any expression ("date>[2024/01/10] and cleared").
  */
-expr_t::ptr_op_t
-query_t::parser_t::try_parse_comparison(const string& term,
-                                        query_t::lexer_t::token_t::kind_t tok_context) {
-  bool ends_with_cmp = !term.empty() && (term.back() == '>' || term.back() == '<');
-
-  if (ends_with_cmp && lexer.peek_token(tok_context).kind == lexer_t::token_t::TOK_EQ) {
-    lexer.next_token(tok_context); // consume the '='
-    lexer_t::token_t rhs = lexer.next_token(tok_context);
-    if (rhs.kind == lexer_t::token_t::TERM && rhs.value) {
-      try {
-        string expr_str = term + "=" + *rhs.value;
-        return expr_t(expr_str).get_op();
-      } catch (...) {
-        discard_error_context();
-        return nullptr;
-      }
-    }
-  } else if (!ends_with_cmp &&
-             (term.find(">[") != string::npos || term.find("<[") != string::npos)) {
-    try {
-      return expr_t(term).get_op();
-    } catch (...) {
-      discard_error_context();
-      return nullptr;
-    }
+static bool is_comparison_tree(const expr_t::ptr_op_t& op) {
+  if (!op)
+    return false;
+  switch (op->kind) {
+  case expr_t::op_t::O_LT:
+  case expr_t::op_t::O_LTE:
+  case expr_t::op_t::O_GT:
+  case expr_t::op_t::O_GTE:
+    return true;
+  case expr_t::op_t::O_AND:
+  case expr_t::op_t::O_OR:
+    return is_comparison_tree(op->left()) || is_comparison_tree(op->right());
+  case expr_t::op_t::O_NOT:
+    return is_comparison_tree(op->left());
+  default:
+    return false;
   }
-  return nullptr;
 }
+
+/**
+ * A query term is a comparison when it holds '<' or '>' and parses, as a
+ * whole, into a comparison tree (see is_comparison_tree).  Any other term,
+ * including one the expression parser rejects (with any exception but
+ * bad_alloc), is a pattern.
+ *
+ * @return The comparison node, or nullptr if the term is a pattern.
+ */
+expr_t::ptr_op_t query_t::parser_t::try_parse_comparison(const string& term) {
+  if (term.find_first_of("<>") == string::npos)
+    return nullptr;
+
+  expr_t::ptr_op_t op;
+  try {
+    op = expr_t(term).get_op();
+  } catch (const std::bad_alloc&) {
+    throw;
+  } catch (const std::exception&) { // whatever the expression parser rejects the term with
+    // A rejected term is a pattern, not an error: its "While parsing value
+    // expression" context must not reach the next, unrelated error.
+    discard_error_context();
+    return nullptr;
+  }
+  return is_comparison_tree(op) ? op : nullptr;
+}
+
+namespace {
+
+/// @brief Escape every regex metacharacter in text, so that the result
+/// matches text literally.
+string quote_regex(const string& text) {
+  string result;
+  result.reserve(text.size());
+  for (char c : text) {
+    if (string_view("\\^$.|?*+()[]{}").find(c) != string_view::npos)
+      result += '\\';
+    result += c;
+  }
+  return result;
+}
+
+} // namespace
 
 /**
  * Build an O_MATCH node that regex-matches a pattern against the field
@@ -565,7 +594,7 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
  * Parse a single query term -- the lowest level of the grammar.
  *
  * This handles:
- * - **Field context switches**: `code`, `payee`, `note`, `account`, `meta`,
+ * - **Field context switches**: `code`, `payee`, `note`, `meta`,
  *   `expr` tokens change tok_context and recurse to get the actual term.
  * - **Section boundaries**: `show`, `only`, `bold`, `for`, `since`, `until`
  *   are pushed back for the top-level parse_query_expr to handle.
@@ -573,7 +602,10 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
  *   - An O_MATCH node (`account =~ /pattern/`) for account/payee/code/note.
  *   - An O_CALL to `has_tag()` for metadata, optionally with a value match.
  *   - A raw expression parse for `expr` context.
- *   - A comparison expression for terms containing `>[` or `<[` syntax.
+ *   - A comparison expression (or an and/or of which one operand is a comparison, or a not
+ *     of one) for an unquoted term holding `<`, `<=`, `>` or `>=`.
+ *   - In account context, a literal match on the target account for an unquoted alias
+ *     name; a quoted or `/.../` pattern never expands.
  * - **Parenthesized sub-expressions**: Recurse into parse_query_expr, or in
  *   TOK_META context, consume a single pattern so `tag(name) == value`
  *   flows through make_meta_node like the unparenthesized form.
@@ -600,7 +632,6 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   case lexer_t::token_t::TOK_CODE:
   case lexer_t::token_t::TOK_PAYEE:
   case lexer_t::token_t::TOK_NOTE:
-  case lexer_t::token_t::TOK_ACCOUNT:
   case lexer_t::token_t::TOK_META:
   case lexer_t::token_t::TOK_EXPR:
     node = parse_query_term(tok.kind);
@@ -620,7 +651,11 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       break;
 
     default:
-      node = try_parse_comparison(*tok.value, tok_context);
+      if (!tok.quoted)
+        node = try_parse_comparison(*tok.value);
+      if (!node && !tok.quoted && journal && tok_context == lexer_t::token_t::TOK_ACCOUNT)
+        if (account_t* acct = journal->expand_aliases(*tok.value))
+          node = make_match_node(tok_context, quote_regex(acct->fullname()));
       if (!node)
         node = make_match_node(tok_context, *tok.value);
       break;
@@ -730,37 +765,42 @@ expr_t::ptr_op_t query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_c
   return expr_t::ptr_op_t();
 }
 
+/// Join successive OR expressions left to right with O_OR until one is
+/// empty; null if the first one is.
+expr_t::ptr_op_t query_t::parser_t::parse_or_chain(lexer_t::token_t::kind_t tok_context) {
+  expr_t::ptr_op_t chain;
+  while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
+    if (!chain) {
+      chain = next;
+    } else {
+      expr_t::ptr_op_t prev(chain);
+      chain = new expr_t::op_t(expr_t::op_t::O_OR);
+      chain->set_left(prev);
+      chain->set_right(next);
+    }
+  }
+  return chain;
+}
+
 /*--- Parser: Top-Level Query Expression and Section Splitting ---*/
 
 /**
  * Parse a complete query expression, handling section keywords.
  *
- * The top-level grammar is:
- *   query := or_expr* ['show' or_expr*] ['only' or_expr*]
- *            ['bold' or_expr*] ['for'|'since'|'until' date_terms...]
+ * Grammar: `query` and `terms` in the EBNF at the top of this file.
  *
- * Multiple consecutive or_expr results at the top level are implicitly
- * OR-ed together (bare terms like `food groceries` mean
- * `account =~ /food/ | account =~ /groceries/`).
+ * Consecutive or_expr results are implicitly OR-ed together, at the top
+ * level, inside a show/only/bold section, and inside parentheses (the
+ * subexpression case), so bare terms like `food groceries` mean
+ * `account =~ /food/ | account =~ /groceries/`.
  *
  * When not parsing a subexpression, section keywords split the query
  * into separate predicates stored in query_map.
  */
 expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
                                                      bool subexpression) {
-  expr_t::ptr_op_t limiter;
-
-  // Parse the main (limit) predicate: accumulate OR-connected expressions.
-  while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
-    if (!limiter) {
-      limiter = next;
-    } else {
-      expr_t::ptr_op_t prev(limiter);
-      limiter = new expr_t::op_t(expr_t::op_t::O_OR);
-      limiter->set_left(prev);
-      limiter->set_right(next);
-    }
-  }
+  // Parse the main (limit) predicate.
+  expr_t::ptr_op_t limiter = parse_or_chain(tok_context);
 
   // For top-level queries, store the limit predicate and then process
   // any trailing section keywords (show, only, bold, for/since/until).
@@ -782,32 +822,11 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
       case lexer_t::token_t::TOK_BOLD: {
         lexer.next_token(tok_context);
 
-        kind_t kind = QUERY_SHOW; // Initialize with a default value
-        switch (tok.kind) {
-        case lexer_t::token_t::TOK_SHOW:
-          kind = QUERY_SHOW;
-          break;
-        case lexer_t::token_t::TOK_ONLY:
-          kind = QUERY_ONLY;
-          break;
-        case lexer_t::token_t::TOK_BOLD:
-          kind = QUERY_BOLD;
-          break;
-        default:
-          break;
-        }
+        const kind_t kind = tok.kind == lexer_t::token_t::TOK_SHOW   ? QUERY_SHOW
+                            : tok.kind == lexer_t::token_t::TOK_ONLY ? QUERY_ONLY
+                                                                     : QUERY_BOLD;
 
-        expr_t::ptr_op_t node;
-        while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
-          if (!node) {
-            node = next;
-          } else {
-            expr_t::ptr_op_t prev(node);
-            node = new expr_t::op_t(expr_t::op_t::O_OR);
-            node->set_left(prev);
-            node->set_right(next);
-          }
-        }
+        expr_t::ptr_op_t node = parse_or_chain(tok_context);
 
         if (node)
           query_map.insert(
@@ -838,8 +857,10 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
           if (tok.kind != lexer_t::token_t::TERM)
             throw_(parse_error, _("Unexpected token in date range expression"));
 
-          if (*tok.value == "show" || *tok.value == "bold" || *tok.value == "for" ||
-              *tok.value == "since" || *tok.value == "until") {
+          // An unquoted section keyword ends the period; rewind so the outer
+          // loop reads it as a keyword. A quoted or /regex/ one is a period word.
+          if (!tok.quoted &&
+              lexer_t::token_t::is_section_keyword(lexer_t::keyword_kind(*tok.value))) {
             lexer.token_cache = lexer_t::token_t();
             lexer.arg_i = lexer.prev_arg_i;
             lexer.consume_next_arg = false;

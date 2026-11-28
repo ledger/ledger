@@ -1,0 +1,36 @@
+; A second sale in one transaction sees the lots the first sale
+; consumed, including the part the first sale split onto another lot:
+; the first sale takes all 5 of lot 1 and 2 of lot 2, so the second
+; takes lot 2's last 3 and books its last 1 as an unmatched remainder.
+
+2024/01/01 Buy Lot 1
+    Assets:Brokerage          5 AAPL {$150.00} [2024/01/01]
+    Assets:Cash          $-750.00
+
+2024/02/01 Buy Lot 2
+    Assets:Brokerage          5 AAPL {$160.00} [2024/02/01]
+    Assets:Cash          $-800.00
+
+2024/03/01 Sell Two Lines
+    Assets:Brokerage         -7 AAPL @ $170.00
+    Assets:Brokerage         -4 AAPL @ $170.00
+    Assets:Cash          $1870.00
+    Income:Gains
+
+test --lot-matching fifo reg Assets:Brokerage --lots
+24-Jan-01 Buy Lot 1             Assets:Brokerage       5 AAPL {$150.00} [2024/01/01] 5 AAPL {$150.00} [2024/01/01]
+24-Feb-01 Buy Lot 2             Assets:Brokerage       5 AAPL {$160.00} [2024/02/01] 5 AAPL {$150.00} [2024/01/01]
+                                                   5 AAPL {$160.00} [2024/02/01]
+24-Mar-01 Sell Two Lines        Assets:Brokerage       -5 AAPL {$150.00} [2024/01/01] 5 AAPL {$160.00} [2024/02/01]
+                                Assets:Brokerage       -2 AAPL {$160.00} [2024/02/01] 3 AAPL {$160.00} [2024/02/01]
+                                Assets:Brokerage       -3 AAPL {$160.00} [2024/02/01]            0
+                                Assets:Brokerage       -1 AAPL {$170.00} [2024/03/01] -1 AAPL {$170.00} [2024/03/01]
+end test
+
+test --lot-matching fifo bal Assets:Brokerage Income --lots --flat
+-1 AAPL {$170.00} [2024/03/01]  Assets:Brokerage
+            $-150.00  Income:Gains
+--------------------
+                      $-150.00
+-1 AAPL {$170.00} [2024/03/01]
+end test

@@ -1,0 +1,6 @@
+reg --ignore-diacritics cafe
+bal --flat --account-rewrite Café=Wallet
+reg --ignore-diacritics cafe
+bal --flat --account-rewrite Cafe=Wallet
+reg --ignore-diacritics cafe
+eval "'Café' =~ /cafe/"

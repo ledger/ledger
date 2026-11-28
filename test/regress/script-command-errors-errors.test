@@ -1,0 +1,33 @@
+; script_command (src/expr.cc) must report the first failing line and stop,
+; with exit status 1, rather than skip the line and exit 0. It must reject a
+; script file it cannot open. The scripts live in the script-command-errors*.dat
+; files beside this test; the long-line case is in script-command-errors.test.
+; The missing-file block names a relative path (the harness runs from the
+; source tree) so that the echoed path does not depend on the checkout.
+
+test -f /dev/null script $sourcepath/test/regress/script-command-errors.dat -> 1
+before
+__ERROR__
+While evaluating value expression:
+  (1 / 0)
+  ^^^^^^^
+While parsing value expression on line 3:
+> 1/0
+Error: Divide by zero
+end test
+
+test -f /dev/null script test/regress/script-command-errors-missing.dat -> 1
+__ERROR__
+Error: Could not open script file: test/regress/script-command-errors-missing.dat
+end test
+
+test -f /dev/null --script $sourcepath/test/regress/script-command-errors-session.dat -> 1
+before
+__ERROR__
+While evaluating value expression:
+  (1 / 0)
+  ^^^^^^^
+While parsing value expression on line 3:
+> 1/0
+Error: Divide by zero
+end test

@@ -1,16 +1,18 @@
-; bal -V and -X with --unrealized keep the revaluation between postings for
-; a journal with an account-rewrite directive, and print what they printed
-; before the balance report valued postings at cost.  rewrite_posts copies
-; each posting it rewrites into a transaction of its own, dated by the
-; posting, so the Brokerage posting, dated 2024/01/15, no longer shares its
-; transaction's date, 2024/01/01, with the Checking posting.  A baseline
-; that valued each cost on the date of its transaction converted the $1500
-; at EUR 0.80 on one side and at EUR 0.90 on the other, and the -X EUR
-; report printed Equity:Unrealized Gains EUR-310.00 and a total of
-; EUR-150.00, while bal -G -X EUR reports a gain of EUR160.00.  Under -V
-; the report books no unrealized gain and totals $200, as it did before.
-; The journal is that of unrealized-footing-posting-date.test with the
-; directive added; unrealized-payee-rewrite.test covers payee-rewrite.
+; bal -V and -X with --unrealized foot to zero for a journal with an
+; account-rewrite directive, as they do for the same journal without one.
+; The Brokerage posting of the 2024/01/01 purchase is dated 2024/01/15,
+; after the dollar fell from EUR 0.90 to EUR 0.80.  rewrite_posts copies
+; the purchase once, whole, keeping its date, so both postings are valued
+; at cost on that date, the purchase adds nothing to the report total,
+; and the change in the value of the lot is the one unrealized row, minus
+; the --gain total.  When rewrite_posts copied each posting into a
+; transaction of its own, dated by the posting, these reports kept the
+; revaluation between postings instead: the -X EUR report totalled
+; EUR10.00, and the -V report booked no unrealized gain and totalled
+; $200.  The journal is that of unrealized-footing-posting-date.test with
+; the directive added, and the output is that journal's with
+; Assets:Brokerage written Assets:Broker; unrealized-payee-rewrite.test
+; covers payee-rewrite.
 
 account-rewrite Brokerage  Assets:Broker
 
@@ -27,17 +29,18 @@ test bal -X EUR --unrealized
            EUR160.00  Assets
           EUR1360.00    Broker
          EUR-1200.00    Checking
-          EUR-150.00  Equity:Unrealized Gains
+          EUR-160.00  Equity:Unrealized Gains
 --------------------
-            EUR10.00
+                   0
 end test
 
 test bal -V --unrealized
                 $200  Assets
                $1700    Broker
               $-1500    Checking
+               $-200  Equity:Unrealized Gains
 --------------------
-                $200
+                   0
 end test
 
 test bal -G -X EUR

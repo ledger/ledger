@@ -7,8 +7,8 @@
 # would leave a non-zero remainder and the transaction would fail to balance.
 #
 # The fix tags the price commodity with COMMODITY_PRECISION_FROM_PRICE after
-# pool.exchange() so that the textual parser can widen the precision to match
-# the actual amounts it encounters in the journal.
+# pool.exchange(), so the next GBP amount parsed with decimals sets the GBP
+# precision outright, here narrowing it from 3 to 2.
 
 import ledger
 
@@ -20,7 +20,7 @@ comms.exchange(comms.find_or_create('Nectar'), ledger.Amount('0.005 GBP'))
 # Read a journal whose GBP amounts require only 2-decimal precision.
 # With the bug: GBP precision stays at 3, so -1.40/1.578 rounds to -0.887 GBP
 # giving a remainder of 0.003 GBP, which causes a balance error.
-# With the fix: GBP precision is widened to 2 (from the 0.89 GBP posting),
+# With the fix: the 0.89 GBP posting sets GBP precision to 2,
 # so -1.40/1.578 rounds to -0.89 GBP and the transaction balances exactly.
 try:
     journal = ledger.read_journal_from_string("""

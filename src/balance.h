@@ -118,9 +118,8 @@ public:
    * is O(1), and adding an amount yields a new version sharing all but
    * O(log K) of its nodes with the previous one.  Every posting of a
    * register keeps its own complete running total (calc_posts stores one
-   * in each post's xdata), so with K components the former
-   * std::unordered_map cost O(K) time and memory per posting; this map
-   * costs O(log K).  Iteration order is a hash order of commodity
+   * in each post's xdata), so with K components each posting costs
+   * O(log K) time and memory.  Iteration order is a hash order of commodity
    * addresses and changes from run to run, so nothing visible may depend
    * on it: display goes through sorted_amounts(), and rebuilding a balance
    * from transformed components through merge().  The map is immutable:
@@ -136,6 +135,20 @@ public:
   enum class lot_sort_order : std::uint8_t { by_commodity, fifo, lifo };
 
   amounts_map amounts;
+  /**
+   * The order in which the display paths list lots: sorted_amounts() and
+   * first_sorted_amount() are its only readers.  It is a display
+   * preference, not part of the balance's value.  Only fifo_lot_prices()
+   * and lifo_lot_prices() set it (through the fifo_lots()/lifo_lots()
+   * value-expression functions, which --lots-fifo/--lots-lifo install),
+   * and operator== ignores it.  Every operation that copies the balance
+   * keeps it (copy or move construction and assignment from a balance take
+   * that balance's; negated(), rounded() and the other rounding copies,
+   * and assignment from an amount, keep their own), as do abs(), reduce(),
+   * unreduce() and strip_annotations(); operator+= and operator-= keep
+   * the left operand's; value(), number(), average_lot_prices() and any
+   * balance built afresh start at by_commodity.
+   */
   lot_sort_order sort_order = lot_sort_order::by_commodity;
 
   /**
@@ -193,12 +206,21 @@ public:
   balance_t(const balance_t& bal) : amounts(bal.amounts), sort_order(bal.sort_order) {
     TRACE_CTOR(balance_t, "copy");
   }
+  balance_t(balance_t&& bal) noexcept
+      : amounts(std::move(bal.amounts)), sort_order(bal.sort_order) {
+    TRACE_CTOR(balance_t, "move");
+  }
 
   balance_t& operator=(const balance_t& bal) {
     if (this != &bal) {
       amounts = bal.amounts;
       sort_order = bal.sort_order;
     }
+    return *this;
+  }
+  balance_t& operator=(balance_t&& bal) noexcept {
+    amounts = std::move(bal.amounts);
+    sort_order = bal.sort_order;
     return *this;
   }
   balance_t& operator=(const amount_t& amt) {
@@ -222,8 +244,9 @@ public:
    * or "greater than" makes no sense when amounts of multiple
    * commodities are involved.
    *
-   * Balances may also be compared to amounts, in which case the sum
-   * of the balance must equal the amount exactly.
+   * Balances may also be compared to amounts: a balance equals an
+   * amount when its only component equals the amount exactly, or, for a
+   * zero amount, when the balance is empty.
    *
    * If a comparison between balances is desired, the balances must
    * first be rendered to value equivalent amounts using the `value'
@@ -248,8 +271,10 @@ public:
 
   /**
    * Binary arithmetic operators.  Balances support addition and
-   * subtraction of other balances or amounts, but multiplication and
-   * division are restricted to uncommoditized amounts only.
+   * subtraction of other balances or amounts.  Multiplication and
+   * division take an uncommoditized amount, which scales every
+   * component, or an amount in the commodity of the balance's single
+   * component; see operator*=() in balance.cc for the other cases.
    */
   balance_t& operator+=(const balance_t& bal);
   balance_t& operator+=(const amount_t& amt);
@@ -312,16 +337,7 @@ public:
       keys.push_back(pair.first);
     amounts_map::transient_type result = std::move(amounts).transient();
     for (commodity_t* key : keys)
-      result.update_if_exists(key, [&fn](auto&& current) -> amount_t {
-        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-          amount_t amt(current);
-          fn(amt);
-          return amt;
-        } else {
-          fn(current);
-          return current;
-        }
-      });
+      result.update_if_exists(key, component_updater(fn));
     amounts = std::move(result).persistent();
   }
 
@@ -345,19 +361,16 @@ public:
    * amount.  That is, a balance of 10m and 1799s will unreduce to
    * 39.98m.
    *
-   * value(optional<datetime_t>) returns the total historical value for
-   * a balance -- the default moment returns a value based on the most
+   * value(moment, in_terms_of) returns the market value of a balance
+   * as an optional<balance_t> -- the default moment uses the most
    * recently known price -- based on the price history of its
-   * component commodities.  See amount_t::value for an example.
+   * component commodities, or an empty optional when no component
+   * has a price.  See amount_t::value for an example.
    *
-   * Further, for the sake of efficiency and avoiding temporary
-   * objects, the following methods support "in-place" variants act on
-   * the balance itself and return a reference to the result
-   * (`*this'):
-   *
-   * in_place_negate()
-   * in_place_reduce()
-   * in_place_unreduce()
+   * negate(), reduce() and unreduce() also have in-place forms
+   * (in_place_negate(), in_place_reduce(), in_place_unreduce()) that
+   * modify the balance itself and return void, avoiding a temporary;
+   * abs() and value() have none.
    */
   [[nodiscard]] balance_t negated() const {
     balance_t temp(*this);
@@ -405,20 +418,10 @@ public:
     transform_amounts([&](amount_t& amt) { amt.in_place_truncate(); });
   }
 
-  [[nodiscard]] balance_t display_rounded() const {
-    balance_t temp(*this);
-    temp.in_place_display_round();
-    return temp;
-  }
   void in_place_display_round() {
-    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(amt.display_precision()); });
+    transform_amounts([&](amount_t& amt) { amt.in_place_display_round(); });
   }
 
-  [[nodiscard]] balance_t rounded_to_commodity_precision() const {
-    balance_t temp(*this);
-    temp.in_place_round_to_commodity_precision();
-    return temp;
-  }
   void in_place_round_to_commodity_precision() {
     transform_amounts([&](amount_t& amt) { amt.in_place_round_to_commodity_precision(); });
   }
@@ -462,7 +465,7 @@ public:
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp.merge(pair.second.reduced());
-    *this = temp;
+    *this = std::move(temp);
   }
 
   balance_t unreduced() const {
@@ -477,7 +480,7 @@ public:
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp.merge(pair.second.unreduced());
-    *this = temp;
+    *this = std::move(temp);
   }
 
   optional<balance_t> value(const datetime_t& moment = datetime_t(),
@@ -537,6 +540,17 @@ public:
   [[nodiscard]] bool single_amount() const { return amounts.size() == 1; }
 
   /**
+   * sole_amount() returns the one amount the balance comes to: its only
+   * component that is not exactly zero or, if every component is exactly
+   * zero, its lone component (which keeps its commodity).  It returns
+   * nullptr for several non-zero components, several zero ones, or none.
+   * Unlike single_amount(), it skips a component that operator+= kept
+   * after cancelling it, so {$10, 0 EUR} comes to $10.  The entry stays
+   * in the map: xact.cc and fn_nail_down read it.
+   */
+  [[nodiscard]] const amount_t* sole_amount() const;
+
+  /**
    * Conversion methods.  A balance can be converted to an amount, but
    * only if contains a single component amount.
    */
@@ -566,15 +580,16 @@ public:
    * commodity_count() returns the number of different commodities
    * stored in the balance.
    *
-   * commodity_amount(optional<commodity_t>) returns an (optional)
-   * amount for the given commodity within the balance; if no
-   * commodity is specified, it returns the (optional) uncommoditized
-   * component of the balance.  If no matching element can be found,
-   * boost::none is returned.
+   * commodity_amount(commodity) returns the component in the given
+   * commodity, or an empty optional if the balance has none.  With no
+   * commodity it returns the sole component, or the sole component
+   * left after stripping annotations; it returns an empty optional for
+   * an empty balance and throws amount_error if several commodities
+   * remain.
    */
   std::size_t commodity_count() const { return amounts.size(); }
 
-  optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
+  optional<amount_t> commodity_amount(const commodity_t* commodity = nullptr) const;
 
   balance_t number() const {
     balance_t temp;
@@ -618,27 +633,36 @@ public:
    */
   template <typename Fn>
   void visit_components(Fn&& fn) const {
-    std::ostringstream earlier;
-    take_error_context(earlier);
-    std::unordered_set<const amount_t*> visited;
+    std::optional<std::ostringstream> earlier;
+    if (long(_ctxt_buffer.tellp()) != 0)
+      take_error_context(earlier.emplace());
     const amount_t* failing = nullptr;
     std::exception_ptr failure;
     try {
       for (const amounts_map::value_type& pair : amounts) {
         failing = &pair.second;
         fn(pair.second);
-        visited.insert(&pair.second);
       }
     } catch (...) {
       failure = std::current_exception();
     }
     if (!failure) {
-      restore_error_context(earlier);
+      if (earlier)
+        restore_error_context(*earlier);
       return;
     }
     std::ostringstream failed;
     take_error_context(failed);
-    restore_error_context(earlier);
+    if (earlier)
+      restore_error_context(*earlier);
+    // The first loop finished exactly the components that precede the
+    // failing one in the map's order, which is fixed for one map object.
+    std::unordered_set<const amount_t*> visited;
+    for (const amounts_map::value_type& pair : amounts) {
+      if (&pair.second == failing)
+        break;
+      visited.insert(&pair.second);
+    }
     amounts_array sorted;
     sorted_amounts(sorted);
     for (const amount_t* amount : sorted) {
@@ -655,62 +679,42 @@ public:
    * Iteration primitives.  `map_sorted_amounts' allows one to visit
    * each amount in balance in the proper order for displaying to the
    * user.  Mostly used by `print' and other routines where the sort
-   * order of the amounts' commodities is significant.
+   * order of the amounts' commodities is significant.  A single
+   * component is visited without sorting; @p fn is called once per
+   * non-null amount, in sorted order.  @p fn is called by reference and
+   * never copied.
    */
-  void map_sorted_amounts(const function<void(const amount_t&)>& fn) const;
+  template <typename Fn>
+  void map_sorted_amounts(Fn&& fn) const {
+    if (!amounts.empty()) {
+      if (amounts.size() == 1) {
+        const amount_t& amount((*amounts.begin()).second);
+        if (!amount.is_null())
+          fn(amount);
+      } else {
+        amounts_array sorted;
+        sorted_amounts(sorted);
+        for (const amount_t* amount : sorted)
+          fn(*amount);
+      }
+    }
+  }
 
   /**
-   * Printing methods.  A balance may be output to a stream using the
-   * `print' method.  There is also a global operator<< defined which
-   * simply calls print for a balance on the given stream.  There is
-   * one form of the print method, which takes two required arguments
-   * and one arguments with a default value:
-   *
-   * print(ostream, int first_width, int latter_width) prints a
-   * balance to the given output stream, using each commodity's
-   * default display characteristics.  The first_width parameter
-   * specifies the width that should be used for printing amounts
-   * (since they are likely to vary in width).  The latter_width, if
-   * specified, gives the width to be used for each line after the
-   * first.  This is useful when printing in a column which falls at
-   * the right-hand side of the screen.
-   *
-   * In addition to the width constraints, balances will also print
-   * with commodities in alphabetized order, regardless of the
-   * relative amounts of those commodities.  There is no option to
-   * change this behavior.
-   *
-   * With AMOUNT_PRINT_COLORIZE in flags, each negative amount is
-   * rendered with the ANSI escape sequence negative_color, if given.
+   * Printing methods.  print() writes the balance to a stream, one
+   * component per line; operator<< calls it with a first_width of 12.
+   * Every parameter after the stream has a default, and the definition
+   * in balance.cc documents them.  Components print in sorted_amounts()
+   * order: by commodity, unless sort_order is fifo or lifo (--lots-fifo or
+   * --lots-lifo), which orders the lots of each commodity by date.
    */
   void print(std::ostream& out, const int first_width = -1, const int latter_width = -1,
              const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS,
              const string& negative_color = empty_string) const;
 
   /**
-   * Debugging methods.  There are two methods defined to help with
-   * debugging:
-   *
-   * dump(ostream) dumps a balance to an output stream.  There is
-   * little different from print(), it simply surrounds the display
-   * value with a marker, for example "BALANCE($1.00, DM 12.00)".
-   * This code is used by other dumping code elsewhere in Ledger.
-   *
    * valid() returns true if the amounts within the balance are valid.
    */
-  void dump(std::ostream& out) const {
-    out << "BALANCE(";
-    bool first = true;
-    for (const amounts_map::value_type& pair : amounts) {
-      if (first)
-        first = false;
-      else
-        out << ", ";
-      pair.second.print(out);
-    }
-    out << ")";
-  }
-
   [[nodiscard]] bool valid() const {
     for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.valid()) {
@@ -718,6 +722,42 @@ public:
         return false;
       }
     return true;
+  }
+
+private:
+  /**
+   * The function immer's update_if_exists() takes, applying @p op to one
+   * component: when the map is owned outright immer hands over the stored
+   * amount itself (an rvalue) and @p op updates it in place; a component
+   * of a shared map arrives const and @p op updates a copy.  amount_t has
+   * no move constructor, so a by-value parameter would copy either way.
+   * The result refers to @p op and must be used within the full-expression.
+   */
+  template <typename Fn>
+  static auto component_updater(Fn&& op) {
+    return [&op](auto&& current) -> amount_t {
+      if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+        amount_t updated(current);
+        op(updated);
+        return updated;
+      } else {
+        op(current);
+        return current;
+      }
+    };
+  }
+
+  /// Apply @p op to the component kept under @p key, if there is one, in
+  /// place when this balance owns its map; returns whether there was one.
+  template <typename Fn>
+  bool update_component(commodity_t* key, Fn&& op) {
+    bool found = false;
+    amounts = std::move(amounts).update_if_exists(
+        key, component_updater([&found, &op](amount_t& current) {
+          found = true;
+          op(current);
+        }));
+    return found;
   }
 };
 

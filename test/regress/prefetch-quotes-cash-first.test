@@ -1,0 +1,25 @@
+; A purchase written cash first records its implied price on the cash
+; side ($ 0.01 AAPL), so AAPL is the commodity $ is priced in and
+; bal --market values $ in AAPL, exactly as it does without --download.
+; prefetch_quotes() follows that recorded direction: it requests $ in
+; terms of AAPL in the batch call, the same request the report itself
+; makes per commodity, and never AAPL in terms of $.  (A stock written
+; first, with "@", or with a P directive is priced in $; see
+; prefetch-quotes-posting-priced.test.)
+
+2024/01/15 Buy
+    Assets:Checking        $-1000.00
+    Assets:Brokerage        10 AAPL
+
+test bal --market --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+          5.000 AAPL  Assets
+         10.000 AAPL    Brokerage
+         -5.000 AAPL    Checking
+--------------------
+          5.000 AAPL
+end test
+
+test pricedb --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+P 2024/01/15 00:00:00 $ 0.010 AAPL
+P 2024/06/15 00:00:00 $ 0.005 AAPL
+end test

@@ -59,9 +59,9 @@ using detail::instance_t;
 /*--- Main Parse Loop ---*/
 
 void instance_t::parse() {
-  INFO("Parsing file " << context.pathname);
+  INFO("Parsing file " << context.pathname());
 
-  TRACE_START(instance_parse, 1, "Done parsing file " << context.pathname);
+  TRACE_START(instance_parse, 1, "Done parsing file " << context.pathname());
 
   if (!in.good() || in.eof())
     return;
@@ -72,11 +72,14 @@ void instance_t::parse() {
   bool error_flag = false;
   xact_t* previous_xact = nullptr;
 
-  // Read lines until EOF or the '^' sentinel (used by the test harness).
-  // Each iteration dispatches one top-level line.  Errors are caught,
-  // reported, and counted rather than aborting the entire parse, so that
-  // all errors in a file can be shown at once.
-  while (in.good() && !in.eof() && in.peek() != '^' && in.good()) {
+  // Read lines until EOF or a line that begins with '^'.  The '^' line
+  // ends this file only (an included file returns to its includer); it is
+  // an undocumented maintainer aid for bisecting a journal to find where
+  // it stops balancing.  The in.good() test after peek() is what stops the
+  // loop at end of input.  Each iteration dispatches one top-level line.
+  // Errors are caught, reported, and counted rather than aborting the
+  // entire parse, so that all errors in a file can be shown at once.
+  while (!in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t* xact = read_next_directive(error_flag, previous_xact)) {
         previous_xact = xact;
@@ -116,19 +119,14 @@ void instance_t::parse() {
     }
   }
 
-  // After the file is fully parsed, propagate any epoch/year changes made
-  // by year/Y directives back to the global state so that subsequent files
-  // see the updated year.
-  if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
-    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
-    year_directive_year = apply_stack.front().saved_year_directive;
-  }
+  // Undo every apply left open at end of file, newest first, as `end apply`
+  // would, so that an unclosed `apply year` does not leak into later files.
+  // The last entry popped is the account the caller seeded.  Plain `year`
+  // and `Y` directives never push an entry: they are permanent changes.
+  while (!apply_stack.empty())
+    pop_application();
 
-  apply_stack.pop_front();
-
-#if TIMELOG_SUPPORT
   timelog.close();
-#endif // TIMELOG_SUPPORT
 
   TRACE_STOP(instance_parse, 1);
 }
@@ -328,7 +326,6 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
     // directives inherited from the original Ledger format.
     if (!general_directive(line)) {
       switch (line[0]) {
-#if TIMELOG_SUPPORT
       case 'i': // clock-in (lowercase = no payee capitalization)
         clock_in_directive(line, false);
         break;
@@ -346,7 +343,6 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
       case 'h': // ignored (historical Ledger compatibility)
       case 'b':
         break;
-#endif // TIMELOG_SUPPORT
 
       case 'A': // A -- default account for unbalanced posts
         default_account_directive(line + 1);
@@ -402,8 +398,7 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind, const string& n
 std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_type_t hash_type) {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
-    instance_t instance(context_stack, context_stack.get_current(), nullptr,
-                        checking_style == journal_t::CHECK_PERMISSIVE, hash_type);
+    instance_t instance(context_stack, context_stack.get_current(), nullptr, hash_type);
     instance.apply_stack.push_front(application_t("account", context_stack.get_current().master));
     instance.parse();
   }
@@ -412,7 +407,7 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_t
   // Apply any deferred postings at this time
   master->apply_deferred_posts();
 
-  // These tracers were started in textual.cc
+  // These tracers were started in textual_xacts.cc
   TRACE_FINISH(xact_text, 2);
   TRACE_FINISH(xact_details, 2);
   TRACE_FINISH(xact_posts, 2);

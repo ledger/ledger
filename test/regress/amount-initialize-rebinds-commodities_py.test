@@ -1,0 +1,6 @@
+test python test/regress/amount-initialize-rebinds-commodities.py
+True
+False True
+True False
+False True
+end test

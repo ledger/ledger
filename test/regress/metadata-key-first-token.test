@@ -1,0 +1,44 @@
+; A `Key: value` comment sets a tag only when the key is the comment's
+; first whitespace-delimited token of two or more characters.  A later
+; token never names a key; a one-character token before it is skipped;
+; a leading `:tag:` token takes the first position, so no key follows.
+; The `Key:: expr` form follows the same rule.
+
+2024/01/01 First token is the key
+    ; Key: alpha
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2024/01/02 Later token is not a key
+    ; foo Key: beta
+    Expenses:Food    $2.00
+    Assets:Cash
+
+2024/01/03 One-character tokens are skipped
+    ; - Key: gamma
+    Expenses:Food    $3.00
+    Assets:Cash
+
+2024/01/04 A tag token ends the key position
+    ; :urgent: Key: delta
+    Expenses:Food    $4.00
+    Assets:Cash
+
+2024/01/05 Value expressions follow the same rule
+    ; - Key:: 2 + 3
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/06 A later value expression is not a key
+    ; foo Key:: 2 + 3
+    Expenses:Food    $6.00
+    Assets:Cash
+
+test reg Food --format '%(payee) [%(tag("Key"))] [%(has_tag("urgent"))]\n'
+First token is the key [alpha] [false]
+Later token is not a key [] [false]
+One-character tokens are skipped [gamma] [false]
+A tag token ends the key position [] [true]
+Value expressions follow the same rule [5] [false]
+A later value expression is not a key [] [false]
+end test

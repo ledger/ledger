@@ -1,0 +1,59 @@
+; prices and pricedb drop the conjuncts that -C, --pending, -U, -L and -R
+; add to --limit, since a price has no transaction state, and must leave
+; the user's own --limit expression meaning what it says.
+2024/01/01 Buy AAPL
+    Assets:AAPL        1 AAPL @ $10
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:MSFT        1 MSFT @ $20
+    Assets:Cash
+
+2024/01/03 * Buy XYZ
+    Assets:XYZ         1 XYZ @ $30
+    Assets:Cash
+
+test prices -l '(account=~/AAPL/)&(account=~/MSFT/)|(account=~/XYZ/)'
+2024/01/03 XYZ               $30
+end test
+
+test pricedb -U -l '(account=~/AAPL/)&(account=~/MSFT/)|(account=~/XYZ/)'
+P 2024/01/03 00:00:00 XYZ $30
+end test
+
+test prices -C -l '(account=~/AAPL/)&(account=~/AAPL/)'
+2024/01/01 AAPL              $10
+end test
+
+test prices -C
+2024/01/01 AAPL              $10
+2024/01/02 MSFT              $20
+2024/01/03 XYZ               $30
+end test
+
+test prices -U -L -R --pending -C -l 'account=~/MSFT/'
+2024/01/02 MSFT              $20
+end test
+
+test prices -C -b 2024/01/02
+2024/01/02 MSFT              $20
+2024/01/03 XYZ               $30
+end test
+
+test prices -U -l '!(account=~/AAPL/)'
+2024/01/02 MSFT              $20
+2024/01/03 XYZ               $30
+end test
+
+; Intended change: a state term the user glues into --limit with & is
+; dropped like the option-added one (transaction state does not apply to
+; prices), so the AAPL price prints; before, no price matched and the
+; report was empty.
+test prices -l 'pending&account=~/AAPL/'
+2024/01/01 AAPL              $10
+end test
+
+test prices -C -l 'amount > $15.5'
+2024/01/02 MSFT            $20.0
+2024/01/03 XYZ             $30.0
+end test

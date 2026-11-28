@@ -1,0 +1,35 @@
+; The pager named by --pager (or $LEDGER_PAGER, or $PAGER) is a shell command
+; line run through /bin/sh -c, as git and man run $PAGER, so quoted arguments,
+; leading variable assignments and pipes reach the pager intact.  --force-pager
+; keeps the pager on although the test harness's stdout is not a terminal.
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test bal --force-pager --pager "sed 's/Cash/XX/'"
+             $-50.00  Assets:XX
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --force-pager --pager "LESS=FRX cat"
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --force-pager --pager "grep Food | cat"
+              $50.00  Expenses:Food
+end test
+
+; A blank pager names no program, so the report goes to stdout.
+
+test bal --force-pager --pager ' '
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

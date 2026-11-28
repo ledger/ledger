@@ -57,7 +57,7 @@
  *   - **DISPLAY** expr    -- maps to `--display`
  *   - **COLLECT** expr    -- maps to `--amount`
  *   - **GROUP BY** expr   -- maps to `--group-by`
- *   - **STYLE** name      -- output style (csv, xml, json, emacs) (placeholder)
+ *   - **STYLE** name      -- accepted and ignored (any name; output unchanged)
  *
  * Each clause is translated into the corresponding report option, then a
  * reporter functor is constructed and executed just as if the user had run

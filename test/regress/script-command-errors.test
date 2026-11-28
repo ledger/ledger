@@ -1,0 +1,8 @@
+; script_command (src/expr.cc) must read lines of any length: a line longer
+; than its old 4095-character buffer, followed by a last line with no
+; trailing newline, must both run. The script is script-command-errors-long.dat
+; beside this test. The error cases are in script-command-errors-errors.test.
+
+test -f /dev/null script $sourcepath/test/regress/script-command-errors-long.dat
+after long line
+end test

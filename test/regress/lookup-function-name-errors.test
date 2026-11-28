@@ -1,0 +1,142 @@
+; The blocks of lookup-function-names.test that expect an error.  They
+; are kept apart because the SemanticBisimulation test
+; (test/semantic/check_all.py) skips a whole file that holds one such
+; block, and the positive file must reach the Lean oracle.  The first
+; eight pin the errors of the phase-1 single-letter names of
+; report_t::lookup.  The next three separate roundto from round,
+; to_balance from the functions that return their argument unchanged,
+; and clear_commodity from quantity, which agree on every input the
+; positive file can build.  The next three pin that account `cost` always
+; refuses and that a prefix of a bound name is not bound; the last, that
+; unround() fails as unrounded() does.  The journal holds only what these
+; blocks need: two AAPL lots in Brokerage, a posting to Expenses:Food:Fruit.
+
+commodity $
+    format $1,000.00
+
+2024/02/20 Broker
+    Assets:Brokerage              10 AAPL {$100.00} [2024/02/20]
+    Assets:Bank:Checking       $-1,000.00
+
+2024/02/21 Broker
+    Assets:Brokerage               5 AAPL {$130.00} [2024/02/21]
+    Assets:Bank:Checking         $-650.00
+
+2024/03/12 Grocer
+    Expenses:Food:Fruit             $3.00
+    Assets:Bank:Checking
+
+; Phase 1 single-letter names that are no longer supported
+test eval 'i' -> 1
+__ERROR__
+Error: The i value expression variable is no longer supported
+end test
+
+test eval 'A' -> 1
+__ERROR__
+Error: The A value expression variable is no longer supported
+end test
+
+test eval 'v' -> 1
+__ERROR__
+Error: The V and v value expression variables are no longer supported
+end test
+
+test eval 'V' -> 1
+__ERROR__
+Error: The V and v value expression variables are no longer supported
+end test
+
+test eval 'I' -> 1
+__ERROR__
+Error: The I and B value expression variables are no longer supported
+end test
+
+test eval 'B' -> 1
+__ERROR__
+Error: The I and B value expression variables are no longer supported
+end test
+
+test eval 'G' -> 1
+__ERROR__
+Error: The G and g value expression variables are no longer supported
+end test
+
+test eval 'g' -> 1
+__ERROR__
+Error: The G and g value expression variables are no longer supported
+end test
+
+; roundto needs its second argument; round does not
+test eval 'roundto(1.2345)' -> 1
+__ERROR__
+While evaluating value expression:
+  roundto(1.2345)
+  ^^^^^^^^^^^^^^^
+While calling function 'roundto 1.2345':
+Error: Too few arguments to function
+end test
+
+; to_balance makes a balance, which the error names
+test eval 'to_balance($2.5) + "s"' -> 1
+__ERROR__
+While evaluating value expression:
+  (to_balance($2.5) + "s")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While adding s to $2.5:
+Error: Cannot add a string to a balance
+end test
+
+; clear_commodity refuses a balance of two lots; quantity answers 0
+test reg Brokerage --format '%(clear_commodity(total))\n' -> 1
+10
+__ERROR__
+While evaluating value expression:
+  clear_commodity(total)
+  ^^^^^^^^^^^^^^^^^^^^^^
+While converting 10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] to an amount:
+While calling function 'clear_commodity 10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21]':
+While handling posting from "$FILE", line 22:
+>     Assets:Brokerage               5 AAPL {$130.00} [2024/02/21]
+Error: Cannot convert a balance with multiple commodities to an amount
+end test
+
+; account: cost is bound, and always refuses
+test bal Fruit --flat --format '%(cost)\n' -> 1
+__ERROR__
+While calculating format expression:
+  cost
+While evaluating value expression:
+  cost
+Error: An account does not have a 'cost' value
+end test
+
+; a prefix of a bound name is not bound
+test eval 'roun' -> 1
+__ERROR__
+While evaluating value expression:
+  roun
+  ^^^^
+Error: Unknown identifier 'roun'
+end test
+
+test eval 'to_' -> 1
+__ERROR__
+While evaluating value expression:
+  to_
+  ^^^
+Error: Unknown identifier 'to_'
+end test
+
+; unround is a synonym of unrounded, also when called without an argument
+test eval 'unround()' -> 1
+__ERROR__
+While evaluating value expression:
+  unround()
+  ^^^^^^^^^
+While unrounding :
+While calling function 'unround ':
+Error: Cannot unround an uninitialized value
+end test

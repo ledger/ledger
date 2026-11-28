@@ -1,0 +1,28 @@
+; The right operand of a '.' lookup (post.(...), account.(...)) is
+; evaluated without being compiled.  The right side of an assignment
+; and the body of a lambda inside it must still evaluate, because the
+; parser gives their scope blocks a scope when it builds them.
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(post.((y -> y * 2)(3)))\n'
+6
+6
+end test
+
+test reg --format '%(account.((y -> y * 2)(4)))\n'
+8
+8
+end test
+
+test reg --format '%(post.(x = 5))|\n'
+|
+|
+end test
+
+test reg --format '%(post.(z = 3; z))\n'
+3
+3
+end test

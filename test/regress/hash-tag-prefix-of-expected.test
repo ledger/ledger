@@ -1,0 +1,18 @@
+; A Hash tag that is a proper prefix of the computed hash is a mismatch,
+; even though every character it has agrees with the expected hash.
+
+2024/01/01 Test
+    ; Hash: fbaef2581d47d8f4
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --hashes sha512_half -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing transaction:
+> 2024/01/01 Test
+>     ; Hash: fbaef2581d47d8f4
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Expected hash fbaef2581d47d8f47b4e683db5c1191a2c3e3df8b0a21dba872d191082d4737e != fbaef2581d47d8f4
+end test

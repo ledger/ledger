@@ -21,7 +21,7 @@ BASE_OUTPUT="${4:-base_results.json}"
 WARMUP=3
 RUNS="${HYPERFINE_RUNS:-10}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BENCHMARK_DAT="$SCRIPT_DIR/benchmark.dat"
+BENCHMARK_DAT="$SCRIPT_DIR/10k.journal"
 
 if ! command -v hyperfine &>/dev/null; then
     echo "Error: hyperfine is required. Install via: cargo install hyperfine" >&2
@@ -36,10 +36,12 @@ for BIN in "$PR_BIN" "$BASE_BIN"; do
     fi
 done
 
-# Generate benchmark data if it doesn't exist
+# Generate the benchmark journal if it doesn't exist: hledger's 10k journal,
+# two thirds of whose transactions carry a cost and so become lots.
 if [ ! -f "$BENCHMARK_DAT" ]; then
     echo "Generating benchmark data..." >&2
-    python3 "$SCRIPT_DIR/gen_benchmark.py"
+    python3 "$SCRIPT_DIR/../tools/bench/generate_journal.py" 10000 1000 10 > "$BENCHMARK_DAT.tmp"
+    mv "$BENCHMARK_DAT.tmp" "$BENCHMARK_DAT"
 fi
 
 echo "Benchmarking PR binary:   $PR_BIN" >&2

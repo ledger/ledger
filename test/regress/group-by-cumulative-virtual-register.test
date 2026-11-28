@@ -1,0 +1,31 @@
+; Under --group-by-cumulative a register keeps the postings' running total
+; from group to group but not the accounts' display state.  P2's only
+; posting to A is virtual, so its row prints as (A), exactly as it does
+; without --group-by-cumulative; account A still carries
+; ACCOUNT_EXT_HAS_NON_VIRTUALS from group P1 if the accounts' xdata
+; survives the flush, and the row then prints as A.  The first block
+; passes on the unfixed tree and pins the output that clearing only the
+; postings' xdata would break.
+
+2012/01/01 P1
+    A                                       $10
+    B
+
+2012/01/02 P2
+    (A)                                      $5
+
+test reg --group-by payee --group-by-cumulative -s --depth 1 A
+P1
+12-Jan-01 - 12-Jan-01           A                               $10          $10
+
+P2
+12-Jan-02 - 12-Jan-02           (A)                              $5          $15
+end test
+
+test reg --group-by payee --group-by-cumulative -s --dow --depth 1 A
+P1
+12-Jan-01 - 12-Jan-01           A                               $10          $10
+
+P2
+12-Jan-02 - 12-Jan-02           (A)                              $5          $15
+end test

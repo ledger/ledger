@@ -1,0 +1,49 @@
+; --anon replaces payees, account names and commodities, and clears the
+; transaction code and the notes, but metadata tags (key: value) pass
+; through and stay readable by tag() in format expressions.  Hashes are
+; salted per run: an account hashes the same everywhere in one run, while
+; a payee is hashed afresh for every transaction.
+
+2024/01/01 (C42) Secret Payee
+    ; :hiddentag:
+    ; Secret: value
+    Expenses:Food          $10.00
+      ; Other: thing
+    Assets:Cash
+
+2024/01/02 Secret Payee
+    Expenses:Food          $5.00
+    Assets:Cash
+
+; Metadata survives; code and note are cleared.
+test reg --anon --format '[%(tag("Secret"))] [%(tag("Other"))] [%(code)] [%(note)]\n'
+[value] [thing] [] []
+[value] [] [] []
+[] [] [] []
+[] [] [] []
+end test
+
+; Tag-only metadata (:tag:) survives as well.
+test reg --anon --format '%(has_tag("hiddentag"))\n'
+true
+true
+false
+false
+end test
+
+; Each account keeps one hash across transactions, so balances still
+; aggregate: two accounts, not four.
+test bal --anon --flat --no-total --sort total --format '%(display_total)\n'
+A-15.00
+A15.00
+end test
+
+; The two transactions share a payee, yet --by-payee sees two payees under
+; --anon (four subtotals, not two), because each transaction's payee hash
+; is salted separately.
+test reg --anon --by-payee --sort amount --format '%(display_amount)\n'
+A-10.00
+A-5.00
+A5.00
+A10.00
+end test

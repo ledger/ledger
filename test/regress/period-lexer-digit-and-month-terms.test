@@ -1,0 +1,43 @@
+; Characterization: a bare number in a period expression lexes as a
+; day (TOK_INT), and a month name as TOK_A_MONTH.  These blocks pass
+; with or without string_to_month_of_year's digit arms, which the
+; lexer never reaches; the source grep in the review step is the
+; check for their removal.
+
+2024/11/11 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period --now 2024/06/15 "11"
+--- Period expression tokens ---
+TOK_INT: 11
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in day 11
+
+--- After stabilization ---
+   range: in day 11
+   start: 24-Jan-11
+  finish: 24-Jan-12
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-11
+end test
+
+test period --now 2024/06/15 "november"
+--- Period expression tokens ---
+TOK_A_MONTH: Nov
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in month Nov
+
+--- After stabilization ---
+   range: in month Nov
+   start: 23-Nov-01
+  finish: 23-Dec-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Nov-01
+end test

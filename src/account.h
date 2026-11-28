@@ -72,6 +72,14 @@ using namespace boost::placeholders;
 /// Map from UUID strings to lists of deferred postings awaiting that UUID.
 using deferred_posts_map_t = std::map<string, posts_list>;
 
+/// A lot an account holds, as --lot-matching sees it (xact.cc, match_lots()).
+struct account_lot_t {
+  commodity_t* commodity; ///< The lot: an annotated commodity.
+  amount_t quantity;      ///< Quantity held, lot annotation stripped; always positive.
+  date_t date;            ///< The lot's own date, else the account's first posting of it.
+  std::size_t sequence;   ///< Order in which the account first posted the lot.
+};
+
 /**
  * @brief A node in the hierarchical chart of accounts.
  *
@@ -109,26 +117,43 @@ public:
   std::optional<expr_t>
       value_expr; ///< Custom valuation expression overriding commodity-level valuation.
 
+  /**
+   * @brief Running total of `posts` that serves self_total().
+   *
+   * Sums, in file order, the posts up to and including `last`, both
+   * combined and real-only, with the latest date() among them.  It
+   * catches up lazily on the posts appended since, so add_post() pays
+   * nothing.  remove_post()/remove_posts() and a change of
+   * item_t::use_aux_date reset it.
+   */
+  struct running_total_t {
+    value_t total;                             ///< All posts' amounts.
+    value_t real_total;                        ///< Non-virtual posts' amounts.
+    optional<date_t> latest;                   ///< Greatest post->date() summed.
+    optional<posts_list::const_iterator> last; ///< Last post summed.
+    bool aux_dates = false;                    ///< item_t::use_aux_date when summed.
+
+    void reset() {
+      total = value_t();
+      real_total = value_t();
+      latest = std::nullopt;
+      last = std::nullopt;
+    }
+  };
+  mutable running_total_t running_total_;
+
   mutable string _fullname; ///< Cached colon-joined full name, computed lazily by fullname().
 
-  account_t(account_t* _parent = nullptr, const string& _name = "",
-            const optional<string>& _note = none)
+  explicit account_t(account_t* _parent = nullptr, const string& _name = "",
+                     const optional<string>& _note = std::nullopt)
       : supports_flags<>(), metadata_t(), scope_t(), parent(_parent), name(_name), note(_note),
         depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
     if (parent && parent->depth == std::numeric_limits<unsigned short>::max())
       throw std::runtime_error("Account hierarchy too deep");
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
-  // Note: copy is intentionally shallow — posts and deferred_posts are
-  // NOT copied. The copy shares the same parent and children map but
-  // has an independent (empty) posting history.  Metadata is copied via
-  // the metadata_t copy constructor.
-  account_t(const account_t& other)
-      : supports_flags<>(other.flags()), metadata_t(other), scope_t(), parent(other.parent),
-        name(other.name), note(other.note), depth(other.depth), accounts(other.accounts) {
-    TRACE_CTOR(account_t, "copy");
-  }
-  account_t& operator=(const account_t&) = default;
+  account_t(const account_t&) = delete;
+  account_t& operator=(const account_t&) = delete;
   ~account_t() override;
 
   string description() override { return string(_("account ")) + fullname(); }
@@ -215,18 +240,25 @@ public:
   void add_post(post_t* post);
 
   /**
-   * @brief Queue a posting to be applied when its UUID-matched transaction arrives.
+   * @brief Park a `<Account>` posting until its transaction's UUID recurs.
    *
-   * Used by automated transactions that reference a specific UUID.  The
-   * posting is held in deferred_posts until apply_deferred_posts() or
-   * UUID deduplication in add_xact() resolves it.
+   * Called by xact_base_t::finalize() for postings to `<Account>`
+   * (POST_DEFERRED) with a non-null amount, keyed by their transaction's
+   * id().  The posting is held in deferred_posts until
+   * journal_t::add_xact() sees a later transaction with the same UUID
+   * that posts to this account, or until apply_deferred_posts() runs at
+   * the end of the parse.
    */
   void add_deferred_post(const string& uuid, post_t* post);
 
   /** @brief Flush all deferred postings into their target accounts, recursively. */
   void apply_deferred_posts();
 
-  /** @brief Remove a posting from this account and invalidate cached iterators. */
+  /**
+   * @brief Remove a posting, which is in this account's list at most once,
+   * searching from the end where report-time copies sit, and invalidate
+   * cached iterators.
+   */
   bool remove_post(post_t* post);
 
   /**
@@ -236,6 +268,38 @@ public:
    * that removing many temporaries from an account is not quadratic.
    */
   void remove_posts(const std::set<post_t*>& doomed);
+
+  /**
+   * @brief The lots of @p referent this account holds a positive quantity of, oldest first.
+   *
+   * @p pending are postings of the transaction being finalized, not yet
+   * registered with the account, counted as though they were.  A lot is
+   * dated by its annotation, else by the earliest dated posting of it in
+   * the account; a lot with neither is left out.  Ties keep the order in
+   * which the account first posted the lots.  The first call builds
+   * lot_inventory from posts, and each call first folds in the posts
+   * appended since the last one.
+   */
+  std::vector<account_lot_t> held_lots(const commodity_t& referent,
+                                       const std::vector<const post_t*>& pending);
+
+  /// Lot holdings for --lot-matching, as held_lots() keeps them.
+  struct lot_inventory_t {
+    struct seen_t {
+      std::optional<date_t> first_date; ///< Earliest dated posting of the lot.
+      std::size_t sequence;             ///< Order in which the lot was first posted.
+    };
+    /// Every lot ever posted to the account, keyed by lot commodity.
+    std::unordered_map<const commodity_t*, seen_t> seen;
+    /// The nonzero holdings, keyed by referent, then by lot.
+    std::unordered_map<const commodity_t*, std::unordered_map<commodity_t*, amount_t>> open;
+    /// How many entries of posts, from the front, are folded in.
+    std::size_t counted = 0;
+  };
+
+  /// Lot holdings for --lot-matching, kept by held_lots();
+  /// remove_post() and remove_posts() drop them.
+  std::optional<lot_inventory_t> lot_inventory;
 
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }
@@ -281,8 +345,6 @@ public:
 
   [[nodiscard]] bool valid() const;
 
-  friend class journal_t;
-
   /**
    * @brief Extended data attached to an account during reporting.
    *
@@ -297,7 +359,7 @@ public:
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x04 ///< Account has at least one unbalanced virtual posting.
 #define ACCOUNT_EXT_AUTO_VIRTUALIZE 0x08  ///< Auto-virtualization is active for this account.
 #define ACCOUNT_EXT_VISITED 0x10  ///< Account was visited by the report walker (totals are valid).
-#define ACCOUNT_EXT_MATCHING 0x20 ///< Account matches the current report query.
+#define ACCOUNT_EXT_MATCHING 0x20 ///< Never set; retained for the Python API.
 #define ACCOUNT_EXT_TO_DISPLAY 0x40 ///< Account is selected for display in the current report.
 #define ACCOUNT_EXT_DISPLAYED 0x80  ///< Account has already been output in the current report.
 
@@ -357,14 +419,9 @@ public:
             posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
         TRACE_CTOR(account_t::xdata_t::details_t, "");
       }
-      // A copy copies nothing
-      details_t(const details_t&)
-          : calculated(false), gathered(false),
-
-            posts_count(0), posts_virtuals_count(0), posts_cleared_count(0), posts_last_7_count(0),
-            posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
-        TRACE_CTOR(account_t::xdata_t::details_t, "copy");
-      }
+      details_t(const details_t&) = delete;
+      // Assignment copies every member; report_statistics::clear() resets
+      // by assigning a fresh details_t.
       details_t& operator=(const details_t&) = default;
       ~details_t() noexcept { TRACE_DTOR(account_t::xdata_t::details_t); }
 
@@ -377,8 +434,10 @@ public:
        * Increments counters, extends date ranges, records timeclock
        * data, and (when @p gather_all is true) collects referenced
        * account names, payee names, and source file paths.
+       * @p today is the reference date for the recency counters; callers
+       * compute it once per gather.
        */
-      void update(post_t& post, bool gather_all = false);
+      void update(post_t& post, const date_t& today, bool gather_all = false);
     };
 
     details_t self_details;    ///< Statistics for this account's own postings only.
@@ -387,14 +446,14 @@ public:
                                ///< display filters).
 
     std::list<sort_value_t> sort_values; ///< Cached sort-key values for the accounts report.
+    /// True only while compare_items<account_t> evaluates this account's
+    /// sort key and its balance row shows the family total; get_amount()
+    /// then returns that total.
+    bool sort_amount_as_total = false;
 
     xdata_t() : supports_flags<>() { TRACE_CTOR(account_t::xdata_t, ""); }
-    xdata_t(const xdata_t& other)
-        : supports_flags<>(other.flags()), self_details(other.self_details),
-          family_details(other.family_details), sort_values(other.sort_values) {
-      TRACE_CTOR(account_t::xdata_t, "copy");
-    }
-    xdata_t& operator=(const xdata_t&) = default;
+    xdata_t(const xdata_t&) = delete;
+    xdata_t& operator=(const xdata_t&) = delete;
     ~xdata_t() noexcept { TRACE_DTOR(account_t::xdata_t); }
   };
 
@@ -419,7 +478,7 @@ public:
   void clear_display_state();
   xdata_t& xdata() {
     if (!xdata_)
-      xdata_ = xdata_t();
+      xdata_.emplace();
     return *xdata_;
   }
   const xdata_t& xdata() const {
@@ -439,24 +498,28 @@ public:
    * @param real_only  If true, return only the non-virtual total.
    * @param expr       Optional valuation expression applied to each posting.
    */
-  value_t amount(const optional<bool> real_only = false,
-                 const optional<expr_t&>& expr = none) const;
+  value_t amount(bool real_only = false, expr_t* expr = nullptr) const;
 
   /**
-   * @brief Unconditional sum of all posting amounts (ignores visit flags).
+   * @brief Sum of the account's own postings (ignores visit flags).
    *
    * Unlike amount(), this sums every posting in the account regardless
-   * of whether it was visited by the reporting pipeline.  Useful for
-   * balance assertions during parsing.
+   * of whether it was visited by the reporting pipeline: only the real
+   * ones when @p real_only, and only those whose date() is on or before
+   * @p cutoff when one is given.  Each entry of `posts` counts once, and
+   * every posting is registered there once.  The sum is answered from
+   * `running_total_` unless a posting dated after the cutoff exists, in
+   * which case the account is rescanned.  Balance assertions and
+   * assignments use it while parsing.
    */
-  value_t self_total(bool real_only = false) const;
+  value_t self_total(bool real_only = false, const optional<date_t>& cutoff = std::nullopt) const;
 
   /**
    * @brief Recursive family total: this account's amount() plus all children's total().
    *
    * Cached via family_details.calculated to avoid redundant tree walks.
    */
-  value_t total(const optional<expr_t&>& expr = none) const;
+  value_t total(expr_t* expr = nullptr) const;
 
   /**
    * @brief Lazily gather and return statistics for this account's own postings.
@@ -472,7 +535,14 @@ public:
 
   bool has_xflags(xdata_t::flags_t flags) const { return xdata_ && xdata_->has_flags(flags); }
   bool children_with_xdata() const;
-  std::size_t children_with_flags(xdata_t::flags_t flags) const;
+  /**
+   * @brief Count the children that carry @p flags or have a descendant that
+   * does, stopping once the count reaches @p limit (pass 1 to ask whether
+   * any does).
+   */
+  std::size_t
+  children_with_flags(xdata_t::flags_t flags,
+                      std::size_t limit = std::numeric_limits<std::size_t>::max()) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);
@@ -481,10 +551,11 @@ std::ostream& operator<<(std::ostream& out, const account_t& account);
 void put_account(property_tree::ptree& pt, const account_t& acct,
                  const function<bool(const account_t&)>& pred);
 
-/// Comparator for ordering accounts by full name in std::map/std::set.
+/// Orders account pointers by full name, for std::map/std::set keyed by
+/// account_t*.
 struct account_compare {
-  bool operator()(const account_t& lhs, const account_t& rhs) const {
-    return (lhs.fullname().compare(rhs.fullname()) < 0);
+  bool operator()(const account_t* lhs, const account_t* rhs) const {
+    return lhs->fullname() < rhs->fullname();
   }
 };
 

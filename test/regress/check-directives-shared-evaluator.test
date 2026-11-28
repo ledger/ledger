@@ -1,0 +1,27 @@
+; Account-scoped `check`/`assert` sub-directives and `= expr` automated
+; transactions run their expressions through one evaluator.  Both must
+; see the primary date while --effective is in force (the #2945 rule),
+; and both report a failed check with the transaction's position and the
+; check's own position.
+
+account Expenses:Food
+    assert aux_date != date
+    check amount < $50
+
+= expr "account =~ /^Expenses:Food$/"
+    assert aux_date != date
+    check amount < $40
+
+2024/01/05=2024/02/01 * Grocer
+    Expenses:Food                $60.00
+    Assets:Cash
+
+test reg --effective
+24-Feb-01 Grocer                Expenses:Food                $60.00       $60.00
+                                Assets:Cash                 $-60.00            0
+__ERROR__
+Warning: "$FILE", line 15: Transaction check failed: (amount < {$40.00})
+  (check expression at "$FILE", line 11)
+Warning: "$FILE", line 15: Transaction check failed: (amount < {$50.00})
+  (check expression at "$FILE", line 7)
+end test

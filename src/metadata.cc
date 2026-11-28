@@ -32,24 +32,8 @@
 #include <system.hh>
 
 #include "metadata.h"
-#include "ptree.h"
 
 namespace ledger {
-
-namespace {
-/**
- * @brief Case-insensitive ordering for metadata tag names.
- *
- * Used as the comparator for metadata_t::string_map so that lookups
- * by exact string are case-insensitive: a tag set as "Payee" can be
- * retrieved via has_tag("payee") or get_tag("PAYEE").
- */
-struct CaseInsensitiveKeyCompare {
-  bool operator()(const string& s1, const string& s2) const {
-    return boost::algorithm::ilexicographical_compare(s1, s2);
-  }
-};
-} // namespace
 
 bool metadata_t::has_tag(const string& tag, bool) const {
   DEBUG("metadata", "Checking if holder has tag: " << tag);
@@ -73,12 +57,9 @@ bool metadata_t::has_tag(const mask_t& tag_mask, const std::optional<mask_t>& va
                          bool) const {
   if (metadata) {
     for (const string_map::value_type& data : *metadata) {
-      if (tag_mask.match(data.first)) {
-        if (!value_mask)
-          return true;
-        else if (data.second.first)
-          return value_mask->match(data.second.first->to_string());
-      }
+      if (tag_mask.match(data.first) &&
+          (!value_mask || (data.second.first && value_mask->match(data.second.first->to_string()))))
+        return true;
     }
   }
   return false;
@@ -114,7 +95,7 @@ metadata_t::string_map::iterator metadata_t::set_tag(const string& tag,
   assert(!tag.empty());
 
   if (!metadata)
-    metadata = string_map(CaseInsensitiveKeyCompare());
+    metadata.emplace();
 
   DEBUG("metadata", "Setting tag '" << tag << "' to value '"
                                     << (value ? *value : string_value("<none>")) << "'");
@@ -134,8 +115,9 @@ metadata_t::string_map::iterator metadata_t::set_tag(const string& tag,
   return i;
 }
 
-void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_t& self_scope,
-                                     bool overwrite_existing) {
+std::vector<metadata_t::parsed_tag_t> metadata_t::scan_metadata_tags(const char* p) {
+  std::vector<parsed_tag_t> found;
+
   // Skip any additional leading `;` characters (with interleaved whitespace).
   // The first `;` has already been consumed by the caller, but comments
   // written as `;;Key: value` or `;  ;Key: value` would otherwise see the
@@ -144,13 +126,11 @@ void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_
     ++p;
 
   if (!std::strchr(p, ':'))
-    return;
+    return found;
 
   string str(p);
   string::size_type pos = 0;
 
-  string tag;
-  bool by_value = false;
   bool first = true;
 
   while (pos < str.length()) {
@@ -173,85 +153,88 @@ void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_
       std::vector<string> tag_names;
       boost::split(tag_names, tag_str, boost::is_any_of(":"));
       for (const string& tag_name : tag_names) {
-        if (!tag_name.empty()) {
-          string_map::iterator i = set_tag(tag_name, std::nullopt, overwrite_existing);
-          i->second.second = true;
-        }
+        if (!tag_name.empty())
+          found.push_back({tag_name, std::nullopt, false});
       }
     } else if (first && token[token.length() - 1] == ':') { // a metadata setting
+      bool by_value = false;
       std::size_t index = 1;
       if (token[token.length() - 2] == ':') {
         by_value = true;
         index = 2;
       }
-      tag = token.substr(0, token.length() - index);
-
-      string_map::iterator i;
-      string field(p + end); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string field(p + end);
       trim(field);
-      if (by_value) {
-        bind_scope_t bound_scope(outer_scope, self_scope);
-        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
-      } else {
-        i = set_tag(tag, string_value(field), overwrite_existing);
-      }
-      i->second.second = true;
+      found.push_back({token.substr(0, token.length() - index), field, by_value});
       break;
     }
     first = false;
     pos = end;
   }
+  return found;
 }
 
-value_t metadata_has_tag(metadata_t& target, call_scope_t& args) {
-  if (args.size() == 1) {
-    if (args[0].is_string())
-      return target.has_tag(args.get<string>(0));
-    else if (args[0].is_mask())
-      return target.has_tag(args.get<mask_t>(0));
-    else
-      throw_(std::runtime_error,
-             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
-  } else if (args.size() == 2) {
-    if (args[0].is_mask() && args[1].is_mask())
-      return target.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-    else
-      throw_(std::runtime_error,
-             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
-                 args[0].label() % args[1].label());
-  } else if (args.size() == 0) {
+void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_t& self_scope,
+                                     bool overwrite_existing) {
+  for (const parsed_tag_t& t : scan_metadata_tags(p)) {
+    string_map::iterator i;
+    if (!t.value) {
+      i = set_tag(t.name, std::nullopt, overwrite_existing);
+    } else if (t.by_value) {
+      bind_scope_t bound_scope(outer_scope, self_scope);
+      i = set_tag(t.name, expr_t(*t.value).calc(bound_scope), overwrite_existing);
+    } else {
+      i = set_tag(t.name, string_value(*t.value), overwrite_existing);
+    }
+    i->second.second = true;
+  }
+}
+
+namespace {
+
+/**
+ * @brief Validate a `has_tag(...)` / `tag(...)` call and hand it to a lookup.
+ *
+ * The call takes a tag name or mask, optionally followed by a value mask.
+ * @p lookup is called as lookup(string), lookup(mask_t) or
+ * lookup(mask_t, std::optional<mask_t>); any other shape throws.
+ */
+template <typename F>
+value_t call_with_tag_args(call_scope_t& args, F&& lookup) {
+  switch (args.size()) {
+  case 0:
     throw_(std::runtime_error, _("Too few arguments to function"));
-  } else {
+  case 1:
+    if (args[0].is_string())
+      return lookup(args.get<string>(0));
+    if (args[0].is_mask())
+      return lookup(args.get<mask_t>(0));
+    throw_(std::runtime_error,
+           _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
+  case 2:
+    if (args[0].is_mask() && args[1].is_mask())
+      return lookup(args.get<mask_t>(0), std::optional<mask_t>(args.get<mask_t>(1)));
+    throw_(std::runtime_error,
+           _f("Expected masks for arguments 1 and 2, but received %1% and %2%") % args[0].label() %
+               args[1].label());
+  default:
     throw_(std::runtime_error, _("Too many arguments to function"));
   }
-  return false;
+}
+
+} // namespace
+
+value_t metadata_has_tag(metadata_t& target, call_scope_t& args) {
+  // has_tag, not get_tag: a valueless tag is present but has no value.
+  return call_with_tag_args(args,
+                            [&](const auto&... a) -> value_t { return target.has_tag(a...); });
 }
 
 value_t metadata_get_tag(metadata_t& target, call_scope_t& args) {
-  std::optional<value_t> val;
-
-  if (args.size() == 1) {
-    if (args[0].is_string())
-      val = target.get_tag(args.get<string>(0));
-    else if (args[0].is_mask())
-      val = target.get_tag(args.get<mask_t>(0));
-    else
-      throw_(std::runtime_error,
-             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
-  } else if (args.size() == 2) {
-    if (args[0].is_mask() && args[1].is_mask())
-      val = target.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-    else
-      throw_(std::runtime_error,
-             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
-                 args[0].label() % args[1].label());
-  } else if (args.size() == 0) {
-    throw_(std::runtime_error, _("Too few arguments to function"));
-  } else {
-    throw_(std::runtime_error, _("Too many arguments to function"));
-  }
-
-  return val ? *val : NULL_VALUE;
+  return call_with_tag_args(args, [&](const auto&... a) -> value_t {
+    std::optional<value_t> val = target.get_tag(a...);
+    return val ? *val : NULL_VALUE;
+  });
 }
 
 void put_metadata(property_tree::ptree& st, const metadata_t::string_map& metadata) {

@@ -1,0 +1,49 @@
+; --historical (-H) nails each element of an (amount, cost) pair to its own
+; market value at the posting's date.  Before the fix, nail_down passed the
+; whole market sequence with each element and failed with "Cannot convert a
+; sequence to an amount".  The AAPL lot is bought at its own price, so its
+; historical gain is zero.  The MSFT purchase uses a virtual cost (@), which
+; records no price, so on 2024/03/01 MSFT is still worth the $60 of the
+; 2024/01/01 price: 5 MSFT are worth $300 against a $250 cost, a $50 gain.
+; Pairing the cost with the amount's market value would show 0 instead.
+
+P 2024/01/01 MSFT $60
+
+2024/01/01 Buy AAPL
+    Assets:Broker    10 AAPL {$100}
+    Assets:Cash     $-1000
+
+2024/03/01 Buy MSFT
+    Assets:Broker    5 MSFT (@) $50
+    Assets:Cash     $-250
+
+P 2024/02/01 AAPL $120
+P 2024/04/01 MSFT $70
+
+test bal -G -H --empty
+                 $50  Assets
+                 $50    Broker
+                   0    Cash
+--------------------
+                 $50
+end test
+
+test bal --plopen -H --empty
+                 $50  Assets
+                 $50    Broker
+                   0    Cash
+--------------------
+                 $50
+end test
+
+test reg -G -H --empty
+24-Jan-01 Buy AAPL              Assets:Broker                     0            0
+                                Assets:Cash                       0            0
+24-Mar-01 Buy MSFT              Assets:Broker                   $50          $50
+                                Assets:Cash                       0          $50
+end test
+
+; Without -H the gain is valued at the latest prices.
+test bal -G
+                $300  Assets:Broker
+end test

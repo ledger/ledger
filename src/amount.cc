@@ -86,7 +86,6 @@ bool amount_t::stream_fullstrings = false;
 /*  Internal storage: GMP temporaries and copy-on-write bigint_t        */
 /*----------------------------------------------------------------------*/
 
-#if !defined(THREADSAFE)
 // These global temporaries are pre-initialized for the sake of
 // efficiency, and are reused over and over again.
 // TODO: These globals are not thread-safe. Use thread_local when
@@ -94,10 +93,6 @@ bool amount_t::stream_fullstrings = false;
 static mpz_t temp;
 static mpq_t tempq;
 static mpfr_t tempf;
-static mpfr_t tempfb;
-static mpfr_t tempfnum;
-static mpfr_t tempfden;
-#endif
 
 /**
  * @brief Copy-on-write storage wrapper around a GMP rational (mpq_t).
@@ -117,15 +112,18 @@ static mpfr_t tempfden;
  *                  (see @c amount_t::_dup).
  *
  * Two flags control special behavior:
- *   - @c BIGINT_BULK_ALLOC -- the object lives inside a bulk memory
- *     pool and must not be freed with @c delete.
  *   - @c BIGINT_KEEP_PREC  -- the stored precision should be used for
  *     display rather than the commodity's default precision.  This is
  *     set when an amount is parsed with PARSE_NO_MIGRATE or after an
  *     explicit @c unround() call.
+ *   - @c BIGINT_COST_PREC  -- set by set_cost_precision() on an amount
+ *     inferred from a cost (xact.cc).  When the commodity's display
+ *     precision would show the amount as zero, or the commodity has no
+ *     precision yet, is_zero() and print() use the stored precision
+ *     instead (#1692).  operator+= and operator-= clear it on their
+ *     result (#717).
  */
 struct amount_t::bigint_t : public flags::supports_flags<> {
-#define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC 0x02
 #define BIGINT_COST_PREC 0x04
 
@@ -140,9 +138,7 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
     mpq_init(val);
     TRACE_CTOR(bigint_t, "");
   }
-  bigint_t(const bigint_t& other)
-      : supports_flags<>(static_cast<uint_least8_t>(other.flags() & ~BIGINT_BULK_ALLOC)),
-        prec(other.prec), refc(1) {
+  bigint_t(const bigint_t& other) : supports_flags<>(other.flags()), prec(other.prec), refc(1) {
     mpq_init(val);
     mpq_set(val, other.val);
     TRACE_CTOR(bigint_t, "copy");
@@ -159,9 +155,8 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
       return false;
     }
-    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
-      DEBUG("ledger.validate",
-            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
+    if (flags() & ~(BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: flags() & ~(KEEP_PREC | COST_PREC)");
       return false;
     }
     return true;
@@ -176,44 +171,107 @@ bool amount_t::is_initialized = false;
 
 namespace {
 
-/// Scratch integers for stream_out_mpq() (its exact path and the
-/// time-colon minutes), initialized by amount_t::initialize() alongside the
-/// other GMP temporaries.
+/// Scratch integers for format_mpq_exact(), within_half_unit() and the
+/// time-colon minutes of stream_out_mpq(), initialized by
+/// amount_t::initialize() alongside the other GMP temporaries.  None of
+/// these users calls another while holding a value in them.
 mpz_t out_scale;
 mpz_t out_quot;
 mpz_t out_rem;
 
 /**
- * @brief Render @p quant with exactly @p precision decimals, rounding the
- * exact rational half away from zero, into @p digits.
+ * @brief Set @p quot to @p num / @p den rounded to the nearest integer,
+ * ties away from zero: the single tie rule of Ledger.
  *
- * Returns false and leaves @p digits alone when the value is an exact tie
- * at that precision (the discarded part is exactly one half unit).  For a
- * tie the caller keeps the historical MPFR rendering, which rounds a
- * binary approximation and so may go either way, and the output stays
- * what Ledger has always printed.  Every other value takes this exact,
- * allocation-free route; the two renderings agree up to about 230
- * decimals, beyond which the approximation's own digits used to show
- * through.  Like MPFR's "%f", a negative value that rounds to zero keeps
- * its sign ("-0.00").
+ * @p rem is scratch.  @p den must be positive.  @p quot may alias @p num,
+ * because the sign is taken from the remainder (with truncating division
+ * the remainder carries the dividend's sign whenever it is nonzero);
+ * neither may alias @p den.  Used by both format_mpq_exact() and, through
+ * round_quantity(), amount_t::in_place_roundto(), so a displayed figure
+ * always equals its roundto().
  */
-bool format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t precision) {
+void round_quotient_half_away(mpz_ptr quot, mpz_ptr rem, mpz_srcptr num, mpz_srcptr den) {
+  mpz_tdiv_qr(quot, rem, num, den);
+  const int sign = mpz_sgn(rem);
+  if (sign == 0)
+    return;
+  mpz_abs(rem, rem);
+  mpz_mul_2exp(rem, rem, 1);
+  if (mpz_cmp(rem, den) >= 0) { // half a unit or more: away from zero
+    if (sign < 0)
+      mpz_sub_ui(quot, quot, 1);
+    else
+      mpz_add_ui(quot, quot, 1);
+  }
+}
+
+/**
+ * @brief Whether @p quant lies within half a unit of zero at @p places
+ * decimals, an exact half included: the tolerance a transaction may leave
+ * over and still balance (regress/1765.test).
+ */
+bool within_half_unit(mpq_srcptr quant, amount_t::precision_t places) {
+  mpz_ui_pow_ui(out_scale, 10, places);
+  mpz_mul(out_quot, mpq_numref(quant), out_scale);
+  mpz_abs(out_quot, out_quot);
+  mpz_mul_2exp(out_quot, out_quot, 1);
+  return mpz_cmp(out_quot, mpq_denref(quant)) <= 0;
+}
+
+/// How round_quantity() settles the digits it drops.
+enum class rounding_t { toward_zero, half_away_from_zero };
+
+/**
+ * @brief Round @p quant in place to @p places decimals, toward zero or
+ * half away from zero as @p mode says.
+ *
+ * Zero @p places rounds to an integer; negative @p places rounds to
+ * tens, hundreds, and so on.  The integer division is mpz_tdiv_q() or
+ * round_quotient_half_away(), the one tie rule Ledger's printer also
+ * uses.  The file-scope temp holds 10^|places| and tempq's numerator and
+ * denominator are the quotient and remainder scratch, so @p quant must
+ * not be tempq.
+ */
+void round_quantity(mpq_ptr quant, int places, rounding_t mode) {
+  mpz_t& scale(temp);
+  if (places)
+    mpz_ui_pow_ui(scale, 10, labs(places));
+
+  if (places > 0) {
+    mpz_mul(mpq_numref(quant), mpq_numref(quant), scale);
+  } else if (places < 0) {
+    mpz_mul(mpq_denref(quant), mpq_denref(quant), scale);
+  }
+
+  auto whole(mpq_numref(tempq));
+  if (mode == rounding_t::toward_zero)
+    mpz_tdiv_q(whole, mpq_numref(quant), mpq_denref(quant));
+  else
+    round_quotient_half_away(whole, mpq_denref(tempq), mpq_numref(quant), mpq_denref(quant));
+
+  if (places > 0) {
+    mpq_set_num(quant, whole);
+    mpq_set_den(quant, scale);
+    mpq_canonicalize(quant);
+  } else if (places == 0) {
+    mpq_set_z(quant, whole);
+  } else {
+    mpq_set_ui(quant, 0, 1);
+    mpz_mul(mpq_numref(quant), whole, scale);
+  }
+}
+
+/**
+ * @brief Render @p quant with exactly @p precision decimals into
+ * @p digits, rounding the exact rational to nearest with ties away from
+ * zero (round_quotient_half_away()), the rule roundto() and --round use.
+ *
+ * A negative value that rounds to zero keeps its sign ("-0.00").
+ */
+void format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t precision) {
   mpz_ui_pow_ui(out_scale, 10, precision);
   mpz_mul(out_quot, mpq_numref(quant), out_scale);
-  mpz_tdiv_qr(out_quot, out_rem, out_quot, mpq_denref(quant));
-  if (mpz_sgn(out_rem) != 0) {
-    mpz_abs(out_rem, out_rem);
-    mpz_mul_2exp(out_rem, out_rem, 1);
-    const int cmp = mpz_cmp(out_rem, mpq_denref(quant));
-    if (cmp == 0)
-      return false;
-    if (cmp > 0) {
-      if (mpz_sgn(mpq_numref(quant)) < 0)
-        mpz_sub_ui(out_quot, out_quot, 1);
-      else
-        mpz_add_ui(out_quot, out_quot, 1);
-    }
-  }
+  round_quotient_half_away(out_quot, out_rem, out_quot, mpq_denref(quant));
 
   // mpz_get_str wants room for the digits, a sign and the terminator.
   char stack_buf[64];
@@ -245,46 +303,6 @@ bool format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t pr
     digits += '.';
     digits.append(p + (len - precision), precision);
   }
-  return true;
-}
-
-/**
- * @brief The historical MPFR rendering of @p quant to @p precision
- * decimals: convert numerator and denominator to floating-point values a
- * few hundred bits wider than they need, divide, and let MPFR round the
- * quotient to the requested decimals.
- *
- * Used for exact ties (see format_mpq_exact) and for rounding modes other
- * than GMP_RNDN.
- */
-std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_rnd_t rnd) {
-  mp_prec_t num_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_numref(quant), 2));
-  num_prec += amount_t::extend_by_digits * 64;
-  if (num_prec < MPFR_PREC_MIN)
-    num_prec = MPFR_PREC_MIN;
-  DEBUG("amount.convert", "num prec = " << num_prec);
-
-  mpfr_set_prec(tempfnum, num_prec);
-  mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
-
-  mp_prec_t den_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_denref(quant), 2));
-  den_prec += amount_t::extend_by_digits * 64;
-  if (den_prec < MPFR_PREC_MIN)
-    den_prec = MPFR_PREC_MIN;
-  DEBUG("amount.convert", "den prec = " << den_prec);
-
-  mpfr_set_prec(tempfden, den_prec);
-  mpfr_set_z(tempfden, mpq_denref(quant), rnd);
-
-  mpfr_set_prec(tempfb, num_prec + den_prec);
-  mpfr_div(tempfb, tempfnum, tempfden, rnd);
-
-  char* buf = nullptr;
-  if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
-    throw_(amount_error, _("Cannot output amount to a floating-point representation"));
-  std::string result(buf);
-  mpfr_free_str(buf);
-  return result;
 }
 
 /**
@@ -302,8 +320,7 @@ std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_r
  *     instead of 1.50h).
  *
  * The digits come from format_mpq_exact(), exact integer arithmetic on
- * the rational, except for exact ties and for rounding modes other than
- * GMP_RNDN, which format_mpq_mpfr() renders as before; the separators
+ * the rational rounded half away from zero; the separators
  * and the time-colon conversion are then applied to that string.
  *
  * @param out        Output stream to write the formatted number to.
@@ -313,13 +330,11 @@ std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_r
  *                   decimal places are stripped.  A value of -1 (the
  *                   default) preserves all trailing zeros up to
  *                   @a precision.
- * @param rnd        MPFR rounding mode (default: round to nearest).
  * @param comm       Optional commodity reference whose display flags
  *                   control thousands separators and decimal style.
  */
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
-                    int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
-                    const optional<commodity_t&>& comm = none) {
+                    int zeros_prec = -1, const commodity_t* comm = nullptr) {
 #if DEBUG_ON
   IF_DEBUG("amount.convert") {
     char* tbuf = mpq_get_str(nullptr, 10, quant);
@@ -329,8 +344,7 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
 #endif
 
   std::string digits;
-  if (rnd != GMP_RNDN || !format_mpq_exact(digits, quant, precision))
-    digits = format_mpq_mpfr(quant, precision, rnd);
+  format_mpq_exact(digits, quant, precision);
 
   DEBUG("amount.convert", "rendered = " << digits << " (precision " << precision << ", zeros_prec "
                                         << zeros_prec << ")");
@@ -355,6 +369,51 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
     return;
   }
 
+  const bool decimal_comma =
+      commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
+  const bool time_colon =
+      (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)) &&
+      (comm->symbol() == "h" || comm->symbol() == "m");
+
+  // Under time-colon notation the fraction becomes the next smaller time
+  // unit (0.50h -> 0:30h, meaning 30 min), rounded half up and padded with
+  // zeros to the width of the fraction.  This is done in GMP: --unround can
+  // show dozens of digits, more than a machine word holds.  The
+  // scratch integers of format_mpq_exact() are free again by now.  A
+  // fraction that rounds to 60 carries into the integer digits, which must
+  // happen before they are counted for digit grouping.
+  std::string minutes;
+  if (time_colon) {
+    const std::string::size_type point = digits.find('.');
+    if (point != std::string::npos) {
+      const std::string frac(digits, point + 1);
+      if (frac.empty())
+        mpz_set_ui(out_quot, 0);
+      else
+        mpz_set_str(out_quot, frac.c_str(), 10);
+      mpz_mul_ui(out_quot, out_quot, 60);
+      mpz_ui_pow_ui(out_scale, 10, frac.size());
+      mpz_fdiv_q_ui(out_rem, out_scale, 2);
+      mpz_add(out_quot, out_quot, out_rem);
+      mpz_fdiv_q(out_quot, out_quot, out_scale);
+      if (mpz_cmp_ui(out_quot, 60) == 0) {
+        mpz_set_ui(out_quot, 0);
+        std::string::size_type i = point;
+        while (i > 0 && digits[i - 1] == '9')
+          digits[--i] = '0';
+        if (i == 0 || digits[i - 1] == '-')
+          digits.insert(i, 1, '1');
+        else
+          ++digits[i - 1];
+      }
+      char* minutes_buf = mpz_get_str(nullptr, 10, out_quot);
+      minutes = minutes_buf;
+      std::free(minutes_buf);
+      if (minutes.size() < frac.size())
+        minutes.insert(0, frac.size() - minutes.size(), '0');
+    }
+  }
+
   int integer_digits = 0;
   if (comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
     // Count the number of integer digits
@@ -366,47 +425,14 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
     }
   }
 
-  const bool decimal_comma =
-      commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
-  const bool time_colon =
-      (("h" == comm->symbol() || "m" == comm->symbol()) &&
-       (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)));
-
   std::string result;
   result.reserve(digits.size() + 8);
 
   for (const char* p = digits.c_str(); *p; p++) {
     if (*p == '.') {
       if (time_colon) {
-        // Convert decimal fraction of hours/minutes to the next
-        // smaller time unit (e.g. 0.50h -> 0:30h, meaning 30 min).
         result += ':';
-        // Parse the fractional digits and convert them to minutes, rounding
-        // half up, in GMP: --unround can show dozens of digits, which used
-        // to overflow a machine word.  The scratch integers of
-        // format_mpq_exact() are free again by now.
-        const char* frac_start = p + 1;
-        const char* frac_end = frac_start;
-        while (*frac_end >= '0' && *frac_end <= '9')
-          frac_end++;
-        const std::string frac(frac_start, frac_end);
-        if (frac.empty())
-          mpz_set_ui(out_quot, 0);
-        else
-          mpz_set_str(out_quot, frac.c_str(), 10);
-        mpz_mul_ui(out_quot, out_quot, 60);
-        mpz_ui_pow_ui(out_scale, 10, frac.size());
-        mpz_fdiv_q_ui(out_rem, out_scale, 2);
-        mpz_add(out_quot, out_quot, out_rem);
-        mpz_fdiv_q(out_quot, out_quot, out_scale);
-        char* minutes_buf = mpz_get_str(nullptr, 10, out_quot);
-        const std::string minutes_str(minutes_buf);
-        std::free(minutes_buf);
-        // Use the same number of digits as the original fraction, but at
-        // least enough to represent the minutes value.
-        if (minutes_str.size() < frac.size())
-          result.append(frac.size() - minutes_str.size(), '0');
-        result += minutes_str;
+        result += minutes;
         break; // fractional part fully handled
       } else if (decimal_comma) {
         result += ',';
@@ -442,8 +468,9 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
 /**
  * @brief Initialize the GMP/MPFR temporary variables and commodity pool.
  *
- * Must be called once at program startup before any amount_t objects
- * are created.  Sets up the reusable GMP/MPFR temporaries and creates
+ * Must be called before any amount_t objects are created; does nothing
+ * if already initialized.  set_session_context() calls it each time a
+ * session becomes current.  Sets up the reusable GMP/MPFR temporaries and creates
  * the global commodity pool with built-in commodities ("s" for seconds,
  * "%" for percentiles).
  */
@@ -455,24 +482,23 @@ void amount_t::initialize() {
     mpz_init(out_quot);
     mpz_init(out_rem);
     mpfr_init(tempf);
-    mpfr_init(tempfb);
-    mpfr_init(tempfnum);
-    mpfr_init(tempfden);
 
     commodity_pool_t::current_pool.reset(new commodity_pool_t);
 
-    // Add time commodity conversions, so that timelogs may be parsed
-    // in terms of seconds, but reported as minutes or hours.
+    // The seconds commodity, in which timelogs are parsed;
+    // set_session_context() adds the minute and hour conversions to it.
     if (commodity_t* commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
     else
       assert(false);
 
     // Add a "percentile" commodity
-    if (commodity_t* commodity = commodity_pool_t::current_pool->create("%"))
+    if (commodity_t* commodity = commodity_pool_t::current_pool->create("%")) {
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-    else
+      commodity_pool_t::current_pool->percent_commodity = commodity;
+    } else {
       assert(false);
+    }
 
     is_initialized = true;
   }
@@ -481,8 +507,9 @@ void amount_t::initialize() {
 /**
  * @brief Release all GMP/MPFR temporaries and destroy the commodity pool.
  *
- * Called once at program exit.  After this call, no amount_t operations
- * are valid.
+ * Does nothing if not initialized.  After this call, no amount_t
+ * operations are valid until initialize() runs again.
+ * set_session_context(nullptr) calls it.
  */
 void amount_t::shutdown() {
   if (is_initialized) {
@@ -492,9 +519,6 @@ void amount_t::shutdown() {
     mpz_clear(out_quot);
     mpz_clear(out_rem);
     mpfr_clear(tempf);
-    mpfr_clear(tempfb);
-    mpfr_clear(tempfnum);
-    mpfr_clear(tempfden);
 
     commodity_pool_t::current_pool.reset();
 
@@ -507,12 +531,11 @@ void amount_t::shutdown() {
 /*----------------------------------------------------------------------*/
 
 /**
- * @brief Share or deep-copy another amount's bigint_t into this one.
+ * @brief Share another amount's bigint_t.
  *
- * If the source bigint_t was allocated from a bulk pool (flagged with
- * BIGINT_BULK_ALLOC), a full deep copy is made because pool pointers
- * are not guaranteed to remain valid.  Otherwise, the reference count
- * on the shared bigint_t is simply incremented.
+ * Releases this amount's own bigint_t, then points at @p amt's and
+ * increments its reference count; the first mutation of either amount
+ * makes a private copy (see _dup).
  */
 void amount_t::_copy(const amount_t& amt) {
   VERIFY(amt.valid());
@@ -521,15 +544,9 @@ void amount_t::_copy(const amount_t& amt) {
     if (quantity)
       _release();
 
-    // Never maintain a pointer into a bulk allocation pool; such
-    // pointers are not guaranteed to remain.
-    if (amt.quantity->has_flags(BIGINT_BULK_ALLOC)) {
-      quantity = new bigint_t(*amt.quantity);
-    } else {
-      quantity = amt.quantity;
-      DEBUG("amount.refs", quantity << " refc++, now " << (quantity->refc + 1));
-      quantity->refc++;
-    }
+    quantity = amt.quantity;
+    DEBUG("amount.refs", quantity << " refc++, now " << (quantity->refc + 1));
+    quantity->refc++;
   }
   commodity_ = amt.commodity_;
 
@@ -575,8 +592,7 @@ void amount_t::_clear() {
 /**
  * @brief Decrement the bigint_t reference count, freeing if it reaches zero.
  *
- * Bulk-allocated bigint_t objects are destroyed in-place (destructor
- * only); heap-allocated ones are deleted outright.
+ * The last release deletes it.
  */
 void amount_t::_release() {
   VERIFY(valid());
@@ -584,10 +600,7 @@ void amount_t::_release() {
   DEBUG("amount.refs", quantity << " refc--, now " << (quantity->refc - 1));
 
   if (--quantity->refc == 0) {
-    if (quantity->has_flags(BIGINT_BULK_ALLOC))
-      quantity->~bigint_t();
-    else
-      checked_delete(quantity);
+    checked_delete(quantity);
     quantity = nullptr;
     commodity_ = nullptr;
   }
@@ -646,9 +659,10 @@ amount_t& amount_t::operator=(const amount_t& amt) {
  * @brief Three-way comparison of two amounts.
  *
  * Returns a negative value if *this < @a amt, zero if equal, and a
- * positive value if *this > @a amt.  Both amounts must be initialized
- * and share the same commodity (or both be uncommoditized); otherwise
- * an exception is thrown.
+ * positive value if *this > @a amt.  Both amounts must be initialized.
+ * An exception is thrown only when both amounts carry a commodity and
+ * the two differ; an uncommoditized amount compares with any commodity
+ * by quantity alone.
  *
  * The comparison is performed on the exact GMP rationals, so no
  * precision is lost regardless of display formatting.
@@ -697,34 +711,34 @@ bool amount_t::operator==(const amount_t& amt) const {
 /*----------------------------------------------------------------------*/
 
 /**
- * @brief Add another amount to this one in place.
- *
- * Both amounts must be initialized and share the same commodity.
- * The result's precision is the maximum of the two operands'
- * precisions, so that no decimal information is lost in the sum.
- *
- * Triggers copy-on-write via _dup() before mutating the GMP value.
+ * @brief The shared body of operator+= and operator-=: add @p amt to
+ * this amount, or subtract it when @p subtract is true, in place.
  */
-amount_t& amount_t::operator+=(const amount_t& amt) {
+amount_t& amount_t::add_or_subtract(const amount_t& amt, bool subtract) {
   VERIFY(amt.valid());
 
   if (!quantity || !amt.quantity) {
     if (quantity)
-      throw_(amount_error, _("Cannot add an uninitialized amount to an amount"));
+      throw_(amount_error, subtract ? _("Cannot subtract an uninitialized amount from an amount")
+                                    : _("Cannot add an uninitialized amount to an amount"));
     else if (amt.quantity)
-      throw_(amount_error, _("Cannot add an amount to an uninitialized amount"));
+      throw_(amount_error, subtract ? _("Cannot subtract an amount from an uninitialized amount")
+                                    : _("Cannot add an amount to an uninitialized amount"));
     else
-      throw_(amount_error, _("Cannot add two uninitialized amounts"));
+      throw_(amount_error, subtract ? _("Cannot subtract two uninitialized amounts")
+                                    : _("Cannot add two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
-    throw_(amount_error, _f("Adding amounts with different commodities: '%1%' != '%2%'") %
-                             commodity() % amt.commodity());
-  }
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity())
+    throw_(amount_error,
+           boost::format(subtract
+                             ? _("Subtracting amounts with different commodities: '%1%' != '%2%'")
+                             : _("Adding amounts with different commodities: '%1%' != '%2%'")) %
+               commodity() % amt.commodity());
 
   _dup();
 
-  mpq_add(MP(quantity), MP(quantity), MP(amt.quantity));
+  (subtract ? mpq_sub : mpq_add)(MP(quantity), MP(quantity), MP(amt.quantity));
 
   if (has_commodity() == amt.has_commodity())
     if (quantity->prec < amt.quantity->prec)
@@ -744,42 +758,28 @@ amount_t& amount_t::operator+=(const amount_t& amt) {
 }
 
 /**
+ * @brief Add another amount to this one in place.
+ *
+ * Both amounts must be initialized.  An exception is thrown only when
+ * both carry a commodity and the two differ; an uncommoditized amount
+ * adds to any commodity, and the result keeps this amount's commodity
+ * (or lack of one).  When both amounts carry a commodity, or neither
+ * does, the result's precision is the larger of the two; otherwise it
+ * keeps this amount's precision.
+ *
+ * Triggers copy-on-write via _dup() before mutating the GMP value.
+ */
+amount_t& amount_t::operator+=(const amount_t& amt) {
+  return add_or_subtract(amt, false);
+}
+
+/**
  * @brief Subtract another amount from this one in place.
  *
  * Same commodity and precision rules as operator+=.
  */
 amount_t& amount_t::operator-=(const amount_t& amt) {
-  VERIFY(amt.valid());
-
-  if (!quantity || !amt.quantity) {
-    if (quantity)
-      throw_(amount_error, _("Cannot subtract an amount from an uninitialized amount"));
-    else if (amt.quantity)
-      throw_(amount_error, _("Cannot subtract an uninitialized amount from an amount"));
-    else
-      throw_(amount_error, _("Cannot subtract two uninitialized amounts"));
-  }
-
-  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
-    throw_(amount_error, _f("Subtracting amounts with different commodities: '%1%' != '%2%'") %
-                             commodity() % amt.commodity());
-  }
-
-  _dup();
-
-  mpq_sub(MP(quantity), MP(quantity), MP(amt.quantity));
-
-  if (has_commodity() == amt.has_commodity())
-    if (quantity->prec < amt.quantity->prec)
-      quantity->prec = amt.quantity->prec;
-
-  // See the comment in operator+= -- BIGINT_COST_PREC must not
-  // propagate through arithmetic, or running-total residuals inherit
-  // it and surface as non-zero (issues #1692 / #717).
-  if (quantity->has_flags(BIGINT_COST_PREC))
-    quantity->drop_flags(BIGINT_COST_PREC);
-
-  return *this;
+  return add_or_subtract(amt, true);
 }
 
 /**
@@ -793,8 +793,9 @@ amount_t& amount_t::operator-=(const amount_t& amt) {
  * @c extend_by_digits, it is clamped to avoid unbounded growth in
  * long chains of multiplications.
  *
- * Special handling for the "%" commodity: multiplying by a percentage
- * amount divides by 100 so that "$1000 * 19%" yields "$190".
+ * The "%" commodity has no special meaning here: a price or a quantity
+ * in "%" multiplies at face value.  Value expressions read "%" as a
+ * fraction (expr_t::op_t::calc).
  *
  * @param amt              The multiplier amount.
  * @param ignore_commodity If true, do not propagate the multiplier's
@@ -818,29 +819,8 @@ amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity) {
   mpq_mul(MP(quantity), MP(quantity), MP(amt.quantity));
   quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec);
 
-  // If the multiplier has the "%" commodity, treat it as a fraction: divide
-  // the result by 100 so that e.g. "$1000 * 19%" yields "$190" rather than
-  // "$19000".  When both operands carry "%" the percentage semantics still
-  // apply (19% * 19% = 3.61%, not 361%).  In that case the result keeps the
-  // "%" commodity; otherwise the result keeps the commodity of *this.
-  if (amt.has_commodity() && amt.commodity().symbol() == "%") {
-    mpq_t hundred;
-    mpq_init(hundred);
-    mpq_set_ui(hundred, 100, 1);
-    mpq_div(MP(quantity), MP(quantity), hundred);
-    mpq_clear(hundred);
-    quantity->prec = static_cast<precision_t>(quantity->prec + 2);
-
-    // If *this had no commodity (or also had "%"), propagate "%" to result;
-    // otherwise keep *this's commodity (the "%" is consumed by the division).
-    if (!has_commodity() && !ignore_commodity)
-      commodity_ = amt.commodity_;
-    // If *this had a non-% commodity, leave commodity_ unchanged so the
-    // result keeps that commodity and the "%" is not propagated.
-  } else {
-    if (!has_commodity() && !ignore_commodity)
-      commodity_ = amt.commodity_;
-  }
+  if (!has_commodity() && !ignore_commodity)
+    commodity_ = amt.commodity_;
 
   if (has_commodity() && !keep_precision()) {
     precision_t comm_prec = commodity().precision();
@@ -859,8 +839,9 @@ amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity) {
  * captures fractional digits that arise from non-terminating decimals
  * (e.g. 1/3) while keeping the rational exact under the hood.
  *
- * If the divisor carries the "%" commodity, it is treated as a
- * fraction: dividing by 19% is equivalent to dividing by 0.19.
+ * The "%" commodity has no special meaning here: a price or a quantity
+ * in "%" divides at face value.  Value expressions read "%" as a
+ * fraction (expr_t::op_t::calc).
  *
  * As with multiplication, the result precision is clamped to
  * commodity precision + extend_by_digits when a commodity is present
@@ -889,30 +870,13 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
   _dup();
 
   // Increase the value's precision, to capture fractional parts after
-  // the divide.  Round up in the last position.
+  // the divide.  mpq_div is exact; only the recorded precision changes.
 
-  // If the divisor has the "%" commodity, treat it as a fraction: instead of
-  // dividing by e.g. 19 we divide by 0.19, which is equivalent to dividing
-  // by amt and then multiplying by 100.  So "$1190 / 19%" yields "$6263.16"
-  // (i.e. $1190 / 0.19).
-  if (amt.has_commodity() && amt.commodity().symbol() == "%") {
-    mpq_t hundred;
-    mpq_init(hundred);
-    mpq_set_ui(hundred, 100, 1);
-    mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
-    mpq_mul(MP(quantity), MP(quantity), hundred);
-    mpq_clear(hundred);
-    quantity->prec =
-        static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
-    // commodity_ is unchanged: *this keeps its own commodity; "%" is consumed.
-  } else {
-    mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
-    quantity->prec =
-        static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
+  mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
+  quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
 
-    if (!has_commodity())
-      commodity_ = amt.commodity_;
-  }
+  if (!has_commodity())
+    commodity_ = amt.commodity_;
 
   // If this amount has a commodity, and we're not dealing with plain
   // numbers, or internal numbers (which keep full precision at all
@@ -926,6 +890,25 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
   }
 
   return *this;
+}
+
+/**
+ * @brief The fraction a percentage denotes: 19% is 0.19.
+ *
+ * Returns the quantity divided by 100, without a commodity, at two more
+ * decimal places.  Value expressions use it to read "%" as a fraction
+ * (expr_t::op_t::calc).
+ */
+amount_t amount_t::percent_fraction() const {
+  if (!quantity)
+    throw_(amount_error, _("Cannot take the fraction of an uninitialized amount"));
+
+  amount_t fraction(number());
+  fraction._dup();
+  mpz_mul_ui(mpq_denref(MP(fraction.quantity)), mpq_denref(MP(fraction.quantity)), 100);
+  mpq_canonicalize(MP(fraction.quantity));
+  fraction.quantity->prec = static_cast<precision_t>(fraction.quantity->prec + 2);
+  return fraction;
 }
 
 /*----------------------------------------------------------------------*/
@@ -968,6 +951,32 @@ void amount_t::set_cost_precision(precision_t prec) {
   in_place_roundto(prec);
   quantity->prec = prec;
   quantity->add_flags(BIGINT_COST_PREC);
+}
+
+amount_t::precision_t amount_t::cost_display_precision() const {
+  const precision_t comm_prec = commodity().precision();
+  if (!quantity->has_flags(BIGINT_COST_PREC) || quantity->prec <= comm_prec)
+    return comm_prec;
+  if (comm_prec == 0)
+    return quantity->prec;
+  amount_t at_comm_prec(*this);
+  at_comm_prec.in_place_roundto(comm_prec);
+  return at_comm_prec.is_realzero() ? quantity->prec : comm_prec;
+}
+
+bool amount_t::set_precision_if_exact(precision_t prec) {
+  if (!quantity)
+    throw_(amount_error, _("Cannot set precision of an uninitialized amount"));
+
+  // The canonical value is exact at prec decimals when its denominator
+  // divides 10^prec.
+  mpz_ui_pow_ui(temp, 10, prec);
+  if (!mpz_divisible_p(temp, mpq_denref(MP(quantity))))
+    return false;
+
+  _dup();
+  quantity->prec = prec;
+  return true;
 }
 
 /**
@@ -1038,8 +1047,10 @@ void amount_t::in_place_round() {
  *
  * Unlike in_place_round() which only affects display, this function
  * actually rounds the underlying rational to the commodity's decimal
- * precision when the stored precision exceeds it.  Used to produce
- * amounts that match what the user would see on a bank statement.
+ * precision (half away from zero) when that precision is nonzero and
+ * the stored precision exceeds it.  It backs the roundto_commodity()
+ * value expression, which --round applies to each posting so that a sum
+ * matches a statement whose lines were each rounded to the cent.
  */
 void amount_t::in_place_round_to_commodity_precision() {
   if (!quantity)
@@ -1055,12 +1066,15 @@ void amount_t::in_place_round_to_commodity_precision() {
       return;
     }
     // A cleared keep_precision flag is a post-condition that we rounded to
-    // a meaningful commodity precision (the #1765 invariant: rounded(x)
-    // must not drift if the commodity widens later).  When comm_prec == 0
-    // there is no such precision to round to, so clearing the flag is
-    // unearned -- it would erase the value's actual fractional content,
-    // making a --basis cost like 20 ETH * `@ $5.025` = $100.500 render
-    // as $100.  Preserve the flag in that case (#3187).
+    // a meaningful commodity precision (the #1765 invariant: a rounded
+    // value must not drift if the commodity widens later).  When the
+    // commodity's precision is 0 (as for a $ seen only inside `@` price
+    // annotations) nothing was rounded, so clearing the flag is unearned:
+    // it would hide the value's fractional content, and --round --basis
+    // would show a cost of 20 * `@ $5.025` = $100.500 as $101.  Preserve
+    // the flag in that case (#3187).  This tests the stored precision
+    // alone.  The display-only rounded() behind --basis has a guard of its
+    // own in report_t::fn_rounded; the two sit on different paths.
     if (comm_prec == 0 && keep_precision() && quantity->prec > 0)
       return;
   }
@@ -1079,9 +1093,7 @@ void amount_t::in_place_round_to_commodity_precision() {
  * negative numbers it rounds toward zero (unlike floor which rounds
  * toward negative infinity).
  *
- * The implementation scales the rational's numerator (or denominator)
- * by 10^places, performs integer truncation via mpz_tdiv_q, then
- * reconstructs the rational at the target precision.
+ * Rounds toward zero at display_precision() through round_quantity().
  */
 void amount_t::in_place_truncate() {
   if (!quantity)
@@ -1091,35 +1103,7 @@ void amount_t::in_place_truncate() {
 
   _dup();
 
-  const int places = display_precision();
-
-  mpz_t& scale(temp);
-  if (places)
-    mpz_ui_pow_ui(scale, 10, labs(places));
-
-  // Scale the numerator or denominator so that the division below produces
-  // a result at the requested decimal precision.
-  if (places > 0) {
-    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
-  } else if (places < 0) {
-    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
-  }
-
-  // mpz_tdiv_q truncates towards zero -- exactly the semantics required.
-  // No rounding step; the remainder is simply discarded.
-  auto whole(mpq_numref(tempq));
-  mpz_tdiv_q(whole, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-
-  if (places > 0) {
-    mpq_set_num(MP(quantity), whole);
-    mpq_set_den(MP(quantity), scale);
-    mpq_canonicalize(MP(quantity));
-  } else if (places == 0) {
-    mpq_set_z(MP(quantity), whole);
-  } else {
-    mpq_set_ui(MP(quantity), 0, 1);
-    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
-  }
+  round_quantity(MP(quantity), display_precision(), rounding_t::toward_zero);
 
   DEBUG("amount.truncate", "Truncated = " << *this);
 }
@@ -1159,10 +1143,9 @@ void amount_t::in_place_ceiling() {
 /**
  * @brief Round to exactly @a places decimal digits, modifying the GMP value.
  *
- * Implements banker's rounding (round half away from zero) by scaling
- * the rational, extracting the integer quotient and remainder via
- * mpz_tdiv_qr, then adjusting the quotient when the remainder is at
- * least half the denominator.
+ * Rounds half away from zero (not banker's rounding) through
+ * round_quantity(), whose division is round_quotient_half_away(), the
+ * rule the printer uses too.
  *
  * @param places Number of decimal places to round to.  May be zero
  *               (round to integer) or negative (round to tens,
@@ -1174,39 +1157,16 @@ void amount_t::in_place_roundto(int places) {
 
   _dup();
 
-  mpz_t& scale(temp);
-  if (places)
-    mpz_ui_pow_ui(scale, 10, labs(places));
+  round_quantity(MP(quantity), places, rounding_t::half_away_from_zero);
+}
 
-  if (places > 0) {
-    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
-  } else if (places < 0) {
-    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
-  }
-
-  auto whole(mpq_numref(tempq));
-  auto reminder(mpq_denref(tempq));
-  mpz_tdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-  mpz_mul_2exp(reminder, reminder, 1);
-  mpz_abs(reminder, reminder);
-  const int rem_denom_cmp = mpz_cmp(reminder, mpq_denref(MP(quantity)));
-  if (rem_denom_cmp >= 0) {
-    if (mpz_sgn(mpq_numref(MP(quantity))) >= 0)
-      mpz_add_ui(whole, whole, 1);
-    else
-      mpz_sub_ui(whole, whole, 1);
-  }
-
-  if (places > 0) {
-    mpq_set_num(MP(quantity), whole);
-    mpq_set_den(MP(quantity), scale);
-    mpq_canonicalize(MP(quantity));
-  } else if (places == 0)
-    mpq_set_z(MP(quantity), whole);
-  else {
-    mpq_set_ui(MP(quantity), 0, 1);
-    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
-  }
+bool amount_t::in_place_round_unit_price(precision_t divisor_prec) {
+  if (!has_commodity() || !keep_precision())
+    return false;
+  amount_t exact(*this);
+  in_place_roundto(
+      boost::numeric_cast<int>(divisor_prec + commodity().precision() + extend_by_digits));
+  return *this != exact;
 }
 
 /**
@@ -1362,60 +1322,61 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
     if (has_commodity() && (in_terms_of || (!commodity().has_flags(COMMODITY_PRIMARY) &&
                                             !(commodity().has_flags(COMMODITY_NOMARKET) &&
                                               !commodity().has_flags(COMMODITY_BUILTIN))))) {
-      std::optional<price_point_t> point;
       const commodity_t* comm(in_terms_of);
-
-      if (has_annotation() && annotation().price) {
-        if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-          point = price_point_t();
-          point->price = *annotation().price;
-          DEBUG("commodity.prices.find", "amount_t::value: fixated price =  " << point->price);
-        } else if (!comm) {
-          comm = annotation().price->commodity_ptr();
-        }
-      }
+      const bool fixated = has_annotation() && annotation().price &&
+                           annotation().has_flags(ANNOTATION_PRICE_FIXATED);
+      if (!comm && !fixated && has_annotation() && annotation().price)
+        comm = annotation().price->commodity_ptr();
 
       if (comm && commodity().referent() == comm->referent())
         return with_commodity(comm->referent());
 
-      if (!point) {
-        point = commodity().find_price(comm, moment);
-
+      // annotated_commodity_t::find_price returns a fixated lot price as
+      // is; it establishes no market value, so it is never re-downloaded.
+      std::optional<price_point_t> point = commodity().find_price(comm, moment);
+      if (!fixated) {
         // Whether a price was found or not, check whether we should attempt
         // to download a price from the Internet.  This is done if (a) no
         // price was found, or (b) the price is "stale" according to the
         // setting of --price-exp.
         point = commodity().check_for_updated_price(point, moment, comm);
+      }
 
-        // If no price was found directly, walk the larger unit chain to find
-        // a price for an equivalent larger unit (issue #2017).  This handles
-        // chains such as A -> B -> C -> D when amounts are stored in the
-        // smallest unit (D) but a price is only defined for an intermediate
-        // unit such as B.  We scale the amount up to the larger unit before
-        // computing the price, then return the scaled price directly.
-        //
-        // Also handles the case where the target commodity is reachable via
-        // the larger() chain directly (e.g. -X h forces seconds to hours,
-        // even when the result is a fraction like 0.50h for 1800s).
-        if (!point && commodity().larger()) {
-          amount_t scaled(*this);
-          int depth = 0;
-          while (!point && scaled.commodity_ && scaled.commodity().larger()) {
-            if (++depth > 100) // safety net: break out of cyclic larger chains
-              break;
-            scaled /= scaled.commodity().larger()->number();
-            scaled.commodity_ = scaled.commodity().larger()->commodity_;
-            if (comm && scaled.commodity().referent() == comm->referent())
-              return scaled;
-            point = scaled.commodity().find_price(comm, moment);
-            point = scaled.commodity().check_for_updated_price(point, moment, comm);
-          }
-          if (point) {
-            amount_t price(point->price);
-            price.multiply(scaled, true);
-            price.in_place_round();
-            return price;
-          }
+      // If no price was found directly, walk the larger unit chain to find
+      // a price for an equivalent larger unit (issue #2017).  This handles
+      // chains such as A -> B -> C -> D when amounts are stored in the
+      // smallest unit (D) but a price is only defined for an intermediate
+      // unit such as B.  We scale the amount up to the larger unit before
+      // computing the price, then return the scaled price directly.
+      //
+      // Also handles the case where the target commodity is reachable via
+      // the larger() chain directly (e.g. -X h forces seconds to hours,
+      // even when the result is a fraction like 0.50h for 1800s).
+      //
+      // This walk is value()'s only route to a built-in unit conversion
+      // (set_session_context's parse_conversion calls for s/m/h): those
+      // add no edge to commodity_price_history.  A journal C directive
+      // also records a 1970 price edge (price_conversion_directive), so
+      // find_price() above may already have reached its larger unit.
+      // The depth guard stops a cyclic larger() chain.
+      if (!point && commodity().larger()) {
+        amount_t scaled(*this);
+        int depth = 0;
+        while (!point && scaled.commodity_ && scaled.commodity().larger()) {
+          if (++depth > 100) // safety net: break out of cyclic larger chains
+            break;
+          scaled /= scaled.commodity().larger()->number();
+          scaled.commodity_ = scaled.commodity().larger()->commodity_;
+          if (comm && scaled.commodity().referent() == comm->referent())
+            return scaled;
+          point = scaled.commodity().find_price(comm, moment);
+          point = scaled.commodity().check_for_updated_price(point, moment, comm);
+        }
+        if (point) {
+          amount_t price(point->price);
+          price.multiply(scaled, true);
+          price.in_place_round();
+          return price;
         }
       }
 
@@ -1459,71 +1420,38 @@ int amount_t::sign() const {
 }
 
 /**
- * @brief Test whether this amount is zero at its display precision.
+ * @brief Test whether this amount is zero at its display precision:
+ * within half a unit of zero there, an exact half included
+ * (within_half_unit()), so a transaction may leave that much over and
+ * still balance.
  *
- * An amount may be non-zero in its exact rational representation but
- * still display as zero when rounded to the commodity's precision.
- * For example, $0.001 with a 2-digit commodity displays as "$0.00"
- * and is considered zero by this test.
+ * For example, with a 2-digit commodity $0.001 and $0.005 are zero and
+ * $0.006 is not.  An exact half unit therefore counts as zero yet prints
+ * rounded away from zero when the value is not first simplified to zero:
+ * is_zero() is true for $0.005, which prints "$0.01".
  *
- * The check is optimized: if the numerator exceeds the denominator
- * the amount is obviously non-zero.  Otherwise, the amount is
- * rendered to a string at commodity precision and scanned for any
- * non-zero digit.
+ * The check is optimized: if the magnitude is at least one
+ * the amount is obviously non-zero; otherwise it is decided in exact
+ * rational arithmetic, independent of how the amount prints.
  */
 bool amount_t::is_zero() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine if an uninitialized amount is zero"));
 
   if (has_commodity()) {
-    // For amounts flagged with BIGINT_COST_PREC, print() may use
-    // quantity->prec as the effective display precision when the
-    // commodity's display precision would otherwise drop the value to
-    // zero on the page (or when the commodity has no established
-    // precision at all).  Mirror that here so inferred balancing
-    // postings whose value falls below the commodity's display
-    // precision are not silently classified as zero -- which would
-    // hide them from output and break the accounting equation (issue
-    // #1692).
-    precision_t check_prec = commodity().precision();
-    if (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec) {
-      // Widen the precision used for the zero-check whenever the
-      // commodity has no established precision (the user has expressed
-      // no expectation of display precision), or whenever the value
-      // would round to zero at the commodity's display precision (the
-      // case the original report describes).  In other situations the
-      // commodity's display precision has caught up to or covered the
-      // value's significant digits and is the right precision to use.
-      if (check_prec == 0) {
-        check_prec = quantity->prec;
-      } else {
-        amount_t at_comm_prec(*this);
-        at_comm_prec.in_place_roundto(check_prec);
-        if (at_comm_prec.is_realzero())
-          check_prec = quantity->prec;
-      }
-    }
+    // print() shows the amount at this precision; testing at it keeps a
+    // shown amount from counting as zero (#1692).
+    const precision_t check_prec = cost_display_precision();
 
     if (keep_precision() || quantity->prec <= check_prec) {
       return is_realzero();
     } else if (is_realzero()) {
       return true;
-    } else if (mpz_cmp(mpq_numref(MP(quantity)), mpq_denref(MP(quantity))) > 0) {
-      DEBUG("amount.is_zero", "Numerator is larger than the denominator");
+    } else if (mpz_cmpabs(mpq_numref(MP(quantity)), mpq_denref(MP(quantity))) >= 0) {
+      DEBUG("amount.is_zero", "Magnitude is at least one");
       return false;
     } else {
-      DEBUG("amount.is_zero", "We have to print the number to check for zero");
-
-      std::ostringstream out;
-      stream_out_mpq(out, MP(quantity), check_prec);
-
-      string output = out.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      if (!output.empty()) {
-        for (const char* p = output.c_str(); *p; p++)
-          if (*p != '0' && *p != '.' && *p != '-')
-            return false;
-      }
-      return true;
+      return within_half_unit(MP(quantity), check_prec);
     }
   }
   return is_realzero();
@@ -1548,6 +1476,9 @@ long amount_t::to_long() const {
 }
 
 bool amount_t::fits_in_long() const {
+  if (!quantity)
+    throw_(amount_error, _("Cannot determine if an uninitialized amount fits in a long"));
+
   mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
   return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }
@@ -1661,8 +1592,9 @@ void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags)
   } else if (c == '+') {
     in.get(); // consume unary '+'; value is positive by default
   }
-  READ_INTO(in, value, c,
-            std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
+  read_into(in, value, [](int ch) {
+    return std::isdigit(static_cast<unsigned char>(ch)) || ch == '.' || ch == ',' || ch == '\'';
+  });
 
   while (!value.empty() && !std::isdigit(static_cast<unsigned char>(value.back()))) {
     value.pop_back();
@@ -1706,11 +1638,17 @@ void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags)
  * @return true if an amount was successfully parsed, false only if
  *         PARSE_SOFT_FAIL is set and no quantity was found.
  */
-bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
+bool amount_t::parse(std::istream& in, const parse_flags_t& flags,
+                     std::optional<amount_t>* given_lot_total) {
   // The possible syntax for an amount is:
   //
-  //   [-]NUM[ ]SYM [@ AMOUNT]
-  //   SYM[ ][-]NUM [@ AMOUNT]
+  //   [-]NUM[ ]SYM [ANNOTATIONS]
+  //   SYM[ ][-]NUM [ANNOTATIONS]
+  //
+  // ANNOTATIONS are the lot details read by annotation_t::parse:
+  // {PRICE}, {=PRICE}, {{TOTAL}} or {{=TOTAL}}, [DATE], (TAG) and
+  // ((EXPR)).  An @ or @@ cost is not part of an amount; the textual
+  // reader parses it.
 
   string symbol;
   string quant;
@@ -1818,11 +1756,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   bool no_migrate_style = commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE);
   bool decimal_comma_style = (commodity_t::decimal_comma_by_default ||
                               commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
-#if 0
-  bool time_colon_style
-    = (commodity_t::time_colon_by_default ||
-       commodity().has_flags(COMMODITY_STYLE_TIME_COLON));
-#endif
+  // Set when the decimal comma came only from the comma heuristics below,
+  // not from the commodity, --decimal-comma, or a period.
+  bool decimal_comma_guessed = false;
 
   new_quantity->prec = 0;
 
@@ -1902,6 +1838,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
             throw_(amount_error, _("Incorrect use of thousand-mark comma"));
           } else {
             decimal_comma_style = true;
+            decimal_comma_guessed = true;
             no_more_commas = true;
             new_quantity->prec = decimal_offset;
             decimal_offset = 0;
@@ -1939,6 +1876,16 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     // is non-NULL.
     new_quantity->add_flags(BIGINT_KEEP_PREC);
   } else if (commodity_ && !no_migrate_style) {
+    // A decimal comma guessed from the digits alone must not overturn the
+    // decimal period this commodity has already been written with, unless
+    // the amount declares the style; a precision learned only from a price
+    // directive establishes nothing.
+    if (decimal_comma_guessed && last_period == string::npos &&
+        !flags.has_flags(PARSE_DECLARES_STYLE) && commodity().precision() > 0 &&
+        !commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE))
+      throw_(amount_error, _f("Ambiguous decimal comma: commodity %1% uses a decimal period") %
+                               commodity().symbol());
+
     commodity().add_flags(comm_flags);
 
     if (commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE) && new_quantity->prec > 0) {
@@ -2013,22 +1960,13 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   if (commodity_ && details) {
     if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
       assert(details.price);
+      // `details` is this parse's own annotation, not the pooled lot.
+      if (given_lot_total)
+        *given_lot_total = *details.price;
       *details.price /= this->abs();
-      // Normalize per-unit cost to a stable precision, matching the
-      // normalization in pool.cc::exchange().  The rounding precision is
-      // derived from the divisor (quantity) and cost commodity precision,
-      // deliberately excluding the dividend (total cost) precision.
-      // This ensures that {{$250}} and @@ $250.00 produce identical
-      // per-unit prices despite differing internal precision metadata
-      // (fixes #2948, #2975).
-      if (details.price->has_commodity() && details.price->keep_precision()) {
-        int round_prec = boost::numeric_cast<int>(
-            this->precision() + details.price->commodity().precision() + extend_by_digits);
-        amount_t exact(*details.price);
-        details.price->in_place_roundto(round_prec);
-        if (*details.price != exact)
-          details.add_flags(ANNOTATION_PRICE_ROUNDED);
-      }
+      // Same rounding as an @@ cost in commodity_pool_t::exchange().
+      if (details.price->in_place_round_unit_price(this->precision()))
+        details.add_flags(ANNOTATION_PRICE_ROUNDED);
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }
@@ -2138,7 +2076,8 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   }
 }
 
-void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) const {
+void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
+                              const precision_t min_decimals) const {
   commodity_t& comm(commodity());
 
   if (!comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
@@ -2148,32 +2087,16 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) cons
   }
 
   precision_t disp_prec = display_precision();
-  int zeros_prec = comm ? commodity().precision() : 0;
-  // Inferred balancing amounts tagged by set_cost_precision() carry
-  // BIGINT_COST_PREC together with a quantity->prec that captures the
-  // recovered cost precision.  Render at the recovered precision when
-  // the commodity has no established display precision (so we don't
-  // collapse to integer rendering) or when the value would otherwise
-  // round to zero on the page (issue #1692).  When the commodity's
-  // display precision has grown to a meaningful coverage (e.g. EUR was
-  // at precision 0 when the inference happened but a later transaction
-  // bumped it to 2), normal display via that precision is what the
-  // user expects.
-  if (comm && quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > commodity().precision()) {
-    bool widen = false;
-    if (commodity().precision() == 0) {
-      widen = true;
-    } else {
-      amount_t at_comm_prec(*this);
-      at_comm_prec.in_place_roundto(commodity().precision());
-      widen = at_comm_prec.is_realzero();
-    }
-    if (widen) {
-      disp_prec = quantity->prec;
-      zeros_prec = quantity->prec;
-    }
+  int zeros_prec = 0;
+  if (comm) {
+    // An amount inferred from a cost may show more digits than its
+    // commodity's precision (see cost_display_precision, #1692).
+    zeros_prec = cost_display_precision();
+    if (zeros_prec > commodity().precision())
+      disp_prec = static_cast<precision_t>(zeros_prec);
   }
-  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);
+  zeros_prec = std::max(zeros_prec, static_cast<int>(min_decimals));
+  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, &comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
@@ -2183,7 +2106,7 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) cons
 
   // If there are any annotations associated with this commodity, output them
   // now.
-  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS, this, flags);
+  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 }
 
 /*----------------------------------------------------------------------*/

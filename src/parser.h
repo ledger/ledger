@@ -39,14 +39,14 @@
  *
  * @ingroup expr
  *
- * @brief Pratt parser (operator-precedence climbing) for Ledger expressions.
+ * @brief Recursive-descent parser (one function per precedence level) for Ledger expressions.
  *
  * This header declares parser_t, the component that transforms a stream of
  * tokens (produced by token_t::next()) into an abstract syntax tree of op_t
- * nodes.  The parser uses the classic Pratt / precedence-climbing technique:
- * each precedence level is a separate function that calls the next-tighter
- * level to parse its operands, then loops to consume operators at its own
- * level.
+ * nodes.  It is a recursive-descent parser with one parse_* function per
+ * precedence level.  The operands of each level are parsed at tighter
+ * levels, except inside parentheses, which restart at parse_value_expr.
+ * The binary-operator levels share the loop pattern described in parser.cc.
  *
  * The precedence levels from lowest (loosest binding) to highest are:
  *
@@ -59,7 +59,7 @@
  * | Ternary / if-else   | parse_querycolon_expr   | `? :`, `if`/`else`           |
  * | Logical OR          | parse_or_expr           | `or`, `\|\|`                 |
  * | Logical AND         | parse_and_expr          | `and`, `&&`                  |
- * | Comparison          | parse_logic_expr        | `==` `!=` `<` `<=` `>` `>=` `=~` `!~` |
+ * | Comparison          | parse_logic_expr        | `==` `!=` `<` `<=` `>` `>=` `=~` `!~` `==~` |
  * | Addition            | parse_add_expr          | `+` `-`                      |
  * | Multiplication      | parse_mul_expr          | `*` `/` `div`                |
  * | Unary prefix        | parse_unary_expr        | `!` `-` (negation)           |
@@ -84,11 +84,11 @@
 namespace ledger {
 
 /**
- * @brief Pratt parser that builds op_t AST trees from expression token streams.
+ * @brief Recursive-descent parser that builds op_t AST trees from expression token streams.
  *
  * parser_t is a non-copyable, stateful parser with a one-token lookahead.
- * It is typically created transiently by expr_t::compile() or parse(), used
- * to parse a single expression string, and then destroyed.
+ * It is created transiently by expr_t::parse(), used to parse a single
+ * expression string, and then destroyed.
  *
  * The public entry point is parse(), which drives the recursive descent
  * from parse_value_expr down through each precedence level and returns the
@@ -101,6 +101,18 @@ class expr_t::parser_t : public noncopyable {
   // Current parenthesis nesting depth
   mutable unsigned int parse_depth = 0;
   static constexpr unsigned int MAX_PARSE_DEPTH = 128;
+
+  /// Depth of the deepest node in the subtree the last parse_* call
+  /// returned, counting that subtree's root as 0 (op_t::calc's convention);
+  /// 0 when it returned no node.
+  mutable int subtree_depth = 0;
+
+  /// @brief Return @p depth, the depth a node about to be linked into the
+  /// tree gives its deepest descendant; throw parse_error("Expression tree
+  /// depth limit exceeded") if it exceeds MAX_EXPR_DEPTH, so no tree that
+  /// compile, calc, print, dump or release could overflow the stack on is
+  /// ever built.
+  int checked_depth(int depth) const;
 
   /**
    * @brief Advance to the next token, or reuse the lookahead if pushed back.
@@ -115,7 +127,7 @@ class expr_t::parser_t : public noncopyable {
    * @return Reference to the lookahead token (always the same object).
    */
   token_t& next_token(std::istream& in, const parse_flags_t& tflags,
-                      const optional<token_t::kind_t>& expecting = none) const {
+                      const optional<token_t::kind_t>& expecting = std::nullopt) const {
     if (use_lookahead)
       use_lookahead = false;
     else
@@ -139,9 +151,6 @@ class expr_t::parser_t : public noncopyable {
     use_lookahead = true;
   }
 
-  /// @brief Push the current lookahead back without an explicit token reference.
-  void push_token() const { use_lookahead = true; }
-
   /*--- Precedence-level parsing functions (highest to lowest) ---*/
 
   /// @brief Parse a primary value: literal, identifier, or parenthesized sub-expression.
@@ -156,7 +165,7 @@ class expr_t::parser_t : public noncopyable {
   ptr_op_t parse_mul_expr(std::istream& in, const parse_flags_t& flags) const;
   /// @brief Parse additive expressions: `+`, `-`.
   ptr_op_t parse_add_expr(std::istream& in, const parse_flags_t& flags) const;
-  /// @brief Parse comparison/relational expressions: `==`, `!=`, `<`, `<=`, `>`, `>=`, `=~`, `!~`.
+  /// @brief Parse comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`, `=~`, `!~`, `==~`.
   ptr_op_t parse_logic_expr(std::istream& in, const parse_flags_t& flags) const;
   /// @brief Parse logical AND expressions: `and`, `&&`.
   ptr_op_t parse_and_expr(std::istream& in, const parse_flags_t& flags) const;
@@ -173,6 +182,13 @@ class expr_t::parser_t : public noncopyable {
   /// @brief Parse semicolon-separated statement sequences (lowest precedence).
   ptr_op_t parse_value_expr(std::istream& in, const parse_flags_t& flags) const;
 
+  using operand_fn = ptr_op_t (parser_t::*)(std::istream&, const parse_flags_t&) const;
+  using op_kind_fn = op_t::kind_t (*)(token_t::kind_t, bool& negate);
+  /// @brief One left-associative binary level: operands from @p operand, operators chosen by
+  /// @p op_kind (op_t::LAST ends the level; negate wraps the node in O_NOT).
+  ptr_op_t parse_binary(std::istream& in, const parse_flags_t& tflags, operand_fn operand,
+                        op_kind_fn op_kind) const;
+
 public:
   parser_t() : use_lookahead(false) { TRACE_CTOR(parser_t, ""); }
   ~parser_t() noexcept { TRACE_DTOR(parser_t); }
@@ -182,17 +198,20 @@ public:
    *
    * This is the main public entry point.  It invokes parse_value_expr (the
    * lowest-precedence level) to parse the complete expression, then cleans
-   * up the lookahead state.  On failure, the original expression text is
+   * up the lookahead state.  Unless @p flags has PARSE_PARTIAL or
+   * PARSE_SINGLE, the expression must use up the input; a token left after
+   * it is a parse_error.  On failure, the original expression text is
    * included in the error context for user-friendly diagnostics.
    *
    * @param in               The input stream containing the expression text.
-   * @param flags            Parse flags (e.g., PARSE_SINGLE, PARSE_PARTIAL).
+   * @param flags            Parse flags; PARSE_PARTIAL or PARSE_SINGLE lets the
+   *                         caller read on past the expression.
    * @param original_string  If provided, the full expression text for error
    *                         context display.
    * @return Root node of the parsed AST, or nullptr if the stream is empty.
    */
   ptr_op_t parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-                 const optional<string>& original_string = boost::none);
+                 const optional<string>& original_string = std::nullopt);
 };
 
 } // namespace ledger

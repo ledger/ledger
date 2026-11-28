@@ -82,7 +82,7 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   0x01 ///< Price was computed from a cost expression, not user-supplied.
 #define ANNOTATION_PRICE_FIXATED 0x02 ///< Price is fixated ({=...}), not a market price.
 #define ANNOTATION_PRICE_NOT_PER_UNIT                                                              \
-  0x04 ///< Price was given as total cost (@@), stored per-unit internally.
+  0x04 ///< Price was written as a total lot price ({{...}}), stored per unit.
 #define ANNOTATION_DATE_CALCULATED                                                                 \
   0x08 ///< Date was derived from the transaction date, not explicit.
 #define ANNOTATION_TAG_CALCULATED 0x10 ///< Tag was computed, not user-supplied.
@@ -131,6 +131,21 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   static int compare_shape(const annotation_t& lhs, const annotation_t& rhs);
 
   /**
+   * @brief Three-way comparison of the date, then the tag, then the
+   * value-expression text; absent before present.
+   *
+   * This is the part of the order that compare_shape() and
+   * commodity_t::compare_by_commodity share.
+   */
+  static int compare_details(const annotation_t& lhs, const annotation_t& rhs);
+
+  /**
+   * @brief Three-way comparison of the ANNOTATION_SEMANTIC_FLAGS, fewer
+   * before more.
+   */
+  static int compare_semantic_flags(const annotation_t& lhs, const annotation_t& rhs);
+
+  /**
    * @brief Three-way total order: compare_shape(), then the price value,
    * then the semantic flags.
    *
@@ -167,12 +182,16 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
    * @brief Render annotation fields back to their textual representation.
    *
    * Outputs only the fields that are present and not suppressed by the
-   * @p no_computed_annotations flag.  When ANNOTATION_PRICE_NOT_PER_UNIT
-   * is set and a quantity is available, the total-cost form `{{...}}` is
-   * reconstructed by multiplying the stored per-unit price by abs(qty).
+   * @p no_computed_annotations flag.  The price prints as `{{total}}`
+   * from @p given_lot_total, the total as a posting wrote it, when the
+   * caller gives one, and as the per-unit `{price}` otherwise.  The
+   * total is never rebuilt from the stored per-unit price: that price
+   * may have been rounded when it was divided out
+   * (ANNOTATION_PRICE_ROUNDED), and the annotation is shared by every
+   * posting of the lot, whichever form each one used.
    */
   void print(std::ostream& out, bool keep_base = false, bool no_computed_annotations = false,
-             const amount_t* qty = nullptr, uint_least8_t print_flags = 0) const;
+             const amount_t* given_lot_total = nullptr) const;
 
   bool valid() const {
     assert(*this);
@@ -234,7 +253,11 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
  *
  * Annotated commodities are deduplicated: two amounts with the same base
  * symbol and identical annotations point to the same annotated_commodity_t
- * instance in the pool's annotated_commodities map.
+ * instance in the pool's annotated_commodities map, except the lots that
+ * reannotate() left carrying one annotation (commodity_pool_t::duplicate_lots)
+ * and a lot whose annotation the Python bindings edit in place.  Conversely,
+ * find_or_create() may return an existing lot for an annotation that only
+ * nearly matches (find_annotation_fuzzy()).  See pool.h.
  */
 class annotated_commodity_t
     : public commodity_t,
@@ -309,8 +332,7 @@ public:
   }
 
   void write_annotations(std::ostream& out, bool no_computed_annotations = false,
-                         const amount_t* qty = nullptr,
-                         uint_least8_t print_flags = 0) const override;
+                         const amount_t* given_lot_total = nullptr) const override;
 };
 
 inline annotated_commodity_t& as_annotated_commodity(commodity_t& commodity) {

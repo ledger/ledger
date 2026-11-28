@@ -1,0 +1,521 @@
+; Every name the report, posting, transaction, item, account and session
+; scopes bind in a value expression, called so that the result identifies
+; the function behind the name.  The journal gives each function a value
+; that no other function of the same table matches on some line below: a
+; cleared, a pending and an uncleared transaction, a generated posting, a
+; virtual and a balanced virtual posting, a sale whose @ price differs
+; from its lot cost, a posting whose Payee tag changes the payee and whose
+; comment adds a second line, transactions with and without a UUID, a
+; parent account with postings of its own, and a timelog entry.  So a row
+; that binds a name to another function of its table changes the output,
+; and a missing or misspelled row makes the name fail or fall through to
+; another scope, which also changes it.  Names bound to one function
+; (b/cost, n/N/count/index, ...) are aliases and are not told apart.  Two
+; pairs agree on every input this file can build: rounded and one-argument
+; round, and clear_commodity and quantity on an amount.  The sibling file
+; lookup-function-name-errors.test separates roundto from round,
+; clear_commodity from quantity, and to_balance from the functions that
+; return their argument unchanged, and pins the errors of the phase-1
+; names.  This file holds no block that expects an error, so its journal
+; is replayed against the Lean oracle (test/semantic/check_all.py).
+; Report names that a posting or an account shadows (date, value_date,
+; commodity, display_account, post, null, d) are reached from eval or from
+; an account (balance) context, where nothing nearer answers them.
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+    note food aisle
+account Expenses:Food:Fruit
+    note produce aisle
+    ; Kind: produce
+
+P 2024/03/01 AAPL $120.00
+
+= /Fruit/
+    (Budget:Food)                     -1
+
+2024/01/15=2024/01/17 * (1001) Grocer  ; xact note
+    ; UUID: 0a1b2c
+    Expenses:Food:Fruit           $12.345  ; :organic:
+    Expenses:Food                   $2.00
+        ; Payee: Bakery
+    Assets:Bank:Checking
+
+2024/02/20 ! Broker
+    ; UUID: 7f8e9d
+    Assets:Brokerage              10 AAPL {$100.00} [2024/02/20]
+    Assets:Bank:Checking       $-1,000.00
+
+2024/02/21 Broker
+    Assets:Brokerage               5 AAPL {$130.00} [2024/02/21]
+    * Assets:Bank:Checking       $-650.00
+    [Savings:Goal]                 $50.00
+    [Assets:Bank:Checking]        $-50.00
+
+2024/02/22 Broker
+    Assets:Brokerage               2 AAPL {$90.00} [2024/02/22]
+    Assets:Bank:Checking         $-180.00
+
+2024/03/05 Broker
+    Assets:Brokerage              -4 AAPL {$100.00} [2024/02/20] @ $120.00
+    Assets:Bank:Checking          $480.00
+    Income:Gains                  $-80.00
+
+2024/03/12 Grocer
+    Expenses:Food:Fruit             $3.00
+    Assets:Bank:Checking
+
+i 2024/03/10 09:00:00 Work:Project
+O 2024/03/10 11:30:00
+
+; report: numeric functions on $-2.567
+test reg Fruit --head 1 --format 'abs=%(abs($-2.567)) ceiling=%(ceiling($-2.567)) floor=%(floor($-2.567)) round=%(round($-2.567)) round_n=%(round(1.256, 1)) roundto=%(roundto(1.256, 2)) truncate=%(truncate($-2.567) * 1000) truncate_n=%(truncate(-2.567, 3)) to_int=%(to_int($-2.567)) unround=%(unround($-2.567)) unrounded=%(unrounded($-2.567)) U=%(U(-2))\n'
+abs=$2.57 ceiling=$-2.00 floor=$-3.00 round=$-2.57 round_n=1.3 roundto=1.26 truncate=$-2,560.00 truncate_n=-2.567 to_int=-3 unround=$-2.567 unrounded=$-2.567 U=2
+end test
+
+; report: rounding family on the posting amount; unround is a synonym of unrounded
+test reg Fruit --head 1 --format 'rounded=%(rounded(unrounded(amount))) rounded_scaled=%(rounded($-2.567) * 1000) unrounded=%(unrounded(amount)) unround=%(unround(amount)) roundto_commodity=%(roundto_commodity($-2.567) * 1000) clear_commodity=%(clear_commodity(amount)) to_balance=%(to_balance($2.567) * 2)\n'
+rounded=$12.35 rounded_scaled=$-2,567.00 unrounded=$12.345 unround=$12.345 roundto_commodity=$-2,570.00 clear_commodity=12.345 to_balance=$5.13
+end test
+
+; report: unround is a synonym of unrounded, also for a sequence
+test eval 'unround(1.5, 2.5)'
+(1.5, 2.5)
+end test
+
+; report: rounded keeps every argument; round reads the first one only
+test eval 'rounded($1.555, $2.555)'
+($1.555, $2.555)
+end test
+
+; report: scrub unreduces, strip does not
+test reg Project --format 'scrub=%(scrub(amount)) strip=%(strip(amount))\n'
+scrub=2.50h strip=9000s
+end test
+
+; report: amount/total expressions and the legacy t/T names under -V
+test reg Brokerage -V --now 2030/06/15 --format 'amount_expr=%(amount_expr) total_expr=%(total_expr) display_amount=%(display_amount) display_total=%(display_total) t=%(t) T=%(T)\n'
+amount_expr=10 AAPL {$100.00} [2024/02/20] total_expr=10 AAPL {$100.00} [2024/02/20] display_amount=$1,000.00 display_total=$1,000.00 t=$1,000.00 T=$1,000.00
+amount_expr=$300.00 total_expr=$1,300.00 display_amount=$300.00 display_total=$1,300.00 t=$300.00 T=$1,300.00
+amount_expr=5 AAPL {$130.00} [2024/02/21] total_expr=10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] display_amount=$650.00 display_total=$1,950.00 t=$650.00 T=$1,950.00
+amount_expr=$-600.00 total_expr=$1,350.00 display_amount=$-600.00 display_total=$1,350.00 t=$-600.00 T=$1,350.00
+amount_expr=2 AAPL {$90.00} [2024/02/22] total_expr=2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] display_amount=$180.00 display_total=$1,530.00 t=$180.00 T=$1,530.00
+amount_expr=$510.00 total_expr=$2,040.00 display_amount=$510.00 display_total=$2,040.00 t=$510.00 T=$2,040.00
+amount_expr=-4 AAPL {$100.00} [2024/02/20] total_expr=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] display_amount=$-480.00 display_total=$1,560.00 t=$-480.00 T=$1,560.00
+end test
+
+; report: string functions; format() wins over the --format option
+test reg Fruit --head 1 --format 'quoted=%(quoted("a\"b  ")) quoted_rfc=%(quoted_rfc("a\"b  ")) join=%(join(note)) trim=[%(trim("a\"b  "))] justify=[%(justify("z", 3, -1, true))] truncated=%(truncated("abcdef", 4)) format=%(format("<%(payee)>")) to_string=%(to_string(5) + "x") to_string_note=[%(to_string(" %(2) " + note))] to_mask=%("xaby" =~ to_mask("a."))\n'
+quoted="a\"b  " quoted_rfc="a""b  " join= :organic:\n xact note\n UUID: 0a1b2c trim=[a"b] justify=[  z] truncated=ab.. format=<Grocer> to_string=5x to_string_note=[ %(2)  :organic:
+ xact note
+ UUID: 0a1b2c] to_mask=true
+end test
+
+; report: strip/S, market/P, nail_down, commodity_price
+test reg Brokerage --format 'strip=%(strip(amount)) S=%(S(amount)) market=%(market(amount, date, "$")) P=%(P(amount, date, "$")) nail_down=%(market(nail_down(1 AAPL, $5), [2024/03/02], "$")) commodity_price=%(commodity_price(5 AAPL, [2024/03/02]))\n'
+strip=10 AAPL S=10 AAPL market=$1,000.00 P=$1,000.00 nail_down=$5.00 commodity_price=$120.00
+strip=5 AAPL S=5 AAPL market=$650.00 P=$650.00 nail_down=$5.00 commodity_price=$120.00
+strip=2 AAPL S=2 AAPL market=$180.00 P=$180.00 nail_down=$5.00 commodity_price=$120.00
+strip=-4 AAPL S=-4 AAPL market=$-480.00 P=$-480.00 nail_down=$5.00 commodity_price=$120.00
+end test
+
+; report: lot ordering functions and quantity of a balance
+test reg Brokerage --format 'averaged_lots=%(averaged_lots(total)) fifo_lots=%(fifo_lots(total)) lifo_lots=%(lifo_lots(total)) to_balance=%(to_balance(total)) quantity=%(quantity(total)) top_amount=%(top_amount(total))\n'
+averaged_lots=10 AAPL {$100.00} [2024/02/20] fifo_lots=10 AAPL {$100.00} [2024/02/20] lifo_lots=10 AAPL {$100.00} [2024/02/20] to_balance=10 AAPL {$100.00} [2024/02/20] quantity=10 top_amount=10 AAPL {$100.00} [2024/02/20]
+averaged_lots=15 AAPL {$110.00} [2024/02/20] fifo_lots=10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] lifo_lots=5 AAPL {$130.00} [2024/02/21]
+10 AAPL {$100.00} [2024/02/20] to_balance=10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] quantity=0 top_amount=10 AAPL {$100.00} [2024/02/20]
+averaged_lots=17 AAPL {$107.64705882} [2024/02/20] fifo_lots=10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21]
+2 AAPL {$90.00} [2024/02/22] lifo_lots=2 AAPL {$90.00} [2024/02/22]
+5 AAPL {$130.00} [2024/02/21]
+10 AAPL {$100.00} [2024/02/20] to_balance=2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] quantity=0 top_amount=2 AAPL {$90.00} [2024/02/22]
+averaged_lots=13 AAPL {$110.00} [2024/02/20] fifo_lots=6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21]
+2 AAPL {$90.00} [2024/02/22] lifo_lots=2 AAPL {$90.00} [2024/02/22]
+5 AAPL {$130.00} [2024/02/21]
+6 AAPL {$100.00} [2024/02/20] to_balance=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] quantity=0 top_amount=2 AAPL {$90.00} [2024/02/22]
+end test
+
+; report: scrubbed_display_total drops the lot details display_total keeps
+test reg Brokerage --format 'display_total=%(display_total) scrubbed_display_total=%(scrubbed_display_total)\n'
+display_total=10 AAPL {$100.00} [2024/02/20] scrubbed_display_total=10 AAPL
+display_total=10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] scrubbed_display_total=15 AAPL
+display_total=2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] scrubbed_display_total=17 AAPL
+display_total=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] scrubbed_display_total=13 AAPL
+end test
+
+; report: account-name helpers and sequence functions
+test reg Fruit --head 1 --format 'account_prefix=%(account_prefix(account, 2)) account_suffix=%(account_suffix(account, 2)) account_skip_prefix=%(account_skip_prefix(account, 2)) account_skip_suffix=%(account_skip_suffix(account, 2)) percent=%(percent($1, $4)) get_at=%(get_at((7, 8), 1)) is_seq=%(is_seq((7, 8))) is_seq_1=%(is_seq(1)) to_sequence=%(to_sequence(7))\n'
+account_prefix=Expenses:Food account_suffix=Food:Fruit account_skip_prefix=Fruit account_skip_suffix=Expenses percent=25.00% get_at=8 is_seq=true is_seq_1=false to_sequence=(7)
+end test
+
+; report: conversion and date-format functions
+test reg Fruit --head 1 --format 'to_boolean=%(to_boolean(1)) to_datetime=%(to_datetime("2024/05/06 07:08:09") + 60) to_date=%(to_date("2024/05/06") + 1) to_amount=%(to_amount("$3.5") * 2) format_date=%(format_date(to_datetime("2024/05/06 07:08:09"), "%d %H")) format_datetime=%(format_datetime(to_datetime("2024/05/06 07:08:09"), "%d %H"))\n'
+to_boolean=true to_datetime=2024/05/06 07:09:09 to_date=2024/05/07 to_amount=$7.00 format_date=06 00 format_datetime=06 07
+end test
+
+; report: ansify_if, should_bold and the eleven color names
+test reg Fruit --head 1 --bold-if "amount > 0" --format 'ansify_if=%(ansify_if("q", false) == "q") ansify_if_red=%(ansify_if("q", "red") == "q") should_bold=%(should_bold) black=%(black) blink=%(blink) blue=%(blue) bold=%(bold) cyan=%(cyan) green=%(green) magenta=%(magenta) red=%(red) underline=%(underline) white=%(white) yellow=%(yellow)\n'
+ansify_if=true ansify_if_red=false should_bold=true black=black blink=blink blue=blue bold=bold cyan=cyan green=green magenta=magenta red=red underline=underline white=white yellow=yellow
+end test
+
+; report: clock functions and options
+test reg Fruit --head 1 --now 2030/06/15 --format 'today=%(today) now=%(now) m=%(m) options=%(options.columns)\n'
+today=2030/06/15 now=2030/06/15 00:00:00 m=2030/06/15 00:00:00 options=80
+end test
+
+; report names a posting would shadow, from an account context
+test bal Fruit --flat --no-total --now 2030/06/15 --format 'value_date=%(value_date) commodity=%(commodity(10 AAPL)) display_account=%(display_account) post=[%(post)] null=[%(null)] print=%(print(1, 2))\n'
+12
+value_date=2030/06/15 00:00:00 commodity=AAPL display_account=Expenses:Food:Fruit post=[false] null=[] print=true
+end test
+
+; report: set_commodity_price feeds commodity_price
+test eval 'set_commodity_price(1 AAPL, [2024/04/01], $130) | commodity_price(1 AAPL, [2024/04/02])'
+$130
+end test
+
+; report: date and value_date outside a posting, and the legacy d/m names
+test eval --now 2030/06/15 'date'
+2030/06/15
+end test
+
+test eval --now 2030/06/15 'value_date'
+2030/06/15 00:00:00
+end test
+
+test eval --now 2030/06/15 'd'
+2030/06/15 00:00:00
+end test
+
+; post: amount-like names
+test reg --format 'a=%(a) amount=%(amount) b=%(b) cost=%(cost) price=%(price) O=%(O) total=%(total) magnitude=%(magnitude) capital_gain=%(capital_gain)\n'
+a=$12.35 amount=$12.35 b=$12.35 cost=$12.35 price=$12.35 O=$12.35 total=$12.35 magnitude=$14.35 capital_gain=0
+a=$2.00 amount=$2.00 b=$2.00 cost=$2.00 price=$2.00 O=$14.35 total=$14.35 magnitude=$14.35 capital_gain=0
+a=$-14.35 amount=$-14.35 b=$-14.35 cost=$-14.35 price=$-14.35 O=$0.00 total=$0.00 magnitude=$14.35 capital_gain=0
+a=$-12.35 amount=$-12.35 b=$-12.35 cost=$-12.35 price=$-12.35 O=$-12.35 total=$-12.35 magnitude=$14.35 capital_gain=0
+a=10 AAPL {$100.00} [2024/02/20] amount=10 AAPL {$100.00} [2024/02/20] b=$1,000.00 cost=$1,000.00 price=$1,000.00 O=$-12.35
+10 AAPL {$100.00} [2024/02/20] total=$-12.35
+10 AAPL {$100.00} [2024/02/20] magnitude=$1,000.00 capital_gain=0
+a=$-1,000.00 amount=$-1,000.00 b=$-1,000.00 cost=$-1,000.00 price=$-1,000.00 O=$-1,012.35
+10 AAPL {$100.00} [2024/02/20] total=$-1,012.35
+10 AAPL {$100.00} [2024/02/20] magnitude=$1,000.00 capital_gain=0
+a=5 AAPL {$130.00} [2024/02/21] amount=5 AAPL {$130.00} [2024/02/21] b=$650.00 cost=$650.00 price=$650.00 O=$-1,012.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,012.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$700.00 capital_gain=0
+a=$-650.00 amount=$-650.00 b=$-650.00 cost=$-650.00 price=$-650.00 O=$-1,662.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,662.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$700.00 capital_gain=0
+a=$50.00 amount=$50.00 b=$50.00 cost=$50.00 price=$50.00 O=$-1,612.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,612.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$700.00 capital_gain=0
+a=$-50.00 amount=$-50.00 b=$-50.00 cost=$-50.00 price=$-50.00 O=$-1,662.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,662.35
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$700.00 capital_gain=0
+a=2 AAPL {$90.00} [2024/02/22] amount=2 AAPL {$90.00} [2024/02/22] b=$180.00 cost=$180.00 price=$180.00 O=$-1,662.35
+2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,662.35
+2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$180.00 capital_gain=0
+a=$-180.00 amount=$-180.00 b=$-180.00 cost=$-180.00 price=$-180.00 O=$-1,842.35
+2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,842.35
+2 AAPL {$90.00} [2024/02/22]
+10 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$180.00 capital_gain=0
+a=-4 AAPL {$100.00} [2024/02/20] amount=-4 AAPL {$100.00} [2024/02/20] b=$-400.00 cost=$-400.00 price=$-480.00 O=$-1,842.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,842.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$480.00 capital_gain=$80.00
+a=$480.00 amount=$480.00 b=$480.00 cost=$480.00 price=$480.00 O=$-1,362.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,362.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$480.00 capital_gain=0
+a=$-80.00 amount=$-80.00 b=$-80.00 cost=$-80.00 price=$-80.00 O=$-1,442.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,442.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$480.00 capital_gain=0
+a=$3.00 amount=$3.00 b=$3.00 cost=$3.00 price=$3.00 O=$-1,439.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,439.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$3.00 capital_gain=0
+a=$-3.00 amount=$-3.00 b=$-3.00 cost=$-3.00 price=$-3.00 O=$-1,442.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,442.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$3.00 capital_gain=0
+a=$-3.00 amount=$-3.00 b=$-3.00 cost=$-3.00 price=$-3.00 O=$-1,445.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,445.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] magnitude=$3.00 capital_gain=0
+a=9000s amount=9000s b=9000s cost=9000s price=9000s O=$-1,445.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21]
+9000s total=$-1,445.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21]
+9000s magnitude=9000s capital_gain=0
+end test
+
+; post: counters, ids and depth
+test reg --format 'count=%(count) index=%(index) n=%(n) N=%(N) xact_id=%(xact_id) account_id=%(account_id) depth=%(depth)\n'
+count=1 index=1 n=1 N=1 xact_id=1 account_id=1 depth=3
+count=2 index=2 n=2 N=2 xact_id=2 account_id=1 depth=2
+count=3 index=3 n=3 N=3 xact_id=3 account_id=1 depth=3
+count=4 index=4 n=4 N=4 xact_id=4 account_id=1 depth=2
+count=5 index=5 n=5 N=5 xact_id=1 account_id=1 depth=2
+count=6 index=6 n=6 N=6 xact_id=2 account_id=2 depth=3
+count=7 index=7 n=7 N=7 xact_id=1 account_id=2 depth=2
+count=8 index=8 n=8 N=8 xact_id=2 account_id=3 depth=3
+count=9 index=9 n=9 N=9 xact_id=3 account_id=1 depth=2
+count=10 index=10 n=10 N=10 xact_id=4 account_id=4 depth=3
+count=11 index=11 n=11 N=11 xact_id=1 account_id=3 depth=2
+count=12 index=12 n=12 N=12 xact_id=2 account_id=5 depth=3
+count=13 index=13 n=13 N=13 xact_id=1 account_id=4 depth=2
+count=14 index=14 n=14 N=14 xact_id=2 account_id=6 depth=3
+count=15 index=15 n=15 N=15 xact_id=3 account_id=1 depth=2
+count=16 index=16 n=16 N=16 xact_id=1 account_id=2 depth=3
+count=17 index=17 n=17 N=17 xact_id=2 account_id=7 depth=3
+count=18 index=18 n=18 N=18 xact_id=3 account_id=2 depth=2
+count=19 index=19 n=19 N=19 xact_id=1 account_id=1 depth=2
+end test
+
+; post: account, payee, note and clock names
+test reg --format 'account=%(account) account_base=%(account_base) display_account=%(display_account) code=[%(code)] payee=%(payee) commodity=%(commodity) note=[%(join(note))] datetime=%(datetime) checkin=[%(checkin)] checkout=[%(checkout)]\n'
+account=Expenses:Food:Fruit account_base=Fruit display_account=Expenses:Food:Fruit code=[1001] payee=Grocer commodity=$ note=[ :organic:\n xact note\n UUID: 0a1b2c] datetime=2024/01/15 00:00:00 checkin=[] checkout=[]
+account=Expenses:Food account_base=Food display_account=Expenses:Food code=[1001] payee=Bakery commodity=$ note=[ Payee: Bakery\n xact note\n UUID: 0a1b2c] datetime=2024/01/15 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[1001] payee=Grocer commodity=$ note=[ xact note\n UUID: 0a1b2c] datetime=2024/01/15 00:00:00 checkin=[] checkout=[]
+account=Budget:Food account_base=Food display_account=(Budget:Food) code=[1001] payee=Grocer commodity=$ note=[ xact note\n UUID: 0a1b2c] datetime=2024/01/15 00:00:00 checkin=[] checkout=[]
+account=Assets:Brokerage account_base=Brokerage display_account=Assets:Brokerage code=[] payee=Broker commodity=AAPL note=[ UUID: 7f8e9d] datetime=2024/02/20 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[] payee=Broker commodity=$ note=[ UUID: 7f8e9d] datetime=2024/02/20 00:00:00 checkin=[] checkout=[]
+account=Assets:Brokerage account_base=Brokerage display_account=Assets:Brokerage code=[] payee=Broker commodity=AAPL note=[] datetime=2024/02/21 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[] payee=Broker commodity=$ note=[] datetime=2024/02/21 00:00:00 checkin=[] checkout=[]
+account=Savings:Goal account_base=Goal display_account=[Savings:Goal] code=[] payee=Broker commodity=$ note=[] datetime=2024/02/21 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=[Assets:Bank:Checking] code=[] payee=Broker commodity=$ note=[] datetime=2024/02/21 00:00:00 checkin=[] checkout=[]
+account=Assets:Brokerage account_base=Brokerage display_account=Assets:Brokerage code=[] payee=Broker commodity=AAPL note=[] datetime=2024/02/22 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[] payee=Broker commodity=$ note=[] datetime=2024/02/22 00:00:00 checkin=[] checkout=[]
+account=Assets:Brokerage account_base=Brokerage display_account=Assets:Brokerage code=[] payee=Broker commodity=AAPL note=[] datetime=2024/03/05 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[] payee=Broker commodity=$ note=[] datetime=2024/03/05 00:00:00 checkin=[] checkout=[]
+account=Income:Gains account_base=Gains display_account=Income:Gains code=[] payee=Broker commodity=$ note=[] datetime=2024/03/05 00:00:00 checkin=[] checkout=[]
+account=Expenses:Food:Fruit account_base=Fruit display_account=Expenses:Food:Fruit code=[] payee=Grocer commodity=$ note=[] datetime=2024/03/12 00:00:00 checkin=[] checkout=[]
+account=Assets:Bank:Checking account_base=Checking display_account=Assets:Bank:Checking code=[] payee=Grocer commodity=$ note=[] datetime=2024/03/12 00:00:00 checkin=[] checkout=[]
+account=Budget:Food account_base=Food display_account=(Budget:Food) code=[] payee=Grocer commodity=$ note=[] datetime=2024/03/12 00:00:00 checkin=[] checkout=[]
+account=Work:Project account_base=Project display_account=Work:Project code=[] payee= commodity=s note=[] datetime=2024/03/10 09:00:00 checkin=[2024/03/10 09:00:00] checkout=[2024/03/10 11:30:00]
+end test
+
+; post: flags, scopes and value_date
+test reg --format 'has_cost=%(has_cost) cost_calculated=%(cost_calculated) calculated=%(calculated) payee_changed=%(payee_changed) primary=%(primary) real=%(real) R=%(R) virtual=%(virtual) use_direct_amount=%(use_direct_amount) any=%(any(amount > 0)) all=%(all(amount > 0)) post=%(post.payee) post.amount=%(post.amount) parent=%(parent.payee) xact=%(xact.payee) value_date=%(value_date)\n'
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Grocer post.amount=$12.35 parent=Grocer xact=Grocer value_date=2024/01/15
+has_cost=false cost_calculated=false calculated=false payee_changed=true primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Bakery post.amount=$2.00 parent=Grocer xact=Grocer value_date=2024/01/15
+has_cost=false cost_calculated=false calculated=true payee_changed=true primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Grocer post.amount=$-14.35 parent=Grocer xact=Grocer value_date=2024/01/15
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=false R=false virtual=true use_direct_amount=false any=true all=false post=Grocer post.amount=$-12.35 parent=Grocer xact=Grocer value_date=2024/01/15
+has_cost=true cost_calculated=true calculated=false payee_changed=false primary=false real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=10 AAPL {$100.00} [2024/02/20] parent=Broker xact=Broker value_date=2024/02/20
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=$-1,000.00 parent=Broker xact=Broker value_date=2024/02/20
+has_cost=true cost_calculated=true calculated=false payee_changed=false primary=false real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=5 AAPL {$130.00} [2024/02/21] parent=Broker xact=Broker value_date=2024/02/21
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=$-650.00 parent=Broker xact=Broker value_date=2024/02/21
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=false R=false virtual=true use_direct_amount=false any=true all=false post=Broker post.amount=$50.00 parent=Broker xact=Broker value_date=2024/02/21
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=false R=false virtual=true use_direct_amount=false any=true all=false post=Broker post.amount=$-50.00 parent=Broker xact=Broker value_date=2024/02/21
+has_cost=true cost_calculated=true calculated=false payee_changed=false primary=false real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=2 AAPL {$90.00} [2024/02/22] parent=Broker xact=Broker value_date=2024/02/22
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=$-180.00 parent=Broker xact=Broker value_date=2024/02/22
+has_cost=true cost_calculated=false calculated=false payee_changed=false primary=false real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=-4 AAPL {$100.00} [2024/02/20] parent=Broker xact=Broker value_date=2024/03/05
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=$480.00 parent=Broker xact=Broker value_date=2024/03/05
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Broker post.amount=$-80.00 parent=Broker xact=Broker value_date=2024/03/05
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Grocer post.amount=$3.00 parent=Grocer xact=Grocer value_date=2024/03/12
+has_cost=false cost_calculated=false calculated=true payee_changed=false primary=true real=true R=true virtual=false use_direct_amount=false any=true all=false post=Grocer post.amount=$-3.00 parent=Grocer xact=Grocer value_date=2024/03/12
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=true real=false R=false virtual=true use_direct_amount=false any=true all=false post=Grocer post.amount=$-3.00 parent=Grocer xact=Grocer value_date=2024/03/12
+has_cost=false cost_calculated=false calculated=false payee_changed=false primary=false real=true R=true virtual=false use_direct_amount=false any=true all=true post= post.amount=9000s parent= xact= value_date=2024/03/10
+end test
+
+; post: value_date is the period end under --monthly, date its start
+test reg Checking --monthly --format 'date=%(date) value_date=%(value_date)\n'
+date=2024/01/01 value_date=2024/01/31
+date=2024/02/01 value_date=2024/02/29
+date=2024/02/01 value_date=2024/02/29
+date=2024/03/01 value_date=2024/03/31
+end test
+
+; item (through parent): state names
+test reg Fruit Brokerage Project --format 'L=%(parent.L) actual=%(parent.actual) X=%(parent.X) cleared=%(parent.cleared) Y=%(parent.Y) pending=%(parent.pending) uncleared=%(parent.uncleared) state=%(parent.state) status=%(parent.status) is_account=%(parent.is_account) parent=%(parent.parent) depth=%(parent.depth)\n'
+L=true actual=true X=true cleared=true Y=false pending=false uncleared=false state=1 status=1 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=true pending=true uncleared=false state=2 status=2 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=false pending=false uncleared=true state=0 status=0 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=false pending=false uncleared=true state=0 status=0 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=false pending=false uncleared=true state=0 status=0 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=false pending=false uncleared=true state=0 status=0 is_account=false parent=false depth=0
+L=true actual=true X=false cleared=false Y=false pending=false uncleared=true state=0 status=0 is_account=false parent=false depth=0
+end test
+
+; item (through parent): dates
+test reg Fruit Brokerage Project --format 'd=%(parent.d) date=%(parent.date) value_date=%(parent.value_date) actual_date=%(parent.actual_date) primary_date=%(parent.primary_date) aux_date=[%(parent.aux_date)] effective_date=[%(parent.effective_date)]\n'
+d=2024/01/15 date=2024/01/15 value_date=2024/01/15 actual_date=2024/01/15 primary_date=2024/01/15 aux_date=[2024/01/17] effective_date=[2024/01/17]
+d=2024/02/20 date=2024/02/20 value_date=2024/02/20 actual_date=2024/02/20 primary_date=2024/02/20 aux_date=[] effective_date=[]
+d=2024/02/21 date=2024/02/21 value_date=2024/02/21 actual_date=2024/02/21 primary_date=2024/02/21 aux_date=[] effective_date=[]
+d=2024/02/22 date=2024/02/22 value_date=2024/02/22 actual_date=2024/02/22 primary_date=2024/02/22 aux_date=[] effective_date=[]
+d=2024/03/05 date=2024/03/05 value_date=2024/03/05 actual_date=2024/03/05 primary_date=2024/03/05 aux_date=[] effective_date=[]
+d=2024/03/12 date=2024/03/12 value_date=2024/03/12 actual_date=2024/03/12 primary_date=2024/03/12 aux_date=[] effective_date=[]
+d=2024/03/10 date=2024/03/10 value_date=2024/03/10 actual_date=2024/03/10 primary_date=2024/03/10 aux_date=[] effective_date=[]
+end test
+
+; item (through parent): dates under --aux-date
+test reg Fruit Brokerage Project --aux-date --format 'd=%(parent.d) date=%(parent.date) value_date=%(parent.value_date) actual_date=%(parent.actual_date) primary_date=%(parent.primary_date) aux_date=[%(parent.aux_date)] effective_date=[%(parent.effective_date)]\n'
+d=2024/01/17 date=2024/01/17 value_date=2024/01/17 actual_date=2024/01/15 primary_date=2024/01/15 aux_date=[2024/01/17] effective_date=[2024/01/17]
+d=2024/02/20 date=2024/02/20 value_date=2024/02/20 actual_date=2024/02/20 primary_date=2024/02/20 aux_date=[] effective_date=[]
+d=2024/02/21 date=2024/02/21 value_date=2024/02/21 actual_date=2024/02/21 primary_date=2024/02/21 aux_date=[] effective_date=[]
+d=2024/02/22 date=2024/02/22 value_date=2024/02/22 actual_date=2024/02/22 primary_date=2024/02/22 aux_date=[] effective_date=[]
+d=2024/03/05 date=2024/03/05 value_date=2024/03/05 actual_date=2024/03/05 primary_date=2024/03/05 aux_date=[] effective_date=[]
+d=2024/03/12 date=2024/03/12 value_date=2024/03/12 actual_date=2024/03/12 primary_date=2024/03/12 aux_date=[] effective_date=[]
+d=2024/03/10 date=2024/03/10 value_date=2024/03/10 actual_date=2024/03/10 primary_date=2024/03/10 aux_date=[] effective_date=[]
+end test
+
+; item (through parent): positions and identity
+test reg Fruit Brokerage Project --format 'beg_line=%(parent.beg_line) end_line=%(parent.end_line) beg_pos=%(parent.beg_pos) end_pos=%(parent.end_pos) seq=%(parent.seq) id=%(parent.id) uuid=%(parent.uuid) addr=%(parent.addr > 100000)\n'
+beg_line=39 end_line=44 beg_pos=1884 end_pos=2100 seq=3 id=0a1b2c uuid=0a1b2c addr=true
+beg_line=46 end_line=49 beg_pos=2101 end_pos=2247 seq=7 id=7f8e9d uuid=7f8e9d addr=true
+beg_line=51 end_line=55 beg_pos=2248 end_pos=2457 seq=10 id=10 uuid=10 addr=true
+beg_line=57 end_line=59 beg_pos=2458 end_pos=2582 seq=15 id=15 uuid=15 addr=true
+beg_line=61 end_line=64 beg_pos=2583 end_pos=2760 seq=18 id=18 uuid=18 addr=true
+beg_line=66 end_line=68 beg_pos=2761 end_pos=2846 seq=22 id=22 uuid=22 addr=true
+beg_line=70 end_line=70 beg_pos=2847 end_pos=2882 seq=25 id=25 uuid=25 addr=true
+end test
+
+; item (through parent): comment, note, file and metadata
+test reg Fruit Brokerage Project --format 'comment=[%(join(parent.comment))] note=[%(join(parent.note))] filebase=%(parent.filebase) filename=%(parent.filename == parent.filepath + "/" + parent.filebase) has_tag=%(parent.has_tag("UUID")) has_meta=%(parent.has_meta("UUID")) tag=[%(parent.tag("UUID"))] meta=[%(parent.meta("UUID"))]\n'
+comment=[\n    ; xact note\n    ; UUID: 0a1b2c] note=[ xact note\n UUID: 0a1b2c] filebase=lookup-function-names.test filename=true has_tag=true has_meta=true tag=[0a1b2c] meta=[0a1b2c]
+comment=[  ; UUID: 7f8e9d] note=[ UUID: 7f8e9d] filebase=lookup-function-names.test filename=true has_tag=true has_meta=true tag=[7f8e9d] meta=[7f8e9d]
+comment=[] note=[] filebase=lookup-function-names.test filename=true has_tag=false has_meta=false tag=[] meta=[]
+comment=[] note=[] filebase=lookup-function-names.test filename=true has_tag=false has_meta=false tag=[] meta=[]
+comment=[] note=[] filebase=lookup-function-names.test filename=true has_tag=false has_meta=false tag=[] meta=[]
+comment=[] note=[] filebase=lookup-function-names.test filename=true has_tag=false has_meta=false tag=[] meta=[]
+comment=[] note=[] filebase=lookup-function-names.test filename=true has_tag=false has_meta=false tag=[] meta=[]
+end test
+
+; account: amounts, counts and depths (tree)
+test bal --no-total --format '%(account) a=%(a) amount=%(amount) O=%(O) total=%(total) n=%(n) subcount=%(subcount) is_index=%(is_index) N=%(N) count=%(count) l=%(l) depth=%(depth) depth_parent=%(depth_parent) depth_spacer=[%(depth_spacer)] has_children_to_display=%(has_children_to_display) any=%(any(depth > 2)) all=%(all(depth > 2)) parent=[%(parent.account)] display_parent=[%(display_parent.account)] partial_account=%(partial_account) account_base=%(account_base) is_account=%(is_account) use_direct_amount=%(use_direct_amount) addr=%(addr > 100000)\n'
+Assets a=0 amount=0 O=$-1,417.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=$-1,417.35
+2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] n=0 subcount=0 is_index=0 N=11 count=11 l=1 depth=1 depth_parent=0 depth_spacer=[] has_children_to_display=true any=false all=true parent=[] display_parent=[] partial_account=Assets account_base=Assets is_account=true use_direct_amount=false addr=true
+Assets:Bank:Checking a=$-1,417.35 amount=$-1,417.35 O=$-1,417.35 total=$-1,417.35 n=7 subcount=7 is_index=7 N=7 count=7 l=3 depth=3 depth_parent=1 depth_spacer=[  ] has_children_to_display=false any=true all=true parent=[Assets:Bank] display_parent=[Assets] partial_account=Bank:Checking account_base=Checking is_account=true use_direct_amount=false addr=true
+Assets:Brokerage a=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] amount=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] O=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] total=2 AAPL {$90.00} [2024/02/22]
+6 AAPL {$100.00} [2024/02/20]
+5 AAPL {$130.00} [2024/02/21] n=4 subcount=4 is_index=4 N=4 count=4 l=2 depth=2 depth_parent=1 depth_spacer=[  ] has_children_to_display=false any=false all=false parent=[Assets] display_parent=[Assets] partial_account=Brokerage account_base=Brokerage is_account=true use_direct_amount=false addr=true
+Budget:Food a=$-15.35 amount=$-15.35 O=$-15.35 total=$-15.35 n=2 subcount=2 is_index=2 N=2 count=2 l=2 depth=2 depth_parent=0 depth_spacer=[] has_children_to_display=false any=false all=false parent=[Budget] display_parent=[Budget] partial_account=Budget:Food account_base=Food is_account=true use_direct_amount=false addr=true
+Expenses:Food a=$2.00 amount=$2.00 O=$17.35 total=$17.35 n=1 subcount=1 is_index=1 N=3 count=3 l=2 depth=2 depth_parent=0 depth_spacer=[] has_children_to_display=true any=false all=false parent=[Expenses] display_parent=[Expenses] partial_account=Expenses:Food account_base=Food is_account=true use_direct_amount=false addr=true
+Expenses:Food:Fruit a=$15.35 amount=$15.35 O=$15.35 total=$15.35 n=2 subcount=2 is_index=2 N=2 count=2 l=3 depth=3 depth_parent=1 depth_spacer=[  ] has_children_to_display=false any=true all=true parent=[Expenses:Food] display_parent=[Expenses:Food] partial_account=Fruit account_base=Fruit is_account=true use_direct_amount=false addr=true
+Income:Gains a=$-80.00 amount=$-80.00 O=$-80.00 total=$-80.00 n=1 subcount=1 is_index=1 N=1 count=1 l=2 depth=2 depth_parent=0 depth_spacer=[] has_children_to_display=false any=false all=false parent=[Income] display_parent=[Income] partial_account=Income:Gains account_base=Gains is_account=true use_direct_amount=false addr=true
+Savings:Goal a=$50.00 amount=$50.00 O=$50.00 total=$50.00 n=1 subcount=1 is_index=1 N=1 count=1 l=2 depth=2 depth_parent=0 depth_spacer=[] has_children_to_display=false any=false all=false parent=[Savings] display_parent=[Savings] partial_account=Savings:Goal account_base=Goal is_account=true use_direct_amount=false addr=true
+Work:Project a=9000s amount=9000s O=9000s total=9000s n=1 subcount=1 is_index=1 N=1 count=1 l=2 depth=2 depth_parent=0 depth_spacer=[] has_children_to_display=false any=false all=false parent=[Work] display_parent=[Work] partial_account=Work:Project account_base=Project is_account=true use_direct_amount=false addr=true
+end test
+
+; account: dates, parents and metadata (flat)
+test bal Checking Food Project --flat --no-total --format '%(account) earliest=%(earliest) latest=%(latest) latest_cleared=%(latest_cleared) d=%(d) date=%(date) earliest_checkin=[%(earliest_checkin)] latest_checkout=[%(latest_checkout)] latest_checkout_cleared=%(latest_checkout_cleared) note=[%(note)] meta=[%(meta("Kind"))] tag=[%(tag("Kind"))] has_tag=%(has_tag("Kind")) has_meta=%(has_meta("Kind"))\n'
+Assets:Bank:Checking earliest=2024/01/15 latest=2024/03/12 latest_cleared=2024/02/21 d=2024/03/12 date=2024/03/12 earliest_checkin=[] latest_checkout=[] latest_checkout_cleared=false note=[] meta=[] tag=[] has_tag=false has_meta=false
+Budget:Food earliest=2024/01/15 latest=2024/03/12 latest_cleared=2024/01/15 d=2024/03/12 date=2024/03/12 earliest_checkin=[] latest_checkout=[] latest_checkout_cleared=false note=[] meta=[] tag=[] has_tag=false has_meta=false
+Expenses:Food earliest=2024/01/15 latest=2024/01/15 latest_cleared=2024/01/15 d=2024/03/12 date=2024/03/12 earliest_checkin=[] latest_checkout=[] latest_checkout_cleared=false note=[food aisle] meta=[] tag=[] has_tag=false has_meta=false
+Expenses:Food:Fruit earliest=2024/01/15 latest=2024/03/12 latest_cleared=2024/01/15 d=2024/03/12 date=2024/03/12 earliest_checkin=[] latest_checkout=[] latest_checkout_cleared=false note=[produce aisle] meta=[produce] tag=[produce] has_tag=true has_meta=true
+Work:Project earliest=2024/03/10 latest=2024/03/10 latest_cleared=2024/03/10 d=2024/03/10 date=2024/03/10 earliest_checkin=[2024/03/10 09:00:00] latest_checkout=[2024/03/10 11:30:00] latest_checkout_cleared=true note=[] meta=[] tag=[] has_tag=false has_meta=false
+end test
+
+; session: lot functions and helpers
+test reg Brokerage --format 'lot_price=%(lot_price) lot_date=%(lot_date(amount)) lot_tag=[%(lot_tag)] int=%(int(3.7)) min=%(min(2, 5)) max=%(max(2, 5)) str=%(str(5) + "x")\n'
+lot_price=$100.00 lot_date=2024/02/20 lot_tag=[] int=4 min=2 max=5 str=5x
+lot_price=$130.00 lot_date=2024/02/21 lot_tag=[] int=4 min=2 max=5 str=5x
+lot_price=$90.00 lot_date=2024/02/22 lot_tag=[] int=4 min=2 max=5 str=5x
+lot_price=$100.00 lot_date=2024/02/20 lot_tag=[] int=4 min=2 max=5 str=5x
+end test
+
+; session: account() returns the account as a scope
+test eval 'account("Expenses:Food:Fruit")'
+<#SCOPE>
+end test
+
+; a name no table binds falls through to the report's options
+test reg Fruit --flat --format 'flat=%(flat) options.flat=%(options.flat) columns=%(columns)\n'
+flat=true options.flat=true columns=80
+flat=true options.flat=true columns=80
+end test
+
+; edge: names in a --limit predicate are bound before any format runs
+test reg --limit 'has_tag("organic") or payee_changed or virtual' --format '%(account)\n'
+Expenses:Food:Fruit
+Budget:Food
+Savings:Goal
+Assets:Bank:Checking
+Budget:Food
+end test
+
+; edge: names in a select query
+test select 'account, amount from posts where virtual'
+(Budget:Food)                                                           $-12.35
+[Savings:Goal]                                                           $50.00
+[Assets:Bank:Checking]                                                  $-50.00
+(Budget:Food)                                                            $-3.00
+end test
+
+; edge: a sort key compiled against the first posting it sees
+test reg -S xact_id Checking --format '%(xact_id) %(amount)\n'
+2 $-1,000.00
+2 $-650.00
+2 $-180.00
+2 $480.00
+2 $-3.00
+3 $-14.35
+4 $-50.00
+end test

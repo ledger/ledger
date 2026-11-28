@@ -1,0 +1,31 @@
+; --lot-matching written in the journal applies as it does on the command
+; line: the sale consumes the oldest lot, and its $150.00 basis leaves the
+; $1360.00 of proceeds $160.00 short of balancing without a gain account.
+
+--lot-matching fifo
+
+2024/01/15 Buy First Lot
+    Assets:Brokerage         10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash          $-1500.00
+
+2024/02/15 Buy Second Lot
+    Assets:Brokerage          5 AAPL {$160.00} [2024/02/15]
+    Assets:Cash           $-800.00
+
+2024/03/15 Sell Some
+    Assets:Brokerage         -8 AAPL @ $170.00
+    Assets:Cash                 $1360.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 17:
+While balancing transaction from "$FILE", lines 15-17:
+> 2024/03/15 Sell Some
+>     Assets:Brokerage         -8 AAPL @ $170.00
+>     Assets:Cash                 $1360.00
+Unbalanced remainder is:
+             $160.00
+Amount to balance against:
+            $1360.00
+Error: Transaction does not balance
+end test

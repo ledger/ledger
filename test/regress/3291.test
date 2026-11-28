@@ -1,0 +1,67 @@
+; Control characters in an account name (#3291).
+;
+; mk_wcwidth() returns -1 for C0 and C1 control characters, and unistring
+; added that into a std::size_t.  The third segment of the bank account
+; below holds 43 NAK (0x15) bytes but only eight printable characters, so
+; its width wrapped around to nearly 2^64, as did the width of the whole
+; name, and format_t::truncate read outside the segment while abbreviating
+; it.  Control characters now occupy zero columns: the name is 29 columns
+; wide.
+;
+; The issue also pointed at the loop that trims whitespace from the end of
+; a shortened segment.  It indexed the segment's bytes by display column,
+; and once only whitespace was left in front of the cut it read the byte
+; before the segment, as " Savings and Loan Association" makes it do in
+; the last test.
+
+2025-01-01 * Opening
+    Assets:Bank:DemoBank:Checking          500.00 AZN
+    Equity:Balances
+
+2025-01-15 * Groceries
+    Expenses:Groceries                     80.00 AZN
+    Assets:Bank:DemoBank:Checking
+
+2025-01-20 * Transfer
+    Assets: Savings and Loan Association:Checking     100.00 AZN
+    Assets:Bank:DemoBank:Checking
+
+test reg
+25-Jan-01 Opening               As:Ba:DemoBan:Checking   500.00 AZN   500.00 AZN
+                                Equity:Balances         -500.00 AZN            0
+25-Jan-15 Groceries             Expenses:Groceries        80.00 AZN    80.00 AZN
+                                As:Ba:DemoBan:Checking   -80.00 AZN            0
+25-Jan-20 Transfer              As: Savings a:Checking   100.00 AZN   100.00 AZN
+                                As:Ba:DemoBan:Checking  -100.00 AZN            0
+end test
+
+test reg --account-width 20
+25-Jan-01 Opening               As:Ba:DemoB:Checking   500.00 AZN   500.00 AZN
+                                Equity:Balances       -500.00 AZN            0
+25-Jan-15 Groceries             Expenses:Groceries      80.00 AZN    80.00 AZN
+                                As:Ba:DemoB:Checking   -80.00 AZN            0
+25-Jan-20 Transfer              As: Savings:Checking   100.00 AZN   100.00 AZN
+                                As:Ba:DemoB:Checking  -100.00 AZN            0
+end test
+
+test --columns 100 reg -V
+25-Jan-01 Opening                    Assets:Bank:DemoBank:Checking       500.00 AZN      500.00 AZN
+                                     Equity:Balances                    -500.00 AZN               0
+25-Jan-15 Groceries                  Expenses:Groceries                   80.00 AZN       80.00 AZN
+                                     Assets:Bank:DemoBank:Checking       -80.00 AZN               0
+25-Jan-20 Transfer                   As: Savings and Loan:Checking       100.00 AZN      100.00 AZN
+                                     Assets:Bank:DemoBank:Checking      -100.00 AZN               0
+end test
+
+test reg --account-width 12 --abbrev-len 1
+25-Jan-01 Opening               ..D:Checking   500.00 AZN   500.00 AZN
+                                Equ:Balances  -500.00 AZN            0
+25-Jan-15 Groceries             Ex:Groceries    80.00 AZN    80.00 AZN
+                                ..D:Checking   -80.00 AZN            0
+25-Jan-20 Transfer              A::Checking    100.00 AZN   100.00 AZN
+                                ..D:Checking  -100.00 AZN            0
+end test
+
+test reg Savings --account-width 12 --abbrev-len 1
+25-Jan-20 Transfer              A::Checking    100.00 AZN   100.00 AZN
+end test

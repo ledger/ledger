@@ -1,6 +1,6 @@
-; Coverage for commodity.cc recursion found disparity in comparison
-; Two lots of the same commodity with different price commodities and numeric values
-; The comparison function recurses to compare numeric values, finds a disparity
+; Two lots of one commodity priced in different commodities ($ and EUR)
+; sort by the price commodity's symbol.  Here number and symbol agree;
+; lot-price-mixed-commodity-order.test covers a case where they do not.
 
 2024/01/01 Buy Lot 1
     Assets:Brokerage    10 AAPL {$150.00}

@@ -1,0 +1,23 @@
+; Journal.add_xact, called from Python after parsing has finished, applies
+; the journal's automated transactions and account check directives just
+; as parsing applies them to a transaction read from the file.
+
+account Expenses:Food
+    check amount < $5
+
+= /^Expenses:Food/
+    (Budget:Food)    -1
+
+2026/01/01 Opening
+    Assets:Cash        $100.00
+    Equity:Opening
+
+test python test/regress/py-add-xact-automated.py
+added: True
+Expenses:Food $10.00
+Assets:Cash $-10.00
+Budget:Food $-10.00
+__ERROR__
+Warning: Transaction check failed: (amount < {$5.00})
+  (check expression at "$FILE", line 5)
+end test

@@ -49,10 +49,10 @@
  *
  * Column mapping is automatic: the first row of the CSV file is treated as
  * a header row, and each column name is matched against a set of regex
- * patterns (e.g., "date", "payee|desc(ription)?|title", "credit|amount")
- * to determine which transaction field it populates.  Columns whose names
- * do not match any known pattern are stored as transaction tags using the
- * original column name.
+ * patterns (e.g., "date", "payee|desc(ription)?|title", "credit", "debit",
+ * "amount") to determine which transaction field it populates.  Columns
+ * whose names do not match any known pattern are stored as transaction
+ * tags using the original column name.
  *
  * The parser handles:
  *   - Quoted fields (double-quote and pipe delimiters, with escape sequences)
@@ -64,8 +64,7 @@
  *     payees
  *   - Rich metadata tagging (import date and original CSV line)
  *
- * @see textual.cc  The main journal parser that delegates to csv_reader
- *                  for `.csv` file includes.
+ * @see convert.cc  convert_command(), the only user of csv_reader.
  * @see xact_t     The transaction type produced by read_xact().
  */
 #pragma once
@@ -118,7 +117,7 @@ class csv_reader {
     FIELD_CODE,     ///< Transaction code (check number, reference)
     FIELD_PAYEE,    ///< Payee/description/title
     FIELD_CREDIT,   ///< Credit amount (positive inflow) or combined amount
-    FIELD_DEBIT,    ///< Debit amount (negated to represent outflow)
+    FIELD_DEBIT,    ///< Debit amount (a positive value is negated to an outflow)
     FIELD_COST,     ///< Cost basis for the posting
     FIELD_TOTAL,    ///< Running total (used for balance assertions)
     FIELD_NOTE,     ///< Transaction note
@@ -127,7 +126,7 @@ class csv_reader {
   };
 
   /// @brief Regex patterns matched against header column names, in priority order.
-  std::array<std::pair<mask_t, headers_t>, 10> masks;
+  std::array<std::pair<mask_t, headers_t>, 11> masks;
 
   std::vector<headers_t> index; ///< Column-to-field mapping, one entry per CSV column
   std::vector<string> names;    ///< Original header names, used as tag keys for FIELD_UNKNOWN
@@ -148,13 +147,16 @@ public:
       : context(_context), separator(_separator),
         masks{// Match the auxiliary date column before the generic "date" pattern so
               // header names such as "aux_date" or "posted date" are not swallowed
-              // by the substring match against "date".
+              // by the substring match against "date".  A header naming "credit" is a
+              // credit column, otherwise one naming "debit" is a debit column,
+              // otherwise a bare "amount" is a signed amount.
               std::make_pair(mask_t("^(aux([_ ]?date)?|posted( ?date)?)$"), FIELD_DATE_AUX),
               std::make_pair(mask_t("date"), FIELD_DATE),
               std::make_pair(mask_t("code"), FIELD_CODE),
               std::make_pair(mask_t("(payee|desc(ription)?|title)"), FIELD_PAYEE),
-              std::make_pair(mask_t("credit|amount"), FIELD_CREDIT),
+              std::make_pair(mask_t("credit"), FIELD_CREDIT),
               std::make_pair(mask_t("debit"), FIELD_DEBIT),
+              std::make_pair(mask_t("amount"), FIELD_CREDIT),
               std::make_pair(mask_t("cost"), FIELD_COST),
               std::make_pair(mask_t("total"), FIELD_TOTAL),
               std::make_pair(mask_t("note"), FIELD_NOTE),
@@ -205,7 +207,7 @@ public:
   xact_t* read_xact(bool rich_data);
 
   const std::string& get_last_line() const { return context.linebuf; } ///< Last line read from CSV
-  path get_pathname() const { return context.pathname; }               ///< CSV file path
+  path get_pathname() const { return context.pathname(); }             ///< CSV file path
   std::size_t get_linenum() const { return context.linenum; }          ///< Current line number
 };
 

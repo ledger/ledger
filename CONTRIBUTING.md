@@ -23,8 +23,9 @@ between C++ and the Python programming language.
 the `CMakeLists.txt` files.
 
 **[Doxygen]**: generates programming documentation from
-source code files.  Primarily used on C++ sources, but works on all.  Uses
-the `doc/Doxyfile.in` file.
+source code files.  Primarily used on C++ sources, but works on all.
+Configured in `doc/CMakeLists.txt` through `doxygen_add_docs`; enable it with
+`-DUSE_DOXYGEN=ON` (or `./acprep --doxygen`) and build the `doc.doxygen` target.
 
 **[GCC]**: Gnu Compiler Collection, which includes the
 *gcc* compiler and *gcov* coverage/profiler tool.
@@ -42,8 +43,11 @@ with correct rounding.
 format that produces *html* files from *.md* files.  Note that GitHub
 automatically renders *.md* files.
 
-**[SHA1]**: a marginally secure cryptographic hash function, used only for
-signing the license file.
+**[SHA1]**: a marginally secure cryptographic hash function.  Ledger uses
+Boost's implementation (`sha1sum()` in `src/utils.h`) to hash payees and
+account names under `--anon` and, in `convert`, to compute the
+duplicate-detection reference of a CSV line that has no UUID.  `--hashes`
+uses SHA-512 (`src/sha512.cc`) instead.
 
 **[Texinfo]**: Gnu documentation
 typesetter that produces *html* and *pdf* files from the `doc/\*.texi` files.
@@ -72,15 +76,26 @@ orientation:
 **./README.md**: user readme file in markdown format, also used as the project
   description on GitHub.
 
+**./benchmark/**: the CI performance gate (`run_benchmark.sh` times two
+  ledger binaries and `compare_benchmarks.py` compares the results) and
+  `profile.sh`, a Clang profiling and PGO helper.
+
+**./cmake/**: CMake find modules for the bundled utfcpp and immer, plus
+  packaging, coverage, lint and Python-module helpers.
+
 **./contrib/**: contributed scripts of random quality and completion.  They
   usually require editing to run.
 
 **./doc/**: documentation, licenses, and
   tools for generating documents such as the *pdf* manual.
 
-**./lib/**: a couple of libraries used in development.
+**./lib/**: bundled copies of utfcpp and immer, used when no system copy is
+  found.
 
 **./python/**:  samples using the Python ledger module.
+
+**./scripts/**:  `sanitizers.sh`, which builds Ledger with AddressSanitizer
+  and UndefinedBehaviorSanitizer and runs the test suite.
 
 **./src/**:  the C++ header and source files in a flat directory.
 
@@ -93,18 +108,18 @@ orientation:
 Building
 ---
 
-If you are going to be working on Ledger, you'll want to enable both debug
-builds (which are the default, using `acprep`), and also the use of
-pre-compiled headers.  To do this, specify your compiler as either `clang++`
-or `g++` as follows:
+If you are going to be working on Ledger, you'll want a debug build, which is
+the default flavor of `acprep`.  Pre-compiled headers for `system.hh` are on
+by default for every build type and compiler (the `PRECOMPILE_SYSTEM_HH` CMake
+option; configure with `-DPRECOMPILE_SYSTEM_HH=OFF` to turn them off).  To
+choose your compiler, pass `--compiler`:
 
     mkdir build
     ./acprep --compiler=clang++
     cd build/ledger/debug
     make
 
-This will set up a debug build using clang++ (and pre-compiled headers, which
-is enabled by the combination of those two), and then start a build.
+This will set up a debug build using clang++, and then start a build.
 
 For even quicker rebuilds, try the Ninja build tool, which is very fast at
 determining what to rebuild, and automatically takes advantage of multiple
@@ -129,6 +144,5 @@ cores:
 [GCC]: https://gcc.gnu.org
 [utfcpp]: https://utfcpp.sourceforge.net
 [small badge]: https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg
-[git-flow]: https://nvie.com/posts/a-successful-git-branching-model/
 [README.md]: https://github.com/ledger/ledger/blob/main/README.md
 [clang]: https://clang.llvm.org

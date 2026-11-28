@@ -1,0 +1,11 @@
+test python test/regress/python-identity-objects.py
+name is read-only
+Expenses:Food
+Expenses:Food
+self_details posts_count=1
+xdata self_details posts_count=1
+reassigned posting to Assets:Cash
+period Monthly with 2 postings
+Account() name='' depth=0
+AutomatedTransaction() constructed
+end test

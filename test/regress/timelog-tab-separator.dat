@@ -1,0 +1,9 @@
+; Journal for test/regress/timelog-tab-separator.test.  A TAB, not a
+; space, separates the time from the account on the check-in line.  It
+; cannot be the inline journal of a .test file: the Lean oracle that
+; test/semantic/check_all.py runs splits clock lines on spaces only and
+; rejects this line, and check_all.py fails on any inline positive
+; journal that the oracle cannot read.
+
+i 2024/01/18 09:00:00	Epsilon  Tab payee  ; tabbed
+o 2024/01/18 10:00:00

@@ -45,21 +45,22 @@
  * output is a nested list structure that Emacs can `read` directly into
  * Lisp objects for programmatic access to transaction and posting data.
  *
- * The output structure is:
+ * The output is a list with one flat list per transaction: five header
+ * elements followed directly by one list per posting.
  * @code
- * ((<xact-1-header>
- *   (<posting-1-line> <posting-2-line> ...))
- *  (<xact-2-header>
- *   (<posting-1-line> ...)))
+ * ((FILE LINE DATE CODE PAYEE
+ *   (POST-1)
+ *   (POST-2) ...)
+ *  (FILE LINE DATE CODE PAYEE
+ *   (POST-1) ...))
  * @endcode
  *
- * Each transaction header includes the source file path, line number,
- * date (as an Emacs time value or custom format), code, and payee.
- * Each posting includes the line number, account name, amount, clearing
- * state, and optional cost and note.
+ * FILE and LINE are the transaction's source path and line number, DATE
+ * an Emacs time value or a --lisp-date-format value, CODE and PAYEE
+ * strings or nil.  Each posting list holds the line number, account name,
+ * amount, clearing state, and optional cost and note.
  *
- * This mode is activated by the `--pager=emacs` or related Emacs
- * integration options in ledger-mode.
+ * Selected by the `emacs` command (alias `lisp`), which ledger-mode runs.
  */
 #pragma once
 
@@ -80,8 +81,6 @@ class report_t;
  * double-quoted string literals.
  */
 class format_emacs_posts : public item_handler<post_t> {
-  format_emacs_posts(); ///< Disabled default constructor (output stream is required).
-
 protected:
   report_t& report;  ///< The report context (provides date format options).
   std::ostream& out; ///< The output stream for s-expression output.
@@ -98,20 +97,27 @@ public:
 
   /// @brief Write the transaction header portion of the s-expression
   ///        (file path, line number, date, code, payee).
-  virtual void write_xact(xact_t& xact);
+  void write_xact(xact_t& xact);
 
-  /// @brief Close the outermost list and flush the stream.
+  /// @brief Close the outermost list and flush the stream.  Under
+  ///        --group-by this runs once per group, so forget the last
+  ///        transaction: the next group opens a list of its own.
   void flush() override {
-    if (last_xact)
+    if (last_xact) {
       out << "))\n";
+      last_xact = nullptr;
+    }
     out.flush();
   }
+
+  /// The lisp output reads amount, cost and note only, never running totals.
+  bool wants_running_total() const override { return false; }
 
   /// @brief Format a single posting as an s-expression list element.
   void operator()(post_t& post) override;
 
   /// @brief Escape backslashes and double quotes for Lisp string literals.
-  virtual string escape_string(string raw);
+  string escape_string(string raw);
 };
 
 } // namespace ledger

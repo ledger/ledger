@@ -1,0 +1,116 @@
+; The parse and format precommands evaluate against a hard-coded "Book
+; Store" sample transaction.  They used to parse it into the session's
+; journal: in a REPL or --script session the sample then showed up in
+; every later report, parse and format bound the user's first posting
+; instead of the sample, and --pedantic/--strict checked the sample
+; against the user's declarations.  The sample now lives in a private
+; journal.  (The shared commodity pool still learns $ precision 2 from
+; the sample's $-200.00, which is why the second balance shows cents.)
+
+2024/01/01 Grocer
+    Expenses:Food    $1
+    Assets:Cash
+
+test --script test/regress/precmd-sample-private-journal.dat | sed -E 's/^0x[0-9a-f]+ +/ADDR /'
+                 $-1  Assets:Cash
+                  $1  Expenses:Food
+--------------------
+                   0
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+amount
+
+--- Text as parsed ---
+amount
+
+--- Expression tree ---
+ADDR IDENT: amount (1)
+
+--- Compiled tree ---
+ADDR IDENT: amount (1)
+ADDR FUNCTION (1)
+
+--- Calculated value ---
+20 BOOK
+              $-1.00  Assets:Cash
+               $1.00  Expenses:Food
+--------------------
+                   0
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%(account)
+
+--- Format elements ---
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: account
+
+--- Formatted string ---
+"Expenses:Books"
+24-Jan-01 Grocer                Expenses:Food                 $1.00        $1.00
+                                Assets:Cash                  $-1.00            0
+end test
+
+test --pedantic parse 1 | sed -E 's/^0x[0-9a-f]+ +/ADDR /'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+1
+
+--- Text as parsed ---
+{1}
+
+--- Expression tree ---
+ADDR VALUE: 1 (1)
+
+--- Compiled tree ---
+ADDR VALUE: 1 (1)
+
+--- Calculated value ---
+1
+end test
+
+test --strict format x
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+x
+
+--- Format elements ---
+Element:  STRING  flags: 0x0  min:  0  max:  0   str: 'x'
+
+--- Formatted string ---
+"x"
+end test

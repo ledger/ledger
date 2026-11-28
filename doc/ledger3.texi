@@ -1211,16 +1211,24 @@ Ledger treats @samp{%} as a built-in commodity with special arithmetic
 semantics.  Amounts written with a @samp{%} suffix---such as
 @samp{19%} or @samp{2.5%}---are percentage values.  Unlike ordinary
 commodities, which simply label a quantity, a @samp{%} amount is
-automatically treated as its fractional equivalent whenever it appears
-as the operand of multiplication or division.
+treated as its fractional equivalent whenever it is an operand of
+multiplication or division in a value expression (an amount expression
+such as @samp{($100.00 * 19%)}, a format, or an automated transaction).
+
+Everywhere else @samp{%} is an ordinary commodity: a posting of
+@samp{10% @@ $5} costs @samp{$50}, and @samp{10 BOND @@ 98.5%} costs
+@samp{985%}.
 
 @table @asis
 @item Multiplication
-The percentage is divided by 100 before the product is formed, so the
-result has the commodity of the other operand rather than @samp{%}:
+The percentage may be either operand, and the other operand may be an
+amount or a balance of several commodities.  The percentage is divided
+by 100 before the product is formed, so the result has the commodity of
+the other operand rather than @samp{%}:
 
 @example
 $1000.00 * 19%  @result{}  $190.00    (not $19000.00)
+19% * $1000.00  @result{}  $190.00
 @end example
 
 @item Division
@@ -1237,6 +1245,15 @@ takes place, preserving the natural percentage convention:
 
 @example
 10% * 10%  @result{}  1%   (i.e., 0.10 × 0.10 = 0.01 = 1%)
+@end example
+
+@item Percentage × number
+A bare number has no commodity for the product to take, so the
+percentage is not divided; the product stays a percentage, in either
+order:
+
+@example
+10 * 19%  @result{}  190%   (i.e., 10 × 0.19 = 1.9 = 190%)
 @end example
 
 @item Addition and subtraction
@@ -2529,6 +2546,9 @@ Assets:Checking
 Expenses:Food ; Dining
 @end smallexample
 
+An indented line that begins with any other word is an error, so that
+a misspelled sub-directive is reported rather than ignored.
+
 @item apply account
 @findex apply account
 @c instance_t::master_account_directive
@@ -2639,6 +2659,70 @@ $ ledger balance --no-total --recursive-aliases ^Exp
 
 The option @option{--no-aliases} completely disables alias expansion.
 All accounts are read verbatim as they are in the ledger file.
+
+@item account-rewrite
+@itemx payee-rewrite
+@findex account-rewrite
+@findex payee-rewrite
+@c instance_t::account_rewrite_directive in textual_directives.cc
+@c instance_t::payee_rewrite_directive in textual_directives.cc
+Rename accounts or payees in reports.  Each directive takes a regular
+expression and a replacement, separated by at least two spaces or a
+tab.  @code{account-rewrite} matches the full name of each posting's
+account, and @code{payee-rewrite} the payee of its transaction, both
+ignoring case; a match replaces the whole name with the replacement.
+When several rules match, the first one given wins, and rules given
+with @option{--account-rewrite} or @option{--payee-rewrite} are tried
+before those in the journal.  Unlike @code{alias}, which changes
+account names as the journal is read, a rewrite happens as postings
+enter a report, so the journal itself is unchanged.
+
+@smallexample @c input:9F558E7
+payee-rewrite ^AMZN  Amazon
+account-rewrite ^Expenses:Shop  Expenses:Online
+
+2024/03/01 AMZN Mktp US*2K4
+    Expenses:Shopping:Books      $25.00
+    Liabilities:Visa
+
+2024/03/02 amzn digital
+    Expenses:Shopping            $10.00
+    Liabilities:Visa
+@end smallexample
+
+@smallexample @c command:9F558E7
+$ ledger -f rewrite.dat reg
+@end smallexample
+
+@smallexample @c output:9F558E7
+24-Mar-01 Amazon                Expenses:Online              $25.00       $25.00
+                                Liabilities:Visa            $-25.00            0
+24-Mar-02 Amazon                Expenses:Online              $10.00       $10.00
+                                Liabilities:Visa            $-10.00            0
+@end smallexample
+
+A query matches the names the journal wrote, not the rewritten ones,
+so @samp{Shopping} below still selects the posting that the report
+shows under @samp{Expenses:Online}; and the @option{--payee-rewrite}
+rule given on the command line wins over the journal's
+@code{payee-rewrite} directive, which matches the same payee:
+
+@smallexample @c input:DD8CF31
+payee-rewrite ^AMZN  Amazon
+account-rewrite ^Expenses:Shop  Expenses:Online
+
+2024/03/02 amzn digital
+    Expenses:Shopping:Books      $10.00
+    Liabilities:Visa
+@end smallexample
+
+@smallexample @c command:DD8CF31
+$ ledger --payee-rewrite 'digital=Kindle Store' reg Shopping
+@end smallexample
+
+@smallexample @c output:DD8CF31
+24-Mar-02 Kindle Store          Expenses:Online              $10.00       $10.00
+@end smallexample
 
 @item assert
 @findex assert
@@ -2762,6 +2846,10 @@ symbol is to use the commodity declared in this block.
 
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
+
 @item define
 @findex define
 @c instance_t::define_directive in textual.cc
@@ -2827,6 +2915,10 @@ the uuid given should have the declared payee name substituted:
 
 Ledger will display the mapped payees in @command{print} and
 @command{register} reports.
+
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
 
 @item apply tag
 @findex apply tag
@@ -2913,6 +3005,10 @@ the context of any use of the related tag.  In such a context,
 ``value'' is bound to the value of the tag (which may be something else
 but a string if typed metadata is used!).  Such checks or assertions are
 not called if no value is given.
+
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
 
 @item test
 @findex test
@@ -3679,14 +3775,20 @@ is one) there is an equals sign, then Ledger will verify that the
 total value for that account as of that posting matches the amount
 specified.  See @option{--permissive} option to relax the balance assertions checks.
 
-There are two forms of this features: balance assertions, and balance assignments.
-Note that both of these are processed while parsing the given ledger files.
-Hence the order in which these are evaluated is the order in which they appear in
-the ledger file.
-The date or effective date of the transactions and postings that contain the
-balance assertions or balance assignments is therefore irrelevant for the
-the evaluation of the balance assertions and balance assignments.
-This may be confusing to people for whom a date order is more intuitive.
+There are two forms of this feature: balance assertions, and balance
+assignments.  Both are processed while Ledger parses the journal, so
+they see only the postings that come before them in the file.  Of
+those postings, they count only the ones dated on or before the date
+of the posting that carries the assertion or assignment: a
+transaction dated later does not disturb them, even when it appears
+earlier in the file.  A transaction dated earlier that appears later
+in the file is not counted either.  The posting's date is its own date
+when it has one (for example a @samp{[DATE]} note after the amount),
+else its transaction's.  Under @option{--effective}, a posting with an
+effective date is checked as of that date, and one without is checked
+against every posting read so far.  The option
+@option{--check-in-file-order} counts every posting parsed so far,
+whatever its date, as Ledger did before version 3.5.
 
 @node Balance assertions, Balance assignments, Balance verification, Balance verification
 @subsection Balance assertions
@@ -3741,6 +3843,41 @@ assert that an account is totally empty.
 
 The last transaction will assert that we are out of cash of any sort.
 
+Because an assertion counts only the postings dated on or before its
+own date, the assertion in this journal holds even though the grocery
+purchase dated July 20 comes first in the file:
+
+@smallexample @c input:FBA128C
+2024/07/20 Grocery
+    Expenses:Food                $30.00
+    Assets:Checking
+
+2024/07/01 Paycheck
+    Assets:Checking            $1000.00
+    Income:Salary
+
+2024/07/10 Rent
+    Expenses:Rent               $500.00
+    Assets:Checking            $-500.00 = $500.00
+@end smallexample
+
+@smallexample @c command:FBA128C
+$ ledger -f assert.dat bal
+@end smallexample
+
+@smallexample @c output:FBA128C
+             $470.00  Assets:Checking
+             $530.00  Expenses
+              $30.00    Food
+             $500.00    Rent
+           $-1000.00  Income:Salary
+--------------------
+                   0
+@end smallexample
+
+With @option{--check-in-file-order} the same journal fails, because
+the assertion then also counts the $30.00 grocery purchase.
+
 @node Balance assignments, Resetting a balance, Balance assertions, Balance verification
 @subsection Balance assignments
 
@@ -3755,6 +3892,10 @@ A balance assignment has this form:
 This sets the amount of the second posting to whatever it would need to
 be for the total in @samp{Assets:Cash} to be $500.00 after the posting.
 If the resulting amount is not $-20.00 in this case, it is an error.
+
+A balance assignment counts the same postings as a balance assertion:
+those earlier in the file and dated on or before it (@pxref{Balance
+verification}).
 
 @node Resetting a balance, Balancing transactions, Balance assignments, Balance verification
 @subsection Resetting a balance
@@ -4297,10 +4438,12 @@ BTC with FIFO matching:
     Income:Capital Gains
 @end smallexample
 
-Ledger splits this into two postings internally: @code{-2 BTC} matched
-against Lot A (fully consumed) and @code{-0.5 BTC} matched against
-Lot B.  The sale cost is split proportionally across the generated
-postings.
+Ledger splits this into two postings: @code{-2 BTC} matched against
+Lot A (fully consumed) and @code{-0.5 BTC} matched against Lot B.
+Each keeps the original posting's note, tags and state, and takes its
+proportional share of the sale cost; @command{print} writes both, so
+its output reads back to the same lots.  A sale larger than all of the
+account's lots books the rest as a posting of its own, with no lot.
 
 @subsection Gain and Loss Calculation
 
@@ -4329,8 +4472,12 @@ price @samp{@{@dots{}@}} or lot date @samp{[@dots{}]}.
 The commodity has been seen with annotations in prior postings (that is,
 there are existing lots to match against).
 @item
-The account holds lots with acquisition dates; only dated lots
-participate in FIFO/LIFO ordering.
+The selling account holds lots with acquisition dates; only dated lots
+participate in FIFO/LIFO ordering.  A lot without a date annotation is
+dated by the account's first posting of it.  Only the selling account's
+own lots count, including those it acquired earlier in the same
+transaction.  Lots of the same date are consumed in the order the
+account acquired them under FIFO, and in the reverse order under LIFO.
 @end enumerate
 
 If any of these conditions are not met, the posting is left as-is and no
@@ -4423,6 +4570,74 @@ indicate what is being desired.
 In most cases, it is simplest to either use explicit amounts in your
 valuation expressions, or just pass the arguments down to @samp{market}
 after modifying them to suit your needs.
+
+A valuation that a posting does not write in doubled parentheses
+itself, but that Ledger finds for it elsewhere, is given to the
+posting's lot when the amount has a lot annotation (a price, a date or
+a note).  Ledger takes the first of these that is given: a
+@samp{Value:} tag, the @code{value} of the posting's account,
+@option{--account-value-expr}, the @code{value} of its commodity,
+@option{--commodity-value-expr}, and the journal's top-level
+@code{value} directive or @option{--value-expr}.  The valuation then
+belongs to the lot and not to the posting: every amount of that lot,
+in any account and wherever it appears in the journal, is valued with
+it.  A lot that thereby gets
+the same annotation as a lot written with that valuation in doubled
+parentheses is the same lot, so balances, balance assertions and
+sales treat the two as one.  An amount without a lot annotation is
+instead annotated with the valuation alone.
+
+Here only @samp{Assets:Broker} gives a valuation, yet the plainly
+written lot that @samp{Assets:Retirement} bought the day before, and
+the lot @samp{Assets:Savings} writes with the valuation spelled out,
+are one lot:
+
+@smallexample @c input:BCF4DF0
+account Assets:Broker
+    value $7
+
+2020/01/01 Buy
+    Assets:Retirement    10 AAPL @{$5@} [2020/01/01]
+    Assets:Cash         $-50
+
+2020/01/02 Buy
+    Assets:Broker        10 AAPL @{$5@} [2020/01/01]
+    Assets:Cash         $-50
+
+2020/01/03 Buy
+    Assets:Savings       10 AAPL @{$5@} [2020/01/01] (($7))
+    Assets:Cash         $-50
+@end smallexample
+
+@smallexample @c command:BCF4DF0
+$ ledger bal --lots
+@end smallexample
+
+@smallexample @c output:BCF4DF0
+                             $-150
+30 AAPL @{$5@} [2020/01/01] ((@{$7@}))  Assets
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Broker
+               $-150    Cash
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Retirement
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Savings
+--------------------
+                             $-150
+30 AAPL @{$5@} [2020/01/01] ((@{$7@}))
+@end smallexample
+
+@smallexample @c command:120F3B4,with_input:BCF4DF0
+$ ledger bal -V
+@end smallexample
+
+@smallexample @c output:120F3B4
+                 $60  Assets
+                 $70    Broker
+               $-150    Cash
+                 $70    Retirement
+                 $70    Savings
+--------------------
+                 $60
+@end smallexample
 
 @node Automated Transactions,  , Lot value expressions, Transactions
 @section Automated Transactions
@@ -4562,7 +4777,7 @@ reached a certain level.  In the example below, an automated posting
 adds $60.00 to @samp{Assets:Budget} for each income posting, but only
 fires while the budget balance is below $50.00:
 
-@smallexample @c input:04D8BC7
+@smallexample @c input:1ADE429
 = expr account =~ /^Income/ and account("Assets:Budget").total < $50.00
     [Assets:Budget]             $60.00
     [Assets:Savings]           -$60.00
@@ -4581,11 +4796,11 @@ zero, bringing it to $60.00.  The second posting finds the budget
 already at $60.00, which is not below the threshold, so the rule does
 not fire again.
 
-@smallexample @c command:04D8BC7
+@smallexample @c command:1ADE429
 $ ledger balance Assets:Budget
 @end smallexample
 
-@smallexample @c output:04D8BC7
+@smallexample @c output:1ADE429
               $60.00  Assets:Budget
 @end smallexample
 
@@ -4614,6 +4829,38 @@ Becomes:
     (Budget:Expenses:Food)      $200.00
     Assets:Cash                 $-20.00
 @end smallexample
+
+More generally, @samp{$@var{name}} is replaced by the value of the
+identifier @var{name}, evaluated against the matched posting's
+account, whenever that value is a string.  For instance,
+@samp{$account_base} gives the last component of the matched
+account's name:
+
+@smallexample @c input:0AD27EC
+= /^Expenses:Food/
+    (Budget:$account_base)           1
+
+2012-03-10 KFC
+    Expenses:Food:Dining          $20.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:0AD27EC
+$ ledger balance --flat Budget
+@end smallexample
+
+@smallexample @c output:0AD27EC
+              $20.00  Budget:Dining
+@end smallexample
+
+Each @samp{$@var{name}} in an account is replaced by its own value.  A
+name that is not defined, or whose value is not a string, is left in
+the account name as written, so an account such as
+@samp{Savings:$Jar} needs no escaping.  A defined function that needs
+arguments, such as @samp{$abs}, is an error.  Any @samp{%(@var{VEXPR})},
+described next, is expanded first; in an account that also contains a
+@samp{$@var{name}}, a @samp{$@var{name}} in that expansion is replaced
+like one written in the account.
 
 It is possible to refer to information within the posting using a @var{VEXPR}.  Note that the syntax for using a @var{VEXPR} is "%(@var{VEXPR})".
 
@@ -4965,6 +5212,12 @@ automated transactions at once:
 
 This disables both @samp{tax:federal} and @samp{tax:state} automated
 transactions with a single command.
+
+Inside @samp{/@dots{}/} the command's pattern keeps its backslash
+escapes, as a @samp{/regex/} in a query does: @samp{= /tax\.federal/
+disable} matches only a literal dot.  Inside quotes every backslash is
+dropped, and so is every backslash in a name being defined:
+@samp{= /c\.d/ :: /^Income:/} defines the name @samp{c.d}.
 
 If a command's pattern does not match any automated transaction,
 a warning is issued.
@@ -5780,6 +6033,9 @@ line of the file.  The fields ledger can recognize contain these
 case-insensitive strings @code{date}, @code{posted}, @code{code},
 @code{payee} or @code{desc} or @code{description}, @code{amount} or
 @code{credit}, @code{debit}, @code{cost}, @code{total}, and @code{note}.
+A header containing @code{credit} names a credit column; otherwise one
+containing @code{debit} names a debit column, so headers such as
+@samp{Amount Debit} and @samp{Amount Credit} are recognized as they are.
 
 Delete the account description lines at the top, and replace the first
 line in the data above with:
@@ -6643,15 +6899,52 @@ Posts this month
 @subsection @command{select}
 @findex select
 
-@command{select query}
-The Command @command{select query} allows generation of SQL-like queries, e.g.,
+The @command{select} command reports postings with an SQL-like query
+written after the command name:
 
-List all postings matching the query.
-This command allows to generate SQL-like queries, e.g.:
-
-@smallexample
-ledger select date,amount from posts where account=~/Income/
+@smallexample @c command:BD98897
+$ ledger -f sample.dat select date,amount from posts where account=~/Income/
 @end smallexample
+
+@smallexample @c output:BD98897
+04-May-14     -500.00€
+04-May-14     $-500.00
+04-May-14   $-1,000.00
+@end smallexample
+
+The query is made of these clauses (a keyword may be written in any
+case), beginning with the column list:
+
+@table @code
+@item @var{EXPR}, @dots{}
+The columns to print, each a value expression.  The @code{date},
+@code{payee}, @code{account}, @code{amount} and @code{total} columns
+are sized as in the @command{register} report.
+
+@item from @var{SOURCE}
+What to report: @code{posts} or @code{postings} (the default),
+@code{xacts}, @code{txns} or @code{transactions} (printed as the
+@command{print} command prints them), @code{accounts}, or
+@code{commodities}.
+
+@item where @var{EXPR}
+Report only the postings for which the value expression is true, as
+@option{--limit} does.
+
+@item display @var{EXPR}
+Show only the postings for which the value expression is true, as
+@option{--display} does.
+
+@item collect @var{EXPR}
+Use the value expression as each posting's amount, as
+@option{--amount} does.
+
+@item group by @var{EXPR}
+Report the postings in groups, as @option{--group-by} does.
+
+@item style @var{NAME}
+Accepted and ignored.
+@end table
 
 @node Command-Line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-Line Syntax
@@ -7299,7 +7592,8 @@ the resolution order.
 
 @item --day-break
 Break up @command{register} report of @ref{timelog} entries that span multiple
-days by day.
+days by day.  Under @option{--time-round}, each day's part of such an entry is
+rounded up on its own.
 @c see test/baseline/opt-day-break.dat
 @c @smallexample @c input:
 @c i 2015/
@@ -7351,7 +7645,8 @@ Format Codes}).
 Automatically match unannotated commodity sales against existing lot
 holdings using the specified @var{POLICY}.  Valid values are
 @samp{fifo} (match against the oldest lot first) and @samp{lifo}
-(match against the newest lot first).  When a sale spans multiple
+(match against the newest lot first); @samp{none}, the default, turns
+matching off.  When a sale spans multiple
 lots, the posting is automatically split.  If the posting also
 specifies a sale price using @samp{@@}, gain or loss is computed
 based on the matched lot's cost basis.  @xref{Automatic Lot
@@ -7435,11 +7730,32 @@ with the @option{--time-colon} option they will be displayed as 2:15.
 Round timelog durations up to the next multiple of @var{INT} minutes.
 This is useful for billing in fixed increments.  For example, with
 @option{--time-round 15}, a 7-minute checkin is rounded up to 15 minutes
-and a 31-minute checkin is rounded up to 45 minutes.
+and a 31-minute checkin is rounded up to 45 minutes:
 
-@smallexample @c command:
+@smallexample @c input:7036D60
+i 2024/01/01 09:00:00 Projects:Alpha
+o 2024/01/01 09:07:00
+i 2024/01/01 10:00:00 Projects:Beta
+o 2024/01/01 10:31:00
+@end smallexample
+
+@smallexample @c command:7036D60
 $ ledger bal --time-round 15
 @end smallexample
+
+@smallexample @c output:7036D60
+               1.00h  Projects
+               15.0m    Alpha
+               45.0m    Beta
+--------------------
+               1.00h
+@end smallexample
+
+Each timelog entry is rounded on its own.  With @option{--day-break}, a
+session that spans midnight becomes one entry per day, and each is rounded
+separately: with @option{--time-round 15}, a session from 23:55 to 00:05 is
+reported as 15 minutes on each day, 30 minutes in all, where without
+@option{--day-break} it is one 10-minute entry rounded up to 15 minutes.
 
 @item --value-expr @var{VEXPR}
 Set a global value expression annotation.  This is the lowest-priority
@@ -7474,6 +7790,17 @@ desired width.
 Prepend @var{STR} to all accounts reported.  That is, the option
 @samp{--account Personal} would tack @samp{Personal:} to the beginning
 of every account reported in a balance report or register report.
+
+@item --account-rewrite @var{PATTERN}=@var{REPLACEMENT}
+In reports, show every account whose full name matches the regular
+expression @var{PATTERN}, ignoring case, as @var{REPLACEMENT}.  The
+argument is split at its first @samp{=}.  The option may be given more
+than once; the first matching rule wins, and these rules are tried
+before those of @code{account-rewrite} directives in the journal
+(@pxref{Command Directives}).  In a @option{--script} file or at the
+REPL prompt, a rule given with this option applies only to the command
+that gives it; one given on the @command{ledger} command line, before
+@option{--script}, applies to every command.
 
 @item --account-width @var{INT}
 Set the width of the account column in the @command{register} report
@@ -7692,6 +8019,11 @@ Strings}).  The default is:
 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
 "%(quoted(join(note | xact.note)))\n"
 @end smallexample
+
+@item --csv-separator @var{CHAR}
+Use @var{CHAR} as the field separator when @command{convert} reads a
+CSV file.  @samp{\t} or @samp{tab} selects a tab; otherwise the first
+character of @var{CHAR} is used.  The default is a comma.
 
 @item --current
 Shorthand for @samp{--limit "date <= today"}.
@@ -7994,6 +8326,13 @@ Group transactions together in the @command{register} report.
 @var{EXPR} can be anything, although most common would be @code{payee}
 or @code{commodity}.  The @code{tags()} function is also useful here.
 
+@item --group-by-cumulative
+With @option{--group-by}, do not reset totals between groups, so that
+each group's totals include the postings of every group before it.
+Groups are taken in the order of their @var{EXPR} values, so with
+@samp{--group-by date} a @command{balance} report shows the balance as
+of each date.
+
 @item --no-group-by
 Cancel any prior @option{--group-by} option, restoring flat ungrouped
 output.  This is useful for overriding a @option{--group-by} set in a
@@ -8078,6 +8417,46 @@ Print the first @var{INT} entries.  Opposite of @option{--tail
 @item --historical
 @itemx -H
 Value commodities at the time of their acquisition.
+
+@item --ignore-diacritics
+When matching a regular expression, such as a query term, fold
+accented letters to their base letters in both the pattern and the
+text, so that @samp{cafe} matches @samp{Café}.  Only letters of the
+Latin-1 Supplement and Latin Extended-A blocks are folded, and
+@code{include} file globs are never folded.
+
+Folding applies wherever Ledger matches a regular expression against
+text: query terms, such as @samp{@@cafe} below, @code{=~} in value
+expressions, the @code{alias} patterns of a @code{payee} directive,
+and the patterns of @code{account-rewrite} and @code{payee-rewrite}.
+Each accented letter is read as one plain letter, so @samp{ß} reads
+as @samp{s} and @samp{Œ} as @samp{O}; letters outside the two blocks
+are compared as written.
+
+@smallexample @c input:5272EAD
+2024/01/05 Café Ñandú
+    Expenses:Coffee             $4.50
+    Assets:Cash
+
+2024/01/06 Cafeteria
+    Expenses:Food               $9.00
+    Assets:Cash
+
+2024/01/07 Bakery
+    Expenses:Food               $3.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:5272EAD
+$ ledger --ignore-diacritics reg @@cafe
+@end smallexample
+
+@smallexample @c output:5272EAD
+24-Jan-05 Café Ñandú            Expenses:Coffee               $4.50        $4.50
+                                Assets:Cash                  $-4.50            0
+24-Jan-06 Cafeteria             Expenses:Food                 $9.00        $9.00
+                                Assets:Cash                  $-9.00            0
+@end smallexample
 
 @item --immediate
 Evaluate calculations immediately rather than lazily.
@@ -8228,6 +8607,17 @@ Sets a value expression for formatting the payee.  In the
 @command{register} report this prevents the second entry from having
 a date and payee for each transaction.
 
+@item --payee-rewrite @var{PATTERN}=@var{REPLACEMENT}
+In reports, show every payee that matches the regular expression
+@var{PATTERN}, ignoring case, as @var{REPLACEMENT}.  The argument is
+split at its first @samp{=}.  The option may be given more than once;
+the first matching rule wins, and these rules are tried before those
+of @code{payee-rewrite} directives in the journal (@pxref{Command
+Directives}).  In a @option{--script} file or at the REPL prompt, a
+rule given with this option applies only to the command that gives
+it; one given on the @command{ledger} command line, before
+@option{--script}, applies to every command.
+
 @item --payee-width @var{INT}
 Set the number of columns dedicated to the payee in the register
 report to @var{INT}.
@@ -8333,7 +8723,15 @@ Define the output format for a total data plot.  @xref{Visualizing with
 Gnuplot}.
 
 @item --prepend-format @var{FORMAT_STRING}
-Prepend @var{STR} to every line of the output.
+Prepend @var{FORMAT_STRING} to the start of each entry of the report.
+An entry that spans several lines, such as a @command{register} posting
+with amounts in two commodities, gets it once, on its first line; the
+separator line above the @command{balance} total gets none.  The
+@command{register}, @command{csv}, @command{prices}, @command{pricedb},
+@command{balance}, @command{budget}, @command{cleared} and
+@command{accounts} reports honor it; the other reports, such as
+@command{payees}, @command{tags}, @command{commodities},
+@command{select} and @command{print}, ignore it.
 
 @item --prepend-width @var{INT}
 Reserve @var{INT} spaces at the beginning of each line of the output.
@@ -8418,6 +8816,13 @@ Used as part of development testing.
 @itemx -S @var{VEXPR}
 Sort the @command{register} report based on the value expression given
 to sort.
+In the @command{balance} report @code{amount} in @var{VEXPR} is the
+figure an account's line shows: in the account tree the total of the
+account and its sub-accounts, unless @option{--total} names another
+expression; with @option{--flat} the account's own amount.  An
+account with no postings of its own sorts by its total.
+With @option{--exchange}, amounts in @var{VEXPR} are converted at the
+date the report values each line.
 
 @item --sort-all
 Sort all accounts and commodities.
@@ -8430,7 +8835,11 @@ Sort the postings within transactions using the given value expression.
 Shift the starting day of monthly, quarterly, and yearly report periods
 by @var{INT} days.  For example, @samp{--monthly --period-shift 15}
 makes monthly periods run from the 16th of one month to the 15th of the
-next.  Does not affect weekly or daily periods.  See also
+next.  Does not affect weekly or daily periods.  Each period starts
+exactly @var{INT} days after the first day of its calendar month,
+quarter or year, so a shift of 28 days or more can carry a boundary
+into the following month: in 2024, @samp{--monthly --period-shift 30}
+starts periods on January 31, March 2, March 31 and May 1.  See also
 @samp{--start-of-week}.
 
 @item --start-of-week @var{STR}
@@ -8965,7 +9374,7 @@ Define the output format for the @command{register} report.  The default
                  true, color),
                  bold if should_bold))
        %(ansify_if(
-         justify(scrub(display_total), int(total_width),
+         justify(scrubbed_display_total, int(total_width),
                  4 + int(meta_width) + int(date_width) + int(payee_width)
                    + int(account_width) + int(amount_width) + int(total_width)
                    + int(prepend_width), true, color),
@@ -9005,7 +9414,7 @@ Set the format for total plots, using the @option{--total-data (-J)}
 option.  The default is:
 
 @smallexample
-"%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n"
+"%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n"
 @end smallexample
 
 @item --pricedb-format @var{FORMAT_STRING}
@@ -9412,6 +9821,17 @@ next week
 last week
 @end smallexample
 
+A @var{SPEC} without a year, such as @samp{10/1} or @samp{oct}, means
+its most recent occurrence on or before today (or the date given to
+@option{--now}): in June 2024, @samp{oct} is October 2023 and @samp{jun}
+is June 2024.  The same rule applies to @option{--begin} and
+@option{--end} and to dates in square brackets in value expressions.  An
+end @var{SPEC} without a year that follows a begin means its first
+occurrence that does not fall before that begin, so @samp{from mar to
+oct} in June 2024 runs from March to October 2024 and @samp{10/15 - oct}
+covers the second half of October 2023.  Write @samp{this oct} to name
+this year's October before it arrives.
+
 The beginning and ending can be given at the same time, if it spans a
 single period.  In that case, just use @var{SPEC} by itself.  In that
 case, the period @samp{oct}, for example, will cover all the days in
@@ -9454,10 +9874,12 @@ The following keywords can be used to specify common dates:
 
 @table @code
 @item today
-The current date.
+@itemx tday
+The current date (both @code{today} and @code{tday} can be used).
 
 @item tomorrow
-The day after today.
+@itemx tmrw
+The day after today (both @code{tomorrow} and @code{tmrw} can be used).
 
 @item yesterday
 @itemx yday
@@ -9630,6 +10052,57 @@ but by date only, and not against the running total:
 
 @smallexample @c command:validate
 $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
+@end smallexample
+
+Forecast postings start with the period that contains today's date,
+or the date given by @option{--now}, so a monthly periodic transaction
+forecast on July 15 first appears on July 1.  Forecasting stops when
+@var{VEXPR} becomes false, and in any case @option{--forecast-years}
+years (5 by default) after today:
+
+@smallexample @c input:69607D0
+~ Monthly
+    Expenses:Rent               $500.00
+    Assets:Checking
+
+2024/06/01 Opening Balance
+    Assets:Checking            $1200.00
+    Equity:Opening Balances
+@end smallexample
+
+@smallexample @c command:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "d<[2024/10/01]" reg Checking
+@end smallexample
+
+@smallexample @c output:69607D0
+24-Jun-01 Opening Balance       Assets:Checking            $1200.00     $1200.00
+24-Jul-01 Forecast transaction  Assets:Checking            $-500.00      $700.00
+24-Aug-01 Forecast transaction  Assets:Checking            $-500.00      $200.00
+24-Sep-01 Forecast transaction  Assets:Checking            $-500.00     $-300.00
+@end smallexample
+
+The @command{balance} report stops at the same date, and shows the
+balance after the last forecast posting:
+
+@smallexample @c command:A5C9423,with_input:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "d<[2024/10/01]" bal Checking
+@end smallexample
+
+@smallexample @c output:A5C9423
+            $-300.00  Assets:Checking
+@end smallexample
+
+The @command{balance} report keeps no running total for forecast
+postings, so a @var{VEXPR} that tests the total, such as
+@samp{T>@{$-500.00@}}, is false from the start there, and the report
+adds no forecast posting:
+
+@smallexample @c command:8263336,with_input:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "T>@{$-500.00@}" bal Checking
+@end smallexample
+
+@smallexample @c output:8263336
+            $1200.00  Assets:Checking
 @end smallexample
 
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
@@ -9923,8 +10396,12 @@ A @strong{string literal} is written in single quotes
 without quotes (or wrap it in braces, see below).  The exception is a
 double-quoted string followed by a quantity, such as
 @samp{"ab cd" 17}: that is an amount of the commodity @samp{ab cd},
-written as in a journal.  Use the literal that does not collide with
-any contained quotes.
+written as in a journal.  As after a name, the quantity may begin with
+a minus sign, so @samp{"ab" -1} and @samp{"ab"-1} are amounts; write
+@samp{"ab" - 1} to subtract.  A plus sign or comma after the closing
+quote is an operator, so @samp{"ab"+1} concatenates.  A double-quoted
+token that is not a well-formed amount is a string.  Use the literal
+that does not collide with any contained quotes.
 
 A @strong{brace-amount literal} like @samp{@{$10.00@}} parses the
 contents as an amount without commodity migration, so the precision
@@ -10093,9 +10570,74 @@ scope it equals the running posting index, and in account scope it
 sums the postings of an account and all its subaccounts.
 
 @item subcount
+@itemx is_index
 In account scope, the number of postings affecting the account
 itself without considering subaccounts (the same value @code{n}
-returns in account scope).
+returns in account scope).  @code{is_index} is an older name for
+@code{subcount}.
+
+@item capital_gain
+For a posting that sells from a lot, that is, a negative amount with
+a lot price such as @samp{-10 AAPL @{$150.00@} @@ $250.00}, the gain
+the sale realizes: the lot's cost less the amount's market value on
+the posting's @code{value_date}, positive for a gain.  Zero for every
+other posting, and when no market price is known.
+
+@smallexample @c input:F82A918
+2024/01/01 Buy
+    Assets:Broker    10 AAPL @@ $150.00
+    Assets:Cash
+
+2024/06/01 Sell
+    Assets:Broker    -10 AAPL @{$150.00@} @@ $250.00
+    Assets:Cash      $2500.00
+    Income:Gains
+@end smallexample
+
+@smallexample @c command:F82A918
+$ ledger reg Broker --format '%(payee)  %(capital_gain)\n'
+@end smallexample
+
+@smallexample @c output:F82A918
+Buy  0
+Sell  $1000.00
+@end smallexample
+
+@item payee_changed
+True, in the @command{register} report, for a posting printed on a
+continuation line (the same transaction and date as the posting above
+it) whose payee differs from that posting's, as a @samp{Payee:} tag on
+a posting can make it.  The default register format prints the payee
+on such a line instead of leaving the column blank.  False otherwise.
+
+@item display_parent
+In account scope, the nearest ancestor that the balance report shows
+on a line of its own.  That is the account's @code{parent}, unless the
+report folds the parent into the line of its only displayed child (as
+@samp{Food:Lunch} below), in which case it is the nearest ancestor
+that is not folded.  When every ancestor is folded, as @samp{Assets}
+is into a top-level line @samp{Assets:Cash}, it is the parent all the
+same, so @option{--percent} shows that line as 100%.
+@option{--percent} divides each account's total
+by its @code{display_parent}'s, so @samp{Food:Lunch} is 25% of
+@samp{Expenses} rather than 100% of @samp{Food}:
+
+@smallexample @c input:1CECEE7
+2024/01/01 Lunch and a book
+    Expenses:Food:Lunch    $10.00
+    Expenses:Books         $30.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:1CECEE7
+$ ledger bal --percent Expenses
+@end smallexample
+
+@smallexample @c output:1CECEE7
+             100.00%  Expenses
+              75.00%    Books
+              25.00%    Food:Lunch
+@end smallexample
 
 @item code
 The transaction code, the text inside parentheses between the date
@@ -10266,6 +10808,20 @@ shorthand was rewritten to a value expression.  When a
 @command{ledger bal food and not %tax} is matching the wrong
 postings, @command{ledger query food and not %tax} reveals exactly
 which value expression is being applied.
+
+A bare term that holds @code{<}, @code{<=}, @code{>} or @code{>=} and
+reads as a comparison, such as @code{amount>20} or
+@code{d>=[2024/01/01]}, is that value expression rather than an
+account regex (so is an @code{and} or @code{or} that has such a
+comparison as an operand, or a @code{not} of one, written as one
+argument, such as @code{"date>[2024/01/10] and date<[2024/01/21]"};
+any other operand is then an ordinary value expression, so
+@code{"amount>20 and Books"} reports the unknown identifier), also
+after the @code{@@}, @code{#} and @code{=} prefixes (a @code{%}
+metadata term is unchanged); quote it, as in @code{"'a>b'"}, to match
+it as a pattern.  An operator that ends one command-line argument does
+not take the next argument as its right-hand side; write the
+comparison as one argument.
 
 A common workflow is to build up a query incrementally with
 @command{query} until it picks the right postings, then move it to
@@ -10656,7 +11212,7 @@ def lunch_total = x -> x * 1.0825
 $ ledger -f doc.dat reg Food --format "%(lunch_total(amount))\n"
 @end smallexample
 @smallexample @c output:E3B23A4
-$54.12
+$54.13
 @end smallexample
 
 Function calls use ordinary parentheses, and a function that takes no
@@ -10977,6 +11533,54 @@ The balance of the account itself, without subaccounts.
 This function is primarily useful in automated transaction predicates
 and @code{assert} or @code{check} directives to inspect the running
 balance of a named account (@pxref{Using current account balances}).
+@end defun
+
+@defun account_prefix name n
+Return the first @var{n} colon-separated components of the account
+name @var{name}: the whole name when @var{n} exceeds its depth, and
+the empty string when @var{n} is zero or negative.
+@smallexample @c command:082CD7C
+$ ledger eval 'account_prefix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:082CD7C
+Assets:Bank
+@end smallexample
+@end defun
+
+@defun account_skip_prefix name n
+Return the account name @var{name} without its first @var{n}
+colon-separated components: the empty string when @var{n} is at least
+its depth, and the whole name when @var{n} is zero or negative.
+@smallexample @c command:2F998D5
+$ ledger eval 'account_skip_prefix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:2F998D5
+HSBC
+@end smallexample
+@end defun
+
+@defun account_skip_suffix name n
+Return the account name @var{name} without its last @var{n}
+colon-separated components: the empty string when @var{n} is at least
+its depth, and the whole name when @var{n} is zero or negative.
+@smallexample @c command:5364F95
+$ ledger eval 'account_skip_suffix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:5364F95
+Assets
+@end smallexample
+@end defun
+
+@defun account_suffix name n
+Return the last @var{n} colon-separated components of the account
+name @var{name}: the whole name when @var{n} exceeds its depth, and
+the empty string when @var{n} is zero or negative.
+@smallexample @c command:4F8B9E9
+$ ledger eval 'account_suffix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:4F8B9E9
+Bank:HSBC
+@end smallexample
 @end defun
 
 @defun all expr
@@ -11458,6 +12062,24 @@ Expenses:Office Supplies ¤ 123,50
 @end smallexample
 @end defun
 
+@defun roundto_commodity value
+Return @var{value} rounded to the display precision of its commodity.
+Unlike @code{rounded}, which changes only how a value is displayed,
+this changes the value itself, so later arithmetic sees the rounded
+amount.  @option{--round} rounds each posting's amount with it.
+@smallexample @c input:E6FD1DC
+2024/01/01 Dinner
+    Expenses:Food                 $1.00
+    Assets:Cash
+@end smallexample
+@smallexample @c command:E6FD1DC
+$ ledger -f split.dat --format "%(roundto_commodity(amount / 3) * 3) %(rounded(amount / 3) * 3)\n" reg Food
+@end smallexample
+@smallexample @c output:E6FD1DC
+$0.99 $1.00
+@end smallexample
+@end defun
+
 @defvar real
 @defvarx R
 True if the posting is not virtual.  @code{virtual} is the
@@ -11468,6 +12090,13 @@ often, just the virtual accounting.
 @defun scrub value
 Clean @var{value} using various transformations such as @code{round}, stripping
 value annotations, and more.
+@end defun
+
+@defun scrubbed_display_total
+The same value as @code{scrub(display_total)}: the total column's value
+with lot annotations removed as @option{--lots} and its siblings direct.
+The default register and plot-total formats use it because the register
+caches this value as it computes the running total.
 @end defun
 
 @defun set_commodity_price commodity price
@@ -11988,23 +12617,10 @@ variable @env{LEDGER_COLORS}, to have every report use your colors.
 @subsection Quantities and Calculations
 
 @table @code
-@item account_prefix(@var{name}, @var{n})
-Return the first @var{n} colon-separated components of an account name.
-For example, @code{account_prefix("Assets:Bank:HSBC", 2)} returns
-@code{"Assets:Bank"}.  When @var{n} is greater than the depth, returns the
-full name; when @var{n} is zero or negative, returns the empty string.
-@item account_suffix(@var{name}, @var{n})
-Return the last @var{n} colon-separated components of an account name.
-For example, @code{account_suffix("Assets:Bank:HSBC", 2)} returns
-@code{"Bank:HSBC"}.
-@item account_skip_prefix(@var{name}, @var{n})
-Drop the first @var{n} colon-separated components of an account name.
-For example, @code{account_skip_prefix("Assets:Bank:HSBC", 2)} returns
-@code{"HSBC"}.
-@item account_skip_suffix(@var{name}, @var{n})
-Drop the last @var{n} colon-separated components of an account name.
-For example, @code{account_skip_suffix("Assets:Bank:HSBC", 2)} returns
-@code{"Assets"}.
+@item account_prefix
+@item account_suffix
+@item account_skip_prefix
+@item account_skip_suffix
 @item amount_expr
 @item abs
 @item commodity
@@ -12284,12 +12900,21 @@ Python can be used to extend your Ledger experience.  But first,
 a word must be said about Ledger's data model, so that other things
 make sense later.
 
+The examples in this chapter are Python 3 and begin with @code{import
+ledger}.  When Ledger is built with Python support, the @code{ledger}
+module is available in two ways: built into the @command{python}
+command (@pxref{Running Python scripts}), which needs nothing
+installed, and as an extension module that @samp{make install} puts in
+Python's site-packages directory, which any Python 3 interpreter can
+import.
+
 @menu
 * Basic data traversal::
 * Raw versus Cooked::
 * Queries::
 * Embedded Python::
 * Amounts::
+* Running Python scripts::
 @end menu
 
 @node Basic data traversal, Raw versus Cooked, Extending with Python, Extending with Python
@@ -12304,6 +12929,9 @@ To make a Session useful, you must read a Journal into it, using the
 function `@code{read_journal}`.  This reads Ledger data from the given
 file, populates a Journal object within the current Session, and
 returns a reference to that Journal object.
+@code{read_journal_from_string} does the same with journal text held
+in a Python string.  Either call replaces the Journal the Session held
+before.
 
 Within the Journal live all the Transactions, Postings, and other
 objects related to your data.  There are also AutomatedTransactions
@@ -12316,18 +12944,33 @@ import ledger
 
 for xact in ledger.read_journal("sample.dat").xacts:
     for post in xact.posts:
-        print "Transferring %s to/from %s" % (post.amount, post.account)
+        print("Transferring %s to/from %s" % (post.amount, post.account))
+@end smallexample
+
+To find accounts by name, call @code{find_accounts_re} with a regular
+expression, on a Journal or on an Account.  It returns a list of every
+account at or below that point whose full name matches, parents before
+children and siblings in name order; as in a query, the match is
+case-insensitive.
+
+@smallexample
+import ledger
+
+journal = ledger.read_journal("sample.dat")
+for account in journal.find_accounts_re("^Expenses:"):
+    print(account.fullname())
 @end smallexample
 
 @node Raw versus Cooked, Queries, Basic data traversal, Extending with Python
 @section Raw versus Cooked
 
 Ledger data exists in one of two forms: raw and cooked.  Raw objects are
-what you get from a traversal like the above, and represent exactly what
-was seen in the data file.  Consider this journal:
+what you get from a traversal like the above: the transactions as the
+journal file wrote them, once Ledger has read them in.  Consider this
+journal:
 
 @smallexample @c input:validate
-= true
+= /Food/
     (Assets:Cash)    $100
 
 2012-03-01 KFC
@@ -12355,13 +12998,45 @@ While the @emph{cooked} form is:
 So the easy way to think about raw vs. cooked is that raw is the
 unprocessed data, and cooked has had all considerations applied.
 
-When you traverse a Journal by iterating over its transactions, you are
-generally looking at raw data.  In order to look at cooked data, you
-must generate a report of some kind by querying the journal:
+Reading a journal already applies some of those considerations to its
+transactions: an elided amount is filled in (@samp{$-100} above), and
+an automated transaction adds its postings to every transaction it
+matches.  @code{Transaction.posts} therefore yields all three postings
+of the transaction above, @samp{(Assets:Cash)} included, while
+@code{Transaction.raw_posts} yields only the two the journal wrote,
+leaving out every posting Ledger generated: those an automated
+transaction adds, and the extra postings an elided amount is split
+into when it balances more than one commodity.  A
+Posting's @code{is_virtual} property is true when its account is
+written in parentheses or brackets, as @samp{(Assets:Cash)} is.
 
 @smallexample
-for post in ledger.read_journal("sample.dat").query("food"):
-    print "Transferring %s to/from %s" % (post.amount, post.account)
+import ledger
+
+journal = ledger.read_journal_from_string("""
+= /Food/
+    (Assets:Cash)    $100
+
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
+""")
+for xact in journal.xacts:
+    print(len(list(xact.posts)), len(list(xact.raw_posts)))
+    for post in xact.posts:
+        if post.is_virtual:
+            print("virtual: %s %s" % (post.amount, post.account))
+@end smallexample
+
+The rest of the cooking happens when a report runs, and to look at
+those results you must generate a report of some kind by querying the
+journal:
+
+@smallexample
+import ledger
+
+for post in ledger.read_journal("sample.dat").query("expenses"):
+    print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 The reason why queries iterate over postings instead of transactions is
@@ -12370,12 +13045,14 @@ apply to.  You can always get at a matching posting's transaction by
 looking at its @code{xact} member:
 
 @smallexample
+import ledger
+
 last_xact = None
 for post in ledger.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
         for post in post.xact.posts:
-            print "Transferring %s to/from %s" % (post.amount,
-            post.account)
+            print("Transferring %s to/from %s" % (post.amount,
+                                                  post.account))
         last_xact = post.xact
 @end smallexample
 
@@ -12394,6 +13071,20 @@ Since a query ``cooks'' the journal it applies to, only one query may be
 active for that journal at a given time.  Once the query object is gone
 (after the for loop), then the data reverts back to its raw state.
 
+A posting's @code{amount} is always the amount the journal gave it.  The
+amount the report would display, after options such as
+@option{--market (-V)} or @option{--exchange (-X)} have converted it, is
+in the query result's @code{display_amounts} list, one Value per
+posting, in the order the query returns the postings:
+
+@smallexample
+import ledger
+
+result = ledger.read_journal("sample.dat").query("-X $ assets")
+for post, shown in zip(result, result.display_amounts):
+    print("%s shown as %s" % (post.amount, shown))
+@end smallexample
+
 @node Embedded Python, Amounts, Queries, Extending with Python
 @section Embedded Python
 
@@ -12403,7 +13094,7 @@ You can embed Python into your data files using the 'python' directive:
 python
     import os
     def check_path(path_value):
-        print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
+        print("%s => %s" % (str(path_value), os.path.isfile(str(path_value))))
         return os.path.isfile(str(path_value))
 
 tag PATH
@@ -12418,7 +13109,7 @@ tag PATH
 Any Python functions you define this way become immediately available as
 valexpr functions.
 
-@node Amounts,  , Embedded Python, Extending with Python
+@node Amounts, Running Python scripts, Embedded Python, Extending with Python
 @section Amounts
 
 When numbers come from Ledger, like post.amount, the type of the value
@@ -12428,11 +13119,34 @@ commodity.  If you need to create sums of multiple commodities, use
 a Balance.  For example:
 
 @smallexample
-total = Balance()
+import ledger
+
+total = ledger.Balance()
 for post in ledger.read_journal("sample.dat").query(""):
     total += post.amount
-print total
+print(total)
 @end smallexample
+
+@node Running Python scripts,  , Amounts, Extending with Python
+@section Running Python scripts
+@findex python
+
+The @command{python} command runs Python with the @code{ledger} module
+built in, so a script needs no installed module:
+
+@table @code
+@item ledger python
+Start an interactive Python interpreter.
+
+@item ledger python @var{FILE} [@var{ARG}@dots{}]
+Run the script @var{FILE}.  @code{sys.argv} holds @var{FILE} followed
+by the @var{ARG}s.
+
+@item ledger python -- -c @var{CODE}
+Run the Python statements @var{CODE}, as @samp{python3 -c} does.  The
+@samp{--} is needed because Ledger would otherwise read @samp{-c} as
+its own @option{--current} option.
+@end table
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
 @chapter Ledger for Developers
@@ -12841,7 +13555,13 @@ Another feature of commoditized amounts is that they are reported back
 in the same form as parsed.  If you specify dollar amounts using
 @samp{$100}, they will print the same; likewise with @samp{100 $} or
 @samp{$100.000}.  You may even use decimal commas, such as
-@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.
+@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.  Once a
+commodity has been written with a decimal period, though, an amount
+whose comma only its digits could make a decimal comma (such as
+@samp{$0,075} or @samp{$1,5}) is an error, since Ledger cannot tell
+which style is meant; write a period that settles it
+(@samp{$1.000,50}) or declare the decimal comma with a @code{format}
+sub-directive.
 
 These display characteristics become associated with the commodity,
 with the result being that all amounts of the same commodity are
@@ -13021,8 +13741,8 @@ debug. You can provide multiple using a regex expression like
 @item @code{commodity.price.find}        @tab @code{lookup.account}                   @tab @code{value.storage.refcount}
 @item @code{commodity.prices.add}        @tab @code{mask.match}                       @tab @code{xact.extend}
 @item @code{commodity.prices.find}       @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}
-@item @code{csv.mappings}                @tab @code{op.memory}                        @tab @code{xact.extend.fail}
-@item @code{csv.parse}                   @tab @code{option.args}                      @tab @code{xact.finalize}
+@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.extend.fail}
+@item                                    @tab @code{option.args}                      @tab @code{xact.finalize}
 @end multitable
 @
 

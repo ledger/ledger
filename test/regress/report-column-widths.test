@@ -1,0 +1,115 @@
+; The register's column widths (report_t::normalize_options) and the select
+; command's (select_command) come from one width model: --columns, else the
+; terminal width, split into date, payee, account, amount and total columns,
+; with a --period report's payee column sized to its date range (#3216).
+; These blocks pin both commands at several widths; the last two pin that a
+; negative width, which select once read as a huge unsigned number and then
+; looped on for ever, lays out like a zero width.
+
+2024/01/15 Grocery Store With A Long Payee Name
+    ; Tag: alpha
+    Expenses:Food:Groceries:Organic        $10.00
+    Assets:Checking:Primary Account
+
+2024/02/15 Pay 2
+    ; Tag: beta
+    Expenses:Food                    $20.00
+    Assets:Cash
+
+test --columns=60 reg
+24-Jan-15 Grocery Stor.. ..Fo:Gr:Organic    $10.00    $10.00
+                         ..imary Account   $-10.00         0
+24-Feb-15 Pay 2          Expenses:Food      $20.00    $20.00
+                         Assets:Cash       $-20.00         0
+end test
+
+test --columns=60 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Stor.. ..o:Gr:Organic    $10.00    $10.00
+24-Jan-15 Grocery Stor.. ..mary Account   $-10.00         0
+24-Feb-15 Pay 2          Expenses:Food     $20.00    $20.00
+24-Feb-15 Pay 2          Assets:Cash      $-20.00         0
+end test
+
+test --columns=120 reg
+24-Jan-15 Grocery Store With A Long Pay.. Expenses:Food:Groceries:Organic                  $10.00             $10.00
+                                          Assets:Checking:Primary Account                 $-10.00                  0
+24-Feb-15 Pay 2                           Expenses:Food                                    $20.00             $20.00
+                                          Assets:Cash                                     $-20.00                  0
+end test
+
+test --columns=120 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Store With A Long Paye.. Expenses:Food:Groceries:Organic                    $10.00             $10.00
+24-Jan-15 Grocery Store With A Long Paye.. Assets:Checking:Primary Account                   $-10.00                  0
+24-Feb-15 Pay 2                            Expenses:Food                                      $20.00             $20.00
+24-Feb-15 Pay 2                            Assets:Cash                                       $-20.00                  0
+end test
+
+test --columns=60 --monthly reg
+24-Jan-01 - 24-Jan-31  ..Primary Account   $-10.00   $-10.00
+                       Ex:Fo:Gro:Organic    $10.00         0
+24-Feb-01 - 24-Feb-29  Assets:Cash         $-20.00   $-20.00
+                       Expenses:Food        $20.00         0
+end test
+
+test --columns=60 --monthly select date, payee, account, amount, total from posts
+24-Jan-01 - 24-Jan-31  ..rimary Account   $-10.00   $-10.00
+24-Jan-01 - 24-Jan-31  Ex:Fo:Gr:Organic    $10.00         0
+24-Feb-01 - 24-Feb-29  Assets:Cash        $-20.00   $-20.00
+24-Feb-01 - 24-Feb-29  Expenses:Food       $20.00         0
+end test
+
+; --meta TAG:WIDTH takes its width out of the register's columns only.
+test --columns=60 --meta Tag:8 reg
+alpha   24-Jan-15 Grocery St.. ..r:Organic   $10.00   $10.00
+alpha                          ..y Account  $-10.00        0
+beta    24-Feb-15 Pay 2        Expens:Food   $20.00   $20.00
+beta                           Assets:Cash  $-20.00        0
+end test
+
+test --columns=60 --meta Tag:8 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Stor.. ..o:Gr:Organic    $10.00    $10.00
+24-Jan-15 Grocery Stor.. ..mary Account   $-10.00         0
+24-Feb-15 Pay 2          Expenses:Food     $20.00    $20.00
+24-Feb-15 Pay 2          Assets:Cash      $-20.00         0
+end test
+
+; A width of zero leaves every column unpadded.
+test --columns=0 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Store With A Long Payee Name Expenses:Food:Groceries:Organic $10.00 $10.00
+24-Jan-15 Grocery Store With A Long Payee Name Assets:Checking:Primary Account $-10.00 0
+24-Feb-15 Pay 2 Expenses:Food $20.00 $20.00
+24-Feb-15 Pay 2 Assets:Cash $-20.00 0
+end test
+
+; An explicit --payee-width overrides the --period payee default in select.
+test --columns=60 --monthly --payee-width=30 select date, payee, account, amount, total from posts
+24-Jan-01 - 24-Jan-31                    ..nt   $-10.00   $-10.00
+24-Jan-01 - 24-Jan-31                    ..ic    $10.00         0
+24-Feb-01 - 24-Feb-29                    ..sh   $-20.00   $-20.00
+24-Feb-01 - 24-Feb-29                    ..od    $20.00         0
+end test
+
+; A negative explicit width still lets select fit the others to the terminal.
+test --columns=80 --date-width=-1 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Store With A .. Expens:Food:Groceries:Organic       $10.00       $10.00
+24-Jan-15 Grocery Store With A .. Asse:Checking:Primary Account      $-10.00            0
+24-Feb-15 Pay 2                   Expenses:Food                       $20.00       $20.00
+24-Feb-15 Pay 2                   Assets:Cash                        $-20.00            0
+end test
+
+; A negative explicit account width with no payee column renders like zero,
+; and select ends instead of shrinking a wrapped width for ever.
+test --account-width=-100 select date, account, amount, total from posts
+24-Jan-15 Expenses:Food:Groceries:Organic       $10.00       $10.00
+24-Jan-15 Assets:Checking:Primary Account      $-10.00            0
+24-Feb-15 Expenses:Food       $20.00       $20.00
+24-Feb-15 Assets:Cash      $-20.00            0
+end test
+
+; A negative width lays out like zero, and select ends instead of looping.
+test --columns=-5 select date, payee, account, amount, total from posts
+24-Jan-15 Grocery Store With A Long Payee Name Expenses:Food:Groceries:Organic $10.00 $10.00
+24-Jan-15 Grocery Store With A Long Payee Name Assets:Checking:Primary Account $-10.00 0
+24-Feb-15 Pay 2 Expenses:Food $20.00 $20.00
+24-Feb-15 Pay 2 Assets:Cash $-20.00 0
+end test

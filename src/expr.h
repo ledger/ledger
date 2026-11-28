@@ -60,9 +60,11 @@
  * filters) to bypass the full scope/calc machinery and read the posting
  * field directly.
  *
- * merged_expr_t extends expr_t to support incremental expression composition:
- * users can layer flags like `-O`, `-B`, `-V`, and `-A` which each prepend
- * or append transformations to a base expression term.
+ * merged_expr_t composes one expression from report options: a base
+ * expression, which -O, -B, -I, -G, --dc and --plopen replace, followed
+ * by the pieces that --amount, --total and --display-* options (and
+ * -V and -A, which go through --display-amount and --display-total)
+ * append in order.
  */
 #pragma once
 
@@ -89,7 +91,7 @@ class symbol_scope_t; // forward declaration for expr_t::accumulator_scope_
  * the bare identifier `amount`.
  *
  * @see op_t          The AST node that this class wraps.
- * @see expr_base_t   CRTP base providing the compile/calc/print protocol.
+ * @see expr_base_t   Abstract base providing the compile/calc/print protocol.
  * @see merged_expr_t Derived class for composable multi-flag expressions.
  */
 class expr_t : public expr_base_t<value_t> {
@@ -123,6 +125,10 @@ public:
     POST_AMOUNT, ///< Expression is "amount" (or "a"); read post_t::amount directly.
   };
 
+  /// @brief True for the identifiers post_t::lookup binds to the posting amount ("amount" and
+  /// "a"); detect_fast_path() selects POST_AMOUNT for exactly these.
+  static bool is_post_amount_ident(const string& name) { return name == "amount" || name == "a"; }
+
 protected:
   ptr_op_t ptr;                               ///< Root of the compiled AST (null if unparsed).
   fast_path_t fast_path_ = fast_path_t::NONE; ///< Detected shortcut, if any.
@@ -143,13 +149,10 @@ public:
 
   ptr_op_t get_op() noexcept;
 
-  void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
-    return parse(stream, flags, str);
-  }
+  using base_type::parse;
 
   void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-             const optional<string>& original_string = none) override;
+             const optional<string>& original_string = std::nullopt) override;
 
   /// @brief Compile the parsed AST against @p scope, resolving identifiers
   /// and folding constants.  Also detects fast_path optimizations.
@@ -161,30 +164,33 @@ public:
 
   /// @brief True if the compiled expression is a single VALUE constant.
   bool is_constant() const;
-  value_t& constant_value();
-  const value_t& constant_value() const;
   /// @brief True if the compiled expression is a single FUNCTION terminal.
   bool is_function() const;
   func_t& get_function();
 
   fast_path_t fast_path() const { return fast_path_; }
-  void set_fast_path(fast_path_t fp) { fast_path_ = fp; }
 
   string context_to_str() const override;
   void print(std::ostream& out) const override;
   void dump(std::ostream& out) const override;
 
 protected:
-  // Persistent local scope for O_DEFINE variables (accumulator patterns like
-  // biggest=max(amount,biggest)).  Keeps variable state isolated from the
-  // report/session scope chain, preventing cross-posting pollution.
-  // Subclasses (e.g. merged_expr_t) may also use this directly.
+  // Persistent per-expression scope for self-referential O_DEFINE
+  // (accumulator) values, like biggest=max(amount,biggest); compile()
+  // folds other definitions away.  real_calc() evaluates through a
+  // lexical_scope_t over it, so the value carries over from one posting to
+  // the next inside this expression instead of landing in the
+  // report/session scope.  merged_expr_t's compile() and real_calc() wrap
+  // their scopes with it the same way.
   std::unique_ptr<symbol_scope_t> accumulator_scope_;
 
-  // Core calc implementation: evaluates ptr->calc(scope) with error context
-  // handling and recursion depth protection, but WITHOUT accumulator wrapping.
-  // Callers are responsible for wrapping scope with accumulator_scope_ first.
-  value_t calc_with_scope(scope_t& scope);
+  // Evaluation core shared by expr_t::real_calc and merged_expr_t::real_calc:
+  // evaluates ptr->calc(scope, locus) under the thread-local guard that
+  // limits nested expr_t evaluations to 256 (#1103: the op_t::calc depth
+  // restarts at every C++ function boundary, so only this counter sees an
+  // expression re-entering itself through a report function).  Adds no error
+  // context and no accumulator wrapping; callers wrap @p scope first.
+  value_t calc_with_scope(scope_t& scope, ptr_op_t* locus = nullptr);
 
 private:
   /// @brief After compilation, inspect the root op to see if it is a bare
@@ -201,13 +207,11 @@ private:
 
 /// @brief Test whether a value_t contains an embedded expression op_t.
 inline bool is_expr(const value_t& val) {
-  return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
+  return val.is_any<expr_t::ptr_op_t>();
 }
 
 /// @brief Extract the embedded op_t pointer from a value_t.
 expr_t::ptr_op_t as_expr(const value_t& val);
-/// @brief Store an op_t pointer inside a value_t (as boost::any).
-void set_expr(value_t& val, expr_t::ptr_op_t op);
 /// @brief Create a value_t that wraps the given op_t pointer.
 value_t expr_value(expr_t::ptr_op_t op);
 
@@ -216,39 +220,42 @@ value_t expr_value(expr_t::ptr_op_t op);
 /**
  * @brief Composable expression that layers transformations onto a base term.
  *
- * merged_expr_t allows one to set an expression term (e.g., `"amount"`) and
- * a base expression (e.g., `"amount"`), then merge in later transformations:
+ * merged_expr_t threads a variable, the @c term (e.g. `display_total`),
+ * through @c base_expr and then each piece in @c exprs.  Options build
+ * it in two ways:
+ *
+ *   - set_base_expr() replaces the base: -O/--quantity, -B/--basis,
+ *     -I/--price, -G/--gain, --dc and --plopen do this to amount_ (-O
+ *     also to total_), as do report_t's normalization for --gain-since
+ *     (amount_) and --flat (total_).
+ *   - append() adds a piece at the end: --amount, --total,
+ *     --display-account, --display-amount, --display-total and the
+ *     options that route through them, such as -V/--market and
+ *     -A/--average.  A piece that is an alphanumeric word (no '_')
+ *     instead replaces the base and clears the pieces
+ *     (check_for_single_identifier).
+ *
+ * With no pieces, compile() parses base_expr alone.  For `-V -A`, it
+ * assembles display_total_ (shown wrapped; it is one line) as:
  *
  * @code
- *    term:   "amount"
- *    base:   "amount"
- *    merge:  "amount * 10"    // from -O flag
- *    merge:  "amount + 20"    // from -B flag
+ *    __tmp_display_total=(display_total=(total_expr);
+ *      display_total=(market(display_total, value_date, exchange));
+ *      display_total=(count>0?(display_total/count):0);
+ *      display_total);__tmp_display_total
  * @endcode
  *
- * When compile() is called, these are assembled into a single expression:
- *
- * @code
- *    __tmp_amount=(amount=(amount); amount=(amount * 10); amount=(amount + 20); amount);
- * __tmp_amount
- * @endcode
- *
- * This allows users to combine flags like `-O`, `-B`, `-V`, and `-A` at any
- * time, with each flag contributing a transformation that is applied in order.
- * The @c merge_operator controls how pieces are joined (`;` for sequential
- * assignment, or an arithmetic operator for inline combination).
- *
- * @see report_t  Where merged_expr_t instances are used for amount_expr and total_expr.
+ * @see report_t  Its amount_, total_, display_account_, display_amount_
+ *                and display_total_ options hold the five instances.
  */
 class merged_expr_t : public expr_t {
 public:
-  string term;           ///< Variable name used as the threading term (e.g., "amount").
-  string base_expr;      ///< The initial expression assigned to @c term.
-  string merge_operator; ///< Operator joining merged pieces (";" or "+", "*", etc.).
+  string term;      ///< Variable name used as the threading term (e.g., "amount").
+  string base_expr; ///< The initial expression assigned to @c term.
 
   std::list<string> exprs; ///< Accumulated transformation expressions to apply in order.
 
-  merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";");
+  merged_expr_t(const string& _term, const string& expr);
   // Custom copy constructor: copies the configuration (term, base_expr, etc.)
   // but starts with a fresh, uncompiled expression.  This is correct for
   // push_report() which needs an independent expression context for the new
@@ -257,25 +264,19 @@ public:
   merged_expr_t& operator=(const merged_expr_t& other);
   ~merged_expr_t() override;
 
-  void set_term(const string& _term) { term = _term; }
   void set_base_expr(const string& expr) { base_expr = expr; }
-  void set_merge_operator(const string& merge_op) { merge_operator = merge_op; }
 
-  /// @brief If @p expr is a bare identifier (no operators), adopt it as
-  /// the new base_expr and clear all merged pieces.  Returns true if so.
+  /// @brief If @p expr is an alphanumeric word, adopt it as the new
+  /// base_expr and clear all merged pieces.  Returns true if so.  A name
+  /// containing '_' (amount_expr, display_amount) usually names another
+  /// report expression, and adopting it could recurse, so it is appended.
   bool check_for_single_identifier(const string& expr);
 
-  /// @brief Add a transformation to the front of the merge chain.
-  void prepend(const string& expr) {
-    if (!check_for_single_identifier(expr))
-      exprs.push_front(expr);
-  }
   /// @brief Add a transformation to the end of the merge chain.
   void append(const string& expr) {
     if (!check_for_single_identifier(expr))
       exprs.push_back(expr);
   }
-  void remove(const string& expr) { exprs.remove(expr); }
 
   /// @brief Assemble the merged expression string, parse it, and compile
   /// against @p scope with accumulator isolation.

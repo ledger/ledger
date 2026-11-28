@@ -10,5 +10,5 @@ account-rewrite  Expenses:Food  Expenses:Groceries
 
 test reg
 24-Jan-01 Whole Foods           Expenses:Groceries           $10.00       $10.00
-24-Jan-01 Whole Foods           Assets:Cash                 $-10.00            0
+                                Assets:Cash                 $-10.00            0
 end test

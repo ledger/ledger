@@ -1,0 +1,16 @@
+; The period lexer reads a yearless 02/29 in the year a journal date would
+; get; when that year has no Feb 29 the period is an error, not a guess.
+
+2024/02/29 Leap day
+    Expenses:A    $1
+    Assets:Cash
+
+test reg Expenses --now 2025/06/15 -p 02/29 -> 1
+__ERROR__
+Error: Day of month is not valid for year
+end test
+
+test reg Expenses --now 2028/01/15 -p 02/29 -> 1
+__ERROR__
+Error: Day of month is not valid for year
+end test

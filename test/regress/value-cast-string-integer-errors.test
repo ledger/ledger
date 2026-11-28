@@ -1,0 +1,42 @@
+; STRING -> INTEGER rejects any string that is not an optional leading
+; minus sign followed by decimal digits that fit a long, as a value_error.
+
+test eval 'int("1-2")' -> 1
+__ERROR__
+While evaluating value expression:
+  int("1-2")
+  ^^^^^^^^^^
+While converting 1-2:
+While calling function 'int 1-2':
+Error: Cannot convert a string to an integer
+end test
+
+test eval 'int("")' -> 1
+__ERROR__
+While evaluating value expression:
+  int("")
+  ^^^^^^^
+While converting :
+While calling function 'int ':
+Error: Cannot convert a string to an integer
+end test
+
+test eval 'int("-")' -> 1
+__ERROR__
+While evaluating value expression:
+  int("-")
+  ^^^^^^^^
+While converting -:
+While calling function 'int -':
+Error: Cannot convert a string to an integer
+end test
+
+test eval 'int("99999999999999999999")' -> 1
+__ERROR__
+While evaluating value expression:
+  int("99999999999999999999")
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While converting 99999999999999999999:
+While calling function 'int 99999999999999999999':
+Error: Cannot convert a string to an integer
+end test

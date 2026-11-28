@@ -1,0 +1,62 @@
+; Pins the display behavior that the annotate.h/annotate.cc doc comments
+; describe: lot details are stripped by default and kept by the --lots
+; family; --basis reports cost; a {{total}} lot price is shown per unit
+; except where print_xacts prints the posting that wrote it (print, xact);
+; an @@ cost is not a {{total}} lot price.
+
+2024/01/01 Buy AAPL
+    Assets:Broker                10 AAPL {$100} [2024/01/01]
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:Broker                10 MSFT {{$1000}}
+    Assets:Cash
+
+2024/01/03 Buy IBM
+    Assets:Broker                10 IBM @@ $1000
+    Assets:Cash
+
+2024/01/04 Buy IBM odd
+    Assets:Broker                3 IBM @@ $10
+    Assets:Cash
+
+test bal Broker
+             10 AAPL
+              13 IBM
+             10 MSFT  Assets:Broker
+end test
+
+test bal --basis Broker
+               $3010  Assets:Broker
+end test
+
+test bal --lot-prices Broker
+      10 AAPL {$100}
+   3 IBM {$3.333333}
+       10 IBM {$100}
+      10 MSFT {$100}  Assets:Broker
+end test
+
+test print
+2024/01/01 Buy AAPL
+    Assets:Broker                       10 AAPL {$100} [2024/01/01]
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:Broker                       10 MSFT {{$1000}}
+    Assets:Cash
+
+2024/01/03 Buy IBM
+    Assets:Broker                             10 IBM @@ $1000
+    Assets:Cash
+
+2024/01/04 Buy IBM odd
+    Assets:Broker                              3 IBM @@ $10
+    Assets:Cash
+end test
+
+test xact 2024/02/01 MSFT
+2024/02/01 Buy MSFT
+    Assets:Broker                       10 MSFT {{$1000}}
+    Assets:Cash
+end test

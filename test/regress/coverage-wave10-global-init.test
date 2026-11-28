@@ -1,6 +1,5 @@
 ; Coverage tests for global.cc (PRECOMMAND push/pop lookup)
 ; Also covers global.cc (TRACE_FINISH environment)
-; Also covers global.cc (normalize_session_options)
 
 2024/01/01 Payee A
     Expenses:Food    $10.00

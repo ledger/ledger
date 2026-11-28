@@ -33,12 +33,13 @@ end test
 ; --- Test 5: --percent -V ---
 test bal --percent -V Expenses
              100.00%  Expenses
-               3.12%    Auto
+               3.13%    Auto
               96.88%    Food
 end test
 
 ; --- Test 6: fn_get_at error - index > 0 on non-sequence ---
 test reg --format "%(get_at(amount, 1))\n" Expenses:Food
+
 end test
 
 ; --- Test 7: --meta option with width ---

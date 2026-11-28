@@ -8,5 +8,5 @@
 
 test reg --account-rewrite 'Expenses:Food=Expenses:Dining'
 24-Jan-01 Test                  Expenses:Dining              $10.00       $10.00
-24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+                                Assets:Cash                 $-10.00            0
 end test

@@ -82,6 +82,8 @@
 
 namespace ledger {
 
+class journal_t;
+
 /**
  * @brief Parses command-line query arguments into expression predicates.
  *
@@ -118,7 +120,8 @@ public:
     value_t::sequence_t::const_iterator begin; ///< Current position in the argument sequence.
     value_t::sequence_t::const_iterator end;   ///< One past the last argument.
 
-    string::const_iterator prev_arg_i; ///< Start of the previously consumed argument (for rewind).
+    string::const_iterator prev_arg_i; ///< Start of the most recently scanned token in the current
+                                       ///< argument (for rewind).
     string::const_iterator arg_i;      ///< Current character position within the current argument.
     string::const_iterator arg_end;    ///< End of the current argument string.
 
@@ -154,7 +157,7 @@ public:
         TOK_CODE,    ///< `code` or `#` -- match transaction code field.
         TOK_PAYEE,   ///< `payee`, `desc`, or `@` -- match payee/description field.
         TOK_NOTE,    ///< `note` or leading `=` -- match note/comment field.
-        TOK_ACCOUNT, ///< `account` -- match account name (the default context).
+        TOK_ACCOUNT, ///< Default context for bare terms; no keyword produces it.
         TOK_META,    ///< `meta`, `tag`, `data`, or `%` -- match metadata tags.
         TOK_EXPR,    ///< `expr` -- pass-through a raw expression string.
 
@@ -172,12 +175,14 @@ public:
       } kind;
 
       optional<string> value; ///< The literal text for TERM tokens; none for operators/keywords.
+      bool quoted = false;    ///< True for a TERM read from a '...', "..." or /.../ pattern.
 
-      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = none)
-          : kind(_kind), value(_value) {
+      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = std::nullopt,
+                       bool _quoted = false)
+          : kind(_kind), value(_value), quoted(_quoted) {
         TRACE_CTOR(query_t::lexer_t::token_t, "");
       }
-      token_t(const token_t& tok) : kind(tok.kind), value(tok.value) {
+      token_t(const token_t& tok) : kind(tok.kind), value(tok.value), quoted(tok.quoted) {
         TRACE_CTOR(query_t::lexer_t::token_t, "copy");
       }
       ~token_t() noexcept { TRACE_DTOR(query_t::lexer_t::token_t); }
@@ -186,62 +191,25 @@ public:
         if (this != &tok) {
           kind = tok.kind;
           value = tok.value;
+          quoted = tok.quoted;
         }
         return *this;
       }
 
       operator bool() const { return kind != END_REACHED; }
 
-      /// @brief Return the debug-friendly name of this token (e.g., "TOK_AND", "TERM(food)").
-      string to_string() const {
+      /// @brief True for the keywords that begin a query section (see the grammar in query.cc).
+      static bool is_section_keyword(kind_t kind) {
         switch (kind) {
-        case UNKNOWN:
-          return "UNKNOWN";
-        case LPAREN:
-          return "LPAREN";
-        case RPAREN:
-          return "RPAREN";
-        case TOK_NOT:
-          return "TOK_NOT";
-        case TOK_AND:
-          return "TOK_AND";
-        case TOK_OR:
-          return "TOK_OR";
-        case TOK_EQ:
-          return "TOK_EQ";
-        case TOK_EQEQ:
-          return "TOK_EQEQ";
-        case TOK_CODE:
-          return "TOK_CODE";
-        case TOK_PAYEE:
-          return "TOK_PAYEE";
-        case TOK_NOTE:
-          return "TOK_NOTE";
-        case TOK_ACCOUNT:
-          return "TOK_ACCOUNT";
-        case TOK_META:
-          return "TOK_META";
-        case TOK_EXPR:
-          return "TOK_EXPR";
         case TOK_SHOW:
-          return "TOK_SHOW";
         case TOK_ONLY:
-          return "TOK_ONLY";
         case TOK_BOLD:
-          return "TOK_BOLD";
         case TOK_FOR:
-          return "TOK_FOR";
         case TOK_SINCE:
-          return "TOK_SINCE";
         case TOK_UNTIL:
-          return "TOK_UNTIL";
-        case TERM:
-          return string("TERM(") + *value + ")";
-        case END_REACHED:
-          return "END_REACHED";
+          return true;
         default:
-          assert(false && "Unknown token kind");
-          return "<UNKNOWN>";
+          return false;
         }
       }
 
@@ -321,9 +289,10 @@ public:
       TRACE_CTOR(query_t::lexer_t, "");
     }
     lexer_t(const lexer_t& lexer)
-        : begin(lexer.begin), end(lexer.end), arg_i(lexer.arg_i), arg_end(lexer.arg_end),
-          consume_whitespace(lexer.consume_whitespace), consume_next_arg(lexer.consume_next_arg),
-          multiple_args(lexer.multiple_args), token_cache(lexer.token_cache) {
+        : begin(lexer.begin), end(lexer.end), prev_arg_i(lexer.prev_arg_i), arg_i(lexer.arg_i),
+          arg_end(lexer.arg_end), consume_whitespace(lexer.consume_whitespace),
+          consume_next_arg(lexer.consume_next_arg), multiple_args(lexer.multiple_args),
+          token_cache(lexer.token_cache) {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
     lexer_t& operator=(const lexer_t&) = default;
@@ -346,14 +315,15 @@ public:
     /// @brief Accumulate a bare-word identifier until an operator boundary.
     /// @param tok_context Affects which characters are boundaries (TOK_EXPR is permissive).
     /// @param consume_next When true, operator chars are consumed into the identifier.
-    /// @param[out] hit_boundary Set to true if scanning stopped at an operator boundary
-    ///             rather than end-of-argument.
     /// @return The accumulated identifier string.
-    string scan_identifier(token_t::kind_t tok_context, bool consume_next, bool& hit_boundary);
+    string scan_identifier(token_t::kind_t tok_context, bool consume_next);
 
     /// @brief Match a completed identifier against known keywords.
     /// @return The corresponding keyword token, or TERM with the identifier as value.
     token_t match_keyword(const string& ident, string::const_iterator ident_start);
+
+    /// @brief Look up a bare word in the keyword table; TERM if it is not a keyword.
+    static token_t::kind_t keyword_kind(const string& ident);
 
   public:
     /// @brief Push a token back into the one-element lookahead cache.
@@ -418,6 +388,7 @@ protected:
     value_t args;  ///< The original argument sequence (owns the strings the lexer iterates).
     lexer_t lexer; ///< Tokenizer over the argument sequence.
     keep_details_t what_to_keep; ///< Annotation-stripping policy passed to constructed predicates.
+    journal_t* journal;          ///< Aliases for unquoted account-context terms; may be null.
     query_map_t query_map;       ///< Accumulated predicates keyed by query section.
     int parse_depth = 0;         ///< Current recursion depth for parenthesized expressions.
 
@@ -429,6 +400,8 @@ protected:
     expr_t::ptr_op_t parse_and_expr(lexer_t::token_t::kind_t tok_context);
     /// @brief Parse an OR expression (left-associative chain of AND expressions).
     expr_t::ptr_op_t parse_or_expr(lexer_t::token_t::kind_t tok_context);
+    /// @brief Parse OR expressions until one is empty, joining them left to right with O_OR.
+    expr_t::ptr_op_t parse_or_chain(lexer_t::token_t::kind_t tok_context);
     /**
      * @brief Parse a complete query expression, including section keywords.
      * @param tok_context The default field context (typically TOK_ACCOUNT).
@@ -446,22 +419,25 @@ protected:
     /// @param val_str The string on the right-hand side of the `==`.
     static expr_t::ptr_op_t make_meta_eq_node(const expr_t::ptr_op_t& mask_arg,
                                               const string& val_str);
-    /// @brief Try to parse a term as a comparison expression (e.g., "d>=[date]").
+    /// @brief A term holding '<' or '>' that parses as a whole into a comparison tree (O_LT,
+    /// O_LTE, O_GT, O_GTE, an O_AND/O_OR with such an operand, or an O_NOT of one) becomes that
+    /// expression; anything else is a pattern (nullptr).
     /// @return The expression node if the term is a comparison, nullptr otherwise.
-    expr_t::ptr_op_t try_parse_comparison(const string& term, lexer_t::token_t::kind_t tok_context);
+    static expr_t::ptr_op_t try_parse_comparison(const string& term);
     /// @brief Build an O_MATCH node that regex-matches a pattern against the given field.
     static expr_t::ptr_op_t make_match_node(lexer_t::token_t::kind_t tok_context,
                                             const string& pattern);
 
   public:
     parser_t(const value_t& _args, const keep_details_t& _what_to_keep = keep_details_t(),
-             bool multiple_args = true)
-        : args(_args), lexer(args.begin(), args.end(), multiple_args), what_to_keep(_what_to_keep) {
-      TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool");
+             bool multiple_args = true, journal_t* _journal = nullptr)
+        : args(_args), lexer(args.begin(), args.end(), multiple_args), what_to_keep(_what_to_keep),
+          journal(_journal) {
+      TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool, journal_t*");
     }
     parser_t(const parser_t& other)
         : args(other.args), lexer(other.lexer), what_to_keep(other.what_to_keep),
-          query_map(other.query_map), parse_depth(other.parse_depth) {
+          journal(other.journal), query_map(other.query_map), parse_depth(other.parse_depth) {
       TRACE_CTOR(query_t::parser_t, "copy");
     }
     ~parser_t() noexcept { TRACE_DTOR(query_t::parser_t); }
@@ -470,33 +446,14 @@ protected:
     expr_t::ptr_op_t parse(bool subexpression = false) {
       return parse_query_expr(lexer_t::token_t::TOK_ACCOUNT, subexpression);
     }
-
-    /// @brief Check whether any unparsed tokens remain in the lexer stream.
-    bool tokens_remaining() {
-      lexer_t::token_t tok = lexer.peek_token();
-      assert(tok.kind != lexer_t::token_t::UNKNOWN);
-      return tok.kind != lexer_t::token_t::END_REACHED;
-    }
   };
 
   optional<parser_t> parser; ///< Lazily constructed parser (created on first parse_args call).
-  query_map_t predicates;    ///< Cached predicate strings by section.
 
 public:
   query_t() { TRACE_CTOR(query_t, ""); }
-  query_t(const query_t& other) : parser(other.parser), predicates(other.predicates) {
-    TRACE_CTOR(query_t, "copy");
-  }
+  query_t(const query_t& other) : parser(other.parser) { TRACE_CTOR(query_t, "copy"); }
 
-  /// @brief Construct from a single query string (e.g., "food and @grocery").
-  query_t(const string& arg, const keep_details_t& what_to_keep = keep_details_t(),
-          bool multiple_args = true) {
-    if (!arg.empty()) {
-      value_t temp(string_value(arg));
-      parse_args(temp.to_sequence(), what_to_keep, multiple_args);
-    }
-    TRACE_CTOR(query_t, "string, keep_details_t, bool");
-  }
   /// @brief Construct from an argument sequence (e.g., from command-line argv).
   query_t(const value_t& args, const keep_details_t& what_to_keep = keep_details_t(),
           bool multiple_args = true) {
@@ -505,7 +462,7 @@ public:
 
     TRACE_CTOR(query_t, "value_t, keep_details_t, bool");
   }
-  virtual ~query_t() { TRACE_DTOR(query_t); }
+  ~query_t() { TRACE_DTOR(query_t); }
 
   /**
    * @brief Parse query arguments into expression trees, populating query_map.
@@ -514,13 +471,15 @@ public:
    * @param multiple_args Whether args contains multiple separate arguments (true)
    *        or a single string with spaces (false).
    * @param subexpression If true, parse as a parenthesized sub-expression.
+   * @param journal Expands account aliases in unquoted account-context terms when given.
    * @return The expression tree for the QUERY_LIMIT section, or nullptr if empty.
    */
   expr_t::ptr_op_t parse_args(const value_t& args,
                               const keep_details_t& what_to_keep = keep_details_t(),
-                              bool multiple_args = true, bool subexpression = false) {
+                              bool multiple_args = true, bool subexpression = false,
+                              journal_t* journal = nullptr) {
     if (!parser)
-      parser = parser_t(args, what_to_keep, multiple_args);
+      parser = parser_t(args, what_to_keep, multiple_args, journal);
     return parser->parse(subexpression);
   }
 
@@ -537,9 +496,6 @@ public:
     }
     return empty_string;
   }
-
-  /// @brief Check whether unparsed tokens remain (useful for incremental parsing).
-  bool tokens_remaining() { return parser && parser->tokens_remaining(); }
 };
 
 } // namespace ledger

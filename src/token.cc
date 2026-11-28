@@ -76,7 +76,9 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
     length = 0;
 
     string buf;
-    READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)));
+    read_into(
+        in, buf, [](int ch) { return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_'; },
+        &length);
 
     switch (buf[0]) {
     case 'a':
@@ -165,11 +167,44 @@ void expr_t::token_t::parse_ident(std::istream& in) {
   kind = IDENT;
   length = 0;
 
-  int c;
   string buf;
-  READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)) || c == '_');
+  read_into(
+      in, buf, [](int ch) { return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_'; },
+      &length);
 
   value.set_string(buf);
+}
+
+/*--- Amount Literals ---*/
+
+bool expr_t::token_t::try_parse_amount(std::istream& in, std::istream::pos_type pos,
+                                       const parse_flags_t& pflags) {
+  parse_flags_t parse_flags;
+
+  parse_flags.add_flags(PARSE_NO_ANNOT);
+  // In f(account,1) or x+1 the comma or plus sign is an operator; it must
+  // not begin the quantity of an amount whose commodity would be the
+  // identifier.
+  parse_flags.add_flags(PARSE_IN_EXPR);
+  if (pflags.has_flags(PARSE_NO_MIGRATE))
+    parse_flags.add_flags(PARSE_NO_MIGRATE);
+  if (pflags.has_flags(PARSE_NO_REDUCE))
+    parse_flags.add_flags(PARSE_NO_REDUCE);
+
+  amount_t temp;
+  if (!temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL)))
+    return false;
+
+  if (!in.good()) {
+    in.clear();
+    in.seekg(0, std::ios::end);
+    if (in.fail())
+      throw_(parse_error, _("Failed to reset input stream"));
+  }
+  kind = VALUE;
+  value = temp;
+  length = static_cast<std::size_t>(in.tellg() - pos);
+  return true;
 }
 
 /*--- Main Tokenizer ---*/
@@ -236,7 +271,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     in.get();
 
     string buf;
-    READ_INTO_(in, buf, c, length, c != ']');
+    c = read_into(in, buf, [](int ch) { return ch != ']'; }, &length);
     if (c != ']')
       expected(']', c);
 
@@ -257,7 +292,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     char delim;
     in.get(delim);
     string buf;
-    READ_INTO_(in, buf, c, length, c != delim);
+    c = read_into(in, buf, [delim](int ch) { return ch != delim; }, &length);
     if (c != delim)
       expected(delim, c);
     in.get();
@@ -272,31 +307,12 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   case '"': {
     std::istream::pos_type pos = in.tellg();
 
-    // Phase 1: attempt amount parsing.  Under PARSE_IN_EXPR a comma or plus
-    // sign after the closing quote is an operator, as in f("abc",1) or
-    // "abc"+1; it does not begin a quantity.
-    parse_flags_t parse_flags;
-    parse_flags.add_flags(PARSE_NO_ANNOT);
-    parse_flags.add_flags(PARSE_IN_EXPR);
-    if (pflags.has_flags(PARSE_NO_MIGRATE))
-      parse_flags.add_flags(PARSE_NO_MIGRATE);
-    if (pflags.has_flags(PARSE_NO_REDUCE))
-      parse_flags.add_flags(PARSE_NO_REDUCE);
-
+    // Phase 1: "ab cd" 17 is an amount of the quoted commodity (#2172).
+    // Anything else is a string, including text amount_t::parse rejects
+    // with an error: the string reader below reports its own diagnostics.
     try {
-      amount_t temp;
-      if (temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
-        if (!in.good()) {
-          in.clear();
-          in.seekg(0, std::ios::end);
-          if (in.fail())
-            throw_(parse_error, _("Failed to reset input stream"));
-        }
-        kind = VALUE;
-        value = temp;
-        length = static_cast<std::size_t>(in.tellg() - pos);
+      if (try_parse_amount(in, pos, pflags))
         break;
-      }
     } catch (const std::exception&) {} // NOLINT(bugprone-empty-catch)
 
     // Phase 2: amount parse failed; rewind and read as a plain string
@@ -308,7 +324,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     char delim;
     in.get(delim);
     string buf;
-    READ_INTO_(in, buf, c, length, c != delim);
+    c = read_into(in, buf, [delim](int ch) { return ch != delim; }, &length);
     if (c != delim)
       expected(delim, c);
     in.get();
@@ -396,48 +412,20 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     in.get();
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
-    } else { // terminal context
-      // Read the regexp pattern, preserving backslash sequences for the regex
-      // engine. Only \/ is treated as an escaped delimiter (the backslash is
-      // stripped so that / does not terminate the pattern early); all other
-      // \X sequences are passed through unchanged so that the regex engine can
-      // interpret them (e.g., \| for literal pipe, \d for digit class).
+    } else { // terminal context: a /regex/ literal
+      std::istream::pos_type start = in.tellg();
+      std::istreambuf_iterator<char> it(in), eos;
       string pat;
-      bool found_closing = false;
-      while (in.good() && !in.eof()) {
-        c = in.get();
-        if (in.eof())
-          break;
-        length++;
-        if (c == '\\') {
-          int next = in.peek();
-          if (next == '/') {
-            // Escaped delimiter: consume the slash and emit just '/'
-            in.get();
-            length++;
-            pat.push_back('/');
-          } else if (next == '\\') {
-            // Collapse \\\\ to \\ for backward compatibility: users who
-            // previously wrote \\\\* to get regex \\* (literal star) will
-            // still get the same result (fixes #2946).
-            in.get();
-            length++;
-            pat.push_back('\\');
-          } else {
-            // All other escape sequences: pass the backslash through so the
-            // regex engine sees the full \\X pair (e.g., \\| → literal pipe)
-            pat.push_back('\\');
-          }
-        } else if (c == '/') {
-          found_closing = true;
-          break;
-        } else {
-          pat.push_back(static_cast<char>(c));
-        }
+      try {
+        pat = scan_pattern_literal(it, eos, '/', true);
+      } catch (const parse_error&) {
+        // Both scanner errors mean the input ran out.  The iterator reads
+        // the stream buffer directly, which leaves the stream's state
+        // untouched, so record the end of input here as in.get() would.
+        in.setstate(std::ios::eofbit);
+        throw;
       }
-      if (!found_closing)
-        expected('/', c);
-
+      length += static_cast<std::size_t>(in.tellg() - start);
       kind = VALUE;
       value.set_mask(pat);
     }
@@ -543,24 +531,8 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     assert(!in.eof());
     assert(static_cast<int>(in.tellg()) != -1);
 
-    // When in relaxed parsing mode, we want to migrate commodity flags
-    // so that any precision specified by the user updates the current
-    // maximum displayed precision.
-    parse_flags_t parse_flags;
-
-    parse_flags.add_flags(PARSE_NO_ANNOT);
-    // In f(account,1) or x+1 the comma or plus sign is an operator; it must
-    // not begin the quantity of an amount whose commodity would be the
-    // identifier.
-    parse_flags.add_flags(PARSE_IN_EXPR);
-    if (pflags.has_flags(PARSE_NO_MIGRATE))
-      parse_flags.add_flags(PARSE_NO_MIGRATE);
-    if (pflags.has_flags(PARSE_NO_REDUCE))
-      parse_flags.add_flags(PARSE_NO_REDUCE);
-
     try {
-      amount_t temp;
-      if (!temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
+      if (!try_parse_amount(in, pos, pflags)) {
         in.clear();
         in.seekg(pos, std::ios::beg);
         if (in.fail() || !in.good())
@@ -582,17 +554,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
           symbol[1] = '\0';
           throw_(parse_error, _("Failed to parse identifier"));
         }
-      } else {
-        if (!in.good()) {
-          in.clear();
-          in.seekg(0, std::ios::end);
-          if (in.fail())
-            throw_(parse_error, _("Failed to reset input stream"));
-        }
-
-        kind = VALUE;
-        value = temp;
-        length = static_cast<std::size_t>(in.tellg() - pos);
       }
     } catch (const std::exception&) {
       kind = ERROR;
@@ -687,21 +648,12 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
   case expr_t::token_t::IDENT:
     out << "<identifier>";
     break;
-  case expr_t::token_t::MASK:
-    out << "<regex mask>";
-    break;
 
   case expr_t::token_t::LPAREN:
     out << "(";
     break;
   case expr_t::token_t::RPAREN:
     out << ")";
-    break;
-  case expr_t::token_t::LBRACE:
-    out << "{";
-    break;
-  case expr_t::token_t::RBRACE:
-    out << "}";
     break;
 
   case expr_t::token_t::EQUAL:
@@ -763,9 +715,6 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
   case expr_t::token_t::KW_OR:
     out << "or";
     break;
-  case expr_t::token_t::KW_MOD:
-    out << "mod";
-    break;
 
   case expr_t::token_t::KW_IF:
     out << "if";
@@ -809,9 +758,6 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token) {
     break;
   case expr_t::token_t::IDENT:
     out << "<ident '" << token.value << "'>";
-    break;
-  case expr_t::token_t::MASK:
-    out << "<mask '" << token.value << "'>";
     break;
 
   default:

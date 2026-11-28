@@ -38,8 +38,7 @@
  * AccountXData and AccountXDataDetails for extended runtime data.  Accounts
  * form a tree (parent/children) and aggregate posting amounts.  This binding
  * provides child account lookup, iteration over sub-accounts and postings,
- * amount/total computation with optional expressions, and xdata access for
- * report-time statistics.
+ * amount/total computation, and xdata access for report-time statistics.
  */
 
 #include <system.hh>
@@ -58,6 +57,11 @@ using namespace boost::python;
 
 namespace {
 
+// Python keeps the one-argument form, which returns the full count.
+std::size_t py_children_with_flags(const account_t& account, account_t::xdata_t::flags_t flags) {
+  return account.children_with_flags(flags);
+}
+
 /*--- Sequence Protocol ---*/
 
 long accounts_len(account_t& account) {
@@ -65,30 +69,10 @@ long accounts_len(account_t& account) {
 }
 
 account_t& accounts_getitem(account_t& account, long i) {
-  long len = static_cast<long>(account.accounts.size());
-
-  if (labs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  long x = i < 0 ? len + i : i;
-  auto elem = std::next(account.accounts.begin(), x);
-  return *elem->second;
+  return *std::next(account.accounts.begin(),
+                    static_cast<std::ptrdiff_t>(py_sequence_index(i, account.accounts.size())))
+              ->second;
 }
-
-#if 0
-  account_t * py_find_account_1(journal_t& journal, const string& name)
-  {
-    return journal.find_account(name);
-  }
-
-  account_t * py_find_account_2(journal_t& journal, const string& name,
-                                const bool auto_create)
-  {
-    return journal.find_account(name, auto_create);
-  }
-#endif
 
 /*--- Extended Data and Computation Wrappers ---*/
 
@@ -96,33 +80,24 @@ account_t::xdata_t& py_xdata(account_t& account) {
   return account.xdata();
 }
 
-PyObject* py_account_unicode(account_t& account) {
-  return str_to_py_unicode(account.fullname());
-}
-
-/// Overloads for amount() and total() that accept an optional expression
-/// for custom aggregation from the Python side.
+/// Overloads that supply amount()'s and total()'s default arguments for Python.
 value_t py_amount_0(const account_t& account) {
   return account.amount();
-}
-
-value_t py_amount_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.amount(false, expr);
 }
 
 value_t py_total_0(const account_t& account) {
   return account.total();
 }
 
-value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.total(expr);
+boost::python::list py_find_accounts_re(account_t& account, const string& regexp) {
+  auto accounts = account.find_accounts_re(regexp);
+  return to_py_list(accounts.begin(), accounts.end(),
+                    [](account_t* a) { return boost::python::ptr(a); });
 }
 
-boost::python::list py_find_accounts_re(account_t& account, const string& regexp) {
-  boost::python::list result;
-  for (account_t* a : account.find_accounts_re(regexp))
-    result.append(boost::python::ptr(a));
-  return result;
+// Python keeps update(post, gather_all); the recency counters use today.
+void py_details_update(account_t::xdata_t::details_t& details, post_t& post, bool gather_all) {
+  details.update(post, CURRENT_DATE(), gather_all);
 }
 
 } // unnamed namespace
@@ -137,7 +112,7 @@ void export_account() {
   scope().attr("ACCOUNT_EXT_TO_DISPLAY") = ACCOUNT_EXT_TO_DISPLAY;
   scope().attr("ACCOUNT_EXT_DISPLAYED") = ACCOUNT_EXT_DISPLAYED;
 
-  class_<account_t::xdata_t::details_t>("AccountXDataDetails")
+  class_<account_t::xdata_t::details_t, boost::noncopyable>("AccountXDataDetails")
       .def_readonly("total", &account_t::xdata_t::details_t::total)
       .def_readonly("real_total", &account_t::xdata_t::details_t::real_total)
       .def_readonly("calculated", &account_t::xdata_t::details_t::calculated)
@@ -163,17 +138,10 @@ void export_account() {
 
       .def(self += self)
 
-      .def("update", &account_t::xdata_t::details_t::update);
+      .def("update", &py_details_update);
 
-  class_<account_t::xdata_t>("AccountXData")
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+  class_<account_t::xdata_t, boost::noncopyable>("AccountXData")
+      .def(flags_visitor<supports_flags<>>())
 
       .def_readonly("self_details", &account_t::xdata_t::self_details)
       .def_readonly("family_details", &account_t::xdata_t::family_details)
@@ -184,23 +152,16 @@ void export_account() {
   scope().attr("ACCOUNT_KNOWN") = ACCOUNT_KNOWN;
   scope().attr("ACCOUNT_TEMP") = ACCOUNT_TEMP;
 
-  class_<account_t>("Account")
-#if 1
-      .add_property("flags", &supports_flags<>::flags, &supports_flags<>::set_flags)
-      .def("has_flags", &supports_flags<>::has_flags)
-      .def("clear_flags", &supports_flags<>::clear_flags)
-      .def("add_flags", &supports_flags<>::add_flags)
-      .def("drop_flags", &supports_flags<>::drop_flags)
-#endif
+  class_<account_t, boost::noncopyable>("Account")
+      .def(flags_visitor<supports_flags<>>())
 
       .add_property("parent", make_getter(&account_t::parent, return_internal_reference<>()))
 
-      .def_readwrite("name", &account_t::name)
+      .def_readonly("name", &account_t::name)
       .def_readwrite("note", &account_t::note)
       .def_readonly("depth", &account_t::depth)
 
       .def("__str__", &account_t::fullname)
-      .def("__unicode__", py_account_unicode)
 
       .def("fullname", &account_t::fullname)
       .def("partial_name", &account_t::partial_name)
@@ -232,15 +193,13 @@ void export_account() {
       .def("xdata", py_xdata, return_internal_reference<>())
 
       .def("amount", py_amount_0)
-      .def("amount", py_amount_1, args("expr"))
       .def("total", py_total_0)
-      .def("total", py_total_1, args("expr"))
 
       .def("self_details", &account_t::self_details, return_internal_reference<>())
       .def("family_details", &account_t::family_details, return_internal_reference<>())
 
       .def("has_xflags", &account_t::has_xflags)
-      .def("children_with_flags", &account_t::children_with_flags);
+      .def("children_with_flags", py_children_with_flags);
 }
 
 } // namespace ledger

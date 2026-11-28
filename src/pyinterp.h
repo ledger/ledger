@@ -97,17 +97,11 @@ public:
   }
 
   void initialize();
-  void hack_system_paths();
 
   boost::python::object import_option(const string& name);
 
-  enum py_eval_mode_t { PY_EVAL_EXPR, PY_EVAL_STMT, PY_EVAL_MULTI };
-
-  boost::python::object eval(std::istream& in, py_eval_mode_t mode = PY_EVAL_EXPR);
-  boost::python::object eval(const string& str, py_eval_mode_t mode = PY_EVAL_EXPR);
-  boost::python::object eval(const char* c_str, py_eval_mode_t mode = PY_EVAL_EXPR) {
-    return eval(string(c_str), mode);
-  }
+  /// Run @p str as a Python module body (Py_file_input) in __main__'s globals.
+  boost::python::object eval(const string& str);
 
   value_t python_command(call_scope_t& scope);
 

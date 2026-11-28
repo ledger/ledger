@@ -78,12 +78,15 @@ namespace ledger {
  * expression set) always returns true, so it acts as a pass-through filter.
  *
  * Typical construction paths:
- * - From a pre-built expression tree (ptr_op_t), as produced by query_t.
+ * - From a pre-built expression tree (ptr_op_t), as query_t does to print
+ *   a section's predicate string.
  * - From a string, as supplied via `--limit` or `--display` command-line
  *   options.
  *
- * @see query_t, which parses command-line arguments into predicate_t
- *      instances for each query category (limit, show, only, bold, for).
+ * @see query_t, which parses command-line arguments into predicate
+ *      expression strings per section (limit, show, only, bold) plus a
+ *      period string (for); report_t::parse_query_args hands them to
+ *      --limit, --display, --only, --bold-if and --period.
  */
 class predicate_t : public expr_t {
 public:

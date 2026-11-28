@@ -1,0 +1,53 @@
+; An amount in "%" used as a posting's quantity is an ordinary commodity
+; in the arithmetic behind costs, lot prices and --percent shares.  That
+; arithmetic used to divide by 100 whenever "%" was its right operand,
+; so 10% @ $5 cost $0.50, 985% traded for 10 BOND recorded a lot price
+; of 1.015228 BOND per unit, a lot total of 50 on 10% gave a per-unit
+; price of 500 rather than 5%, and --percent gave 7500.00% for 30% of
+; 40%.  The percentage reading of "%" belongs to value expressions only
+; (see 2724.test).
+
+2024/01/01 Rate units bought at a price
+    Assets:Rate    10% @ $5
+    Assets:Cash
+
+2024/01/02 Rate units bought for a total
+    Assets:Rate    10% @@ $50
+    Assets:Cash
+
+2024/01/03 Par traded for bonds
+    Assets:Par      -985%
+    Assets:Bonds    10 BOND
+
+2024/01/04 Shares
+    Shares:A    30%
+    Shares:B    10%
+    Equity
+
+2024/01/05 Rate units with a lot total and no commodity
+    Lots:Rate    10% {{50}}
+    Lots:Cash
+
+test bal -B --flat ^Assets:Rate ^Assets:Cash
+               $-100  Assets:Cash
+                $100  Assets:Rate
+--------------------
+                   0
+end test
+
+test bal --lots --flat ^Assets:Par
+-985% {0.010152 BOND} [2024/01/03]  Assets:Par
+end test
+
+test bal --percent ^Shares:
+             100.00%  Shares
+              75.00%    A
+              25.00%    B
+end test
+
+test bal --lots --flat ^Lots:
+           -10% {5%}  Lots:Cash
+            10% {5%}  Lots:Rate
+--------------------
+                   0
+end test

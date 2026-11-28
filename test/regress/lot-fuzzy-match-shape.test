@@ -1,0 +1,33 @@
+; A typed lot price names a lot computed from a cost when the prices
+; agree to the lesser precision (#524), but only a computed lot of the
+; same shape: the same lot date, lot note and price commodity.  The
+; typed lots dated 2021/01/02, noted (lot1) or priced in EUR stay apart.
+
+2021/01/01 Buy
+    Assets:Broker    23 AAPL @@ $23.60
+    Assets:Cash
+
+2021/01/01 Typed, same shape
+    Assets:Same      10 AAPL {$1.03} [2021/01/01]
+    Equity:Opening
+
+2021/01/01 Typed, other date
+    Assets:Date      10 AAPL {$1.03} [2021/01/02]
+    Equity:Opening
+
+2021/01/01 Typed, with a note
+    Assets:Note      10 AAPL {$1.03} [2021/01/01] (lot1)
+    Equity:Opening
+
+2021/01/01 Typed, other price commodity
+    Assets:Euro      10 AAPL {1.03 EUR} [2021/01/01]
+    Equity:Opening   -10.30 EUR
+
+test bal Assets --lots --flat --no-total
+23 AAPL {$1.026087} [2021/01/01]  Assets:Broker
+             $-23.60  Assets:Cash
+10 AAPL {$1.03} [2021/01/02]  Assets:Date
+10 AAPL {1.03 EUR} [2021/01/01]  Assets:Euro
+10 AAPL {$1.03} [2021/01/01] (lot1)  Assets:Note
+10 AAPL {$1.026087} [2021/01/01]  Assets:Same
+end test

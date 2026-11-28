@@ -11,5 +11,5 @@ account-rewrite  Expenses:Food  Expenses:Groceries
 
 test reg
 24-Jan-01 Grocery               Expenses:Groceries           $25.00       $25.00
-24-Jan-01 Grocery               Assets:Cash                 $-25.00            0
+                                Assets:Cash                 $-25.00            0
 end test

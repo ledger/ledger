@@ -588,38 +588,38 @@ BOOST_AUTO_TEST_CASE(testCommodityAmount)
   b1 += amount_t("CAD 75");
 
   // Extract the dollar amount
-  optional<amount_t> dollar_amt =
-    b1.commodity_amount(amount_t("$1").commodity());
+  std::optional<amount_t> dollar_amt =
+    b1.commodity_amount(&amount_t("$1").commodity());
   BOOST_CHECK(dollar_amt);
   BOOST_CHECK_EQUAL(*dollar_amt, amount_t("$100.00"));
 
   // Extract the EUR amount
-  optional<amount_t> eur_amt =
-    b1.commodity_amount(amount_t("EUR 1").commodity());
+  std::optional<amount_t> eur_amt =
+    b1.commodity_amount(&amount_t("EUR 1").commodity());
   BOOST_CHECK(eur_amt);
   BOOST_CHECK_EQUAL(*eur_amt, amount_t("EUR 50"));
 
   // Extract the CAD amount
-  optional<amount_t> cad_amt =
-    b1.commodity_amount(amount_t("CAD 1").commodity());
+  std::optional<amount_t> cad_amt =
+    b1.commodity_amount(&amount_t("CAD 1").commodity());
   BOOST_CHECK(cad_amt);
   BOOST_CHECK_EQUAL(*cad_amt, amount_t("CAD 75"));
 
   // Looking up a commodity not in the balance returns none
-  optional<amount_t> gbp_amt =
-    b1.commodity_amount(amount_t("GBP 1").commodity());
+  std::optional<amount_t> gbp_amt =
+    b1.commodity_amount(&amount_t("GBP 1").commodity());
   BOOST_CHECK(!gbp_amt);
 
   // Single-commodity balance: calling with no argument returns the amount
   balance_t b2;
   b2 += amount_t("$200.00");
-  optional<amount_t> single_amt = b2.commodity_amount();
+  std::optional<amount_t> single_amt = b2.commodity_amount();
   BOOST_CHECK(single_amt);
   BOOST_CHECK_EQUAL(*single_amt, amount_t("$200.00"));
 
   // Empty balance: calling with no argument returns none
   balance_t b3;
-  optional<amount_t> empty_amt = b3.commodity_amount();
+  std::optional<amount_t> empty_amt = b3.commodity_amount();
   BOOST_CHECK(!empty_amt);
 
   BOOST_CHECK(b1.valid());
@@ -672,6 +672,46 @@ BOOST_AUTO_TEST_CASE(testSingleAmount)
   BOOST_CHECK(b0.valid());
   BOOST_CHECK(b1.valid());
   BOOST_CHECK(b2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testSoleAmount)
+{
+  balance_t b0;
+  BOOST_CHECK(b0.sole_amount() == nullptr);
+
+  // {$1.00, EUR 0}: operator+= keeps the cancelled EUR component
+  balance_t b1;
+  b1 += amount_t("$1.00");
+  b1 += amount_t("EUR 1");
+  b1 += amount_t("EUR -1");
+  BOOST_CHECK(!b1.single_amount());
+  BOOST_REQUIRE(b1.sole_amount() != nullptr);
+  BOOST_CHECK_EQUAL(*b1.sole_amount(), amount_t("$1.00"));
+
+  // two non-zero components: no sole amount
+  balance_t b2;
+  b2 += amount_t("$1.00");
+  b2 += amount_t("EUR 1");
+  BOOST_CHECK(b2.sole_amount() == nullptr);
+
+  // a lone zero is its own sole amount, so it keeps its commodity
+  // (operator+= keeps the realzero sum); the single-amount arms of *=
+  // and /= read it, so {$0} * 2 is $0
+  balance_t b3;
+  b3 += amount_t("$1.00");
+  b3 += amount_t("$-1.00");
+  BOOST_CHECK(b3.single_amount());
+  BOOST_REQUIRE(b3.sole_amount() != nullptr);
+  BOOST_CHECK(b3.sole_amount()->is_realzero());
+  BOOST_CHECK(b3.sole_amount()->has_commodity());
+
+  // several zero components: no sole amount
+  balance_t b4(b1);
+  b4 += amount_t("$-1.00");
+  BOOST_CHECK(b4.sole_amount() == nullptr);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b4.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testBalancePrint)
@@ -1141,17 +1181,17 @@ BOOST_AUTO_TEST_CASE(testDuplicateLotsCommodityAmount)
   balance_t b;
   b += duplicate_lots_t::of(lots.spelled, 10);
 
-  optional<amount_t> by_other = b.commodity_amount(*lots.reannotated);
+  std::optional<amount_t> by_other = b.commodity_amount(lots.reannotated);
   BOOST_REQUIRE(by_other);
   BOOST_CHECK(&by_other->commodity() == lots.spelled);
   BOOST_CHECK_EQUAL(by_other->number(), amount_t(10L));
 
-  optional<amount_t> by_own = b.commodity_amount(*lots.spelled);
+  std::optional<amount_t> by_own = b.commodity_amount(lots.spelled);
   BOOST_REQUIRE(by_own);
   BOOST_CHECK(&by_own->commodity() == lots.spelled);
   BOOST_CHECK_EQUAL(by_own->number(), amount_t(10L));
 
-  BOOST_CHECK(!b.commodity_amount(*lots.outsider));
+  BOOST_CHECK(!b.commodity_amount(lots.outsider));
 }
 
 BOOST_AUTO_TEST_CASE(testComponentKeyOutsideDuplicateLots)
@@ -1215,6 +1255,226 @@ BOOST_AUTO_TEST_CASE(testUnreduceMergeKeepsPrecision)
     // With neither part keeping full precision, neither does the sum.
     BOOST_CHECK_EQUAL(hours.keep_precision(), keeper < 2);
   }
+}
+
+BOOST_AUTO_TEST_CASE(testVisitComponentsSuccessKeepsContext)
+{
+  // A visit in which nothing fails visits every component once and leaves
+  // the error context gathered before it as it was.
+  balance_t b;
+  for (const char* text : {"1 HHH", "1 CCC", "1 AAA", "1 EEE", "1 BBB"})
+    b += amount_t(text);
+
+  (void)error_context();
+  add_error_context("outer");
+  std::map<string, int> visits;
+  b.visit_components(
+      [&visits](const amount_t& amount) { ++visits[amount.commodity().symbol()]; });
+  BOOST_CHECK_EQUAL(visits.size(), 5U);
+  for (const auto& [symbol, count] : visits)
+    BOOST_CHECK_MESSAGE(count == 1, symbol << " visited " << count << " times");
+  BOOST_CHECK_EQUAL(error_context(), "outer");
+
+  // With no context before the visit, none is left after it.
+  visits.clear();
+  b.visit_components(
+      [&visits](const amount_t& amount) { ++visits[amount.commodity().symbol()]; });
+  BOOST_CHECK_EQUAL(visits.size(), 5U);
+  BOOST_CHECK_EQUAL(error_context(), "");
+}
+
+BOOST_AUTO_TEST_CASE(testVisitComponentsFailureOrder)
+{
+  // Whichever two components fail, and whichever of them the map happens
+  // to reach first, the failure thrown is the one display order meets
+  // first, no component is visited twice, every component display order
+  // lists before it is visited, and the error context reads as an
+  // uninterrupted visit in display order would leave it.
+  const std::vector<string> symbols{"AAA", "BBB", "CCC", "DDD", "EEE", "FFF",
+                                    "GGG", "HHH", "III", "JJJ", "KKK", "LLL"};
+  // Create the commodities out of display order, so that a map order that
+  // follows allocation addresses is still not monotone in display order.
+  const std::size_t creation[] = {7, 2, 10, 0, 5, 11, 3, 8, 1, 6, 9, 4};
+  balance_t b;
+  for (std::size_t index : creation)
+    b += amount_t("1 " + symbols[index]);
+  BOOST_REQUIRE_EQUAL(b.amounts.size(), symbols.size());
+
+  // pos[d] is where the map's iteration reaches the commodity whose
+  // display rank is d.
+  std::map<string, std::size_t> rank;
+  for (std::size_t d = 0; d < symbols.size(); ++d)
+    rank[symbols[d]] = d;
+  std::vector<std::size_t> pos(symbols.size());
+  std::size_t at = 0;
+  for (const auto& pair : b.amounts)
+    pos[rank.at(pair.second.commodity().symbol())] = at++;
+
+  std::size_t reversed_pairs = 0;     // map reaches the display-later failure first
+  std::size_t skip_pairs = 0;         // replay must skip an already visited component
+  std::size_t replay_call_pairs = 0;  // replay must call a component not yet visited
+  for (std::size_t i = 0; i < symbols.size(); ++i) {
+    for (std::size_t j = i + 1; j < symbols.size(); ++j) {
+      // The map stops at whichever failure it reaches first; the replay
+      // then tries the display ranks below i (it throws at i at the latest).
+      const std::size_t stop = std::min(pos[i], pos[j]);
+      if (pos[j] < pos[i])
+        ++reversed_pairs;
+      bool skips = false;
+      bool calls = false;
+      for (std::size_t k = 0; k < i; ++k)
+        (pos[k] < stop ? skips : calls) = true;
+      skip_pairs += skips;
+      replay_call_pairs += calls;
+    }
+  }
+  BOOST_REQUIRE_MESSAGE(reversed_pairs > 0 && skip_pairs > 0 && replay_call_pairs > 0,
+                        "map order exercises no replay: reversed " << reversed_pairs
+                            << ", skip " << skip_pairs << ", call " << replay_call_pairs);
+
+  for (const bool outer : {true, false}) {
+    for (std::size_t i = 0; i < symbols.size(); ++i) {
+      for (std::size_t j = i + 1; j < symbols.size(); ++j) {
+        const string& first = symbols[i]; // display order: first < second
+        const string& second = symbols[j];
+        std::map<string, int> visits;
+
+        (void)error_context();
+        if (outer)
+          add_error_context("outer");
+        string thrown;
+        try {
+          b.visit_components([&](const amount_t& amount) {
+            const string& symbol = amount.commodity().symbol();
+            ++visits[symbol];
+            if (symbol == first || symbol == second) {
+              // Lay out context as expr_t's handler does: own lines first,
+              // then the context it found.
+              const string found = error_context();
+              add_error_context("failed " + symbol);
+              if (!found.empty())
+                add_error_context(found);
+              throw std::runtime_error(symbol);
+            }
+          });
+        } catch (const std::runtime_error& err) {
+          thrown = err.what();
+        }
+
+        BOOST_CHECK_EQUAL(thrown, first);
+        // With no context before the visit (the saved context is never
+        // taken), only the failure's own line is left.
+        BOOST_CHECK_EQUAL(error_context(), outer ? "failed " + first + "\nouter" : "failed " + first);
+        for (const auto& [symbol, count] : visits)
+          BOOST_CHECK_MESSAGE(count == 1, symbol << " visited " << count << " times (pair "
+                                                 << first << ", " << second << ")");
+        for (std::size_t k = 0; k <= i; ++k)
+          BOOST_CHECK_MESSAGE(visits[symbols[k]] == 1,
+                              symbols[k] << " not visited (pair " << first << ", " << second
+                                         << ")");
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testMapSortedAmountsCallsCallerFunctor)
+{
+  // map_sorted_amounts calls the caller's own functor: a stateful functor
+  // passed as an lvalue sees every call, on the sorted path and on the
+  // single-component fast path.  (A copy into a type-erased wrapper would
+  // leave the caller's count at zero.)
+  struct counter_t {
+    int calls = 0;
+    void operator()(const amount_t&) { ++calls; }
+  };
+  balance_t b;
+  b += amount_t("$1.00");
+  b += amount_t("EUR 2");
+  counter_t counter;
+  b.map_sorted_amounts(counter);
+  BOOST_CHECK_EQUAL(counter.calls, 2);
+  balance_t single(amount_t("$1.00"));
+  single.map_sorted_amounts(counter);
+  BOOST_CHECK_EQUAL(counter.calls, 3);
+}
+
+BOOST_AUTO_TEST_CASE(testMergeOntoSharedMapKeepsPrecision)
+{
+  balance_t b;
+  b += amount_t("$1.00");
+  const balance_t shared(b);
+
+  amount_t keeper("$0.001");
+  keeper.set_keep_precision(true);
+  b.merge(keeper);
+
+  BOOST_REQUIRE_EQUAL(b.commodity_count(), 1U);
+  BOOST_CHECK(b.first_sorted_amount()->keep_precision());
+  BOOST_CHECK_EQUAL(b.first_sorted_amount()->number(), amount_t("1.001"));
+  BOOST_CHECK(!shared.first_sorted_amount()->keep_precision());
+  BOOST_CHECK_EQUAL(shared.first_sorted_amount()->number(), amount_t("1.00"));
+}
+
+BOOST_AUTO_TEST_CASE(testMoveTransfersComponents)
+{
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<balance_t>);
+  BOOST_CHECK(std::is_nothrow_move_assignable_v<balance_t>);
+
+  balance_t source;
+  source += amount_t("$1.00");
+  source += amount_t("EUR 2");
+  source.sort_order = balance_t::lot_sort_order::fifo;
+
+  balance_t moved(std::move(source));
+  BOOST_CHECK(source.is_empty()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK_EQUAL(moved.commodity_count(), 2U);
+  BOOST_CHECK(moved.sort_order == balance_t::lot_sort_order::fifo);
+
+  balance_t target(amount_t("GBP 3"));
+  target = std::move(moved);
+  BOOST_CHECK_EQUAL(target.commodity_count(), 2U);
+  BOOST_CHECK(target.sort_order == balance_t::lot_sort_order::fifo);
+
+  // A moved-from balance is still a balance: it can be assigned and used.
+  source += amount_t("$4.00");
+  BOOST_CHECK_EQUAL(source, amount_t("$4.00"));
+}
+
+BOOST_AUTO_TEST_CASE(testDocumentedCommodityAmountAndSortOrder)
+{
+  // commodity_amount() with no commodity returns the sole component left
+  // after stripping annotations, and throws amount_error when several
+  // commodities remain.
+  balance_t lots;
+  lots += amount_t("10 AAPL {$5} [2024/02/01]");
+  lots += amount_t("5 AAPL {$6} [2024/01/01]");
+  auto whole = lots.commodity_amount();
+  BOOST_REQUIRE(whole);
+  BOOST_CHECK_EQUAL(*whole, amount_t("15 AAPL"));
+
+  balance_t mixed(lots);
+  mixed += amount_t("$1.00");
+  BOOST_CHECK_THROW((void)mixed.commodity_amount(), amount_error);
+
+  // sort_order is a display preference.  Copies, negated(), assignment
+  // from an amount, abs() and strip_annotations() keep it, number()
+  // starts at by_commodity, operator+= keeps the left operand's, and
+  // operator== ignores it.
+  balance_t fifo(fifo_lot_prices(lots));
+  BOOST_CHECK(fifo.sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(balance_t(fifo).sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.negated().sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.abs().sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.strip_annotations(keep_details_t()).sort_order ==
+              balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.number().sort_order == balance_t::lot_sort_order::by_commodity);
+  balance_t assigned(fifo);
+  assigned = amount_t("1 AAPL");
+  BOOST_CHECK(assigned.sort_order == balance_t::lot_sort_order::fifo);
+  balance_t sum(lots);
+  sum += fifo;
+  BOOST_CHECK(sum.sort_order == balance_t::lot_sort_order::by_commodity);
+  BOOST_CHECK(fifo == lots);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

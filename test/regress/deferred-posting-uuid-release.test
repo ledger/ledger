@@ -1,0 +1,37 @@
+; A posting to <Account> is deferred: finalize() parks it under its
+; transaction's id() instead of adding it to the account.  When a later
+; transaction with the same UUID arrives, journal_t::add_xact() releases
+; every posting parked under that UUID on the accounts the later
+; transaction posts to, including the later transaction's own, and drops
+; the later transaction's posting again when it discards the duplicate.
+; The Check transaction asserts that the first Paid posting is already in
+; Assets:X before the parse ends, which only that release achieves.  Any
+; posting still parked at the end of the parse (Other) is applied then.
+; Neither the date nor an automated transaction is involved.
+
+2020/01/01 Paid
+    ; UUID: abc
+    <Assets:X>   $5
+    Equity
+
+2020/01/01 Paid
+    ; UUID: abc
+    <Assets:X>   $5
+    Equity
+
+2020/01/03 Check
+    Assets:X   $0 = $5
+    Equity
+
+2020/02/01 Other
+    <Assets:Y>   $7
+    Equity
+
+test bal
+                 $12  Assets
+                  $5    X
+                  $7    Y
+                $-12  Equity
+--------------------
+                   0
+end test

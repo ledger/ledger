@@ -1,0 +1,33 @@
+; xact copies a matched historical posting and then puts the amount the
+; user typed in place of its amount.  The {{total}} lot price print shows
+; must be the one that the printed amount was written with: the user's,
+; when the user typed one, and the historical posting's own when xact
+; keeps its amount; never the historical total on the user's new lot.
+
+2024/01/01 Buy
+    Assets:Broker    3 ABC {{$100.00}}
+    Assets:Cash     $-100.00
+
+test xact 2024/02/01 Buy Broker '6 ABC {$50}'
+2024/02/01 Buy
+    Assets:Broker                       6 ABC {$50.00}
+    Assets:Cash
+end test
+
+test xact 2024/02/01 Buy Broker '6 ABC {{$300}}'
+2024/02/01 Buy
+    Assets:Broker                       6 ABC {{$300.00}}
+    Assets:Cash
+end test
+
+test xact 2024/02/01 Buy Broker
+2024/02/01 Buy
+    Assets:Broker                       3 ABC {{$100.00}}
+    Assets:Cash
+end test
+
+test xact 2024/02/01 Buy
+2024/02/01 Buy
+    Assets:Broker                       3 ABC {{$100.00}}
+    Assets:Cash                             $-100.00
+end test

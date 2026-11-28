@@ -1,0 +1,31 @@
+; A yearless 02/28 or 02/29 in a period resolves to its most recent
+; occurrence on or before --now, never snapped across a leap year.
+
+2027/02/28 Feb end 2027
+    Expenses:A    $1
+    Assets:Cash
+
+2028/02/28 Feb end 2028
+    Expenses:A    $2
+    Assets:Cash
+
+2028/02/29 Leap day 2028
+    Expenses:A    $4
+    Assets:Cash
+
+test reg Expenses --now 2029/01/15 -p 02/28
+28-Feb-28 Feb end 2028          Expenses:A                       $2           $2
+end test
+
+test reg Expenses --now 2029/01/15 -b 02/28
+28-Feb-28 Feb end 2028          Expenses:A                       $2           $2
+28-Feb-29 Leap day 2028         Expenses:A                       $4           $6
+end test
+
+test reg Expenses --now 2029/01/15 -p 02/29
+28-Feb-29 Leap day 2028         Expenses:A                       $4           $4
+end test
+
+test reg Expenses --now 2029/01/15 -b 02/29
+28-Feb-29 Leap day 2028         Expenses:A                       $4           $4
+end test

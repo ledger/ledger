@@ -89,8 +89,14 @@ class account_t;
  * Ledger infers it from the other postings to balance the transaction.
  * The cost fields track currency conversions and lot prices:
  *   - cost: the total cost in the target commodity (e.g., $150 for 10 AAPL)
- *   - given_cost: the cost as originally written by the user, before
- *     per-unit conversion
+ *   - given_cost: the total cost as written (an @ price is multiplied
+ *     out by the amount), kept when finalize() later rewrites cost; a
+ *     sale that finalize() splits across lots gives each part its share
+ *   - given_lot_total: the {{total}} lot price as written; the lot's
+ *     annotation, shared by every posting of the lot, keeps only the
+ *     per-unit price.  A posting that takes another posting's amount
+ *     takes its given_lot_total with it; one whose amount is assigned
+ *     afresh clears it, or sets the total its new amount was written with
  *   - assigned_amount: a balance assertion or assignment (= $500)
  *
  * Virtual postings (parenthesized accounts) and balanced virtual postings
@@ -106,19 +112,18 @@ public:
   0x0040 ///< Amount was computed (e.g., inferred null amount to balance the transaction).
 #define POST_COST_CALCULATED 0x0080 ///< Cost was computed rather than explicitly given by the user.
 #define POST_COST_IN_FULL                                                                          \
-  0x0100 ///< Cost was given as total cost (@@); stored internally as per-unit.
+  0x0100 ///< Cost was written as a total (@@); cost holds a total either way.
 #define POST_COST_FIXATED                                                                          \
   0x0200 ///< Cost is fixated with = indicator ({=...}), locking the lot price.
 #define POST_COST_VIRTUAL                                                                          \
   0x0400 ///< Cost was virtualized via (@), meaning the cost is informational only.
-#define POST_ANONYMIZED 0x0800 ///< Temporary anonymous posting created during anonymization.
+#define POST_ANONYMIZED                                                                            \
+  0x0800 ///< Copy standing in for a journal posting (--anon, rewrite rules); print shows it.
 #define POST_DEFERRED 0x1000 ///< Account was specified with <angle brackets> for deferred posting.
 #define POST_IS_TIMELOG 0x2000 ///< Posting was generated from timeclock check-in/check-out data.
 #define POST_AMOUNT_USER_ANNOTATED                                                                 \
   0x4000 ///< Amount has user-supplied lot annotations (price, date, or tag).
 #define POST_AMOUNT_USER_DATE 0x8000 ///< Amount has a user-supplied lot date annotation.
-  // Note: FIFO/LIFO auto-matching is indicated by the presence of an
-  // annotation without POST_AMOUNT_USER_ANNOTATED
 
   xact_t* xact;       ///< Parent transaction; only set for posts of regular xacts.
   account_t* account; ///< Target account this posting debits or credits.
@@ -127,7 +132,10 @@ public:
   optional<expr_t> amount_expr; ///< Expression that computed the amount, if any.
   std::optional<amount_t>
       cost; ///< Total cost in the cost commodity (e.g., $1500 for 10 AAPL @ $150).
-  std::optional<amount_t> given_cost; ///< Cost as originally written, before per-unit conversion.
+  std::optional<amount_t> given_cost; ///< Total cost as written; a lot-split part holds its share.
+  std::optional<amount_t> given_lot_total; ///< A {{total}} lot price as written, before
+                                           ///< amount_t::parse divided it into the lot's
+                                           ///< per-unit price.
   std::optional<amount_t> assigned_amount; ///< Balance assertion or assignment amount (= $500).
   optional<datetime_t> checkin;            ///< Timeclock check-in time (for timelog postings).
   optional<datetime_t> checkout;           ///< Timeclock check-out time (for timelog postings).
@@ -141,15 +149,18 @@ public:
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
   post_t(account_t* _account, const amount_t& _amount, flags_t _flags = ITEM_NORMAL,
-         const optional<string>& _note = none)
+         const optional<string>& _note = std::nullopt)
       : item_t(_flags, _note), xact(nullptr), account(_account), amount(_amount) {
     TRACE_CTOR(post_t, "account_t *, amount_t, flags_t, optional<string>");
   }
+  // amount_expr is not copied: it is the source text of the original
+  // amount, and the filters that copy postings negate, replace or
+  // anonymize the amount, so a copy reports its amount, not stale text.
   post_t(const post_t& post)
       : item_t(post), xact(post.xact), account(post.account), amount(post.amount), cost(post.cost),
+        given_cost(post.given_cost), given_lot_total(post.given_lot_total),
         assigned_amount(post.assigned_amount), checkin(post.checkin), checkout(post.checkout),
-        xdata_(post.xdata_) {
-    copy_details(post);
+        _payee(post._payee), xdata_(post.xdata_) {
     TRACE_CTOR(post_t, "copy");
   }
   post_t& operator=(const post_t&) = default;
@@ -191,8 +202,9 @@ public:
    * @brief The date to use for valuation purposes.
    *
    * Returns the xdata override if set, otherwise falls back to date().
-   * This allows the reporting pipeline to assign a custom valuation date
-   * (e.g., for --now or --value-date) separate from the posting's actual date.
+   * Reporting filters set the override (e.g. handle_value for subtotal
+   * and interval rows, changed_value_posts for revaluations) to value a
+   * synthetic or revalued posting as of a date other than its own.
    */
   virtual date_t value_date() const;
 
@@ -246,6 +258,15 @@ public:
   }
 
   /**
+   * @brief Wrap an account name in this posting's virtual-posting brackets.
+   *
+   * Balanced virtual postings get [brackets] and other virtual postings
+   * (parens), matching the journal syntax; real postings and non-string
+   * values are returned unchanged.
+   */
+  value_t decorate_account_name(const value_t& name) const;
+
+  /**
    * @brief Resolve an expression name to its implementation in the posting scope.
    *
    * Maps expression identifiers to getter functions.  Single-character
@@ -253,7 +274,7 @@ public:
    *   - `a` = amount, `b` = cost, `n`/`N` = count, `O` = total, `R` = real
    *
    * Key named bindings include: amount, cost, price, total, count, account,
-   * display_account, payee, virtual, real, has_cost, commodity, any(), all().
+   * payee, virtual, real, has_cost, commodity, any(), all().
    * Falls through to item_t::lookup() for inherited bindings (date, note, etc.).
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
@@ -266,6 +287,30 @@ public:
   std::size_t xact_id() const;
   /** @brief 1-based index of this posting within its account's posting list. */
   std::size_t account_id() const;
+
+  /**
+   * @brief Set the cost written after `@` (per unit) or `@@` (in full).
+   *
+   * Applies the journal's cost rules against this posting's amount, which
+   * must not be null: a negative cost is an error; a per-unit cost is
+   * multiplied by the amount, keeping the cost's commodity; a total cost is
+   * negated when the amount is negative.  Sets both `cost` and
+   * `given_cost`, and POST_COST_IN_FULL for `@@`.
+   */
+  void set_given_cost(amount_t written, bool in_full);
+
+  /**
+   * @brief Negate the amount and the costs that scale with it (cost, given_cost).
+   *
+   * given_lot_total is a lot price, which is never negative, so it stays.
+   */
+  void in_place_negate() {
+    amount.in_place_negate();
+    if (cost)
+      cost->in_place_negate();
+    if (given_cost)
+      given_cost->in_place_negate();
+  }
 
   void copy_details(const item_t& item) override {
     const post_t& post(dynamic_cast<const post_t&>(item));
@@ -293,16 +338,19 @@ public:
 #define POST_EXT_SORT_CALC 0x0010  ///< Sort key value has been computed and cached in sort_values.
 #define POST_EXT_COMPOUND 0x0020   ///< compound_value is set and should be used instead of amount.
 #define POST_EXT_VISITED 0x0040    ///< Posting was visited during report traversal.
-#define POST_EXT_MATCHES 0x0080    ///< Posting matches the current query predicate.
 #define POST_EXT_CONSIDERED 0x0100 ///< Posting has already been counted toward account totals.
-#define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200 ///< display_total has been computed and cached.
+/// xdata.display_total holds the annotation-stripped display total.
+#define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200
 #define POST_EXT_PAYEE_CHANGED 0x0400 ///< Payee differs from previous posting in display order.
+#define POST_EXT_SUBTOTAL_ROW 0x0800  ///< One account's row of a group from a grouping filter.
 
     value_t visited_value;  ///< Value recorded when the posting was visited.
     value_t compound_value; ///< Compound value set by filters (overrides amount when
                             ///< POST_EXT_COMPOUND).
     value_t total;          ///< Running total accumulated through the filter chain.
-    value_t display_total;  ///< Cached stripped display total for output formatting.
+    value_t display_total;  ///< Stripped display total, written by calc_posts (or
+                            ///< display_filter_posts when calc_posts kept none); read by
+                            ///< display_filter_posts and scrubbed_display_total
     std::size_t count;      ///< Posting index or count within the current report context.
     date_t date;            ///< Overridden date assigned by the reporting pipeline.
     date_t value_date;      ///< Overridden valuation date for price lookups.
@@ -318,7 +366,8 @@ public:
         : supports_flags<uint_least16_t>(other.flags()), visited_value(other.visited_value),
           compound_value(other.compound_value), total(other.total),
           display_total(other.display_total), count(other.count), date(other.date),
-          account(other.account), sort_values(other.sort_values) {
+          value_date(other.value_date), datetime(other.datetime), account(other.account),
+          sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
     xdata_t& operator=(const xdata_t&) = default;
@@ -332,7 +381,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const { return static_cast<bool>(xdata_); }
-  void clear_xdata() { xdata_ = none; }
+  void clear_xdata() { xdata_ = std::nullopt; }
   xdata_t& xdata() {
     if (!xdata_)
       xdata_ = xdata_t();
@@ -349,7 +398,7 @@ public:
    * Otherwise evaluates the expression in a bound scope.  The compound_value
    * in xdata takes precedence if POST_EXT_COMPOUND is set.
    */
-  void add_to_value(value_t& value, const optional<expr_t&>& expr = none) const;
+  void add_to_value(value_t& value, expr_t* expr = nullptr) const;
 
   void set_reported_account(account_t* account);
 
@@ -364,26 +413,6 @@ public:
   const account_t* reported_account() const {
     return const_cast<post_t*>(this)->reported_account();
   }
-
-  friend class xact_t;
-
-  /**
-   * @brief Comparator for sorting postings by date, then by file sequence.
-   *
-   * Used to present postings in chronological order.  When two postings
-   * share the same date, the tie is broken by their source file sequence
-   * number, preserving the order in which they appeared in the journal.
-   */
-  struct compare_by_date_and_sequence {
-    bool operator()(const post_t* left, const post_t* right) const {
-      gregorian::date_duration duration = left->primary_date() - right->primary_date();
-      if (duration.days() == 0) {
-        return ((left->pos ? left->pos->sequence : 0) < (right->pos ? right->pos->sequence : 0));
-      } else {
-        return duration.days() < 0;
-      }
-    }
-  };
 };
 
 class journal_t;
@@ -408,6 +437,15 @@ class journal_t;
  * by the posting quantity to convert from total value to per-unit price.
  */
 void extend_post(post_t& post, journal_t& journal);
+
+/**
+ * @brief Expression functions any(EXPR[, INCLUDE_SELF]) and
+ * all(EXPR[, INCLUDE_SELF]) over the postings of the context posting's
+ * transaction, shared by post_t::lookup and xact_t::lookup; INCLUDE_SELF
+ * false skips the context posting.
+ */
+value_t fn_post_any(call_scope_t& args);
+value_t fn_post_all(call_scope_t& args);
 
 /**
  * @brief Serialize a posting to an XML property tree.

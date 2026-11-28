@@ -54,6 +54,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "temps.h"
 
 namespace ledger {
 
@@ -64,28 +65,13 @@ journal_t::journal_t() {
   TRACE_CTOR(journal_t, "");
 }
 
-#if 0
-journal_t::journal_t(const path& pathname)
-{
-  initialize();
-  read(pathname);
-  TRACE_CTOR(journal_t, "path");
-}
-
-journal_t::journal_t(const string& str)
-{
-  initialize();
-  read(str);
-  TRACE_CTOR(journal_t, "string");
-}
-#endif
-
 /**
  * @brief Destroy the journal, freeing all owned transactions and accounts.
  *
  * Cleanup order matters: regular and period xacts are deleted first,
  * then auto_xacts are cleared (their destructors call remove_post on
- * accounts), and finally the master account tree is deleted.
+ * accounts), the accounts reports built are taken out of the tree, and
+ * finally the master account tree is deleted.
  */
 journal_t::~journal_t() {
   TRACE_DTOR(journal_t);
@@ -98,14 +84,26 @@ journal_t::~journal_t() {
   for (period_xact_t* xact : period_xacts)
     checked_delete(xact);
 
-  // Clear the account-scoped check index first: it holds non-owning
-  // pointers into auto_xacts, which we are about to destroy below.
+  // Both own auto_xacts, whose destructors call remove_post on accounts
+  // owned by master, so they are cleared before master is deleted.
   account_check_xacts.clear();
-  // Clear auto_xacts before deleting master to avoid use-after-free:
-  // auto_xact_t destructors call remove_post on accounts owned by master.
   auto_xacts.clear();
 
+  // A report may still hold the pool after this journal (the session closes
+  // its journal while the last report lives).  The pool's accounts hang in
+  // the tree below, so take them out while it stands.
+  if (std::shared_ptr<temporaries_t> pool = report_accounts_.lock())
+    pool->clear();
+
   checked_delete(master);
+}
+
+std::shared_ptr<temporaries_t> journal_t::report_accounts_pool() {
+  if (std::shared_ptr<temporaries_t> pool = report_accounts_.lock())
+    return pool;
+  std::shared_ptr<temporaries_t> pool = std::make_shared<temporaries_t>();
+  report_accounts_ = pool;
+  return pool;
 }
 
 void journal_t::initialize() {
@@ -163,13 +161,16 @@ std::vector<account_t*> journal_t::find_accounts_re(const string& regexp) {
  *   3. If the account is named "Unknown", check payees_for_unknown_accounts
  *      for a payee-based mapping to a real account.
  *   4. When --strict or --pedantic is active, verify the account is known.
- *      Template variables ($var, %(expr)) are silently accepted because they
- *      will be resolved at runtime by automated transactions.
+ *      Template variables ($var, %(expr)) are accepted in the postings of
+ *      automated and periodic transactions (@p template_post), which resolve
+ *      them when applied; any other posting's account is checked whatever
+ *      its name.
  */
-account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account) {
+account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account,
+                                       bool template_post) {
   // If there are any account aliases, substitute before creating an account
   // object.
-  account_t* result = expand_aliases(string(name));
+  account_t* result = has_aliases() ? expand_aliases(string(name)) : nullptr;
 
   // Create the account object and associate it with the journal; this
   // is registering the account.
@@ -178,14 +179,9 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
 
   // If the account name being registered is "Unknown", check whether
   // the payee indicates an account that should be used.
-  if (result->name == _("Unknown")) {
-    for (account_mapping_t& value : payees_for_unknown_accounts) {
-      if (post && post->xact && value.first.match(post->xact->payee)) {
-        result = value.second;
-        break;
-      }
-    }
-  }
+  if (result->name == _("Unknown") && post && post->xact)
+    if (account_t* mapped = account_for_payee(post->xact->payee))
+      result = mapped;
 
   // Now that we have an account, make certain that the account is
   // "known", if the user has requested validation of that fact.
@@ -199,12 +195,13 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
       else if (post->has_flags(ITEM_GENERATED)) {
         result->add_flags(ACCOUNT_KNOWN);
       } else {
-        // If the account name contains template variable references ($variable
-        // or %(expr)) used in automated transactions, it will be resolved at
-        // runtime, so mark it as known without warning (see issue #545).
+        // If a template posting's account name contains template variable
+        // references ($variable or %(expr)), it will be resolved when the
+        // automated or periodic transaction is applied, so mark it as known
+        // without warning (see issue #545).
         const string& fn = result->fullname();
-        bool has_template_var = contains(fn, "%(");
-        if (!has_template_var) {
+        bool has_template_var = template_post && contains(fn, "%(");
+        if (template_post && !has_template_var) {
           for (size_t i = 0; i + 1 < fn.size(); ++i) {
             if (fn[i] == '$' && (std::isalpha((unsigned char)fn[i + 1]) || fn[i + 1] == '_')) {
               has_template_var = true;
@@ -215,12 +212,8 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
         if (has_template_var) {
           result->add_flags(ACCOUNT_KNOWN);
         } else if (checking_style == CHECK_WARNING) {
-          // Outside of parsing (e.g. register_account called from Python)
-          // there is no parse context, and thus no source location.
-          if (current_context)
-            current_context->warning(_f("Unknown account '%1%'") % result->fullname());
-          else
-            warning_func((_f("Unknown account '%1%'") % result->fullname()).str());
+          warning_func(check_location(nullptr, current_context) +
+                       (_f("Unknown account '%1%'") % result->fullname()).str());
         } else if (checking_style == CHECK_ERROR) {
           throw_(parse_error, _f("Unknown account '%1%'") % result->fullname());
         }
@@ -243,12 +236,11 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
  * (#836).  An already_seen set tracks which names have been expanded
  * to detect and prevent infinite alias loops.
  *
- * To avoid the duplication bug reported in #3132 -- where
- * "alias Dining=Expenses:Dining" would cause a user-written
- * "Expenses:Dining:Coffee" to become
- * "Expenses:Expenses:Dining:Coffee" -- a component is skipped when
- * the portion of the name up to and including that component already
- * equals the alias target on a colon-aligned boundary.
+ * A component is skipped when the portion of the name up to and
+ * including it already equals the alias target on a colon-aligned
+ * boundary, so under "alias Dining=Expenses:Dining" the name
+ * "Expenses:Dining:Coffee" stays as written rather than becoming
+ * "Expenses:Expenses:Dining:Coffee" (#3132).
  *
  * @return The resolved account, or nullptr if no alias matched.
  */
@@ -260,7 +252,7 @@ account_t* journal_t::expand_aliases(string name) {
   // prevent infinite excursion. Each alias may only be expanded at most once.
   account_t* result = nullptr;
 
-  if (no_aliases)
+  if (!has_aliases())
     return result;
 
   const string original_name = name;
@@ -268,73 +260,66 @@ account_t* journal_t::expand_aliases(string name) {
   std::unordered_set<string> already_seen;
   // loop until no expansion can be found
   do {
-    if (account_aliases.size() > 0) {
-      if (auto i = account_aliases.find(name); i != account_aliases.end()) {
-        if (already_seen.count(name) > 0) {
-          throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
-        }
-        // there is an alias for the full account name, including colons
-        already_seen.insert(name);
-        result = (*i).second;
-        name = result->fullname();
-      } else {
-        // Walk colon-separated components looking for an alias match.
-        // In the default (non-recursive) mode only the first component
-        // is considered; with --recursive-aliases every component is
-        // eligible (#836).  The first match is expanded.
-        size_t pos = 0;
-        bool found = false;
-        while (pos < name.size()) {
-          size_t colon = name.find(':', pos);
-          size_t component_end = (colon != string::npos) ? colon : name.size();
-          string component = name.substr(pos, component_end - pos);
+    if (auto i = account_aliases.find(name); i != account_aliases.end()) {
+      if (already_seen.count(name) > 0) {
+        throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
+      }
+      // there is an alias for the full account name, including colons
+      already_seen.insert(name);
+      result = (*i).second;
+      name = result->fullname();
+    } else {
+      // Walk colon-separated components looking for an alias match.
+      // In the default (non-recursive) mode only the first component
+      // is considered; with --recursive-aliases every component is
+      // eligible (#836).  The first match is expanded.
+      size_t pos = 0;
+      bool found = false;
+      while (pos < name.size()) {
+        size_t colon = name.find(':', pos);
+        size_t component_end = (colon != string::npos) ? colon : name.size();
+        string component = name.substr(pos, component_end - pos);
 
-          if (auto j = account_aliases.find(component);
-              j != account_aliases.end() && already_seen.count(component) == 0) {
-            // Skip the expansion when the name already contains the
-            // alias target as a colon-aligned prefix ending at this
-            // component.  This prevents #3132's duplication:
-            // "Expenses:Dining:Coffee" must not be rewritten using
-            // "alias Dining=Expenses:Dining" just because its middle
-            // component matches.
-            const string& target = (*j).second->fullname();
-            bool already_there = false;
-            if (component_end >= target.size()) {
-              size_t start = component_end - target.size();
-              if ((start == 0 || name[start - 1] == ':') &&
-                  name.compare(start, target.size(), target) == 0) {
-                already_there = true;
-              }
-            }
-
-            if (!already_there) {
-              already_seen.insert(component);
-
-              string new_name;
-              if (pos > 0)
-                new_name = name.substr(0, pos); // prefix including trailing ':'
-              new_name += target;
-              if (colon != string::npos)
-                new_name += name.substr(colon); // suffix including leading ':'
-              result = find_account(new_name);
-              name = result->fullname();
-              found = true;
-              break;
+        if (auto j = account_aliases.find(component);
+            j != account_aliases.end() && already_seen.count(component) == 0) {
+          // Skip the expansion when the name already contains the
+          // alias target as a colon-aligned prefix ending at this
+          // component.  Under "alias Dining=Expenses:Dining",
+          // "Expenses:Dining:Coffee" must not be rewritten just because
+          // its middle component matches (#3132).
+          const string& target = (*j).second->fullname();
+          bool already_there = false;
+          if (component_end >= target.size()) {
+            size_t start = component_end - target.size();
+            if ((start == 0 || name[start - 1] == ':') &&
+                name.compare(start, target.size(), target) == 0) {
+              already_there = true;
             }
           }
 
-          // Only walk past the first component when recursive alias
-          // expansion is enabled; otherwise stop here to preserve the
-          // pre-#836 default behavior.
-          if (!recursive_aliases || colon == string::npos)
+          if (!already_there) {
+            already_seen.insert(component);
+
+            string new_name;
+            if (pos > 0)
+              new_name = name.substr(0, pos); // prefix including trailing ':'
+            new_name += target;
+            if (colon != string::npos)
+              new_name += name.substr(colon); // suffix including leading ':'
+            result = find_account(new_name);
+            name = result->fullname();
+            found = true;
             break;
-          pos = colon + 1;
+          }
         }
-        if (!found)
-          keep_expanding = false;
+
+        // Components past the first are expanded only under --recursive-aliases (#836).
+        if (!recursive_aliases || colon == string::npos)
+          break;
+        pos = colon + 1;
       }
-    } else {
-      keep_expanding = false;
+      if (!found)
+        keep_expanding = false;
     }
   } while (keep_expanding && recursive_aliases);
 
@@ -362,7 +347,8 @@ string journal_t::validate_payee(const string& name_or_alias) {
 
   if (should_check_payees() && payee_not_registered(payee)) {
     if (checking_style == CHECK_WARNING) {
-      current_context->warning(_f("Unknown payee '%1%'") % payee);
+      warning_func(check_location(nullptr, current_context) +
+                   (_f("Unknown payee '%1%'") % payee).str());
     } else if (checking_style == CHECK_ERROR) {
       throw_(parse_error, _f("Unknown payee '%1%'") % payee);
     }
@@ -379,10 +365,10 @@ bool journal_t::payee_not_registered(const string& name) {
   return known_payees.find(name) == known_payees.end();
 }
 
-string journal_t::translate_payee_name(const string& name) {
+string journal_t::translate_payee_name(const string& name) const {
   string payee;
 
-  for (payee_alias_mapping_t& value : payee_alias_mappings) {
+  for (const payee_alias_mapping_t& value : payee_alias_mappings) {
     if (value.first.match(name)) {
       payee = value.second;
       break;
@@ -392,23 +378,25 @@ string journal_t::translate_payee_name(const string& name) {
   return payee.empty() ? name : payee;
 }
 
+account_t* journal_t::account_for_payee(const string& payee) const {
+  for (const account_mapping_t& value : payees_for_unknown_accounts)
+    if (value.first.match(payee))
+      return value.second;
+  return nullptr;
+}
+
 /*--- Commodity and Metadata Registration ---*/
 
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
-  // Commodity validation honours the commodity-specific override when set
-  // (--strict-commodity / --pedantic-commodity, issue #3200).  When the
-  // commodity-specific level is at its default (CHECK_NORMAL), fall back
-  // to the global checking_style so that --strict / --pedantic and any
-  // direct callers that only adjust checking_style continue to work.
-  checking_style_t style =
-      commodity_checking_style != CHECK_NORMAL ? commodity_checking_style : checking_style;
+  checking_style_t style = effective_commodity_checking_style();
 
   if (style == CHECK_WARNING || style == CHECK_ERROR) {
     if (!comm.has_flags(COMMODITY_KNOWN)) {
       if (context.index() == 0) {
         comm.add_flags(COMMODITY_KNOWN);
       } else if (style == CHECK_WARNING) {
-        current_context->warning(_f("Unknown commodity '%1%'") % comm);
+        warning_func(check_location(nullptr, current_context) +
+                     (_f("Unknown commodity '%1%'") % comm).str());
       } else if (style == CHECK_ERROR) {
         throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
       }
@@ -426,6 +414,11 @@ void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*,
  */
 void journal_t::register_metadata(const string& key, const value_t& value,
                                   std::variant<int, xact_t*, post_t*> context) {
+  const item_t* item = context.index() == 1 ? static_cast<const item_t*>(std::get<xact_t*>(context))
+                       : context.index() == 2
+                           ? static_cast<const item_t*>(std::get<post_t*>(context))
+                           : nullptr;
+
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     std::set<string>::iterator i = known_tags.find(key);
 
@@ -434,12 +427,8 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       if (context.index() == 0) {
         known_tags.insert(key);
       } else if (checking_style == CHECK_WARNING) {
-        // Outside of parsing (e.g. add_xact called from Python) there is
-        // no parse context, and thus no source location to point at.
-        if (current_context)
-          current_context->warning(_f("Unknown metadata tag '%1%'") % key);
-        else
-          warning_func((_f("Unknown metadata tag '%1%'") % key).str());
+        warning_func(check_location(item, current_context) +
+                     (_f("Unknown metadata tag '%1%'") % key).str());
       } else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _f("Unknown metadata tag '%1%'") % key);
       }
@@ -481,10 +470,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
         } else {
           boost::format msg(_f("Metadata check failed for (%1%: %2%): %3%") % key % value %
                             (*i).second.first);
-          if (current_context)
-            current_context->warning(msg);
-          else
-            warning_func(msg.str());
+          warning_func(check_location(item, current_context) + msg.str());
         }
       }
     }
@@ -494,9 +480,9 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 namespace {
 /** @brief Iterate all metadata on a transaction or posting and validate each tag.
  *
- * Temporarily overrides the journal's current_context pathname and linenum
- * with the item's source position so that --strict warnings reference the
- * correct file and line (fixes #750 and #692).
+ * Warnings cite the item's own line while parsing, through check_location()
+ * (#750, #692); an error propagates with the item's source added to the
+ * error context.
  */
 void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
   xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
@@ -505,32 +491,21 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
     item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
 
-    path saved_pathname;
-    std::shared_ptr<const path> saved_pathname_ref;
-    std::size_t saved_linenum = 0;
-    if (journal.current_context && item->pos) {
-      saved_pathname = journal.current_context->pathname;
-      saved_pathname_ref = journal.current_context->pathname_ref;
-      saved_linenum = journal.current_context->linenum;
-      journal.current_context->pathname = *item->pos->pathname;
-      journal.current_context->pathname_ref = item->pos->pathname;
-      journal.current_context->linenum = item->pos->beg_line;
-    }
+    try {
+      for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
+        const string& key(pair.first);
 
-    for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
-      const string& key(pair.first);
-
-      const std::optional<value_t>& value = pair.second.first;
-      if (value)
-        journal.register_metadata(key, *value, context);
-      else
-        journal.register_metadata(key, NULL_VALUE, context);
-    }
-
-    if (journal.current_context && item->pos) {
-      journal.current_context->pathname = saved_pathname;
-      journal.current_context->pathname_ref = saved_pathname_ref;
-      journal.current_context->linenum = saved_linenum;
+        const std::optional<value_t>& value = pair.second.first;
+        if (value)
+          journal.register_metadata(key, *value, context);
+        else
+          journal.register_metadata(key, NULL_VALUE, context);
+      }
+    } catch (const std::exception&) {
+      if (journal.current_context && item->pos)
+        add_error_context(item_context(*item, xact ? _("While checking transaction metadata")
+                                                   : _("While checking posting metadata")));
+      throw;
     }
   }
 }
@@ -538,7 +513,8 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
 
 /*--- Transaction Management ---*/
 
-/** @brief Compare postings by account pointer for sorting during UUID dedup. */
+namespace {
+/** @brief Order postings by account for UUID dedup, so equal copies share a prefix. */
 bool lt_posting_account(post_t* left, post_t* right) {
   return left->account < right->account;
 }
@@ -553,6 +529,7 @@ bool is_equivalent_posting(post_t* left, post_t* right) {
 
   return true;
 }
+} // namespace
 
 /**
  * @brief Add a parsed transaction to the journal.
@@ -564,9 +541,10 @@ bool is_equivalent_posting(post_t* left, post_t* right) {
  *   3. Validate all metadata on the transaction.
  *   4. Extend each posting and validate its metadata.
  *   5. UUID deduplication: if a transaction with the same UUID already
- *      exists, verify that the postings are equivalent (same accounts
- *      and amounts).  If they match, apply any deferred posts and
- *      silently discard the duplicate.  If they differ, throw an error.
+ *      exists, first apply any postings the earlier copy deferred, then
+ *      verify that the postings are equivalent (same accounts and
+ *      amounts).  If they match, silently discard the duplicate; if they
+ *      differ, throw an error.
  *
  * @return true if the transaction was added, false if rejected.
  */
@@ -591,7 +569,7 @@ bool journal_t::add_xact(xact_t* xact) {
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
   if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
-    std::string uuid = ref->to_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::string uuid = ref->to_string();
     auto [iter, inserted] = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (!inserted) {
       // This UUID has been seen before; apply any postings which the
@@ -611,17 +589,17 @@ bool journal_t::add_xact(xact_t* xact) {
 
       xact_t* other = iter->second;
 
-      // Copy the two lists of postings (which should be relatively
-      // short), and make sure that the intersection is the empty set
-      // (i.e., that they are the same list).
+      // The two copies are the same transaction when they hold the same
+      // multiset of (account, amount) postings, in any order.  Sorting by
+      // account lets is_permutation pass over the common prefix in one step;
+      // it compares the sizes before it reads either list.
       std::vector<post_t*> this_posts(xact->posts.begin(), xact->posts.end());
       std::sort(this_posts.begin(), this_posts.end(), lt_posting_account);
       std::vector<post_t*> other_posts(other->posts.begin(), other->posts.end());
       std::sort(other_posts.begin(), other_posts.end(), lt_posting_account);
-      bool match = std::equal(this_posts.begin(), this_posts.end(), other_posts.begin(),
-                              is_equivalent_posting);
 
-      if (!match || this_posts.size() != other_posts.size()) {
+      if (!std::is_permutation(this_posts.begin(), this_posts.end(), other_posts.begin(),
+                               other_posts.end(), is_equivalent_posting)) {
         // A transaction that was not parsed from a file -- one built by a
         // caller of add_xact such as the Python bindings -- has no source
         // position; fall back to the standard "<no source context>" text
@@ -650,7 +628,13 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
-  if (!current_context)
+  // A transaction added outside a parse -- the xact command's draft, or
+  // Journal.add_xact from Python -- has no parse context.  Apply the
+  // automated transactions and account checks anyway, against the default
+  // scope, as register_metadata() does for tag checks (#3244); only when
+  // there is no scope at all (embedded use) is there nothing to evaluate
+  // them in.
+  if (!current_context && !scope_t::default_scope)
     return;
   // Run posting-generating auto_xacts first, then assertion-only ones.
   // Assertion-only auto_xacts (check_exprs but no template postings) need
@@ -658,24 +642,23 @@ void journal_t::extend_xact(xact_base_t* xact) {
   // all posting generators have finished (fixes #1680).
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     if (!auto_xact->posts.empty())
-      auto_xact->extend_xact(*xact, *current_context);
-  // Skip auto_xacts that are scoped to a specific account; those are
-  // dispatched below via `account_check_xacts` to avoid the O(m*n) scan
-  // pattern described in issue #562.
+      auto_xact->extend_xact(*xact, current_context);
+  // Then the assertion-only auto_xacts.
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
-    if (auto_xact->posts.empty() && auto_xact->scoped_to_account == nullptr)
-      auto_xact->extend_xact(*xact, *current_context);
+    if (auto_xact->posts.empty())
+      auto_xact->extend_xact(*xact, current_context);
   // Dispatch account-scoped check directives via the per-account index.
   // Snapshot posts after posting-generating auto_xacts have run so that
-  // generated postings are checked too (matching prior #1680 behavior).
+  // generated postings are checked too, as they are for the assertion-only
+  // auto_xacts above (#1680).
   if (!account_check_xacts.empty()) {
     posts_list initial_posts(xact->posts.begin(), xact->posts.end());
     for (post_t* post : initial_posts) {
       auto it = account_check_xacts.find(post->reported_account());
       if (it == account_check_xacts.end())
         continue;
-      for (auto_xact_t* axe : it->second)
-        axe->apply_checks_to_post(*post, *current_context);
+      for (const unique_ptr<auto_xact_t>& axe : it->second)
+        axe->apply_checks_to_post(*post, current_context);
     }
   }
 }
@@ -720,15 +703,15 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
 
     if (!current.scope)
       throw_(std::runtime_error,
-             _f("No default scope in which to read journal file '%1%'") % current.pathname);
+             _f("No default scope in which to read journal file '%1%'") % current.pathname());
 
     if (!current.master)
       current.master = master;
 
     count = read_textual(context, hash_type);
     if (count > 0) {
-      if (!current.pathname.empty())
-        sources.push_back(fileinfo_t(current.pathname));
+      if (!current.pathname().empty())
+        sources.push_back(fileinfo_t(current.pathname()));
       else
         sources.push_back(fileinfo_t());
     }

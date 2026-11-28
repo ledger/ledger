@@ -1,0 +1,8 @@
+test python test/regress/commodity-pool-iteration.py
+iter ['', '$', '%', 'AAPL', 'EUR', 'h', 'm', 's']
+iterkeys ['', '$', '%', 'AAPL', 'EUR', 'h', 'm', 's']
+itervalues ['', '$', '%', 'AAPL', 'EUR', 'h', 'm', 's']
+iteritems ['', '$', '%', 'AAPL', 'EUR', 'h', 'm', 's']
+symbols match True
+same commodity True
+end test

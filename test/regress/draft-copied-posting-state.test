@@ -1,0 +1,50 @@
+; When the xact command copies a posting from history and gives it a new
+; amount, nothing that described the old amount survives: not the
+; calculated flag (which hides the amount in print), not a balance
+; assertion, and not the history's lot annotation on a bare amount.
+
+2024/01/01 Lunch
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Dinner
+    Expenses:Food    $20.00
+    Assets:Bank    $-20.00 = $-20.00
+
+; The price keeps the journal valued in one commodity, which the
+; ValuationFooting test (test/semantic/footing.py) requires of every journal
+; it replays under `bal -V --unrealized`.
+P 2023/12/01 AAPL $2.00
+
+2024/01/03 Snack
+    Expenses:Food    5 AAPL {$2.00} [2023/12/01]
+    Assets:Cash
+
+; The history's Cash amount was calculated; the drafted one is given.
+test xact 2024/03/01 Lunch to Assets:Cash '$-7' Expenses:Food
+2024/03/01 Lunch
+    Assets:Cash                               $-7.00
+    Expenses:Food
+end test
+
+; The history's assertion = $-20.00 described the old amount.
+test xact 2024/03/01 Dinner to Assets:Bank '$-7' Expenses:Food
+2024/03/01 Dinner
+    Assets:Bank                               $-7.00
+    Expenses:Food
+end test
+
+; A bare amount takes the commodity, not the history's lot.
+test xact 2024/03/01 Snack to Expenses:Food 3 Assets:Cash
+2024/03/01 Snack
+    Expenses:Food                             3 AAPL
+    Assets:Cash
+end test
+
+; A cost with no amount keeps the history's quantity, but the cost names a
+; new lot: the history's user-written lot does not survive beside it.
+test xact 2024/03/01 Snack to Expenses:Food '@' '$3.00' Assets:Cash
+2024/03/01 Snack
+    Expenses:Food                             5 AAPL @ $3.00
+    Assets:Cash
+end test

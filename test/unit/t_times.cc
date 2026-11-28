@@ -18,17 +18,21 @@ struct times_fixture {
   }
 };
 
+// Pins CURRENT_DATE() (as --now does) for cases that parse relative
+// dates, and restores the system clock when the case ends.
+struct pinned_today {
+  explicit pinned_today(const char* when) { epoch = parse_datetime(when); }
+  ~pinned_today() { epoch = std::nullopt; }
+};
+
 BOOST_FIXTURE_TEST_SUITE(times, times_fixture)
 
 BOOST_AUTO_TEST_CASE(testConstructors)
 {
-#ifndef NOT_FOR_PYTHON
   std::time_t now         = std::time(nullptr);
   struct tm * moment      = std::localtime(&now);
   std::time_t localMoment = std::mktime(moment);
-#endif // NOT_FOR_PYTHON
 
-#ifndef NOT_FOR_PYTHON
   date_t d0;
   date_t d1;
   datetime_t d3;
@@ -39,20 +43,8 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   date_t d8;
   date_t d9;
 
-#if 0
-  date_t d10;
-  date_t d11;
-  date_t d12;
-  date_t d13;
-  date_t d14;
-  datetime_t d15;
-#endif
-#endif // NOT_FOR_PYTHON
-
   d1 = parse_date("1990/01/01");
-#ifndef NOT_FOR_PYTHON
   d3 = boost::posix_time::from_time_t(localMoment);
-#endif // NOT_FOR_PYTHON
   d4 = parse_date("2006/12/25");
   d5 = parse_date("12/25");
   d6 = parse_date("2006.12.25");
@@ -60,114 +52,21 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   d8 = parse_date("2006-12-25");
   d9 = parse_date("12-25");
 
-#ifndef NOT_FOR_PYTHON
-#if 0
-  d10 = parse_date("tue");
-  d11 = parse_date("tuesday");
-  d12 = parse_date("feb");
-  d13 = parse_date("february");
-  d14 = parse_date("2006");
-  d15 = d3;
-#endif
-#endif // NOT_FOR_PYTHON
-
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(d0.is_not_a_date());
   BOOST_CHECK(! d1.is_not_a_date());
   BOOST_CHECK(! d4.is_not_a_date());
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(CURRENT_DATE() > d1);
   BOOST_CHECK(CURRENT_DATE() > d4);
 
-#ifndef NOT_FOR_PYTHON
-#if 0
-  BOOST_CHECK_EQUAL(d3, d15);
-#endif
-#endif // NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(d4, d6);
   BOOST_CHECK_EQUAL(d4, d8);
   BOOST_CHECK_EQUAL(d5, d7);
   BOOST_CHECK_EQUAL(d5, d9);
-#ifndef NOT_FOR_PYTHON
-#if 0
-  BOOST_CHECK_EQUAL(d10, d11);
-  BOOST_CHECK_EQUAL(d12, d13);
-  
-  BOOST_CHECK_THROW(parse_date("2007/02/29"), boost::gregorian::bad_day_of_month);
-  //BOOST_CHECK_THROW(parse_date("2007/13/01"), datetime_error);
-  //BOOST_CHECK_THROW(parse_date("2007/00/01"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("2007/01/00"), boost::gregorian::bad_day_of_month);
-  //BOOST_CHECK_THROW(parse_date("2007/00/00"), boost::gregorian::bad_day_of_month);
-  //BOOST_CHECK_THROW(parse_date("2007/05/32"), boost::gregorian::bad_day_of_month);
-
-  BOOST_CHECK_THROW(parse_date("2006x/12/25"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("2006/12x/25"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("2006/12/25x"), datetime_error);
-
-  BOOST_CHECK_THROW(parse_date("feb/12/25"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("2006/mon/25"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("2006/12/web"), datetime_error);
-
-  BOOST_CHECK_THROW(parse_date("12*25"), datetime_error);
-
-  BOOST_CHECK_THROW(parse_date("tuf"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("tufsday"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("fec"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("fecruary"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("207x"), datetime_error);
-  BOOST_CHECK_THROW(parse_date("hello"), datetime_error);
-
-  d1 = parse_date("2002-02-02");
-  d1 = parse_date("2002/02/02");
-  d1 = parse_date("2002.02.02");
-  d1 = parse_date("02-02-2002");
-  d1 = parse_date("02/02/2002");
-  d1 = parse_date("02.02.2002");
-  d1 = parse_date("02-02-02");
-  d1 = parse_date("02/02/02");
-  d1 = parse_date("02.02.02");
-  d1 = parse_date("02-02");
-  d1 = parse_date("02/02");
-  d1 = parse_date("02.02");
-  d1 = parse_date("20020202");
-  d1 = parse_date("20020202T023318");
-  d1 = parse_date("20020202T023318-0700");
-  d1 = parse_date("20020202T023318-0100");
-  d1 = parse_date("02-Feb-2002");
-  d1 = parse_date("2002-Feb-02");
-  d1 = parse_date("02 Feb 2002");
-  d1 = parse_date("02-Feb-2002");
-  d1 = parse_date("02 February 2002");
-  d1 = parse_date("02-February-2002");
-  d1 = parse_date("2002 Feb 02");
-  d1 = parse_date("2002-Feb-02");
-  d1 = parse_date("2002 February 02");
-  d1 = parse_date("2002-February-02");
-  d1 = parse_date("02 Feb");
-  d1 = parse_date("02-Feb");
-  d1 = parse_date("02 February");
-  d1 = parse_date("02-February");
-  d1 = parse_date("Feb 02");
-  d1 = parse_date("Feb-02");
-  d1 = parse_date("February 02");
-  d1 = parse_date("February-02");
-  d1 = parse_date("Feb 02, 2002");
-  d1 = parse_date("February 02, 2002");
-  d1 = parse_date("2002-02-02 12:00:00");
-  d1 = parse_date("2002-02-02 12:00:00 AM");
-  d1 = parse_date("2002-02-02 12:00 AM");
-  d1 = parse_date("2002-02-02 12:00AM");
-  d1 = parse_date("2002-02-02 12p");
-  d1 = parse_date("2002-02-02 12a");
-
-  BOOST_CHECK(d1.valid());
-#endif // NOT_FOR_PYTHON
-#endif
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 306-325: date_duration_t operator<<
+// Cover times.cc: date_duration_t operator<<
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateDurationOutput)
@@ -205,7 +104,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationOutput)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.h line 168: date_duration_t::add for YEARS
+// Cover times.h: date_duration_t::add for YEARS
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateDurationAdd)
@@ -234,7 +133,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationAdd)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.h lines 386-403: date_interval_t begin/end/begin_has_year
+// Cover times.h: date_interval_t begin/end
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalFromPeriod)
@@ -412,7 +311,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalThisYear)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 491,506-522: token dump for MONTHS, UNKNOWN, TOK_DATE,
+// Cover times.cc: token dump for MONTHS, UNKNOWN, TOK_DATE
 // TOK_INT, TOK_SLASH, TOK_DASH, TOK_DOT
 // ---------------------------------------------------------------------------
 
@@ -445,7 +344,7 @@ BOOST_AUTO_TEST_CASE(testTokenDumpCoverage)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 608-609,646: TOK_MONTHS/TOK_QUARTERS dump,
+// Cover times.cc: TOK_MONTHS/TOK_QUARTERS dump
 // peek_token
 // ---------------------------------------------------------------------------
 
@@ -462,7 +361,7 @@ BOOST_AUTO_TEST_CASE(testShowPeriodTokensMore)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 724-725: integer + unexpected token after ago/hence
+// Cover times.cc: integer + unexpected token after ago/hence
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalIntAgoHence)
@@ -489,7 +388,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalIntAgoHence)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 789-795: last/next weekday (TOK_A_WDAY)
+// Cover times.cc: last/next weekday (TOK_A_WDAY)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalLastNextWday)
@@ -505,7 +404,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalLastNextWday)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 883-884,912: unexpected token in determine_when,
+// Cover times.cc: unexpected token in determine_when
 // dash without prior inclusion
 // ---------------------------------------------------------------------------
 
@@ -521,7 +420,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalLastNextMonth)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 988-989,1097: last N days/weeks/months/etc. (relative)
+// Cover times.cc: last N days/weeks/months/etc. (relative)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalLast3Months)
@@ -540,7 +439,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalLast3Months)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1123-1124,1175: "every" with unknown quantity token
+// Cover times.cc: "every" with unknown quantity token
 // and period_token default case
 // ---------------------------------------------------------------------------
 
@@ -557,7 +456,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalEvery2Weeks)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1215,1240,1247,1268: parse() main loop tokens
+// Cover times.cc: parse() main loop tokens
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalInKeyword)
@@ -567,7 +466,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalInKeyword)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1327-1328: find_nearest DAYS quantum
+// Cover times.cc: find_nearest DAYS quantum
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindNearestDays)
@@ -578,7 +477,7 @@ BOOST_AUTO_TEST_CASE(testFindNearestDays)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1459,1470-1478,1488-1489: find_period edge cases
+// Cover times.cc: find_period edge cases
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriod)
@@ -601,7 +500,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriod)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1512-1530: find_period scan loop
+// Cover times.cc: find_period scan loop
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriodScan)
@@ -619,7 +518,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriodScan)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1540-1570: operator++ for date_interval_t
+// Cover times.cc: operator++ for date_interval_t
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalIncrement)
@@ -638,7 +537,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalIncrement)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1562-1570,1602: dump method
+// Cover times.cc: dump method
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalDump)
@@ -651,7 +550,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalDump)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1666,1750,1753: lexer next_token special chars and
+// Cover times.cc: lexer next_token special chars and
 // unknown tokens
 // ---------------------------------------------------------------------------
 
@@ -671,7 +570,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalSlashDot)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc lines 1776,1793,1801-1821: expected() and
+// Cover times.cc: expected() and
 // format_datetime/format_date FMT_CUSTOM
 // ---------------------------------------------------------------------------
 
@@ -712,7 +611,7 @@ BOOST_AUTO_TEST_CASE(testFormatDateTimeCustomDT)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.cc line 156: break in parse_date_mask comparison loop
+// Cover times.cc: break in parse_date_mask comparison loop
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCustomDateFormat)
@@ -726,7 +625,7 @@ BOOST_AUTO_TEST_CASE(testCustomDateFormat)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t with monthly period (lines 1459-1530)
+// date_interval_t with monthly period
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalMonthlyW7)
@@ -741,7 +640,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalMonthlyW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t with weekly period
+// date_interval_t with weekly period
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalWeeklyW7)
@@ -753,7 +652,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalWeeklyW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t with quarterly period
+// date_interval_t with quarterly period
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalQuarterlyW7)
@@ -765,7 +664,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalQuarterlyW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t with yearly period
+// date_interval_t with yearly period
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalYearlyW7)
@@ -777,7 +676,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalYearlyW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t with date range (lines 1465-1536)
+// date_interval_t with date range
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriodW7)
@@ -789,7 +688,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalFindPeriodW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t increment (lines 1538-1560)
+// date_interval_t increment
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalIncrementW7)
@@ -805,7 +704,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalIncrementW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_interval_t dump (lines 1562-1614)
+// date_interval_t dump
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalDumpW7)
@@ -817,7 +716,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalDumpW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_date with custom format (lines 1806-1822)
+// format_date with custom format
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatDateCustomW7)
@@ -844,7 +743,7 @@ BOOST_AUTO_TEST_CASE(testFormatDateCustomW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_datetime with custom format (lines 1787-1804)
+// format_datetime with custom format
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatDatetimeCustomW7)
@@ -870,23 +769,22 @@ BOOST_AUTO_TEST_CASE(testFormatDatetimeCustomW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse_date with "since" and "until" date expressions
-// (lines 1694-1697)
+// parse_date with "since" and "until" date expressions
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseDateExpressionsSinceUntilW7)
 {
-  // Parse interval with "since"
   date_interval_t interval1("since 2024/01/01");
-  BOOST_CHECK(true);  // Just testing it doesn't crash
+  BOOST_CHECK(interval1.begin() == parse_date("2024/01/01"));
+  BOOST_CHECK(!interval1.end());
 
-  // Parse interval with "until"
   date_interval_t interval2("until 2024/12/31");
-  BOOST_CHECK(true);
+  BOOST_CHECK(!interval2.begin());
+  BOOST_CHECK(interval2.end() == parse_date("2024/12/31"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse_date with "in" keyword (lines 1698-1699)
+// parse_date with "in" keyword
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseDateInW7)
@@ -898,24 +796,28 @@ BOOST_AUTO_TEST_CASE(testParseDateInW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: parse_date with "today/tomorrow/yesterday"
-// (lines 1708-1713)
+// parse_date with "today/tomorrow/yesterday"
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseDateRelativeW7)
 {
+  pinned_today pin("2024/06/15 00:00:00");
+
   date_interval_t interval1("today");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval1.begin() == parse_date("2024/06/15"));
+  BOOST_CHECK(interval1.end() == parse_date("2024/06/16"));
 
   date_interval_t interval2("tomorrow");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.begin() == parse_date("2024/06/16"));
+  BOOST_CHECK(interval2.end() == parse_date("2024/06/17"));
 
   date_interval_t interval3("yesterday");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval3.begin() == parse_date("2024/06/14"));
+  BOOST_CHECK(interval3.end() == parse_date("2024/06/15"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: set_date_format and set_datetime_format
+// set_date_format and set_datetime_format
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSetDateFormatsW7)
@@ -933,16 +835,16 @@ BOOST_AUTO_TEST_CASE(testSetDateFormatsW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_specifier_t methods (lines 988-989, 1097)
+// date_specifier_t methods
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
 {
   // Use the public constructor with optional args
   date_specifier_t spec(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Jan),
-    optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Jan),
+    std::optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
 
   date_t d = spec.begin();
   BOOST_CHECK(!d.is_not_a_date());
@@ -951,20 +853,17 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
   date_t e = spec.end();
   BOOST_CHECK(!e.is_not_a_date());
 
-  // Test is_within
+  // 2024/01/15 lies in the half-open range [begin(), end())
   date_t check = parse_date("2024/01/15");
-  BOOST_CHECK(spec.is_within(check));
-
-  // Test implied_duration with day
-  optional<date_duration_t> dur = spec.implied_duration();
-  BOOST_CHECK(dur);
+  BOOST_CHECK(check >= spec.begin() && check < spec.end());
+  BOOST_CHECK_EQUAL(spec.end(), parse_date("2024/01/16"));
 
   // Test has_year
   BOOST_CHECK(spec.has_year());
 
   // Test specifier with only year
   date_specifier_t year_only(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
   BOOST_CHECK(year_only.has_year());
   BOOST_CHECK(!year_only.begin().is_not_a_date());
 
@@ -976,80 +875,74 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_parser_t with relative dates (next/last month)
+// date_parser_t with relative dates (next/last month)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateParserRelativeW7)
 {
-  // "next month" - exercises handle_relative_token
+  pinned_today pin("2024/06/15 00:00:00");
+
   date_interval_t interval1("next month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval1.begin() == parse_date("2024/07/01"));
+  BOOST_CHECK(interval1.end() == parse_date("2024/08/01"));
 
-  // "last month" - exercises adjust = -1
   date_interval_t interval2("last month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.begin() == parse_date("2024/05/01"));
+  BOOST_CHECK(interval2.end() == parse_date("2024/06/01"));
 
-  // "this month"
   date_interval_t interval3("this month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval3.begin() == parse_date("2024/06/01"));
+  BOOST_CHECK(interval3.end() == parse_date("2024/07/01"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_parser_t with "N days ago/hence"
-// (lines 700-766)
+// date_parser_t with "N days ago/hence"
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateParserDaysAgoHenceW7)
 {
-  date_interval_t interval1("3 days ago");
-  BOOST_CHECK(true);
+  pinned_today pin("2024/06/15 00:00:00");
 
-  date_interval_t interval2("5 days hence");
-  BOOST_CHECK(true);
-
-  date_interval_t interval3("2 weeks ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval4("1 month ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval5("1 year ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval6("2 quarters ago");
-  BOOST_CHECK(true);
+  BOOST_CHECK(date_interval_t("3 days ago").begin() == parse_date("2024/06/12"));
+  BOOST_CHECK(date_interval_t("5 days hence").begin() == parse_date("2024/06/20"));
+  BOOST_CHECK(date_interval_t("2 weeks ago").begin() == parse_date("2024/06/01"));
+  BOOST_CHECK(date_interval_t("1 month ago").begin() == parse_date("2024/05/15"));
+  BOOST_CHECK(date_interval_t("1 year ago").begin() == parse_date("2023/06/15"));
+  BOOST_CHECK(date_interval_t("2 quarters ago").begin() == parse_date("2023/12/15"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: date_parser with "every" period type (lines 630-680)
+// date_parser with "every" period type
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateParserEveryW7)
 {
-  date_interval_t interval1("every month");
   date_t today = parse_date("2024/06/15");
-  interval1.stabilize(today);
-  BOOST_CHECK(true);
 
+  date_interval_t interval1("every month");
+  interval1.stabilize(today);
+  BOOST_CHECK(interval1.start == parse_date("2024/06/01"));
+
+  // Weeks begin on start_of_week, Sunday by default
   date_interval_t interval2("every week");
   interval2.stabilize(today);
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.start == parse_date("2024/06/09"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 156: parse_date_mask comparison mismatch
+// times.cc: parse_date_mask comparison mismatch
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseDateMaskMismatchW8)
 {
-  // Line 156 triggers when the formatted result of a parsed date
+  // This path triggers when the formatted result of a parsed date
   // doesn't round-trip match the input string. Using a non-standard
   // format to create a mismatch scenario.
   BOOST_CHECK_THROW(parse_date("2020/13/01"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 306-307: date_specifier_t::end() with no
+// times.cc: date_specifier_t::end() with no
 // day/month/year (the assert(false) path is not testable, but we can
 // test the else-if branches)
 // -----------------------------------------------------------------------
@@ -1058,28 +951,28 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierEndW8)
 {
   // end() with day set => begin() + 1 day
   date_specifier_t spec_day(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Mar),
-    optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Mar),
+    std::optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
   date_t e1 = spec_day.end();
   BOOST_CHECK_EQUAL(e1, parse_date("2024/03/16"));
 
   // end() with month but no day => begin() + 1 month
   date_specifier_t spec_month(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Mar));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Mar));
   date_t e2 = spec_month.end();
   BOOST_CHECK_EQUAL(e2, parse_date("2024/04/01"));
 
-  // end() with year only => begin() + 1 year (line 303-304)
+  // end() with year only => begin() + 1 year
   date_specifier_t spec_year(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
   date_t e3 = spec_year.end();
   BOOST_CHECK_EQUAL(e3, parse_date("2025/01/01"));
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 325: operator<< for date_duration_t YEARS
+// times.cc: operator<< for date_duration_t YEARS
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW8)
@@ -1091,14 +984,14 @@ BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 506-507, 515-516, 521-522: token dump for
+// times.cc: token dump for
 // UNKNOWN, TOK_DATE, TOK_INT, TOK_SLASH, TOK_DASH, TOK_DOT
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testShowPeriodTokensDumpW8)
 {
   // Exercise show_period_tokens which calls dump on various token types
-  // Lines 506-522: dump for UNKNOWN, TOK_DATE, TOK_INT, TOK_SLASH, TOK_DASH, TOK_DOT
+  // dump for UNKNOWN, TOK_DATE, TOK_INT, TOK_SLASH, TOK_DASH, TOK_DOT
   std::ostringstream out1;
   show_period_tokens(out1, "2020/01/01");
   BOOST_CHECK(!out1.str().empty());
@@ -1124,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(testShowPeriodTokensDumpW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 646: peek_token()
+// times.cc: peek_token()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPeekTokenW8)
@@ -1137,12 +1030,12 @@ BOOST_AUTO_TEST_CASE(testPeekTokenW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 724-725: unexpected token after ago/hence
+// times.cc: unexpected token after ago/hence
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testUnexpectedTokenAfterAgoW8)
 {
-  // Line 724: unexpected token in the ago/hence path.
+  // unexpected token in the ago/hence path.
   // "5 days blah" should fail because "blah" is not ago/hence
   BOOST_CHECK_THROW(date_interval_t("5 days blah"), date_error);
 
@@ -1151,12 +1044,12 @@ BOOST_AUTO_TEST_CASE(testUnexpectedTokenAfterAgoW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 789-795: last/next weekday (TOK_A_WDAY)
+// times.cc: last/next weekday (TOK_A_WDAY)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLastNextWdayW8)
 {
-  // Lines 789-795: last/next with a weekday token
+  // last/next with a weekday token
   date_interval_t i1("last tuesday");
   BOOST_CHECK(i1.range || i1.start);
 
@@ -1168,43 +1061,40 @@ BOOST_AUTO_TEST_CASE(testLastNextWdayW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 883-884, 912: unexpected token in
+// times.cc: unexpected token in
 // determine_when and dash without inclusion
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDetermineWhenUnexpectedW8)
 {
-  // Line 883: unexpected token falls through to default in determine_when
+  // unexpected token falls through to default in determine_when
   // Passing something that isn't a valid date token
   BOOST_CHECK_THROW(date_interval_t("every blah"), date_error);
 }
 
 BOOST_AUTO_TEST_CASE(testDashWithoutInclusionW8)
 {
-  // Line 912: dash operator without prior inclusion_specifier
+  // dash operator without prior inclusion_specifier
   BOOST_CHECK_THROW(date_interval_t("- 2020/01/01"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 988-989: unexpected token in last N <unit>
+// times.cc: unexpected token in last N <unit>
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLastNUnexpectedTokenW8)
 {
-  // Line 988: unexpected token kind after "last N" (not days/weeks/etc.)
+  // unexpected token kind after "last N" (not days/weeks/etc.)
   BOOST_CHECK_THROW(date_interval_t("last 5 blah"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1097: handle_simple_period_token default
+// today, tomorrow and yesterday as whole period expressions
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSimplePeriodTokenDefaultW8)
 {
-  // The default case in handle_simple_period_token is a break (no-op),
-  // reached through tokens that are not today/tomorrow/yesterday
-  // but this is hard to hit directly. Exercised via coverage of the
-  // other branches.
+  // Each keyword resolves through determine_when to a one-day range.
   date_interval_t i1("today");
   BOOST_CHECK(i1.range || i1.start);
 
@@ -1216,18 +1106,18 @@ BOOST_AUTO_TEST_CASE(testSimplePeriodTokenDefaultW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1123-1124: every with unexpected token
+// times.cc: every with unexpected token
 // after int
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testEveryUnexpectedAfterIntW8)
 {
-  // Line 1123: default case in handle_every_token after TOK_INT
+  // default case in handle_every_token after TOK_INT
   BOOST_CHECK_THROW(date_interval_t("every 2 blah"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1175: handle_period_token default case
+// times.cc: handle_period_token default case
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPeriodTokenDefaultW8)
@@ -1244,58 +1134,58 @@ BOOST_AUTO_TEST_CASE(testPeriodTokenDefaultW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1215, 1240, 1247, 1268: parse() main loop
+// times.cc: parse() main loop
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseMainLoopW8)
 {
-  // Line 1215: TOK_A_WDAY in main loop
+  // TOK_A_WDAY in main loop
   date_interval_t i1("monday");
   BOOST_CHECK(i1.range || i1.start);
 
-  // Line 1240: TOK_LAST in main loop
+  // TOK_LAST in main loop
   date_interval_t i2("last year");
   BOOST_CHECK(i2.range || i2.start);
 
-  // Line 1247: TOK_TODAY/TOMORROW/YESTERDAY in main loop
+  // TOK_TODAY/TOMORROW/YESTERDAY in main loop
   date_interval_t i3("yesterday");
   BOOST_CHECK(i3.range || i3.start);
 
-  // Line 1268: default case in main loop (unexpected token)
+  // default case in main loop (unexpected token)
   BOOST_CHECK_THROW(date_interval_t("!!!"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1459, 1475, 1488-1489: find_period edge cases
+// times.cc: find_period edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPeriodEdgeCasesW8)
 {
-  // Line 1459: no start, no finish, no duration => error
+  // no start, no finish, no duration => error
   date_interval_t empty_interval;
   BOOST_CHECK_THROW(empty_interval.find_period(parse_date("2020/01/01")),
                     date_error);
 
-  // Line 1475: improperly initialized
+  // improperly initialized
   // (has finish but no start after stabilize)
   // This is hard to trigger directly but we can try the basic path.
 
-  // Lines 1488-1489: no end_of_duration
+  // no end_of_duration
   date_interval_t interval("since 2020/01/01");
   date_t test_date = parse_date("2020/06/15");
   bool found = interval.find_period(test_date);
-  // Without duration, there's no end_of_duration => returns false (line 1489)
+  // Without duration, there's no end_of_duration => returns false
   BOOST_CHECK(!found);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1512-1514, 1516-1517, 1519, 1521: find_period
+// times.cc: find_period
 // scan loop
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPeriodScanLoopW8)
 {
-  // Exercise the scan loop in find_period (lines 1510-1531)
+  // Exercise the scan loop in find_period
   date_interval_t interval("weekly from 2020/01/01 to 2020/06/01");
   date_t test_date = parse_date("2020/04/15");
   bool found = interval.find_period(test_date);
@@ -1306,7 +1196,7 @@ BOOST_AUTO_TEST_CASE(testFindPeriodScanLoopW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1526-1527, 1529-1530: scan loop advancement
+// times.cc: scan loop advancement
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPeriodScanAdvanceW8)
@@ -1320,28 +1210,28 @@ BOOST_AUTO_TEST_CASE(testFindPeriodScanAdvanceW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1540, 1545: operator++ edge cases
+// times.cc: operator++ edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testIncrementEdgeCasesW8)
 {
-  // Line 1540: increment on unstarted interval
+  // increment on unstarted interval
   date_interval_t empty_interval("monthly");
   // Need to stabilize first to avoid the unstarted error
   empty_interval.stabilize(parse_date("2020/01/15"));
-  if (empty_interval.start) {
-    ++empty_interval;
-    BOOST_CHECK(true); // just exercising the path
-  }
+  BOOST_REQUIRE(empty_interval.start);
+  BOOST_CHECK(*empty_interval.start == parse_date("2020/01/01"));
+  ++empty_interval;
+  BOOST_CHECK(*empty_interval.start == parse_date("2020/02/01"));
 
-  // Line 1545: increment without duration
+  // increment without duration
   date_interval_t no_dur("since 2020/01/01");
   no_dur.stabilize(parse_date("2020/06/15"));
   BOOST_CHECK_THROW(++no_dur, date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1560, 1568, 1570: dump() code paths
+// times.cc: dump() code paths
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDumpCodePathsW8)
@@ -1351,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(testDumpCodePathsW8)
   std::ostringstream out;
   interval.dump(out);
   BOOST_CHECK(!out.str().empty());
-  // Lines 1568, 1570: finish should appear in dump
+  // finish should appear in dump
   BOOST_CHECK(out.str().find("finish") != string::npos ||
               out.str().find("stabilization") != string::npos);
 
@@ -1363,7 +1253,7 @@ BOOST_AUTO_TEST_CASE(testDumpCodePathsW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1602: dump sample dates loop break
+// times.cc: dump sample dates loop break
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDumpSampleDatesW8)
@@ -1379,43 +1269,43 @@ BOOST_AUTO_TEST_CASE(testDumpSampleDatesW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1666: throw on invalid date string
+// times.cc: throw on invalid date string
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLexerThrowInvalidDateW8)
 {
-  // Line 1666: date string with separator that fails to parse throws
+  // date string with separator that fails to parse throws
   BOOST_CHECK_THROW(date_interval_t("2020/99/99"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1750, 1753: expected() with and without
+// times.cc: expected() with and without
 // wanted char
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testLexerExpectedW8)
 {
-  // Lines 1749-1753: These are triggered by the lexer encountering
+  // These are triggered by the lexer encountering
   // non-alphanumeric, non-digit characters that aren't recognized.
-  // e.g. "!!!" exercises the expected('\0', *begin) path
+  // e.g. "@@@" exercises the expected('\0', term[0]) path
   BOOST_CHECK_THROW(date_interval_t("@@@"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1776: expected(wanted, c) with specific char
+// times.cc: expected(wanted, c) with specific char
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testExpectedSpecificCharW8)
 {
-  // Line 1776: "wanted" character in error message
+  // "wanted" character in error message
   // This is triggered internally; we just need to cause a parse failure
   // where a specific character is expected
   BOOST_CHECK_THROW(date_interval_t("###"), date_error);
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc lines 1801-1802: format_datetime else assert(false)
-// and lines 1820-1821: format_date else assert(false)
+// times.cc: format_datetime else assert(false)
+// and format_date else assert(false)
 // These are unreachable paths (assert), but we cover the other branches.
 // -----------------------------------------------------------------------
 
@@ -1423,19 +1313,19 @@ BOOST_AUTO_TEST_CASE(testFormatDatetimeAllFormatsW8)
 {
   datetime_t dt = parse_datetime("2020/06/15 14:30:00");
 
-  // FMT_WRITTEN (line 1790)
+  // FMT_WRITTEN
   string written = format_datetime(dt, FMT_WRITTEN);
   BOOST_CHECK(!written.empty());
 
-  // FMT_CUSTOM (lines 1791-1797)
+  // FMT_CUSTOM
   string custom = format_datetime(dt, FMT_CUSTOM, "%Y-%m-%d %H:%M");
   BOOST_CHECK(!custom.empty());
 
-  // FMT_CUSTOM cache hit (line 1792-1793)
+  // FMT_CUSTOM cache hit
   string custom2 = format_datetime(dt, FMT_CUSTOM, "%Y-%m-%d %H:%M");
   BOOST_CHECK_EQUAL(custom, custom2);
 
-  // FMT_PRINTED (line 1798-1799)
+  // FMT_PRINTED
   string printed = format_datetime(dt, FMT_PRINTED);
   BOOST_CHECK(!printed.empty());
 }
@@ -1444,25 +1334,25 @@ BOOST_AUTO_TEST_CASE(testFormatDateAllFormatsW8)
 {
   date_t d = parse_date("2020/06/15");
 
-  // FMT_WRITTEN (line 1809)
+  // FMT_WRITTEN
   string written = format_date(d, FMT_WRITTEN);
   BOOST_CHECK(!written.empty());
 
-  // FMT_CUSTOM with new format (lines 1813-1815)
+  // FMT_CUSTOM with new format
   string custom = format_date(d, FMT_CUSTOM, "%d/%m/%Y");
   BOOST_CHECK(!custom.empty());
 
-  // FMT_CUSTOM cache hit (lines 1811-1812)
+  // FMT_CUSTOM cache hit
   string custom2 = format_date(d, FMT_CUSTOM, "%d/%m/%Y");
   BOOST_CHECK_EQUAL(custom, custom2);
 
-  // FMT_PRINTED (line 1817-1818)
+  // FMT_PRINTED
   string printed = format_date(d, FMT_PRINTED);
   BOOST_CHECK(!printed.empty());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc lines 1512-1521 find_period scan loop
+// times.cc find_period scan loop
 // (date inside a later period, requires scan)
 // -----------------------------------------------------------------------
 
@@ -1476,7 +1366,7 @@ BOOST_AUTO_TEST_CASE(testFindPeriodScanW11)
   BOOST_CHECK(found);
 
   // Now request a date 6 months later - this should trigger the scan loop
-  // in find_period (lines 1510-1530)
+  // in find_period
   date_t jul = parse_date("2020/07/15");
   found = interval.find_period(jul);
   BOOST_CHECK(found);
@@ -1486,7 +1376,7 @@ BOOST_AUTO_TEST_CASE(testFindPeriodScanW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc lines 1526-1530 (scan advances)
+// times.cc (scan advances)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPeriodScanAdvancesW11)
@@ -1503,7 +1393,7 @@ BOOST_AUTO_TEST_CASE(testFindPeriodScanAdvancesW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1475 (improperly initialized interval)
+// times.cc (improperly initialized interval)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPeriodNoStartW11)
@@ -1517,7 +1407,7 @@ BOOST_AUTO_TEST_CASE(testFindPeriodNoStartW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc lines 1568-1570 (dump with start/finish set)
+// times.cc (dump with start/finish set)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalDumpStartFinishW11)
@@ -1534,12 +1424,12 @@ BOOST_AUTO_TEST_CASE(testDateIntervalDumpStartFinishW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1602 (dump last_date == start break)
+// times.cc (dump last_date == start break)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalDumpNoDurationW11)
 {
-  // An interval with no duration - should exercise line 1602
+  // An interval with no duration - should exercise date_interval_t::dump
   date_interval_t interval("from 2020/01/01 to 2020/06/01");
   std::ostringstream out;
   interval.dump(out);
@@ -1547,7 +1437,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalDumpNoDurationW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1666 (date parsing with rethrow)
+// times.cc (date parsing with rethrow)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseDateWithSlashRethrowW11)
@@ -1562,7 +1452,7 @@ BOOST_AUTO_TEST_CASE(testParseDateWithSlashRethrowW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc lines 1750, 1753 (expected chars in tokens)
+// times.cc (expected chars in tokens)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateParserInvalidCharsW11)
@@ -1575,8 +1465,7 @@ BOOST_AUTO_TEST_CASE(testDateParserInvalidCharsW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc date_duration_t to_string and add_duration
-// (lines 1801-1802, 1820-1821)
+// times.cc date_duration_t to_string
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateDurationToStringW11)
@@ -1603,7 +1492,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationToStringW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 883-884 (unexpected token in determine_when)
+// times.cc (unexpected token in determine_when)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateParserUnexpectedTokenW11)
@@ -1616,7 +1505,7 @@ BOOST_AUTO_TEST_CASE(testDateParserUnexpectedTokenW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 325 (date_duration_t operator<< with years)
+// times.cc (date_duration_t operator<< with years)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW11)
@@ -1624,11 +1513,11 @@ BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW11)
   date_duration_t dy(date_duration_t::YEARS, 3);
   std::ostringstream out;
   out << dy;
-  BOOST_CHECK_EQUAL(out.str(), "3 year(s)");
+  BOOST_CHECK_EQUAL(out.str(), "3 years");
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1097 (handle_simple_period_token default)
+// "in" followed by a month name
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalMixedTokensW11)
@@ -1639,7 +1528,7 @@ BOOST_AUTO_TEST_CASE(testDateIntervalMixedTokensW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1175 (handle_period_token default)
+// times.cc (handle_period_token default)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalBimonthlyW11)

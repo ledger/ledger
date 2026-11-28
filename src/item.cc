@@ -46,10 +46,7 @@
 #include <system.hh>
 
 #include "item.h"
-
-#if HAVE_GPGME
-#include "gpgme.h"
-#endif
+#include "context.h"
 
 namespace ledger {
 
@@ -59,15 +56,16 @@ bool item_t::use_aux_date = false;
 /*  Tag Parsing (date extension)                                        */
 /*                                                                      */
 /*  Items extend the base parser with a bracketed-date form `[date]`    */
-/*  or `[date=auxdate]`, recognized while no colon precedes it.         */
+/*  or `[date=auxdate]`, recognized by note_date_span (also used by     */
+/*  print) while no colon precedes it.                                  */
 /*  Everything else is delegated to metadata_t::parse_metadata_tags.    */
 /*----------------------------------------------------------------------*/
 
-void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+std::optional<std::pair<std::size_t, std::size_t>> item_t::note_date_span(const char* line) {
   // Skip any additional leading `;` characters (with interleaved whitespace)
   // before scanning for `[date]`.  `parse_metadata_tags` repeats this skip
   // so the colon parser sees the same starting position.
-  const char* d = p;
+  const char* d = line;
   while (*d == ' ' || *d == '\t' || *d == ';')
     ++d;
 
@@ -80,30 +78,35 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   // where a trailing bracketed date has always moved the item -- as in
   // `; Returned clothes [2026/01/01]` (#3252).
   //
-  // Before #1644 and #1968 a colon *anywhere* in the comment disabled the
-  // directive, which broke the documented `; [=date] :tag:` forms; only the
-  // text preceding the bracket is consulted now.
-  if (const char* b = std::strchr(d, '[')) {
-    if ((std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=') &&
-        !std::memchr(d, ':', static_cast<std::size_t>(b - d))) {
-      const char* e = std::strchr(b, ']');
-      char buf[256];
-      // A span that does not fit is far too long to be a date, and copying
-      // it would overrun the buffer.
-      if (e && static_cast<std::size_t>(e - b - 1) < sizeof(buf)) {
-        std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
-        buf[e - b - 1] = '\0';
+  // Only the text preceding the bracket is consulted, so the documented
+  // `; [=date] :tag:` forms keep their dates (#1644, #1968).
+  const char* b = std::strchr(d, '[');
+  if (!b || !(std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=') ||
+      std::memchr(d, ':', static_cast<std::size_t>(b - d)))
+    return std::nullopt;
 
-        if (char* pp = std::strchr(buf, '=')) {
-          *pp++ = '\0';
-          _date_aux = parse_date(pp);
-        }
-        if (buf[0])
-          _date = parse_date(buf);
-      }
+  // A span of 256 characters or more is far too long to be a date.
+  const char* e = std::strchr(b, ']');
+  if (!e || static_cast<std::size_t>(e - b - 1) >= 256)
+    return std::nullopt;
+
+  return std::make_pair(static_cast<std::size_t>(b + 1 - line), static_cast<std::size_t>(e - line));
+}
+
+void item_t::parse_bracket_dates(const char* p) {
+  if (auto span = note_date_span(p)) {
+    string content(p + span->first, span->second - span->first);
+    if (auto eq = content.find('='); eq != string::npos) {
+      _date_aux = parse_date(content.substr(eq + 1));
+      content.resize(eq);
     }
+    if (!content.empty())
+      _date = parse_date(content);
   }
+}
 
+void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+  parse_bracket_dates(p);
   parse_metadata_tags(p, scope, *this, overwrite_existing);
 }
 
@@ -229,6 +232,47 @@ template <value_t (*Func)(item_t&)>
 value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<item_t>(scope));
 }
+
+/// The functions item_t binds by name.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> item_functions[] = {
+    {"L", get_wrapper<&get_actual>},
+    {"X", get_wrapper<&get_cleared>},
+    {"Y", get_wrapper<&get_pending>},
+    {"actual", get_wrapper<&get_actual>},
+    {"actual_date", get_wrapper<&get_primary_date>},
+    {"addr", get_wrapper<&get_addr>},
+    {"aux_date", get_wrapper<&get_aux_date>},
+    {"beg_line", get_wrapper<&get_beg_line>},
+    {"beg_pos", get_wrapper<&get_beg_pos>},
+    {"cleared", get_wrapper<&get_cleared>},
+    {"comment", get_wrapper<&get_comment>},
+    {"d", get_wrapper<&get_date>},
+    {"date", get_wrapper<&get_date>},
+    {"depth", get_wrapper<&get_depth>},
+    {"effective_date", get_wrapper<&get_aux_date>},
+    {"end_line", get_wrapper<&get_end_line>},
+    {"end_pos", get_wrapper<&get_end_pos>},
+    {"filebase", get_wrapper<&get_filebase>},
+    {"filename", get_wrapper<&get_pathname>},
+    {"filepath", get_wrapper<&get_filepath>},
+    {"has_meta", item_has_tag},
+    {"has_tag", item_has_tag},
+    {"id", get_wrapper<&get_id>},
+    {"is_account", get_wrapper<&ignore>},
+    {"meta", item_get_tag},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&ignore>},
+    {"pending", get_wrapper<&get_pending>},
+    {"primary_date", get_wrapper<&get_primary_date>},
+    {"seq", get_wrapper<&get_seq>},
+    {"state", get_wrapper<&get_status>},
+    {"status", get_wrapper<&get_status>},
+    {"tag", item_get_tag},
+    {"uncleared", get_wrapper<&get_uncleared>},
+    {"uuid", get_wrapper<&get_id>},
+    {"value_date", get_wrapper<&get_date>},
+};
+static_assert(symbol_table_sorted(item_functions), "item_functions must stay sorted");
 } // namespace
 
 /*----------------------------------------------------------------------*/
@@ -320,133 +364,9 @@ void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::pt
  * and fall through to item_t::lookup() for base properties.
  */
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {
-  if (kind != symbol_t::FUNCTION)
-    return nullptr;
-
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (name[0]) {
-  case 'a':
-    if (name == "actual")
-      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
-    else if (name == "actual_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
-    else if (name == "addr")
-      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (name == "aux_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
-    break;
-
-  case 'b':
-    if (name == "beg_line")
-      return WRAP_FUNCTOR(get_wrapper<&get_beg_line>);
-    else if (name == "beg_pos")
-      return WRAP_FUNCTOR(get_wrapper<&get_beg_pos>);
-    break;
-
-  case 'c':
-    if (name == "cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    else if (name == "comment")
-      return WRAP_FUNCTOR(get_wrapper<&get_comment>);
-    break;
-
-  case 'd':
-    if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
-    else if (name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    break;
-
-  case 'e':
-    if (name == "end_line")
-      return WRAP_FUNCTOR(get_wrapper<&get_end_line>);
-    else if (name == "end_pos")
-      return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
-    else if (name == "effective_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
-    break;
-
-  case 'f':
-    if (name == "filename")
-      return WRAP_FUNCTOR(get_wrapper<&get_pathname>);
-    else if (name == "filebase")
-      return WRAP_FUNCTOR(get_wrapper<&get_filebase>);
-    else if (name == "filepath")
-      return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
-    break;
-
-  case 'h':
-    if (name == "has_tag" || name == "has_meta")
-      return WRAP_FUNCTOR(item_has_tag);
-    break;
-
-  case 'i':
-    if (name == "is_account")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    else if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    break;
-
-  case 'm':
-    if (name == "meta")
-      return WRAP_FUNCTOR(item_get_tag);
-    break;
-
-  case 'n':
-    if (name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    break;
-
-  case 'p':
-    if (name == "pending")
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    else if (name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    else if (name == "primary_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
-    break;
-
-  case 's':
-    if (name == "status" || name == "state")
-      return WRAP_FUNCTOR(get_wrapper<&get_status>);
-    else if (name == "seq")
-      return WRAP_FUNCTOR(get_wrapper<&get_seq>);
-    break;
-
-  case 't':
-    if (name == "tag")
-      return WRAP_FUNCTOR(item_get_tag);
-    break;
-
-  case 'u':
-    if (name == "uncleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
-    else if (name == "uuid")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    break;
-
-  case 'v':
-    if (name == "value_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
-    break;
-
-  case 'L':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
-    break;
-
-  case 'X':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    break;
-
-  case 'Y':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (kind == symbol_t::FUNCTION)
+    if (const auto* fn = find_symbol(item_functions, name))
+      return WRAP_FUNCTOR(*fn);
   return nullptr;
 }
 
@@ -460,12 +380,7 @@ bool item_t::valid() const {
 }
 
 /** @brief Re-read and print the original source text of an item. */
-void print_item(std::ostream& out, const item_t& item, const string& prefix) {
-  if (!prefix.empty()) {
-    out << source_context(*item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
-    return;
-  }
-
+void print_item(std::ostream& out, const item_t& item) {
   // Raw printing: stream source directly without any size limit.
   if (!item.pos || item.pos->pathname->empty())
     return;
@@ -474,52 +389,11 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   if (!(len > 0))
     return;
 
-  std::unique_ptr<std::istream> in(
-#if HAVE_GPGME
-      decrypted_stream_t::open_stream(*item.pos->pathname)
-#else
-      new ifstream(*item.pos->pathname, std::ios::binary)
-#endif
-  );
-
-  // Determine the effective end position by scanning backwards to strip
-  // trailing CR/LF, matching source_context()'s line-splitting behaviour which
-  // never emits trailing newlines.  (print_xacts::flush() appends one.)
-  std::streamoff effective_off = static_cast<std::streamoff>(item.pos->end_pos);
-  const std::streamoff beg_off = static_cast<std::streamoff>(item.pos->beg_pos);
-  {
-    char c;
-    while (effective_off > beg_off) {
-      in->seekg(effective_off - 1, std::ios::beg);
-      if (!in->read(&c, 1))
-        break;
-      if (c != '\n' && c != '\r')
-        break;
-      --effective_off;
-    }
-  }
-
-  const std::streamoff effective_len = effective_off - beg_off;
-  if (effective_len <= 0)
-    return;
-
-  in->seekg(beg_off, std::ios::beg);
-
-  const std::size_t CHUNK_SIZE = 8192;
-  scoped_array<char> buf(new char[CHUNK_SIZE]);
-  std::streamoff remaining = effective_len;
-
-  while (remaining > 0) {
-    const std::streamsize to_read = static_cast<std::streamsize>(
-        remaining < static_cast<std::streamoff>(CHUNK_SIZE) ? static_cast<std::size_t>(remaining)
-                                                            : CHUNK_SIZE);
-    in->read(buf.get(), to_read);
-    const std::streamsize got = in->gcount();
-    if (got <= 0)
-      break;
-    out.write(buf.get(), got);
-    remaining -= got;
-  }
+  string text = read_source(*item.pos->pathname, item.pos->beg_pos, len);
+  // Drop trailing CR/LF, as source_context() does; print_xacts::flush()
+  // appends the newline.
+  text.erase(text.find_last_not_of("\r\n") + 1);
+  out << text;
 }
 
 /**
@@ -555,9 +429,17 @@ string item_context(const item_t& item, const string& desc) {
   else
     out << _(", line ") << item.pos->beg_line << ":\n";
 
-  print_item(out, item, "> ");
+  out << source_context(*item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, "> ");
 
   return out.str();
+}
+
+string check_location(const item_t* item, const parse_context_t* context) {
+  if (!context)
+    return string();
+  if (item && item->pos)
+    return file_context(*item->pos->pathname, item->pos->beg_line) + " ";
+  return context->location() + " ";
 }
 
 } // namespace ledger

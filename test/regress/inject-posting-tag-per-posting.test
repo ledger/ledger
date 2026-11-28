@@ -1,0 +1,45 @@
+; --inject: a tag on a posting injects once for every posting that carries
+; it, even twice within one transaction; a tag on the transaction injects
+; once per transaction, whatever the number of its postings.  A posting
+; that carries the tag itself never consults the transaction's tag, so in
+; "Both levels" Food injects its own $0.75 and the transaction's $2.00 is
+; injected once, at the first posting without the tag (Drink).
+
+2024/01/01 Two tagged postings
+    Expenses:Food          $50.00
+      ; Surcharge: $3.50
+    Expenses:Drink         $20.00
+      ; Surcharge: $1.25
+    Assets:Checking
+
+2024/01/02 Transaction tag
+    ; Surcharge: $2.00
+    Expenses:Food          $10.00
+    Expenses:Drink          $5.00
+    Assets:Checking
+
+2024/01/03 Both levels
+    ; Surcharge: $2.00
+    Expenses:Food          $10.00
+      ; Surcharge: $0.75
+    Expenses:Drink          $5.00
+    Expenses:Snack          $1.00
+    Assets:Checking
+
+test --inject Surcharge reg
+24-Jan-01 Two tagged postings   Surcharge                     $3.50        $3.50
+24-Jan-01 Two tagged postings   Expenses:Food                $50.00       $53.50
+24-Jan-01 Two tagged postings   Surcharge                     $1.25       $54.75
+24-Jan-01 Two tagged postings   Expenses:Drink               $20.00       $74.75
+                                Assets:Checking             $-70.00        $4.75
+24-Jan-02 Transaction tag       Surcharge                     $2.00        $6.75
+24-Jan-02 Transaction tag       Expenses:Food                $10.00       $16.75
+                                Expenses:Drink                $5.00       $21.75
+                                Assets:Checking             $-15.00        $6.75
+24-Jan-03 Both levels           Surcharge                     $0.75        $7.50
+24-Jan-03 Both levels           Expenses:Food                $10.00       $17.50
+24-Jan-03 Both levels           Surcharge                     $2.00       $19.50
+24-Jan-03 Both levels           Expenses:Drink                $5.00       $24.50
+                                Expenses:Snack                $1.00       $25.50
+                                Assets:Checking             $-16.00        $9.50
+end test

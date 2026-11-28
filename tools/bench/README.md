@@ -1,10 +1,15 @@
 # Benchmarking and profiling Ledger
 
 This directory holds the tools behind Ledger's comparison with hledger
-(https://hledger.org/PERFORMANCE.html#other-apps) and the profiling
-recipes used to find and fix the slow paths.  `benchmark/` next door is the
-older PGO-oriented workflow that CI's `perf.yml` drives; the two will be
-merged once this one has settled.
+(https://hledger.org/PERFORMANCE.html#other-apps) and the profiling recipes
+used to find and fix the slow paths.  `benchmark/` next door is CI's
+performance gate: `perf.yml` runs `benchmark/run_benchmark.sh`, which times
+the PR and base binaries in alternation with hyperfine on this directory's
+10k journal (`generate_journal.py 10000 1000 10`, written to
+`benchmark/10k.journal`), and `benchmark/compare_benchmarks.py`, which fails
+the job when any report's median slows by more than the threshold;
+`benchmark/profile.sh` holds the clang PGO recipe.  Use `bench.py` here for
+CPU time, RSS and comparisons with hledger.
 
 ## Journals
 
@@ -22,14 +27,22 @@ journals pathological for 3.4.1.
 
 ## Checking that output is unchanged
 
-    tools/bench/difftest.sh ./build-before/ledger ./build/ledger bench-journals/10k.journal test/input/*.dat
+    for j in bench-journals/10k.journal test/input/*.dat; do
+        n=$(basename "$j")
+        python3 test/snapshot.py ./build-before/ledger "$j" before/"$n" --only-bench --timeout 600
+        python3 test/snapshot.py ./build/ledger "$j" after/"$n" --only-bench --timeout 600
+    done
+    diff -r --exclude=_snapshot_meta.txt before after
 
-runs both binaries over a matrix of reports (balance in several modes,
-register, print, csv, xml, equity, prices, with lots, basis, market value
-and periods) and lists every command whose output or exit status differs.
-Byte-identical output is the acceptance criterion for a performance
-change, so run it, with the pre-change binary as the reference, before
-measuring anything.
+runs both binaries over the reports listed in `BENCH_COMBOS` in
+`test/snapshot.py` (balance in several modes, register, print, csv, xml,
+equity, stats, prices, with lots, basis, market value and periods), records
+each report's output and exit status, and `diff` lists every report whose
+output or exit status differs, exiting 1 if any does.  Start from empty
+`before` and `after` directories.  Byte-identical output is the acceptance
+criterion for a performance change, so run it, with the pre-change binary as
+the reference, before measuring anything.  Without `--only-bench` the same
+tool runs its full matrix (see `test/snapshot.md`).
 
 ## Measuring
 

@@ -1,0 +1,16 @@
+2024/01/01 Main first
+    Expenses:Food    $1.00
+    Assets:Cash
+
+include caret-ends-file-inc.dat
+include caret-ends-file-empty.dat
+
+2024/01/04 Main after include
+    ; Memo: a^b
+    Expenses:Food    $4.00
+    Assets:Cash
+
+^ Everything below this line is ignored.
+2024/01/05 Main after caret
+    Expenses:Food    $5.00
+    Assets:Cash

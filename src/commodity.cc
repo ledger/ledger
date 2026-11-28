@@ -40,8 +40,9 @@
  *
  * This file contains the core logic for managing commodities at runtime:
  * recording and removing prices in the commodity_history graph, performing
- * memoized price lookups (with LRU-style cache eviction), downloading
- * updated quotes when --download is active, and parsing commodity symbols
+ * memoized price lookups (the memo drops its earliest-moment entries when
+ * it grows too large), downloading updated quotes when --download is
+ * active, and parsing commodity symbols
  * from both stream and C-string input.  It also implements the multi-level
  * compare_by_commodity ordering used for deterministic balance display.
  */
@@ -65,24 +66,26 @@ bool commodity_t::time_colon_by_default = false;
  *
  * Adds an edge from this commodity to the price's commodity in the price
  * history graph.  When @p reflexive is true (the default for parsed P
- * directives), the price's commodity is marked COMMODITY_PRIMARY, which
- * tells -V/-X to convert into it.  The memoized price cache is
- * invalidated because a new price may change future lookup results.
+ * directives), the price's commodity is marked COMMODITY_PRIMARY
+ * (commodity_pool_t::mark_primary, which also marks the commodities
+ * retired into it), which tells -V/-X to convert into it.  The memoized
+ * price cache is invalidated because a new price may change future lookup
+ * results.
  */
 void commodity_t::add_price(const datetime_t& date, const amount_t& price, const bool reflexive) {
   if (reflexive) {
     DEBUG("history.find", "Marking " << price.commodity().symbol() << " as a primary commodity");
-    price.commodity().add_flags(COMMODITY_PRIMARY);
+    pool().mark_primary(price.commodity());
   } else {
     DEBUG("history.find", "Marking " << symbol() << " as a primary commodity");
-    add_flags(COMMODITY_PRIMARY);
+    pool().mark_primary(*this);
   }
 
   DEBUG("history.find", "Adding price: " << symbol() << " for " << price << " on " << date);
 
   pool().commodity_price_history.add_price(referent(), date, price);
 
-  base->price_map.clear(); // a price was added, invalid the map
+  base->price_map.clear(); // a price was added; invalidate the memo map
 }
 
 /**
@@ -96,19 +99,13 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
 
   DEBUG("history.find", "Removing price: " << symbol() << " on " << date);
 
-  base->price_map.clear(); // a price was added, invalid the map
+  base->price_map.clear(); // a price was removed; invalidate the memo map
 }
 
 void commodity_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                              const datetime_t& moment, const datetime_t& _oldest,
                              bool bidirectionally) {
-  datetime_t when;
-  if (!moment.is_not_a_date_time())
-    when = moment;
-  else if (epoch)
-    when = *epoch;
-  else
-    when = CURRENT_TIME();
+  const datetime_t when = moment_or_now(moment);
 
   pool().commodity_price_history.map_prices(fn, referent(), when, _oldest, bidirectionally);
 }
@@ -162,8 +159,9 @@ std::optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
  *   2. Check the memoization cache for an identical (moment, oldest, target) key.
  *   3. If the commodity has a value_expr, evaluate it instead of the graph.
  *   4. Otherwise, query the commodity_history graph for the best price.
- *   5. Store the result in the cache; if the cache exceeds max_price_map_size,
- *      evict the oldest half of the entries.
+ *   5. Store the result in the cache; first, if the cache holds more than
+ *      max_price_map_size entries, erase the max_price_map_size / 2 entries
+ *      with the smallest keys (the earliest moments).
  *
  * Returns nullopt when no conversion path exists or the commodity is being
  * looked up in terms of itself.
@@ -195,13 +193,7 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
     return (*i).second;
   }
 
-  datetime_t when;
-  if (!moment.is_not_a_date_time())
-    when = moment;
-  else if (epoch)
-    when = *epoch;
-  else
-    when = CURRENT_TIME();
+  const datetime_t when = moment_or_now(moment);
 
   if (base->value_expr)
     return find_price_from_expr(*base->value_expr, commodity, when);
@@ -223,6 +215,11 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
   return point;
 }
 
+bool commodity_t::quoted_recently() const {
+  const std::optional<datetime_t>& last_quote = referent().base->last_quote;
+  return last_quote && (TRUE_CURRENT_TIME() - *last_quote).total_seconds() < pool().quote_leeway;
+}
+
 /**
  * @brief Download an updated price quote if the current one is stale.
  *
@@ -240,21 +237,17 @@ std::optional<price_point_t>
 commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
                                      const datetime_t& moment, const commodity_t* in_terms_of) {
   if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
-    // If we have already successfully downloaded a quote for this commodity
-    // during this session and within the leeway period, don't download again.
+    // If a download for this commodity was already attempted during this
+    // session and within the leeway period, don't try again (see
+    // quoted_recently()).  A failed attempt sets last_quote too (below),
+    // so a failing getquote script is not rerun for every posting.
     // This prevents duplicate downloads when the same commodity appears in
     // multiple postings (issue #996): find_price() called with a historical
     // moment (midnight) cannot see a price downloaded with a later time
     // component on the same date, causing repeated download attempts.
-    if (referent().base->last_quote) {
-      time_duration_t::sec_type secs_since_last =
-          (TRUE_CURRENT_TIME() - *referent().base->last_quote).total_seconds();
-      DEBUG("commodity.download", "last_quote = " << *referent().base->last_quote);
-      DEBUG("commodity.download", "secs_since_last = " << secs_since_last);
-      if (secs_since_last < pool().quote_leeway) {
-        DEBUG("commodity.download", "quote already fetched recently, skipping download");
-        return point;
-      }
+    if (quoted_recently()) {
+      DEBUG("commodity.download", "quote already fetched recently, skipping download");
+      return point;
     }
 
     bool exceeds_leeway = true;
@@ -414,7 +407,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   int c = peek_next_nonws(in);
   if (c == '"') {
     in.get();
-    READ_INTO(in, symbol, c, c != '"');
+    c = read_into(in, symbol, [](int ch) { return ch != '"'; });
     if (c == '"')
       in.get();
     else
@@ -475,7 +468,7 @@ void commodity_t::parse_symbol(char*& p, string& symbol) {
 void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const {
   string sym = symbol();
   if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) && !sym.empty() && sym[0] == '"') {
-    string subsym(sym, 1, sym.length() - 2); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string subsym(sym, 1, sym.length() - 2);
     if (!all(subsym, is_digit()))
       out << subsym;
     else
@@ -510,11 +503,9 @@ bool commodity_t::valid() const {
  * difference is found:
  *   1. Base symbol (lexicographic).
  *   2. Annotation presence (unannotated sorts before annotated).
- *   3. Lot price (by commodity symbol, then by numeric value).
- *   4. Lot date (chronological).
- *   5. Lot tag (lexicographic).
- *   6. Valuation expression text (lexicographic).
- *   7. Semantic flags (ANNOTATION_PRICE_FIXATED).
+ *   3. Lot price (presence, then by commodity, then by numeric value).
+ *   4-6. annotation_t::compare_details (date, tag, value expression).
+ *   7. annotation_t::compare_semantic_flags.
  *
  * Returns negative if left < right, zero if equal, positive if left > right.
  */
@@ -543,122 +534,27 @@ int commodity_t::compare_by_commodity::operator()(const amount_t* left,
     return 0;
   }
 
-  annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
-  annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
+  const annotation_t& ldetails(static_cast<annotated_commodity_t&>(leftcomm).details);
+  const annotation_t& rdetails(static_cast<annotated_commodity_t&>(rightcomm).details);
 
-  if (!aleftcomm.details.price && arightcomm.details.price) {
-    DEBUG("commodity.compare", "left has no price, right does");
-    return -1;
-  }
-  if (aleftcomm.details.price && !arightcomm.details.price) {
-    DEBUG("commodity.compare", "right has no price, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.price && arightcomm.details.price) {
-    amount_t leftprice(*aleftcomm.details.price);
-    amount_t rightprice(*arightcomm.details.price);
-
-    if (leftprice.commodity() != rightprice.commodity()) {
-      // Since we have two different amounts, there's really no way to
-      // establish a true sorting order; we'll just do it based on the
-      // numerical values, before falling back to comparing the prices
-      // with their original commodity.
-      amount_t leftpricenumeric(leftprice);
-      amount_t rightpricenumeric(rightprice);
-      leftpricenumeric.clear_commodity();
-      rightpricenumeric.clear_commodity();
-      DEBUG("commodity.compare", "both have price, commodities don't match, recursing");
-      int cmp2 = commodity_t::compare_by_commodity()(&leftpricenumeric, &rightpricenumeric);
-      if (cmp2 != 0) {
-        DEBUG("commodity.compare", "recursion found a disparity");
-        return cmp2;
-      }
-      DEBUG("commodity.compare", "recursion found no difference, comparing prices with commodity");
+  // Display order compares the price value before the other fields (the
+  // pool key, annotation_t::compare, compares it after them).
+  if (ldetails.price.has_value() != rdetails.price.has_value())
+    return ldetails.price ? 1 : -1;
+  if (ldetails.price) {
+    const amount_t& leftprice(*ldetails.price);
+    const amount_t& rightprice(*rdetails.price);
+    if (leftprice.commodity() != rightprice.commodity())
+      // Prices in different commodities share no scale, so order the lots
+      // by the price commodities themselves.
       return commodity_t::compare_by_commodity()(&leftprice, &rightprice);
-    } else {
-      if (leftprice < rightprice) {
-        DEBUG("commodity.compare", "left price is less");
-        return -1;
-      } else if (leftprice > rightprice) {
-        DEBUG("commodity.compare", "left price is more");
-        return 1;
-      }
-    }
+    if (int cmp = leftprice.compare(rightprice))
+      return cmp;
   }
 
-  if (!aleftcomm.details.date && arightcomm.details.date) {
-    DEBUG("commodity.compare", "left has no date, right does");
-    return -1;
-  }
-  if (aleftcomm.details.date && !arightcomm.details.date) {
-    DEBUG("commodity.compare", "right has no date, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.date && arightcomm.details.date) {
-    gregorian::date_duration diff = *aleftcomm.details.date - *arightcomm.details.date;
-    DEBUG("commodity.compare", "both have dates, comparing on difference");
-    if (diff.is_negative()) {
-      DEBUG("commodity.compare", "dates differ");
-      return -1;
-    }
-
-    gregorian::date_duration diff2 = *arightcomm.details.date - *aleftcomm.details.date;
-    if (diff2.is_negative()) {
-      DEBUG("commodity.compare", "dates differ");
-      return 1;
-    }
-  }
-
-  if (!aleftcomm.details.tag && arightcomm.details.tag) {
-    DEBUG("commodity.compare", "left has no tag, right does");
-    return -1;
-  }
-  if (aleftcomm.details.tag && !arightcomm.details.tag) {
-    DEBUG("commodity.compare", "right has no tag, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.tag && arightcomm.details.tag) {
-    DEBUG("commodity.compare", "both have tags, comparing lexically");
-    if (*aleftcomm.details.tag < *arightcomm.details.tag)
-      return -1;
-    else if (*aleftcomm.details.tag > *arightcomm.details.tag)
-      return 1;
-  }
-
-  if (!aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "left has no value expr, right does");
-    return -1;
-  }
-  if (aleftcomm.details.value_expr && !arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "right has no value expr, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
-    int cmp3 = aleftcomm.details.value_expr->text().compare(arightcomm.details.value_expr->text());
-    if (cmp3 != 0)
-      return cmp3 < 0 ? -1 : 1;
-  }
-
-  // Compare the semantic flags (ANNOTATION_SEMANTIC_FLAGS: whether the price is fixated)
-  unsigned int left_flags = aleftcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  unsigned int right_flags = arightcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  if (left_flags < right_flags) {
-    DEBUG("commodity.compare", "left has fewer semantic flags");
-    return -1;
-  }
-  if (left_flags > right_flags) {
-    DEBUG("commodity.compare", "left has more semantic flags");
-    return 1;
-  }
-
-  // All attributes match - the commodities are equal
-  DEBUG("commodity.compare", "all attributes match, commodities are equal");
-  return 0;
+  if (int cmp = annotation_t::compare_details(ldetails, rdetails))
+    return cmp;
+  return annotation_t::compare_semantic_flags(ldetails, rdetails);
 }
 
 void put_commodity(property_tree::ptree& st, const commodity_t& comm, bool commodity_details) {

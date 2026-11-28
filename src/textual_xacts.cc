@@ -46,7 +46,8 @@
  *   - parse_xact()  -- Parses a complete transaction (date line + postings)
  *   - parse_post()  -- Parses a single posting line (account, amount, cost,
  *                      balance assertion/assignment, and note)
- *   - parse_posts() -- Reads all indented posting lines following a header
+ *   - parse_posts() -- Reads the posting lines of a periodic (`~`)
+ *                      transaction; `;` note lines are skipped
  *
  * The posting parser is the most complex part of the Ledger grammar.  A
  * posting line packs a surprising amount of information:
@@ -84,6 +85,29 @@ void check_command_has_match(parse_context_t& context, bool has_match, const str
                     command % name_mask);
   }
 }
+
+/// @brief Recognize an indented `assert`, `check`, `expr` or `eval` line of
+///        a transaction or automated transaction.
+///
+/// Returns the kind (`expr` and `eval` are EXPR_GENERAL) and the expression
+/// text with its leading whitespace skipped, or nullopt for anything else,
+/// which is a posting.  The keyword must be followed by whitespace and at
+/// least one more character.
+std::optional<std::pair<expr_t::check_expr_kind_t, char*>> match_inline_check(char* p) {
+  static const std::pair<const char*, expr_t::check_expr_kind_t> keywords[] = {
+      {"assert", expr_t::EXPR_ASSERTION},
+      {"check", expr_t::EXPR_CHECK},
+      {"expr", expr_t::EXPR_GENERAL},
+      {"eval", expr_t::EXPR_GENERAL},
+  };
+  for (const auto& [kw, kind] : keywords) {
+    const std::size_t len = std::strlen(kw);
+    if (std::strncmp(p, kw, len) == 0 && std::isspace(static_cast<unsigned char>(p[len])) &&
+        p[len + 1] != '\0')
+      return std::make_pair(kind, skip_ws(p + len));
+  }
+  return std::nullopt;
+}
 } // namespace
 
 /*--- Automated Transaction Parsing ---*/
@@ -95,27 +119,18 @@ void instance_t::automated_xact_directive(char* line) {
 
   // Phase 1: Extract the name/pattern from the line.  The pattern can be
   // quoted (single, double, or slash-delimited) or a bare word.
-  string name;
+  string name;    // the string a `::` definition stores
+  string pattern; // the regex enable/disable/delete match stored names with
   char* p = skip_ws(line + 1);
   switch (*p) {
   case '\'':
   case '"':
   case '/': {
-    char closing = *p;
-    bool found_closing = false;
-    for (p++; *p; p++) {
-      if (*p == '\\') {
-        if (*(p++) == '\0')
-          throw_(parse_error, _("Unexpected '\\' at end of pattern"));
-      } else if (*p == closing) {
-        p++;
-        found_closing = true;
-        break;
-      }
-      name.push_back(*p);
-    }
-    if (!found_closing)
-      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+    char closing = *p++;
+    char* end = p + std::strlen(p);
+    char* q = p;
+    name = scan_pattern_literal(q, end, closing, false);
+    pattern = scan_pattern_literal(p, end, closing, closing == '/');
     if (name.empty())
       throw_(parse_error, _("Match pattern is empty"));
     break;
@@ -126,6 +141,7 @@ void instance_t::automated_xact_directive(char* line) {
         break;
       name.push_back(*p);
     }
+    pattern = name;
   }
 
   // Phase 2: Extract an optional command word (enable, disable, delete, or ::).
@@ -137,36 +153,36 @@ void instance_t::automated_xact_directive(char* line) {
     command.push_back(*p);
   }
 
-  mask_t name_mask(name);
-  bool has_match = false;
-
   // Phase 3: Handle management commands that operate on existing auto-xacts.
-  if (command == "enable" || command == "disable") {
-    DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
-    bool enabled = command == "enable";
-    for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
-      if (xact->name && name_mask.match(xact->name.get())) {
-        DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
-        xact->enabled = enabled;
-        has_match = true;
-      }
-    }
-    check_command_has_match(context, has_match, command, name_mask);
-    return;
-  } else if (command == "delete") {
-    DEBUG("textual.autoxact", "deleting automated transaction matching '" << name << "'");
-    auto_xacts_list::iterator it = context.journal->auto_xacts_begin();
-    auto_xacts_list::iterator end = context.journal->auto_xacts_end();
+  // Only these match with the pattern, so only they compile it.
+  if (command == "enable" || command == "disable" || command == "delete") {
+    mask_t name_mask(pattern);
+    bool has_match = false;
+    if (command == "delete") {
+      DEBUG("textual.autoxact", "deleting automated transaction matching '" << pattern << "'");
+      auto_xacts_list::iterator it = context.journal->auto_xacts_begin();
+      auto_xacts_list::iterator end = context.journal->auto_xacts_end();
 
-    while (it != end) {
-      unique_ptr<auto_xact_t>& xact = *it;
-      if (xact->name && name_mask.match(xact->name.get())) {
-        DEBUG("textual.autoxact", "deleted '" << xact->name.get() << "'");
-        it = context.journal->auto_xacts.erase(it);
-        has_match = true;
-        continue;
-      } else {
-        it++;
+      while (it != end) {
+        unique_ptr<auto_xact_t>& xact = *it;
+        if (xact->name && name_mask.match(*xact->name)) {
+          DEBUG("textual.autoxact", "deleted '" << *xact->name << "'");
+          it = context.journal->auto_xacts.erase(it);
+          has_match = true;
+          continue;
+        } else {
+          it++;
+        }
+      }
+    } else {
+      DEBUG("textual.autoxact", command << " automated transaction matching '" << pattern << "'");
+      bool enabled = command == "enable";
+      for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
+        if (xact->name && name_mask.match(*xact->name)) {
+          DEBUG("textual.autoxact", command << "d '" << *xact->name << "'");
+          xact->enabled = enabled;
+          has_match = true;
+        }
       }
     }
     check_command_has_match(context, has_match, command, name_mask);
@@ -174,7 +190,7 @@ void instance_t::automated_xact_directive(char* line) {
   }
 
   // Phase 4: Parse the predicate query and build the auto_xact_t.
-  optional<string> xact_name = none;
+  optional<string> xact_name = std::nullopt;
 
   // If command is "::" it means we are defining a named auto-xact, so we
   // need to start parsing the query at `p` (after the name and "::").
@@ -213,7 +229,7 @@ void instance_t::automated_xact_directive(char* line) {
     }
 
     for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
-      if (xact->name && name == xact->name.get()) {
+      if (xact->name && name == *xact->name) {
         throw_(parse_error, _f("Automated transaction with name '%1%' already exists") % name);
       }
     }
@@ -235,8 +251,6 @@ void instance_t::automated_xact_directive(char* line) {
       if (!*p)
         break;
 
-      const std::size_t remlen = std::strlen(p);
-
       if (*p == ';') {
         item_t* item;
         if (last_post)
@@ -249,31 +263,17 @@ void instance_t::automated_xact_directive(char* line) {
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
-      } else if ((remlen > 7 && *p == 'a' && std::strncmp(p, "assert", 6) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[6]))) ||
-                 (remlen > 6 && *p == 'c' && std::strncmp(p, "check", 5) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[5]))) ||
-                 (remlen > 5 && *p == 'e' &&
-                  ((std::strncmp(p, "expr", 4) == 0 &&
-                    std::isspace(static_cast<unsigned char>(p[4]))) ||
-                   (std::strncmp(p, "eval", 4) == 0 &&
-                    std::isspace(static_cast<unsigned char>(p[4])))))) {
-        const char c = *p;
-        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+      } else if (auto check = match_inline_check(p)) {
         if (!ae->check_exprs)
           ae->check_exprs = expr_t::check_expr_list();
-        ae->check_exprs->push_back(expr_t::check_expr_pair(
-            expr_t(p), c == 'a' ? expr_t::EXPR_ASSERTION
-                                : (c == 'c' ? expr_t::EXPR_CHECK : expr_t::EXPR_GENERAL)));
+        ae->check_exprs->push_back(expr_t::check_expr_pair(expr_t(check->second), check->first));
       } else {
         reveal_context = false;
 
-        if (post_t* post = parse_post(p, len - (p - line), top_account(), nullptr, true)) {
-          reveal_context = true;
-          ae->add_post(post);
-          ae->active_post = last_post = post;
-        }
+        post_t* post = parse_post(p, len - (p - line), top_account(), nullptr, true);
         reveal_context = true;
+        ae->add_post(post);
+        ae->active_post = last_post = post;
       }
     }
 
@@ -285,7 +285,7 @@ void instance_t::automated_xact_directive(char* line) {
   } catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing automated transaction:"));
-      add_error_context(source_context(context.pathname, pos, context.curr_pos, "> "));
+      add_error_context(source_context(context.pathname(), pos, context.curr_pos, "> "));
     }
     throw;
   }
@@ -322,7 +322,6 @@ void instance_t::period_xact_directive(char* line) {
 
         pe.release(); // NOLINT(bugprone-unused-return-value)
       } else {
-        reveal_context = true;
         pe->journal = nullptr;
         throw parse_error(_("Period transaction failed to balance"));
       }
@@ -331,7 +330,7 @@ void instance_t::period_xact_directive(char* line) {
   } catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing periodic transaction:"));
-      add_error_context(source_context(context.pathname, pos, context.curr_pos, "> "));
+      add_error_context(source_context(context.pathname(), pos, context.curr_pos, "> "));
     }
     throw;
   }
@@ -341,24 +340,26 @@ void instance_t::period_xact_directive(char* line) {
 
 xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* previous_xact) {
   TRACE_START(xacts, 2, "Time spent handling transactions:");
+  xact_t* added = nullptr;
 
-  if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
-    unique_ptr<xact_t> manager(xact);
+  try {
+    unique_ptr<xact_t> manager(parse_xact(line, len, top_account(), previous_xact));
 
-    if (context.journal->add_xact(xact)) {
+    if (context.journal->add_xact(manager.get())) {
       context.count++;
-      return manager.release(); // it's owned by the journal now
+      added = manager.release(); // it's owned by the journal now
     }
     // It's perfectly valid for the journal to reject the xact, which it
     // will do if the xact has no substantive effect (for example, a
     // checking xact, all of whose postings have null amounts).
-  } else {
-    throw parse_error(_("Failed to parse transaction"));
+  } catch (...) {
+    TRACE_STOP(xacts, 2);
+    throw;
   }
 
   TRACE_STOP(xacts, 2);
 
-  return nullptr;
+  return added;
 }
 
 /*--- Amount Expression Parsing ---*/
@@ -407,37 +408,22 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
   } else {
     real_only = false;
   }
-  value_t account_total;
+  // File-order accumulation counts every posting parsed so far for this
+  // account, regardless of date.  It is required in --effective mode for
+  // postings without an explicit effective date, so that assertions are
+  // not confused by other postings whose effective dates land after the
+  // current posting's primary date (fixes #2966), and is selected via
+  // --check-in-file-order to restore the pre-#1092 behaviour (#3186).
+  // Otherwise only postings dated on or before this one count, so that an
+  // assertion is not polluted by later-dated postings written earlier in
+  // the file (#847, #1092); with an explicit effective date under
+  // --effective that is effective-date order (#2071).
   bool use_file_order = (context.journal && context.journal->check_in_file_order) ||
                         (item_t::use_aux_date && !post->aux_date());
-  if (use_file_order) {
-    // File-order accumulation: sum every posting parsed so far for this
-    // account, regardless of date.  This is required in --effective mode
-    // for postings without an explicit effective date so that assertions
-    // are not confused by other postings whose effective dates land after
-    // the current posting's primary date (fixes #2966).  It is also
-    // selected via --check-in-file-order to restore the pre-#1092
-    // behaviour for users who depend on file order rather than date
-    // order (issue #3186).
-    account_total = post->account->self_total(real_only);
-  } else {
-    // Filter account posts by date so that balance assertions respect
-    // date ordering rather than file order.  In --effective mode with
-    // an explicit effective date this uses effective-date ordering
-    // (fixes #2071); otherwise it uses primary-date ordering so that
-    // an assertion dated before later-dated transactions in the file
-    // is not polluted by those future-dated posts (fixes #847, #1092).
-    date_t cutoff = post->date();
-    std::set<const post_t*> seen;
-    for (const post_t* p : post->account->posts) {
-      if (!seen.insert(p).second)
-        continue;
-      if (real_only && p->has_flags(POST_VIRTUAL))
-        continue;
-      if (!p->amount.is_null() && p->date() <= cutoff)
-        add_or_set_value(account_total, p->amount);
-    }
-  }
+  optional<date_t> cutoff;
+  if (!use_file_order)
+    cutoff = post->date();
+  value_t account_total = post->account->self_total(real_only, cutoff);
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
 
@@ -483,8 +469,6 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
 
 post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                                bool defer_expr) {
-  TRACE_START(post_details, 2, "Time spent parsing postings:");
-
   unique_ptr<post_t> post(new post_t);
 
   post->xact = xact; // this could be NULL (for automated/period xacts)
@@ -494,7 +478,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
-  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::string buf(line);
   std::streamsize beg = 0;
 
   try {
@@ -568,7 +552,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     DEBUG("textual.parse", "line " << context.linenum << ": "
                                    << "Parsed account name " << name);
 
-    post->account = context.journal->register_account(name, post.get(), account);
+    post->account = context.journal->register_account(name, post.get(), account, xact == nullptr);
 
     // Step 3: Parse the optional amount.
     // The amount may be a literal number (parsed by amount_t::parse) or a
@@ -580,7 +564,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       ptristream stream(next, static_cast<std::size_t>(len - beg));
 
       if (*next != '(') // indicates a value expression
-        (void)post->amount.parse(stream, PARSE_NO_REDUCE);
+        (void)post->amount.parse(stream, PARSE_NO_REDUCE, &post->given_lot_total);
       else
         parse_amount_expr(stream, *context.scope, *post.get(), post->amount,
                           PARSE_NO_REDUCE | PARSE_SINGLE, defer_expr, &post->amount_expr);
@@ -597,14 +581,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         if (!post->amount_expr && post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
             post->amount.precision() > post->amount.commodity().precision()) {
-          // Commodity precision is a commodity-level check, so honour the
-          // commodity-specific override when set; otherwise fall back to
-          // the global checking_style.  Mirrors register_commodity()
-          // (issue #3200).
-          journal_t::checking_style_t style =
-              context.journal->commodity_checking_style != journal_t::CHECK_NORMAL
-                  ? context.journal->commodity_checking_style
-                  : context.journal->checking_style;
+          // Commodity precision is a commodity-level check (issue #3200).
+          journal_t::checking_style_t style = context.journal->effective_commodity_checking_style();
           if (style == journal_t::CHECK_WARNING) {
             context.warning(
                 _f("Amount for commodity '%1%' has %2% decimal places but declared format only "
@@ -662,7 +640,6 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           bool per_unit = true;
           if (*++next == '@') {
             per_unit = false;
-            post->add_flags(POST_COST_IN_FULL);
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "And it's for a total price");
             next++;
@@ -692,26 +669,10 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               parse_amount_expr(cstream, *context.scope, *post.get(), *post->cost,
                                 PARSE_NO_MIGRATE | PARSE_SINGLE);
 
-            if (post->cost->sign() < 0)
-              throw parse_error(_("A posting's cost may not be negative"));
-
-            post->cost->in_place_unround();
-
-            if (per_unit) {
-              // For the sole case where the cost might be uncommoditized,
-              // guarantee that the commodity of the cost after multiplication
-              // is the same as it was before.
-              commodity_t& cost_commodity(post->cost->commodity());
-              *post->cost *= post->amount;
-              post->cost->set_commodity(cost_commodity);
-            } else if (post->amount.sign() < 0) {
-              post->cost->in_place_negate();
-            }
+            post->set_given_cost(*post->cost, !per_unit);
 
             if (fixed_cost)
               post->add_flags(POST_COST_FIXATED);
-
-            post->given_cost = post->cost;
 
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "Total cost is " << *post->cost);
@@ -769,16 +730,15 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               "line " << context.linenum << ": "
                       << "POST assign: parsed balance amount = " << *post->assigned_amount);
 
-        // Pre-parse the inline note to extract an effective date before
-        // checking the balance assertion.  The note (e.g. "[=2021-03-01]")
-        // appears after the assertion amount on the same line, but
-        // post->date() must return the effective date so that the
-        // date-filtered account balance in compute_balance_diff() is
-        // correct (fixes #2071).
-        if (item_t::use_aux_date && !stream.eof()) {
+        // A posting's own date may be written in its note, after the
+        // asserted amount (`= 10 r ; [2021/03/01]` or `[=2021/03/01]`).
+        // Read just those dates now, in every mode, so that post->date()
+        // is the posting's date when compute_balance_diff() takes it as
+        // the cutoff (#2071); Step 6 parses the whole note, tags included.
+        if (!stream.eof()) {
           const char* rest = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
           if (rest && *rest == ';')
-            post->parse_tags(rest + 1, *context.scope, true);
+            post->parse_bracket_dates(rest + 1);
         }
 
         const amount_t& amt(*post->assigned_amount);
@@ -823,7 +783,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "Finding commodity " << amt.commodity() << " (" << amt
                                            << ") in balance " << diff);
-            optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+            optional<amount_t> wanted_commodity = diff.commodity_amount(&amt.commodity());
             if (!wanted_commodity) {
               diff = amt - amt; // this is '0' with the correct commodity.
             } else {
@@ -843,21 +803,14 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                 // Recompute the diff preserving lot annotations (cost basis
                 // and lot date) so that the assigned amount retains them.
                 balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
-                // Use annotated diff if it can be represented as a single
-                // amount; fall back to the stripped diff otherwise (e.g.
-                // when multiple lots with different annotations exist).
-                try {
-                  post->amount = ann_diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.to_amount();
-                }
+                // Use the annotated diff if it is a single amount; fall back
+                // to the stripped diff otherwise (e.g. when multiple lots with
+                // different annotations exist).
+                post->amount = ann_diff.single_amount() ? ann_diff.to_amount() : diff.to_amount();
               } else {
-                // Diff already has annotations; use it directly.
-                try {
-                  post->amount = diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.strip_annotations(keep_details_t()).to_amount();
-                }
+                // An annotated target has a commodity, so diff was restricted
+                // above to that one lot and is a single amount.
+                post->amount = diff.to_amount();
               }
               DEBUG("textual.parse", "line " << context.linenum << ": "
                                              << "Overwrite null posting with " << post->amount);
@@ -873,7 +826,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
                                     : post->amount.reduced());
             diff -= post_amt;
-            if (!no_assertions && !diff.is_zero()) {
+            if (!(context.journal &&
+                  context.journal->checking_style == journal_t::CHECK_PERMISSIVE) &&
+                !diff.is_zero()) {
               balance_t tot =
                   strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
               DEBUG("textual.parse",
@@ -922,8 +877,6 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     if (post_payee != "")
       post->set_payee(context.journal->validate_payee(post_payee));
 
-    TRACE_STOP(post_details, 2);
-
     return post.release();
 
   } catch (const std::exception&) {
@@ -948,10 +901,8 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
     if (!*p)
       break;
     if (*p != ';') {
-      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {
-        xact.add_post(post);
-        added = true;
-      }
+      xact.add_post(parse_post(line, len, account, nullptr, defer_expr));
+      added = true;
     }
   }
 
@@ -1069,8 +1020,6 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       if (!*p)
         break;
 
-      const std::size_t remlen = std::strlen(p);
-
       item_t* item;
       if (last_post)
         item = last_post;
@@ -1083,23 +1032,16 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
-      } else if ((remlen > 7 && *p == 'a' && std::strncmp(p, "assert", 6) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[6]))) ||
-                 (remlen > 6 && *p == 'c' && std::strncmp(p, "check", 5) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[5]))) ||
-                 (remlen > 5 && *p == 'e' && std::strncmp(p, "expr", 4) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[4])))) {
-        const char c = *p;
-        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
-        expr_t expr(p);
+      } else if (auto check = match_inline_check(p)) {
+        expr_t expr(check->second);
         bind_scope_t bound_scope(*context.scope, *item);
-        if (c == 'e') {
+        if (check->first == expr_t::EXPR_GENERAL) {
           expr.calc(bound_scope);
         } else if (!expr.calc(bound_scope).to_boolean()) {
-          if (c == 'a') {
-            throw_(parse_error, _f("Transaction assertion failed: %1%") % p);
+          if (check->first == expr_t::EXPR_ASSERTION) {
+            throw_(parse_error, _f("Transaction assertion failed: %1%") % check->second);
           } else {
-            context.warning(_f("Transaction check failed: %1%") % p);
+            context.warning(_f("Transaction check failed: %1%") % check->second);
           }
         }
       } else {
@@ -1115,30 +1057,12 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
           }
         }
 
-        if (post_t* post = parse_post(p, len - (p - line), account, xact.get())) {
-          reveal_context = true;
-          xact->add_post(post);
-          last_post = post;
-        }
+        post_t* post = parse_post(p, len - (p - line), account, xact.get());
         reveal_context = true;
+        xact->add_post(post);
+        last_post = post;
       }
     }
-
-#if 0
-  if (xact->_state == item_t::UNCLEARED) {
-    item_t::application_t result = item_t::CLEARED;
-
-    for (post_t * post : xact->posts) {
-      if (post->_state == item_t::UNCLEARED) {
-        result = item_t::UNCLEARED;
-        break;
-      }
-      else if (post->_state == item_t::PENDING) {
-        result = item_t::PENDING;
-      }
-    }
-  }
-#endif
 
     xact->pos->end_pos = context.curr_pos;
     xact->pos->end_line = context.linenum;
@@ -1176,8 +1100,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       string expected_hash = xact->hash(prev_hash, hash_type);
       if (xact->has_tag("Hash")) {
         string current_hash = xact->get_tag("Hash")->to_string();
-        if (current_hash.size() != expected_hash.size() ||
-            !std::equal(expected_hash.begin(), expected_hash.end(), current_hash.begin()))
+        if (current_hash != expected_hash)
           throw_(parse_error, _f("Expected hash %1% != %2%") % expected_hash % current_hash);
       } else {
         xact->set_tag("Hash", string_value(expected_hash));

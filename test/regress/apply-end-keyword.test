@@ -1,0 +1,75 @@
+; `apply rate` and `apply fixed` are one block under two names, so either
+; `end apply rate` or `end apply fixed` closes either of them.  `end apply
+; rate` used to fail with "does not match 'apply fixed'".  The older
+; `end tag` and `end account` forms close their blocks too.
+
+apply rate EUR $1.10
+2024/01/01 Lunch
+    Expenses:Food    10 EUR
+    Assets:Cash
+end apply rate
+
+apply fixed GBP $1.25
+2024/01/02 Dinner
+    Expenses:Food    10 GBP
+    Assets:Cash
+end apply fixed
+
+apply rate CAD $0.75
+2024/01/03 Snack
+    Expenses:Food    10 CAD
+    Assets:Cash
+end apply fixed
+
+apply fixed CHF $1.00
+2024/01/04 Coffee
+    Expenses:Food    4 CHF
+    Assets:Cash
+end apply rate
+
+2024/01/05 Late
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+apply account Personal
+apply tag trip
+2024/01/06 Taxi
+    Expenses:Taxi    $5.00
+    Assets:Cash
+end tag
+end account
+
+2024/01/07 Bus
+    Expenses:Bus    $2.00
+    Assets:Cash
+
+test print
+2024/01/01 Lunch
+    Expenses:Food                       10 EUR {=$1.10}
+    Assets:Cash
+
+2024/01/02 Dinner
+    Expenses:Food                       10 GBP {=$1.25}
+    Assets:Cash
+
+2024/01/03 Snack
+    Expenses:Food                       10 CAD {=$0.75}
+    Assets:Cash
+
+2024/01/04 Coffee
+    Expenses:Food                       4 CHF {=$1.00}
+    Assets:Cash
+
+2024/01/05 Late
+    Expenses:Food                             10 EUR
+    Assets:Cash
+
+2024/01/06 Taxi
+    ; :trip:
+    Personal:Expenses:Taxi                     $5.00
+    Personal:Assets:Cash
+
+2024/01/07 Bus
+    Expenses:Bus                               $2.00
+    Assets:Cash
+end test

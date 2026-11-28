@@ -1,0 +1,36 @@
+; A monthly or yearly period anchored on the 28th keeps the 28th, also
+; when the anchor or a boundary is the last day of a common-year
+; February: the boundary is never snapped to the end of the month.
+
+2023/03/28 A
+    Expenses:A    $1
+    Assets:Cash
+
+2023/04/29 B
+    Expenses:A    $2
+    Assets:Cash
+
+2024/02/28 C
+    Expenses:A    $4
+    Assets:Cash
+
+2024/03/27 D
+    Expenses:A    $8
+    Assets:Cash
+
+test reg -p "every month from 2023/01/28" Expenses
+23-Mar-28 - 23-Apr-27  Expenses:A                         $1           $1
+23-Apr-28 - 23-May-27  Expenses:A                         $2           $3
+24-Feb-28 - 24-Mar-27  Expenses:A                        $12          $15
+end test
+
+test reg -p "every month from 2023/02/28" Expenses
+23-Mar-28 - 23-Apr-27  Expenses:A                         $1           $1
+23-Apr-28 - 23-May-27  Expenses:A                         $2           $3
+24-Feb-28 - 24-Mar-27  Expenses:A                        $12          $15
+end test
+
+test reg -p "yearly from 2011/02/28" Expenses
+23-Feb-28 - 24-Feb-27  Expenses:A                         $3           $3
+24-Feb-28 - 25-Feb-27  Expenses:A                        $12          $15
+end test

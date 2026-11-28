@@ -1,0 +1,43 @@
+; Lot matching conserves exact quantities even when the commodity's
+; declared format shows none of the fraction: selling 1.4 AAPL takes
+; all of the $50 lot and 0.4 of the $60 lot, and overselling 2.4 AAPL
+; against two 1-share lots books a 0.4 remainder.
+
+commodity AAPL
+    format 1 AAPL
+
+2024/01/01 Buy
+    Assets:B1                 1 AAPL {$50} [2024/01/01]
+    Assets:B2                 1 AAPL {$50} [2024/01/01]
+    Assets:Cash            $-100
+
+2024/02/01 Buy
+    Assets:B1                 1 AAPL {$60} [2024/02/01]
+    Assets:B2                 1 AAPL {$60} [2024/02/01]
+    Assets:Cash            $-120
+
+2024/03/01 Sell
+    Assets:B1              -1.4 AAPL @ $100
+    Assets:Cash             $140
+    Income:Gains
+
+2024/03/02 Oversell
+    Assets:B2              -2.4 AAPL @ $100
+    Assets:Cash             $240
+    Income:Gains
+
+test --lot-matching fifo bal Assets:B1 --lots --unround
+0.6 AAPL {$60} [2024/02/01]  Assets:B1
+end test
+
+test --lot-matching fifo reg Assets:B2 --unround
+24-Jan-01 Buy                   Assets:B2                    1 AAPL       1 AAPL
+24-Feb-01 Buy                   Assets:B2                    1 AAPL       2 AAPL
+24-Mar-02 Oversell              Assets:B2                   -1 AAPL       1 AAPL
+                                Assets:B2                   -1 AAPL            0
+                                Assets:B2                 -0.4 AAPL    -0.4 AAPL
+end test
+
+test --lot-matching fifo bal Income --unround
+               $-156  Income:Gains
+end test

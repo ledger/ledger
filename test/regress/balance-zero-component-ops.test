@@ -1,0 +1,63 @@
+; balance_t::operator+= keeps a component that an addition cancels as an
+; exact zero, so the running total 10.00 USD + 5.00 EUR - 5.00 EUR holds
+; {10.00 USD, 0 EUR}.  It prints as 10.00 USD, and display_total < X
+; already compared it as 10.00 USD.  display_total > X runs as
+; X < display_total, which converted the balance to an amount and failed
+; on the zero EUR; it, ==, * and / now read the balance as 10.00 USD too,
+; whichever side it is on.
+
+2024/01/01 One
+    A    10.00 USD
+    B
+
+2024/01/02 Two
+    A    5.00 EUR
+    B
+
+2024/01/03 Three
+    A   -5.00 EUR
+    B
+
+test reg A --tail 1 --format '%(display_total)|%(display_total == 10.00 USD)|%(10.00 USD == display_total)\n'
+10.00 USD|true|true
+end test
+
+test reg A --tail 1 --format '%(display_total < 20.00 USD)|%(display_total > 5.00 USD)\n'
+true|true
+end test
+
+test reg A --tail 1 --format '%(display_total * 2.00 USD)|%(2.00 USD * display_total)\n'
+20.00 USD|20.00 USD
+end test
+
+test reg A --tail 1 --format '%(display_total / 2.00 USD)|%(20.00 USD / display_total)\n'
+5.00 USD|2.00 USD
+end test
+
+test reg A --tail 1 --format '%(2 * display_total)|%(int(2) * display_total)|%((display_total * 2) == 20.00 USD)\n'
+20.00 USD|20.00 USD|true
+end test
+
+test eval '((1 USD + 1 EUR) + -1 EUR) == 1 USD'
+1
+end test
+
+test eval '((1 USD + 1 EUR) - 1 EUR) == 1 USD'
+1
+end test
+
+test eval '((1 USD + 1 EUR) + -1 EUR + -1 USD) == 0'
+1
+end test
+
+test eval '((1 USD + 1 EUR + 1 GBP) + -1 GBP) == ((1 USD + 1 EUR + 1 CAD) + -1 CAD)'
+1
+end test
+
+test eval '((1 USD + 1 EUR) + -1 EUR) != 1 EUR'
+1
+end test
+
+test eval '10 / ((1 USD + 1 EUR) + -1 EUR)'
+10 USD
+end test

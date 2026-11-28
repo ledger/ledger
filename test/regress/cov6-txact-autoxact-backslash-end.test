@@ -1,6 +1,6 @@
 ; Coverage for textual_xacts.cc backslash at end of auto xact pattern
 
-= /Expense\ -> 1
+= /Expense\
     Savings    10%
     Assets
 
@@ -11,5 +11,5 @@
 test bal -> 1
 __ERROR__
 While parsing file "$FILE", line 3:
-Error: Expected '/' at end of pattern
+Error: Unexpected '\' at end of pattern
 end test

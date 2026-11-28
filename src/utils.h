@@ -52,17 +52,17 @@
  *   profiling parsing, report generation, and other phases
  * - **Signal handling** for graceful interruption via Ctrl-C
  * - **String utilities** for whitespace manipulation and argument splitting
- * - **SHA-1 hashing** used to generate stable identifiers for transactions
+ * - **SHA-1 hashing** for `--anon` and for convert's duplicate detection
+ *   (transaction `--hashes` use SHA-512; see sha512.cc)
  *
- * Nearly every source file in Ledger includes this header (typically via
- * `system.hh`), making it the shared vocabulary for the entire codebase.
+ * Nearly every source file in Ledger includes this header (through other
+ * Ledger headers; utils.h itself includes ledger.hh, which includes
+ * system.hh), making it the shared vocabulary for the entire codebase.
  */
 #pragma once
 
 #include <boost/uuid/detail/sha1.hpp>
 #include <ledger.hh>
-
-#define TIMERS_ON 1 ///< Enable cumulative timer instrumentation
 
 /**
  * @name Forward declarations and type aliases
@@ -75,6 +75,7 @@
 
 namespace ledger {
 using namespace boost;
+using std::optional; // not boost::optional, which `using namespace boost` would name
 
 using string = std::string;             ///< Default string type
 using string_view = std::string_view;   ///< Non-owning string view
@@ -111,8 +112,9 @@ inline const std::shared_ptr<const path>& empty_pathname_ptr() {
  * `abort()`.  This allows the test harness and interactive sessions to
  * report assertion failures as catchable exceptions with file/line context.
  *
- * Compile with `NO_ASSERTS=1` to elide all assertion checks for release
- * builds (the expression is still evaluated for side effects).
+ * Configure with `-DDISABLE_ASSERTS=ON` (which sets `NO_ASSERTS` in the
+ * generated ledger.hh) to elide all assertion checks; the expression is
+ * still evaluated for its side effects.
  */
 /*@{*/
 
@@ -149,12 +151,14 @@ void debug_assert(const string& reason, const string& func, const string& file, 
  *
  * 2. **Object lifetime tracing** (`TRACE_CTOR`/`TRACE_DTOR`).  When enabled,
  *    every constructor/destructor call is recorded so that at shutdown the
- *    system can report leaked objects and their allocation sites.  This is
+ *    system can report leaked objects by address, class and size.  This is
  *    Ledger's own lightweight leak detector, independent of tools like
  *    AddressSanitizer.
  *
- * Enable with `--verify` at runtime.  Compile with `VERIFY_ON=0` to remove
- * all verification overhead from release builds.
+ * Verification is compiled in only for Debug builds (`VERIFY_ON` follows
+ * `DEBUG_MODE` in the generated ledger.hh, set by
+ * `-DCMAKE_BUILD_TYPE=Debug`).  There, `--verify` (or `--verify-memory`)
+ * enables it at runtime; in every other build both options do nothing.
  */
 /*@{*/
 
@@ -216,12 +220,10 @@ void report_memory(std::ostream& out, bool report_all = false);
 /*@}*/
 
 /**
- * @name String wrapper
+ * @name String helpers
  *
- * This string type is a wrapper around std::string that allows us to trace
- * constructor and destructor calls.  It also makes ledger's use of strings a
- * unique type, that the Boost.Python code can use as the basis for
- * transparent Unicode conversions.
+ * Small helpers over `ledger::string`, which is a plain alias for
+ * `std::string` (see the type aliases above).
  */
 /*@{*/
 
@@ -234,29 +236,11 @@ extern string empty_string; ///< Shared empty string instance, avoids repeated a
 /// command parser and Python bindings.
 strings_list split_arguments(const char* line);
 
-/// Convert a long integer to its decimal string representation.
-inline string to_string(long num) {
-  std::ostringstream buf;
-  buf << num;
-  return buf.str();
-}
-
-/// Convert a size_t value to its decimal string representation.
-inline string to_string(std::size_t num) {
-  std::ostringstream buf;
-  buf << num;
-  return buf.str();
-}
-
 /// Return a lower-cased copy of @p str (using Boost's locale-aware to_lower).
 inline string lowered(const string& str) {
-  string tmp(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string tmp(str);
   to_lower(tmp);
   return tmp;
-}
-
-inline string operator+(const char* left, const string& right) {
-  return string(left) + right;
 }
 
 } // namespace ledger
@@ -276,12 +260,13 @@ inline string operator+(const char* left, const string& right) {
  * - **DEBUG** messages are filtered by a regex-matched category string
  *   (e.g. `--debug "history.find"`).  Source files declare their default
  *   category with `LOGGER("category.name")`.
- * - **INFO** through **CRITICAL** are unconditionally formatted when
- *   the log level is high enough.
+ * - **INFO** messages are formatted whenever the log level is at least
+ *   `LOG_INFO` (`--verbose` and above).
  *
- * The `IF_TRACE`, `IF_DEBUG`, etc. macros allow guarding expensive
- * argument construction so it is skipped when the message would not
- * be emitted.
+ * `SHOW_TRACE(lvl)`, `SHOW_DEBUG(cat)` and `SHOW_INFO()` test whether a
+ * message would be emitted, and `IF_DEBUG(cat)` guards a block with that
+ * test, so expensive argument construction is skipped when the message
+ * would not be emitted.
  */
 /*@{*/
 
@@ -313,7 +298,7 @@ extern thread_local std::ostringstream _log_buffer; ///< Per-thread buffer for m
 void logger_func(log_level_t level);
 
 /// Declare the default debug category for the current translation unit.
-/// Used by `DEBUG_()` and `SHOW_DEBUG_()` to avoid repeating the category.
+/// Used by `DEBUG_()` to avoid repeating the category.
 #define LOGGER(cat) static const char* const _this_category = cat
 
 #if TRACING_ON
@@ -368,7 +353,6 @@ inline bool category_matches(const char* cat) {
 }
 
 #define SHOW_DEBUG(cat) (ledger::_log_level >= ledger::LOG_DEBUG && ledger::category_matches(cat))
-#define SHOW_DEBUG_() SHOW_DEBUG(_this_category)
 
 #define DEBUG(cat, ...)                                                                            \
   do {                                                                                             \
@@ -382,7 +366,6 @@ inline bool category_matches(const char* cat) {
 #else // DEBUG_ON
 
 #define SHOW_DEBUG(cat) false
-#define SHOW_DEBUG_() false
 #define DEBUG(cat, msg)
 #define DEBUG_(msg)
 
@@ -397,31 +380,12 @@ inline bool category_matches(const char* cat) {
   } while (false)
 
 #define SHOW_INFO() (ledger::_log_level >= ledger::LOG_INFO) ///< True if INFO messages are visible
-#define SHOW_WARN() (ledger::_log_level >= ledger::LOG_WARN) ///< True if WARN messages are visible
-#define SHOW_ERROR()                                                                               \
-  (ledger::_log_level >= ledger::LOG_ERROR) ///< True if ERROR messages are visible
-#define SHOW_FATAL()                                                                               \
-  (ledger::_log_level >= ledger::LOG_FATAL) ///< True if FATAL messages are visible
-#define SHOW_CRITICAL()                                                                            \
-  (ledger::_log_level >= ledger::LOG_CRIT) ///< True if CRITICAL messages are visible
 
-#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg)        ///< Log an informational message
-#define WARN(msg) LOG_MACRO(ledger::LOG_WARN, msg)        ///< Log a warning message
-#define ERROR(msg) LOG_MACRO(ledger::LOG_ERROR, msg)      ///< Log an error message
-#define FATAL(msg) LOG_MACRO(ledger::LOG_FATAL, msg)      ///< Log a fatal error message
-#define CRITICAL(msg) LOG_MACRO(ledger::LOG_CRIT, msg)    ///< Log a critical error message
-#define EXCEPTION(msg) LOG_MACRO(ledger::LOG_EXCEPT, msg) ///< Log exception details
+#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg) ///< Log an informational message
 
 } // namespace ledger
 
-#define IF_TRACE(lvl) if (SHOW_TRACE(lvl))
 #define IF_DEBUG(cat) if (SHOW_DEBUG(cat))
-#define IF_DEBUG_() if (SHOW_DEBUG_())
-#define IF_INFO() if (SHOW_INFO())
-#define IF_WARN() if (SHOW_WARN())
-#define IF_ERROR() if (SHOW_ERROR())
-#define IF_FATAL() if (SHOW_FATAL())
-#define IF_CRITICAL() if (SHOW_CRITICAL())
 
 /*@}*/
 
@@ -429,19 +393,18 @@ inline bool category_matches(const char* cat) {
  * @name Cumulative timers
  *
  * Timers measure cumulative wall-clock time spent in named regions of code.
- * They appear in log output as, for example, `[INFO] Parsing journal: (42ms)`.
+ * They appear in log output as, for example, `[INFO]  Read journal file (42ms)`;
+ * a description ending in `:` is printed without the parentheses.
  *
  * - `start_timer` / `stop_timer` accumulate elapsed time across multiple
  *   start/stop pairs (useful for functions called repeatedly).
  * - `finish_timer` logs the total accumulated time and removes the timer.
  *
- * The `TRACE_START`/`DEBUG_START`/`INFO_START` macros combine the level
+ * The `TRACE_START`/`INFO_START` macros combine the level
  * check with the timer start so that the timer description is only built
  * when the corresponding log level is active.
  */
 /*@{*/
-
-#if TIMERS_ON
 
 namespace ledger {
 
@@ -468,26 +431,6 @@ void finish_timer(const char* name);
 #define TRACE_FINISH(name, lvl)
 #endif
 
-#if DEBUG_ON
-#define DEBUG_START(name, cat, ...)                                                                \
-  do {                                                                                             \
-    if (SHOW_DEBUG(cat)) {                                                                         \
-      ledger::_log_buffer << __VA_ARGS__;                                                          \
-      ledger::start_timer(#name, ledger::LOG_DEBUG);                                               \
-    }                                                                                              \
-  } while (false)
-#define DEBUG_START_(name, msg) DEBUG_START_(name, _this_category, msg)
-#define DEBUG_STOP(name, cat) (SHOW_DEBUG(cat) ? ledger::stop_timer(#name) : ((void)0))
-#define DEBUG_STOP_(name) DEBUG_STOP_(name, _this_category)
-#define DEBUG_FINISH(name, cat) (SHOW_DEBUG(cat) ? ledger::finish_timer(#name) : ((void)0))
-#define DEBUG_FINISH_(name) DEBUG_FINISH_(name, _this_category)
-#else
-#define DEBUG_START(name, cat, msg)
-#define DEBUG_START_(name, msg)
-#define DEBUG_STOP(name)
-#define DEBUG_FINISH(name)
-#endif
-
 #define INFO_START(name, ...)                                                                      \
   do {                                                                                             \
     if (SHOW_INFO()) {                                                                             \
@@ -495,27 +438,9 @@ void finish_timer(const char* name);
       ledger::start_timer(#name, ledger::LOG_INFO);                                                \
     }                                                                                              \
   } while (false)
-#define INFO_STOP(name) (SHOW_INFO() ? stop_timer(#name) : ((void)0))
 #define INFO_FINISH(name) (SHOW_INFO() ? finish_timer(#name) : ((void)0))
 
 } // namespace ledger
-
-#else // !TIMERS_ON
-
-#define TRACE_START(lvl, msg, name)
-#define TRACE_STOP(name, lvl)
-#define TRACE_FINISH(name, lvl)
-
-#define DEBUG_START(name, msg)
-#define DEBUG_START_(name, cat, msg)
-#define DEBUG_STOP(name)
-#define DEBUG_FINISH(name)
-
-#define INFO_START(name, msg)
-#define INFO_STOP(name)
-#define INFO_FINISH(name)
-
-#endif // TIMERS_ON
 
 /*@}*/
 
@@ -535,14 +460,15 @@ void finish_timer(const char* name);
  */
 /*@{*/
 
-/// Tracks which signal, if any, has been caught since the last check.
+/// The values stored in caught_signal: which signal, if any, has been caught since the last check.
 enum caught_signal_t : uint8_t {
   NONE_CAUGHT, ///< No signal pending
   INTERRUPTED, ///< SIGINT received (user pressed Ctrl-C)
   PIPE_CLOSED  ///< SIGPIPE received (pager or pipe consumer exited)
 };
 
-extern caught_signal_t caught_signal; ///< Global signal flag, set by signal handlers
+/// Holds a caught_signal_t; set by signal handlers.
+extern volatile std::sig_atomic_t caught_signal;
 
 void sigint_handler(int sig);  ///< SIGINT handler -- sets caught_signal to INTERRUPTED
 void sigpipe_handler(int sig); ///< SIGPIPE handler -- sets caught_signal to PIPE_CLOSED
@@ -584,15 +510,39 @@ inline T& downcast(U& object) {
   return *polymorphic_downcast<T*>(&object);
 }
 
+/// Assign a new value to @p target (or only save it) for the lifetime of
+/// this object, restoring the saved value on every exit path, including
+/// unwinding.  Used for the process globals that steer parsing and
+/// evaluation (epoch, year_directive_year, item_t::use_aux_date,
+/// commodity_t::decimal_comma_by_default).
+template <typename T>
+class scoped_assign {
+public:
+  /// Save @p target, leaving it unchanged.
+  explicit scoped_assign(T& target) : target_(target), saved_(target) {}
+
+  /// Save @p target, then assign @p value to it.
+  scoped_assign(T& target, T value) : target_(target), saved_(target) {
+    target_ = std::move(value);
+  }
+
+  ~scoped_assign() noexcept { target_ = std::move(saved_); }
+
+  /// The value saved at construction.
+  const T& saved() const { return saved_; }
+
+  scoped_assign(const scoped_assign&) = delete;
+  scoped_assign& operator=(const scoped_assign&) = delete;
+
+private:
+  T& target_;
+  T saved_;
+};
+
 /// Resolve a filesystem path, expanding `~` to the user's home directory
 /// and normalizing the result.  On Cygwin, also converts Windows-style
 /// drive letter paths (e.g. `C:\...`) to POSIX paths.
 path resolve_path(const path& pathname);
-
-/// Return @p first if non-empty, otherwise @p second.
-inline const string& either_or(const string& first, const string& second) {
-  return first.empty() ? second : first;
-}
 
 /// Advance @p ptr past any leading whitespace (space, tab, newline).
 inline char* skip_ws(char* ptr) {
@@ -680,98 +630,61 @@ inline int peek_next_nonws(std::istream& in) {
   return c;
 }
 
-/// Read characters from stream @p str into string @p targ, appending each
-/// character to @p targ and storing the byte just consumed in @p var,
-/// continuing while @p cond is true.  The string grows as needed, so the
-/// caller does not need to anticipate the input length.  Handles backslash
-/// escape sequences (\b, \f, \n, \r, \t, \v).  Stops at newline or
-/// end-of-stream; the terminating character is left in the stream so the
-/// caller can inspect it via @p var.
-#define READ_INTO(str, targ, var, cond)                                                            \
-  {                                                                                                \
-    (var) = (str).peek();                                                                          \
-    while ((str).good() && !(str).eof() && (var) != '\n' && (cond)) {                              \
-      (var) = (str).get();                                                                         \
-      if ((str).eof())                                                                             \
-        break;                                                                                     \
-      if ((var) == '\\') {                                                                         \
-        (var) = (str).get();                                                                       \
-        if ((str).eof())                                                                           \
-          break;                                                                                   \
-        switch (var) {                                                                             \
-        case 'b':                                                                                  \
-          (var) = '\b';                                                                            \
-          break;                                                                                   \
-        case 'f':                                                                                  \
-          (var) = '\f';                                                                            \
-          break;                                                                                   \
-        case 'n':                                                                                  \
-          (var) = '\n';                                                                            \
-          break;                                                                                   \
-        case 'r':                                                                                  \
-          (var) = '\r';                                                                            \
-          break;                                                                                   \
-        case 't':                                                                                  \
-          (var) = '\t';                                                                            \
-          break;                                                                                   \
-        case 'v':                                                                                  \
-          (var) = '\v';                                                                            \
-          break;                                                                                   \
-        default:                                                                                   \
-          break;                                                                                   \
-        }                                                                                          \
-      }                                                                                            \
-      (targ).push_back(static_cast<char>(var));                                                    \
-      (var) = (str).peek();                                                                        \
-    }                                                                                              \
+/// Read characters from @p in into @p out while the next character is not
+/// a newline and @p keep(next) holds, decoding backslash escapes (\b, \f,
+/// \n, \r, \t, \v; any other escaped byte stands for itself).  @p out grows
+/// as needed.  The terminating character is left in the stream.  When
+/// @p consumed is given it is incremented once per byte taken from the
+/// stream, both bytes of an escape included (the expression tokenizer's
+/// column count).  Returns the last character peeked, or read at
+/// end-of-stream, which callers test to see why reading stopped.
+template <class Keep>
+inline int read_into(std::istream& in, string& out, Keep keep, std::size_t* consumed = nullptr) {
+  int c = in.peek();
+  while (in.good() && !in.eof() && c != '\n' && keep(c)) {
+    c = in.get();
+    if (in.eof())
+      break;
+    if (consumed)
+      ++*consumed;
+    if (c == '\\') {
+      c = in.get();
+      if (in.eof())
+        break;
+      switch (c) {
+      case 'b':
+        c = '\b';
+        break;
+      case 'f':
+        c = '\f';
+        break;
+      case 'n':
+        c = '\n';
+        break;
+      case 'r':
+        c = '\r';
+        break;
+      case 't':
+        c = '\t';
+        break;
+      case 'v':
+        c = '\v';
+        break;
+      default:
+        break;
+      }
+      if (consumed)
+        ++*consumed;
+    }
+    out.push_back(static_cast<char>(c));
+    c = in.peek();
   }
-
-/// Like READ_INTO but also increments a column index @p idx for each
-/// character consumed, including both bytes of an escape sequence.
-/// Used by the parser to track column positions for error reporting.
-#define READ_INTO_(str, targ, var, idx, cond)                                                      \
-  {                                                                                                \
-    (var) = (str).peek();                                                                          \
-    while ((str).good() && !(str).eof() && (var) != '\n' && (cond)) {                              \
-      (var) = (str).get();                                                                         \
-      if ((str).eof())                                                                             \
-        break;                                                                                     \
-      (idx)++;                                                                                     \
-      if ((var) == '\\') {                                                                         \
-        (var) = (str).get();                                                                       \
-        if ((str).eof())                                                                           \
-          break;                                                                                   \
-        switch (var) {                                                                             \
-        case 'b':                                                                                  \
-          (var) = '\b';                                                                            \
-          break;                                                                                   \
-        case 'f':                                                                                  \
-          (var) = '\f';                                                                            \
-          break;                                                                                   \
-        case 'n':                                                                                  \
-          (var) = '\n';                                                                            \
-          break;                                                                                   \
-        case 'r':                                                                                  \
-          (var) = '\r';                                                                            \
-          break;                                                                                   \
-        case 't':                                                                                  \
-          (var) = '\t';                                                                            \
-          break;                                                                                   \
-        case 'v':                                                                                  \
-          (var) = '\v';                                                                            \
-          break;                                                                                   \
-        default:                                                                                   \
-          break;                                                                                   \
-        }                                                                                          \
-        (idx)++;                                                                                   \
-      }                                                                                            \
-      (targ).push_back(static_cast<char>(var));                                                    \
-      (var) = (str).peek();                                                                        \
-    }                                                                                              \
-  }
+  return c;
+}
 
 /// Convert a SHA-1 digest to a hexadecimal string.
-/// @param message_digest  The raw SHA-1 digest (array of unsigned ints).
+/// @param message_digest  The raw SHA-1 digest (an array whose element type
+///                        varies across Boost versions).
 /// @param len             Number of hex characters to produce (default: full digest).
 inline string digest_to_hex(const boost::uuids::detail::sha1::digest_type& message_digest,
                             size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2) {
@@ -792,8 +705,8 @@ inline string digest_to_hex(const boost::uuids::detail::sha1::digest_type& messa
 }
 
 /// Compute the SHA-1 hash of @p str and return it as a hex string.
-/// Used to generate stable identifiers for automated transactions
-/// and other content-addressed data.
+/// Used to anonymize payees and accounts (`--anon`) and to key CSV lines
+/// for duplicate detection in `convert`.
 /// @param len  Number of hex characters to return (default: full 40-char hash).
 inline string sha1sum(const string& str,
                       size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2) {

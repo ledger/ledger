@@ -123,6 +123,8 @@ class draft_t : public expr_base_t<value_t> {
       optional<amount_t> amount;      ///< Explicit amount for this posting
       optional<string> cost_operator; ///< "@" for per-unit or "@@" for total cost
       optional<amount_t> cost;        ///< Cost amount, if specified
+      /// The {{total}} lot price the amount argument wrote, as written.
+      std::optional<amount_t> given_lot_total;
 
       post_template_t() : from(false) { TRACE_CTOR(post_template_t, ""); }
       ~post_template_t() noexcept { TRACE_DTOR(post_template_t); }

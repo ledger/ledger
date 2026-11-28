@@ -41,7 +41,5 @@ test reg Assets:Brokerage --gain
 24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
 24-Mar-01 Commodities revalued  <Revalued>                  $100.00      $200.00
 24-Apr-01 Commodities revalued  <Revalued>                  $-50.00      $150.00
-24-Apr-15 Sell stock            <Adjustment>                    150
-                                                           $-150.00          150
-                                Assets:Brokerage           $-150.00            0
+24-Apr-15 Sell stock            Assets:Brokerage           $-150.00            0
 end test

@@ -1,0 +1,63 @@
+; A for/since/until period in a query ends at the next unquoted section
+; keyword: show, only, bold, for, since or until.  'only' used to be
+; missing from that list, so 'for 2024 only Books' fed 'only Books' to the
+; period parser.
+
+2023/12/20 December Purchase
+    Expenses:Books    $15.00
+    Liabilities:Cards
+
+2024/01/15 January Purchase
+    Expenses:Books    $25.00
+    Liabilities:Cards
+
+2024/05/10 May Purchase
+    Expenses:Books    $30.00
+    Liabilities:Cards
+
+2024/05/20 May Dinner
+    Expenses:Dining   $40.00
+    Assets:Checking
+
+test reg for 2024 only Books
+24-Jan-15 January Purchase      Expenses:Books               $25.00       $25.00
+24-May-10 May Purchase          Expenses:Books               $30.00       $30.00
+end test
+
+test reg Expenses for 2024/05 only Books
+24-May-10 May Purchase          Expenses:Books               $30.00       $30.00
+end test
+
+test reg until 2024/02 only Books
+23-Dec-20 December Purchase     Expenses:Books               $15.00       $15.00
+24-Jan-15 January Purchase      Expenses:Books               $25.00       $25.00
+end test
+
+test reg since 2024/05 only Dining
+24-May-20 May Dinner            Expenses:Dining              $40.00       $40.00
+end test
+
+test reg for 2024 show Books
+24-Jan-15 January Purchase      Expenses:Books               $25.00       $25.00
+24-May-10 May Purchase          Expenses:Books               $30.00       $30.00
+end test
+
+test reg for 2024 only
+24-Jan-15 January Purchase      Expenses:Books               $25.00       $25.00
+                                Liabilities:Cards           $-25.00            0
+24-May-10 May Purchase          Expenses:Books               $30.00       $30.00
+                                Liabilities:Cards           $-30.00            0
+24-May-20 May Dinner            Expenses:Dining              $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg for ''
+23-Dec-20 December Purchase     Expenses:Books               $15.00       $15.00
+                                Liabilities:Cards           $-15.00            0
+24-Jan-15 January Purchase      Expenses:Books               $25.00       $25.00
+                                Liabilities:Cards           $-25.00            0
+24-May-10 May Purchase          Expenses:Books               $30.00       $30.00
+                                Liabilities:Cards           $-30.00            0
+24-May-20 May Dinner            Expenses:Dining              $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test

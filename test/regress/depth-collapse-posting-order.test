@@ -1,0 +1,75 @@
+; --depth collapses each transaction's postings into one row per account at
+; that depth.  The rows follow the transaction: an account comes out where
+; its first posting does.  No fixed order of the accounts (by name, by
+; creation or by address) gives both the Grocer and Diner rows (Expenses
+; first) and the Refund row (Assets first).  Under --effective the rows go
+; by effective date, and within a date in arrival order (Split).
+
+2024/01/01 Opening
+    Assets:Checking            $100
+    Equity:Opening
+
+2024/01/05 Grocer
+    Expenses:Food               $50
+    Assets:Checking
+
+2024/01/06 Diner
+    Expenses:Dining             $20
+    Assets:Checking
+    Expenses:Food                $5
+    Assets:Savings              $-5
+
+2024/01/07 Refund
+    Assets:Checking             $10
+    Expenses:Food
+
+2024/01/08 Split
+    Expenses:Food               $20  ; [=2024/01/12]
+    Assets:Checking            $-20  ; [=2024/01/10]
+    Expenses:Dining              $5  ; [=2024/01/10]
+    Assets:Savings              $-5  ; [=2024/01/12]
+
+test reg --depth 1
+24-Jan-01 Opening               Assets                         $100         $100
+                                Equity                        $-100            0
+24-Jan-05 Grocer                Expenses                        $50          $50
+                                Assets                         $-50            0
+24-Jan-06 Diner                 Expenses                        $25          $25
+                                Assets                         $-25            0
+24-Jan-07 Refund                Assets                          $10          $10
+                                Expenses                       $-10            0
+24-Jan-08 Split                 Expenses                        $25          $25
+                                Assets                         $-25            0
+end test
+
+test reg --depth 2
+24-Jan-01 Opening               Assets:Checking                $100         $100
+                                Equity:Opening                $-100            0
+24-Jan-05 Grocer                Expenses:Food                   $50          $50
+                                Assets:Checking                $-50            0
+24-Jan-06 Diner                 Expenses:Dining                 $20          $20
+                                Assets:Checking                $-20            0
+                                Expenses:Food                    $5           $5
+                                Assets:Savings                  $-5            0
+24-Jan-07 Refund                Assets:Checking                 $10          $10
+                                Expenses:Food                  $-10            0
+24-Jan-08 Split                 Expenses:Food                   $20          $20
+                                Assets:Checking                $-20            0
+                                Expenses:Dining                  $5           $5
+                                Assets:Savings                  $-5            0
+end test
+
+test reg --depth 1 --effective
+24-Jan-01 Opening               Assets                         $100         $100
+24-Jan-01 Opening               Equity                        $-100            0
+24-Jan-05 Grocer                Expenses                        $50          $50
+24-Jan-05 Grocer                Assets                         $-50            0
+24-Jan-06 Diner                 Expenses                        $25          $25
+24-Jan-06 Diner                 Assets                         $-25            0
+24-Jan-07 Refund                Assets                          $10          $10
+24-Jan-07 Refund                Expenses                       $-10            0
+24-Jan-10 Split                 Assets                         $-20         $-20
+24-Jan-10 Split                 Expenses                         $5         $-15
+24-Jan-12 Split                 Expenses                        $20           $5
+24-Jan-12 Split                 Assets                          $-5            0
+end test

@@ -787,13 +787,34 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                                   Beaststalker's Belt 1 {65.00G}
-                                                                         -71.65G
+                                                                         -71.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                                   Beaststalker's Belt 1 {65.00G}
-                                                                         -71.65G
+                                                                         -71.66G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                  Beaststalker's Belt 1 {65.00G}
+                                                                         -73.16G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                  Beaststalker's Belt 1 {65.00G}
+                                                                         -70.16G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                  Beaststalker's Belt 1 {65.00G}
+                                                                         -73.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -807,28 +828,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                   Beaststalker's Belt 1 {65.00G}
-                                                                         -70.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                  Beaststalker's Belt 1 {65.00G}
-                                                                         -73.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                  Beaststalker's Belt 1 {65.00G}
-                                                                         -73.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                  Beaststalker's Belt 1 {65.00G}
-                                                                         -73.15G
+                                                                         -73.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -847,91 +847,91 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 2 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 2 {2.105G}
                                            Plans: Mithril Shield Spike 2 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 2 {2.105G}
                                            Plans: Mithril Shield Spike 2 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 2 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 2 {2.105G}
                                            Plans: Mithril Shield Spike 2 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 2 {1.00G}
                                         Recipe: Elixir of Giant Growth 2 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 2 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 2 {1.00G}
                                         Recipe: Elixir of Giant Growth 2 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 2 {1.00G}
                                         Recipe: Elixir of Giant Growth 2 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 2 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -4.15G
+                                                                          -4.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                           5.25G
+                                                                           5.26G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                                           -8.15G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -949,7 +949,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -985,13 +985,13 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -7.75G
+                                                                          -7.76G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1003,7 +1003,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1021,7 +1021,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1039,20 +1039,20 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -8.15G
+                                                                          -8.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -9.15G
+                                                                          -9.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1066,7 +1066,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Pulsating Hydra Heart 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -9.15G
+                                                                          -9.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1087,7 +1087,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Pulsating Hydra Heart 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                                          -9.15G
+                                                                          -9.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1095,7 +1095,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                          -9.15G
+                                                                          -9.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1103,7 +1103,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1111,7 +1111,15 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 4 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                                 Pulsating Hydra Heart 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                      Ace of Warlords 2 {15.00G}
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1127,15 +1135,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                                 Pulsating Hydra Heart 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                      Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1151,7 +1151,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1167,7 +1167,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1175,7 +1175,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -38.40G
+                                                                         -38.41G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1183,7 +1183,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -37.65G
+                                                                         -37.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1191,15 +1191,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Plans: Wildthorn Mail 1 {1.25G}
-                                                 Pulsating Hydra Heart 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.00G}
-                                        Recipe: Elixir of Giant Growth 1 {1.50G}
-                                                      Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1215,7 +1207,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1231,7 +1223,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1247,7 +1239,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1263,7 +1255,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -38.15G
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1271,7 +1263,15 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.50G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -39.15G
+                                                                         -38.16G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Plans: Wildthorn Mail 1 {1.25G}
+                                                 Pulsating Hydra Heart 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.00G}
+                                        Recipe: Elixir of Giant Growth 1 {1.50G}
+                                                      Ace of Warlords 2 {15.00G}
+                                                                         -39.16G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1294,7 +1294,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Pulsating Hydra Heart 1 {1.00G}
                                         Recipe: Elixir of Giant Growth 1 {1.00G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -37.65G
+                                                                         -37.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1314,7 +1314,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1326,19 +1326,19 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                       Ace of Warlords 2 {15.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
@@ -1350,36 +1350,36 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -36.62G
+                                                                         -36.63G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -36.65G
+                                                                         -36.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -35.65G
+                                                                         -35.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Plans: Wildthorn Mail 1 {1.25G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -35.65G
+                                                                         -35.66G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -35.40G
+                                                                         -35.41G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Pulsating Hydra Heart 1 {1.00G}
@@ -1389,27 +1389,27 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
-                                                                         -35.40G
+                                                                         -35.41G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
-                                                                         -35.40G
-                                          Plans: Mithril Shield Spike 1 {2.105G}
-                                           Plans: Mithril Shield Spike 1 {2.30G}
-                                                 Pulsating Hydra Heart 1 {1.00G}
-                                                       Wildheart Belt 1 {30.00G}
-                                                       Ace of Warlords 1 {3.00G}
-                                                       Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
                                                  Pulsating Hydra Heart 1 {1.00G}
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
+                                          Plans: Mithril Shield Spike 1 {2.105G}
+                                           Plans: Mithril Shield Spike 1 {2.30G}
+                                                 Pulsating Hydra Heart 1 {1.00G}
+                                                       Wildheart Belt 1 {30.00G}
+                                                       Ace of Warlords 1 {3.00G}
+                                                       Ace of Warlords 1 {3.90G}
+                                                                         -35.41G
                                                           Holy Bologna 1 {2.00G}
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
@@ -1417,7 +1417,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                                           Holy Bologna 1 {2.00G}
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
@@ -1426,7 +1426,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                                           Holy Bologna 1 {2.00G}
                                           Plans: Mithril Shield Spike 1 {2.105G}
                                            Plans: Mithril Shield Spike 1 {2.30G}
@@ -1436,7 +1436,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                                     Harnessing Shadows 1 {5.00G}
                                                           Holy Bologna 1 {2.00G}
                                           Plans: Mithril Shield Spike 1 {2.105G}
@@ -1447,7 +1447,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                              Garona: Book on Treachery 1 {4.00G}
                                                     Harnessing Shadows 1 {5.00G}
                                                           Holy Bologna 1 {2.00G}
@@ -1459,7 +1459,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                        Wildheart Belt 1 {30.00G}
                                                        Ace of Warlords 1 {3.00G}
                                                        Ace of Warlords 1 {3.90G}
-                                                                         -35.40G
+                                                                         -35.41G
                                              Garona: Book on Treachery 1 {4.00G}
                                                     Harnessing Shadows 1 {5.00G}
                                                           Holy Bologna 1 {2.00G}

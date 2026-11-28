@@ -104,7 +104,6 @@ namespace {
 bool memory_tracing_active = false; ///< Guard against re-entrant tracing from within allocators
 
 memory_map* live_memory = nullptr;              ///< Currently allocated memory blocks
-memory_map* freed_memory = nullptr;             ///< Recently freed blocks (detect double-free)
 object_count_map* live_memory_count = nullptr;  ///< Per-class live memory aggregates
 object_count_map* total_memory_count = nullptr; ///< Per-class cumulative memory aggregates
 objects_map* live_objects = nullptr;            ///< Currently alive traced objects
@@ -117,7 +116,6 @@ void initialize_memory_tracing() {
   memory_tracing_active = false;
 
   live_memory = new memory_map;
-  freed_memory = new memory_map;
   live_memory_count = new object_count_map;
   total_memory_count = new object_count_map;
   live_objects = new objects_map;
@@ -140,8 +138,6 @@ void shutdown_memory_tracing() {
 
   checked_delete(live_memory);
   live_memory = nullptr;
-  checked_delete(freed_memory);
-  freed_memory = nullptr;
   checked_delete(live_memory_count);
   live_memory_count = nullptr;
   checked_delete(total_memory_count);
@@ -187,10 +183,6 @@ static void trace_new_func(void* ptr, const char* which, std::size_t size) {
 
   memory_tracing_active = false;
 
-  memory_map::iterator i = freed_memory->find(ptr);
-  if (i != freed_memory->end())
-    freed_memory->erase(i);
-
   live_memory->insert(memory_map::value_type(ptr, allocation_pair(which, size)));
 
   add_to_count_map(*live_memory_count, which, size);
@@ -200,34 +192,21 @@ static void trace_new_func(void* ptr, const char* which, std::size_t size) {
   memory_tracing_active = true;
 }
 
-/// Record deallocation of a heap block, moving it from live_memory to
-/// freed_memory.  Called from the global operator delete overloads.
+/// Record deallocation of a heap block by removing it from live_memory.
+/// Called from the global operator delete overloads.
 static void trace_delete_func(void* ptr, const char* which) {
   if (!live_memory || !memory_tracing_active)
     return;
 
   memory_tracing_active = false;
 
-  // Ignore deletions of memory not tracked, since it's possible that
-  // a user (like boost) allocated a block of memory before memory
-  // tracking began, and then deleted it before memory tracking ended.
-  // If it really is a double-delete, the malloc library on OS/X will
-  // notify me.
-
   memory_map::iterator i = live_memory->find(ptr);
   if (i == live_memory->end()) {
-    i = freed_memory->find(ptr);
-    if (i != freed_memory->end())
-      freed_memory->erase(i);
-#if 0
-    // There can be memory allocated by Boost or the standard library, which
-    // was allocated before memory tracing got turned on, that the system
-    // might free for some coincidental reason.  As such, we can't rely on
-    // this check being valid.  I've seen cases where processes ran to
-    // completion with it on, and then others where valid processes failed.
-    else
-      VERIFY(! "Freeing an unknown block of memory");
-#endif
+    // An untraced block is not an error: Boost or the standard library may
+    // free memory it allocated before tracing began.  For the same reason a
+    // double delete cannot be told apart from the release of a block that an
+    // untraced allocation placed at a freed address, so double deletes are
+    // left to AddressSanitizer and the malloc library.
     memory_tracing_active = true;
     return;
   }
@@ -236,8 +215,6 @@ static void trace_delete_func(void* ptr, const char* which) {
   VERIFY((*i).second.first == which);
 
   live_memory->erase(i);
-
-  freed_memory->insert(memory_map::value_type(ptr, allocation_pair(which, size)));
 
   object_count_map::iterator j = live_memory_count->find(which);
   VERIFY(j != live_memory_count->end());
@@ -255,17 +232,24 @@ static void trace_delete_func(void* ptr, const char* which) {
 
 /*--- Global operator new/delete overloads for memory tracing ---*/
 
-void* operator new(std::size_t size) {
-  void* ptr = std::malloc(size);
+static void* traced_allocate(std::size_t size, const char* which) {
+  void* ptr;
+  while ((ptr = std::malloc(size != 0 ? size : 1)) == nullptr) {
+    std::new_handler handler = std::get_new_handler();
+    if (!handler)
+      throw std::bad_alloc();
+    handler();
+  }
   if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new", size);
+    ledger::trace_new_func(ptr, which, size);
   return ptr;
 }
+
+void* operator new(std::size_t size) {
+  return traced_allocate(size, "new");
+}
 void* operator new[](std::size_t size) {
-  void* ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new[]", size);
-  return ptr;
+  return traced_allocate(size, "new[]");
 }
 void operator delete(void* ptr) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
@@ -300,7 +284,7 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
 
   buf << num;
 
-  string number(buf.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string number(buf.str());
 
   int integer_digits = 0;
   // Count the number of integer digits
@@ -502,22 +486,20 @@ string empty_string("");
 strings_list split_arguments(const char* line) {
   strings_list args;
 
-  char buf[4096];
-  char* q = buf;
+  string arg;
   char in_quoted_string = '\0';
 
   for (const char* p = line; *p; p++) {
     if (!in_quoted_string && std::isspace(static_cast<unsigned char>(*p))) {
-      if (q != buf) {
-        *q = '\0';
-        args.push_back(buf);
-        q = buf;
+      if (!arg.empty()) {
+        args.push_back(std::move(arg));
+        arg.clear();
       }
     } else if (in_quoted_string != '\'' && *p == '\\') {
       p++;
       if (!*p)
         throw_(std::logic_error, _("Invalid use of backslash"));
-      *q++ = *p;
+      arg.push_back(*p);
     } else if (in_quoted_string != '"' && *p == '\'') {
       if (in_quoted_string == '\'')
         in_quoted_string = '\0';
@@ -529,17 +511,15 @@ strings_list split_arguments(const char* line) {
       else
         in_quoted_string = '"';
     } else {
-      *q++ = *p;
+      arg.push_back(*p);
     }
   }
 
   if (in_quoted_string)
     throw_(std::logic_error, _f("Unterminated string, expected '%1%'") % in_quoted_string);
 
-  if (q != buf) {
-    *q = '\0';
-    args.push_back(buf);
-  }
+  if (!arg.empty())
+    args.push_back(std::move(arg));
 
   return args;
 }
@@ -661,8 +641,6 @@ static struct _maybe_enable_debugging {
 
 /*--- Cumulative timers ---*/
 
-#if TIMERS_ON
-
 namespace ledger {
 
 /// Internal state for one named cumulative timer.  Tracks the log level
@@ -738,13 +716,14 @@ void finish_timer(const char* name) {
 
   time_duration spent = (*i).second.spent;
   if ((*i).second.active) {
-    spent = TRUE_CURRENT_TIME() - (*i).second.begin;
+    spent += TRUE_CURRENT_TIME() - (*i).second.begin;
     (*i).second.active = false;
   }
 
-  _log_buffer << (*i).second.description << ' ';
+  const std::string& description = (*i).second.description;
+  _log_buffer << description << ' ';
 
-  bool need_paren = (*i).second.description[(*i).second.description.size() - 1] != ':';
+  bool need_paren = description.empty() || description.back() != ':';
 
   if (need_paren)
     _log_buffer << '(';
@@ -765,11 +744,9 @@ void finish_timer(const char* name) {
 
 } // namespace ledger
 
-#endif // TIMERS_ON
-
 /*--- Signal handlers ---*/
 
-caught_signal_t caught_signal = NONE_CAUGHT;
+volatile std::sig_atomic_t caught_signal = NONE_CAUGHT;
 
 void sigint_handler(int) {
   caught_signal = INTERRUPTED;

@@ -1,0 +1,45 @@
+; The xact command reads a date only before the payee (or after `on`).
+; An amount after the payee that looks like a date (11.50) or a weekday
+; number (0-6) is an amount.
+
+2024/02/01 Shop
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test --now 2024/03/01 xact Shop Food 11.50
+2024/03/01 Shop
+    Expenses:Food                             $11.50
+    Assets:Cash
+end test
+
+test --now 2024/03/01 xact Shop Food 5
+2024/03/01 Shop
+    Expenses:Food                              $5.00
+    Assets:Cash
+end test
+
+test --now 2024/03/01 xact Shop Food 5 on 2024/03/05
+2024/03/05 Shop
+    Expenses:Food                              $5.00
+    Assets:Cash
+end test
+
+test --now 2024/03/01 xact at Shop Food 11.50
+2024/03/01 Shop
+    Expenses:Food                             $11.50
+    Assets:Cash
+end test
+
+; An amount right after the payee, with no account.
+test --now 2024/03/01 xact Shop 11.50
+2024/03/01 Shop
+    Expenses:Food                             $11.50
+    Assets:Cash
+end test
+
+; A weekday before the payee is still the date.
+test --now 2024/03/01 xact fri Shop Food 5
+2024/02/23 Shop
+    Expenses:Food                              $5.00
+    Assets:Cash
+end test

@@ -26,6 +26,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
+from LedgerHarness import sanitized_env  # noqa: E402
+
 JOURNAL = """\
 2025/01/06 * Test
     Assets:A    10 FOO
@@ -63,15 +66,10 @@ def main():
     ledger = os.path.abspath(sys.argv[1])
     failed = 0
 
-    # Keep the sanitizer and coverage settings ctest runs under, but nothing
-    # else -- above all no LEDGER_* variable, XDG_CONFIG_HOME or HOME, so that
-    # no init file or price database of whoever runs the tests is read.
-    base_env = {
-        k: v
-        for k, v in os.environ.items()
-        if k.endswith("SAN_OPTIONS") or k.startswith(("LLVM_PROFILE_", "GCOV_"))
-    }
-    base_env["TZ"] = "America/Chicago"
+    # The environment every test runs under, less HOME, so that no init file
+    # or price database of whoever runs the tests is read.
+    base_env = sanitized_env()
+    base_env.pop("HOME", None)
 
     def check(description, args, expected, cwd, home=None):
         nonlocal failed

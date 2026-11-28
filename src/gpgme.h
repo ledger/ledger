@@ -78,21 +78,8 @@ protected:
 class decrypted_stream_t : public std::istream {
 public:
   std::shared_ptr<GpgME::Data> dec_d;
-  std::FILE* file;
 
-  /* Establishes an istream decrypting a file pointed to by FILENAME.
-
-     Decryption is performed at object creation and only the decrypted Data
-     buffer is retained as the backing store for the stream.
-
-     Expects the input file to be unencrypted or encrypted in CMS or PGP
-     format (includes asymmetrically and symmetrically encrypted content).
-
-     Calls open_file(), setup_cipher_buffer() and decrypt() and throws
-     exceptions noted in there on error. */
-  decrypted_stream_t(path& filename);
-
-  /* Established an istream serving the decrypted content in DEC_D.
+  /* Establishes an istream serving the decrypted content in DEC_D.
 
      Make sure DEC_D is properly rewound. (Which it is not after decrypting.)
 
@@ -113,18 +100,20 @@ public:
 
   /* Returns a Data buffer connected to an open FILE object.
 
-     Throws a runtime error when the content is neither PGPEncrypted,
-     CMSEncrypted or Unknown, or when the buffer cannot be established. */
+     Throws a runtime error unless GpgME classifies the content as
+     PGPEncrypted, CMSEncrypted, Unknown or Invalid; the last two are
+     unencrypted input, which decrypt() passes through. */
   static std::shared_ptr<GpgME::Data> setup_cipher_buffer(std::FILE* f);
 
-  /* Returns a Data buffer of the plain text. Decrypts cipher text by
-     establishing a proper decryption context, first. .
+  /* Returns a Data buffer of the plain text.
 
-     Returns the input Data buffer when the encryption type is Unknown, which
-     is considered unencrypted input.
+     Returns ENC_D itself when its type is Unknown or Invalid, which is
+     unencrypted input.  Otherwise decrypts it with an OpenPGP context when
+     the type is PGPEncrypted and with a CMS context for any other type
+     (setup_cipher_buffer() admits only CMSEncrypted besides these).
 
-     Throws a runtime error when the decryption fails or when the cipher text
-     is neither PGPEncrypted nor CMSEncrypted. */
+     Throws a runtime error when no decryption context can be established
+     or when decryption fails. */
   static std::shared_ptr<GpgME::Data> decrypt(std::shared_ptr<GpgME::Data> enc_d);
 
   /* Returns an istream, which is either a decrypted_stream_t, given the file

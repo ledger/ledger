@@ -1,0 +1,32 @@
+; A timelog posting, and the bucket posting that balances it, are added to
+; their accounts once, when the transaction is finalized.  The timelog
+; parser used to add each a second time, so account_id counted 1, 3, 5 and
+; removing a posting from its account had to remove every occurrence.
+
+bucket Equity:Time
+
+i 2024/01/01 09:00:00 Work:Project  Alpha
+o 2024/01/01 10:00:00
+i 2024/01/02 09:00:00 Work:Project  Beta
+o 2024/01/02 11:00:00
+i 2024/01/03 09:00:00 Work:Project  Gamma
+o 2024/01/03 09:30:00
+
+test reg --format "%(account_id) %(account) %(payee)\n"
+1 Work:Project Alpha
+1 Equity:Time Alpha
+2 Work:Project Beta
+2 Equity:Time Beta
+3 Work:Project Gamma
+3 Equity:Time Gamma
+end test
+
+; Each --account copy is evaluated as the fourth posting of its account and
+; then leaves it, so every copy sees the same id.
+
+test bal --flat --account 'str(account_id)'
+              -3.50h  4:Equity:Time
+               3.50h  4:Work:Project
+--------------------
+                   0
+end test

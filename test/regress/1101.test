@@ -31,7 +31,7 @@ test prices
 end test
 
 test bal -X USD Assets:Basket
-            USD 1.04  Assets:Basket
+            USD 1.05  Assets:Basket
 end test
 
 test bal -X EUR Assets:Basket

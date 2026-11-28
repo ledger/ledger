@@ -11,6 +11,9 @@
 ;
 ; Also covers the double-include case: including a file with a commodity
 ; alias directive more than once previously triggered the same assertion.
+;
+; The last block checks that the prices read under RUB before the alias
+; value Bank's dollars in ₽ (they used to come out inverted, ₽7.34).
 
 P 2018-08-30 $ 68.1451 RUB
 
@@ -53,4 +56,12 @@ test bal Assets
 --------------------
              $500.00
             ₽1000.00
+end test
+
+test bal Assets -X ₽ --now 2019/01/01
+           ₽35072.55  Assets
+           ₽34072.55    Bank
+            ₽1000.00    Checking
+--------------------
+           ₽35072.55
 end test

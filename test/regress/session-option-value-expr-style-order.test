@@ -1,0 +1,17 @@
+; A value expression is parsed when the option is given, so the commodity
+; styles its text teaches are in place before a later --decimal-comma: here
+; "25,500 EUR" read before --decimal-comma gives EUR a thousands mark, which
+; the display keeps.  The base parsed the expression after every option and
+; printed 51000,000 EUR in either order.
+
+2015/01/01 Buy stocks
+    Assets:Investments         2000 FOO @@ 20,00 EUR
+    Assets:Cash                           -20,00 EUR
+
+test bal assets:investments -V --value-expr "25,500 EUR" --decimal-comma
+      51.000,000 EUR  Assets:Investments
+end test
+
+test bal assets:investments -V --decimal-comma --value-expr "25,500 EUR"
+       51000,000 EUR  Assets:Investments
+end test

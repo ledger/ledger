@@ -1,0 +1,7 @@
+2024/01/02 Included before caret
+    Expenses:Food    $2.00
+    Assets:Cash
+^
+2024/01/03 Included after caret
+    Expenses:Food    $3.00
+    Assets:Cash

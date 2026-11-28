@@ -108,7 +108,7 @@ public:
 
   xact_base_t() : item_t(), journal(nullptr) { TRACE_CTOR(xact_base_t, ""); }
   xact_base_t(const xact_base_t& e);
-  xact_base_t& operator=(const xact_base_t&) = default;
+  xact_base_t& operator=(const xact_base_t&) = delete;
 
   ~xact_base_t() override;
 
@@ -199,7 +199,7 @@ public:
 
   xact_t() { TRACE_CTOR(xact_t, ""); }
   xact_t(const xact_t& e);
-  xact_t& operator=(const xact_t&) = default;
+  xact_t& operator=(const xact_t&) = delete;
 
   ~xact_t() override { TRACE_DTOR(xact_t); }
 
@@ -234,15 +234,16 @@ public:
   bool valid() const override;
 
   /**
-   * @brief Compute a cryptographic hash of this transaction.
+   * @brief Compute this transaction's link in the --hashes chain.
    *
-   * Produces a SHA-512 hash of the transaction's date, auxiliary date,
-   * code, payee, and all postings (sorted for determinism).  The nonce
-   * parameter can salt the hash for different purposes.
+   * Hashes the transaction's dates, code, payee, and all postings (sorted
+   * for determinism), prefixed by the nonce.  The parser passes the
+   * previous transaction's Hash tag as the nonce, and stores the result
+   * in, or checks it against, this transaction's Hash tag.
    *
-   * @param nonce      Salt value prepended to the hash input.
-   * @param hash_type  HASH_SHA512 for full 64-byte hash, or
-   *                   HASH_SHA512_HALF for the first 32 bytes.
+   * @param nonce      The previous transaction's Hash tag, or "" if none.
+   * @param hash_type  HASH_SHA512 for the full 64-byte hash, or
+   *                   HASH_SHA512_Half for the first 32 bytes.
    */
   string hash(const string& nonce, hash_type_t hash_type) const;
 };
@@ -280,22 +281,14 @@ class auto_xact_t : public xact_base_t {
 public:
   predicate_t
       predicate; ///< Expression that must be true for a posting to trigger this auto transaction.
-  optional<string> name; ///< Optional descriptive name for the automated transaction.
-  bool try_quick_match;  ///< If true, attempt the fast AST-based predicate matcher before falling
-                         ///< back to full evaluation. Disabled after a failure.
+  optional<string> name;       ///< Optional descriptive name for the automated transaction.
+  bool try_quick_match = true; ///< If true, attempt the fast AST-based predicate matcher before
+                               ///< falling back to full evaluation. Disabled after a failure.
   std::map<string, bool>
       memoized_results; ///< Cache of account fullname -> predicate result, for the quick matcher.
                         ///< Cleared if quick matching is disabled.
-  bool enabled;         ///< If false, this auto transaction is skipped entirely. Can be toggled by
+  bool enabled = true;  ///< If false, this auto transaction is skipped entirely. Can be toggled by
                         ///< directives.
-
-  /// If non-null, this auto_xact applies only to postings whose reported
-  /// account is exactly this account (no hierarchical descent).  Created
-  /// by `account <name> / check <expr>` directives, which are indexed by
-  /// the journal via `account_check_xacts` so that extend_xact() can
-  /// dispatch them via O(1) account lookup instead of scanning the full
-  /// auto_xacts list for every posting.  See issue #562.
-  account_t* scoped_to_account = nullptr;
 
   optional<expr_t::check_expr_list>
       check_exprs; ///< Optional assertion/check expressions evaluated when the predicate matches.
@@ -326,27 +319,15 @@ public:
   using deferred_notes_list = std::list<deferred_tag_data_t>;
 
   optional<deferred_notes_list> deferred_notes; ///< Tags deferred until extend_xact() applies them.
-  post_t* active_post; ///< During parsing, the template posting currently being built (used by
-                       ///< parse_tags to set apply_to_post).
+  post_t* active_post = nullptr; ///< During parsing, the template posting currently being built
+                                 ///< (used by parse_tags to set apply_to_post).
 
-  auto_xact_t() : try_quick_match(true), active_post(nullptr) { TRACE_CTOR(auto_xact_t, ""); }
-  auto_xact_t(const auto_xact_t& other)
-      : xact_base_t(other), predicate(other.predicate), name(other.name),
-        try_quick_match(other.try_quick_match), enabled(other.enabled),
-        active_post(other.active_post) {
-    TRACE_CTOR(auto_xact_t, "copy");
+  auto_xact_t(const predicate_t& _predicate = predicate_t(), optional<string> _name = std::nullopt)
+      : predicate(_predicate), name(std::move(_name)) {
+    TRACE_CTOR(auto_xact_t, "const predicate_t&, optional<string>");
   }
-  auto_xact_t& operator=(const auto_xact_t&) = default;
-  auto_xact_t(const predicate_t& _predicate)
-      : predicate(_predicate), name(none), try_quick_match(true), enabled(true),
-        active_post(nullptr) {
-    TRACE_CTOR(auto_xact_t, "const predicate_t&");
-  }
-  auto_xact_t(const predicate_t& _predicate, optional<string> _name)
-      : predicate(_predicate), name(std::move(_name)), try_quick_match(true), enabled(true),
-        active_post(nullptr) {
-    TRACE_CTOR(auto_xact_t, "const predicate_t&");
-  }
+  auto_xact_t(const auto_xact_t&) = delete;
+  auto_xact_t& operator=(const auto_xact_t&) = delete;
 
   ~auto_xact_t() override { TRACE_DTOR(auto_xact_t); }
 
@@ -386,20 +367,39 @@ public:
    * After all postings are added, if any must-balance posting was
    * generated, verify() is called to ensure the transaction still
    * balances.
+   *
+   * @p context is the active parse context, or null when the transaction
+   * enters the journal outside a parse (the xact command, Python's
+   * Journal.add_xact); `$var` account templates are then evaluated in
+   * scope_t::default_scope and a failed check warns without a location
+   * (see check_location()).
    */
-  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
+  virtual void extend_xact(xact_base_t& xact, const parse_context_t* context);
 
   /**
    * @brief Evaluate check_exprs against a single posting, skipping the
    *        predicate.
    *
    * Fast path used by journal_t::extend_xact() for account-scoped check
-   * directives that are indexed by account.  The caller guarantees the
-   * posting's account matches `scoped_to_account`, so the predicate is
-   * not re-evaluated.  No template postings are generated and deferred
-   * notes are not applied (account directives cannot carry those).
+   * directives that are indexed by account.  The caller looks the
+   * posting's account up in journal_t::account_check_xacts, so no
+   * predicate is evaluated.  It runs the same run_check_exprs() as
+   * extend_xact(); no template postings are generated and deferred notes
+   * are not applied (account directives cannot carry those).
+   *
+   * @p context is the active parse context, or null outside a parse (the
+   * xact command, Python's Journal.add_xact); a failed check then warns
+   * without a location (see check_location()).
    */
-  void apply_checks_to_post(post_t& initial_post, parse_context_t& context);
+  void apply_checks_to_post(post_t& initial_post, const parse_context_t* context);
+
+private:
+  /// Evaluate check_exprs in @p bound_scope: an `expr` runs for effect, a
+  /// false `assert` throws parse_error and a false `check` warns at
+  /// check_location(@p xact_for_location, @p context).  The caller holds
+  /// item_t::use_aux_date false (#2945).
+  void run_check_exprs(bind_scope_t& bound_scope, const xact_base_t* xact_for_location,
+                       const parse_context_t* context);
 };
 
 /**
@@ -431,7 +431,7 @@ public:
       : xact_base_t(e), period(e.period), period_string(e.period_string) {
     TRACE_CTOR(period_xact_t, "copy");
   }
-  period_xact_t& operator=(const period_xact_t&) = default;
+  period_xact_t& operator=(const period_xact_t&) = delete;
   period_xact_t(const string& _period) : period(_period), period_string(_period) {
     TRACE_CTOR(period_xact_t, "const string&");
   }

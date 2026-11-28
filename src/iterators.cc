@@ -53,8 +53,6 @@ void xacts_iterator::reset(journal_t& journal) {
   xacts_i = journal.xacts.begin();
   xacts_end = journal.xacts.end();
 
-  xacts_uninitialized = false;
-
   increment();
 }
 
@@ -72,19 +70,29 @@ void journal_posts_iterator::reset(journal_t& journal) {
   increment();
 }
 
-void journal_posts_iterator::increment() {
+namespace {
+
+/// Advance a two-level (transaction, posting) walk and return the next
+/// posting, or nullptr once every transaction is exhausted.
+post_t* next_post(xacts_iterator& xacts, xact_posts_iterator& posts) {
   // NOLINTBEGIN(bugprone-branch-clone)
   // Try the next posting in the current transaction first.  If exhausted,
   // advance to the next transaction and reset the inner posting iterator.
   if (post_t* post = *posts++) {
-    m_node = post;
+    return post;
   } else if (xact_t* xact = *xacts++) {
     posts.reset(*xact);
-    m_node = *posts++;
+    return *posts++;
   } else {
-    m_node = nullptr;
+    return nullptr;
   }
   // NOLINTEND(bugprone-branch-clone)
+}
+
+} // namespace
+
+void journal_posts_iterator::increment() {
+  m_node = next_post(xacts, posts);
 }
 
 /*--- Commodity price posting synthesis ---*/
@@ -94,9 +102,9 @@ namespace {
 /**
  * @brief Functor that creates synthetic transactions from commodity price data.
  *
- * Called by commodity_t::map_prices for each (datetime, price) pair in a
- * commodity's price history.  It groups price postings into one transaction
- * per commodity symbol, avoiding duplicates.  The resulting temporary
+ * Called for each price point kept from a commodity's price history (see
+ * posts_commodities_iterator::reset).  It groups price postings into one
+ * transaction per commodity symbol, avoiding duplicates.  The resulting temporary
  * transactions and postings are allocated via a temporaries_t arena and
  * stored in an xacts_list so they persist for the iterator's lifetime.
  */
@@ -108,12 +116,10 @@ struct create_price_xact {
 
   std::map<string, xact_t*> xacts_by_commodity; ///< One xact per commodity symbol.
 
-  // Per xact, an index of already-inserted (date, amount) pairs, used to
-  // deduplicate in O(log) instead of a linear scan of xact->posts.  A single
-  // xact for a popular price commodity (e.g. the reporting currency) can
-  // accumulate every parsed price, so the prior O(N) scan made the overall
-  // synthesis O(N^2) -- with the inner `date.date()` ptime->date conversion
-  // dominating cost.
+  // Per xact, an index of already-inserted (date, amount) pairs, so that
+  // deduplication is a lookup rather than a scan of xact->posts: one xact
+  // for a popular price commodity (e.g. the reporting currency) can
+  // accumulate every parsed price.
   std::map<string, std::map<date_t, std::vector<amount_t>>> seen_by_commodity;
 
   create_price_xact(journal_t& _journal, account_t* _account, temporaries_t& _temps,
@@ -210,85 +216,44 @@ void posts_commodities_iterator::reset(journal_t& journal) {
       commodities.insert(base);
   }
 
-  // Phase 2: For each commodity, walk its price history and create
-  // synthetic transactions with postings representing each price point.
-  // When latest_only is set, scan the full history but emit only the
-  // most recently-dated price for each commodity.
-  // When interval is set with a duration, keep only the last price per
-  // commodity per period (e.g. monthly), so that interval_posts does not
-  // sum multiple prices within the same period.
-  if (latest_only) {
-    for (commodity_t* comm : commodities) {
-      datetime_t best_when;
-      amount_t best_price;
-
-      // map_prices emits prices in ascending datetime order (price_map_t is
-      // a std::map<datetime_t, amount_t>), so the last callback gives the
-      // most recent price.  We overwrite best_when/best_price on each call
-      // so only the final (latest) entry survives.
-      comm->map_prices(
-          [&best_when, &best_price](const datetime_t& when, const amount_t& price) {
-            best_when = when;
-            best_price = price;
-          },
-          datetime_t(), datetime_t(), bidirectional);
-
-      if (best_when.is_not_a_date_time())
-        continue; // no price history for this commodity
-
-      xact_t& xact = temps.create_xact();
-      xact_temps.push_back(&xact);
-      xact.payee = best_price.commodity().symbol();
-      xact._date = best_when.date();
-      xact._state = item_t::CLEARED;
-      xact.journal = &journal;
-
-      account_t* account = journal.master->find_account(comm->symbol());
-      post_t& post = temps.create_post(xact, account);
-      post._date = best_when.date();
-      post.amount = best_price;
-      post._state = item_t::CLEARED;
-      post.xdata().datetime = best_when;
+  // Phase 2: For each commodity, walk its price history once and create
+  // synthetic transactions with postings representing each price point
+  // kept.  Without selection every point is kept.  When latest_only is
+  // set, only the newest point of each commodity is kept; when interval is
+  // set with a duration, only the newest point of each period (e.g.
+  // monthly), so that interval_posts does not sum multiple prices within
+  // the same period.  map_prices yields the prices of each price commodity
+  // in date order, but not across price commodities, so "newest" is chosen
+  // by comparing the dates explicitly.
+  const bool select_newest = latest_only || (interval && interval->duration);
+  for (commodity_t* comm : commodities) {
+    create_price_xact add_price_post(journal, journal.master->find_account(comm->symbol()), temps,
+                                     xact_temps);
+    if (!select_newest) {
+      comm->map_prices(std::ref(add_price_post), datetime_t(), datetime_t(), bidirectional);
+      continue;
     }
-  } else if (interval && interval->duration) {
-    for (commodity_t* comm : commodities) {
-      // Use a map from period start date to (latest_when, latest_price).
-      // Since map_prices emits in ascending datetime order, the last
-      // assignment per period keeps the latest price in that period.
-      std::map<date_t, std::pair<datetime_t, amount_t>> period_prices;
-      date_interval_t working(*interval);
 
-      comm->map_prices([&](const datetime_t& when, const amount_t& price) {
-        date_t d = when.date();
-        date_interval_t probe(working);
-        if (probe.find_period(d)) {
-          date_t period_start = *probe.start;
-          period_prices[period_start] = {when, price};
-        }
-      });
-
-      // Create one synthetic posting per period with the last price.
-      account_t* account = journal.master->find_account(comm->symbol());
-      for (const auto& pp : period_prices) {
-        xact_t& xact = temps.create_xact();
-        xact_temps.push_back(&xact);
-        xact.payee = pp.second.second.commodity().symbol();
-        xact._date = pp.second.first.date();
-        xact._state = item_t::CLEARED;
-        xact.journal = &journal;
-
-        post_t& post = temps.create_post(xact, account);
-        post._date = pp.second.first.date();
-        post.amount = pp.second.second;
-        post._state = item_t::CLEARED;
-        post.xdata().datetime = pp.second.first;
-      }
-    }
-  } else {
-    for (commodity_t* comm : commodities)
-      comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()),
-                                         temps, xact_temps),
-                       datetime_t(), datetime_t(), bidirectional);
+    std::map<date_t, std::pair<datetime_t, amount_t>> newest; // key: period start
+    optional<date_interval_t> working;
+    if (!latest_only)
+      working = *interval;
+    comm->map_prices(
+        [&](const datetime_t& when, const amount_t& price) {
+          date_t key(boost::gregorian::min_date_time); // --latest: one bucket
+          if (working) {
+            date_interval_t probe(*working);
+            if (!probe.find_period(when.date()))
+              return;
+            key = *probe.start;
+          }
+          auto [i, inserted] = newest.try_emplace(key, when, price);
+          if (!inserted && when >= i->second.first) // ties: the later yielded, as before
+            i->second = {when, price};
+        },
+        datetime_t(), datetime_t(), bidirectional);
+    for (const auto& [start, point] : newest)
+      add_price_post(point.first, point.second);
   }
 
   // Phase 3: Sort synthetic transactions by date for deterministic output,
@@ -301,16 +266,7 @@ void posts_commodities_iterator::reset(journal_t& journal) {
 }
 
 void posts_commodities_iterator::increment() {
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (post_t* post = *posts++) {
-    m_node = post;
-  } else if (xact_t* xact = *xacts++) {
-    posts.reset(*xact);
-    m_node = *posts++;
-  } else {
-    m_node = nullptr;
-  }
-  // NOLINTEND(bugprone-branch-clone)
+  m_node = next_post(xacts, posts);
 }
 
 /*--- Account tree traversal ---*/

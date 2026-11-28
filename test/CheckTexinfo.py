@@ -99,4 +99,4 @@ if __name__ == "__main__":
                                  parents=[CheckTexinfo.parser()]).parse_args()
   script = CheckTexinfo(args)
   status = script.main()
-  sys.exit(status)
+  sys.exit(1 if status else 0)

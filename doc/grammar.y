@@ -3,25 +3,43 @@
  * @version 3.0
  * @author John Wiegley
  *
- * @brief Canonical BNF grammar for Ledger data files
+ * @brief Informative sketch of the grammar of Ledger data files
  *
- * Extensions are permitted if: they are not required, and they are
- * backwards-compatible with this grammar.
+ * This file is not normative, and no build, test or tool reads it.
+ * The manual, doc/ledger3.texi, specifies the journal format: see its
+ * "Journal Format" section and "Command Directives" node, and the
+ * "Naming Commodities" section for commodity symbols.  Where this
+ * sketch disagrees with the manual or with src/textual.cc, they are
+ * right and it is wrong.
+ *
+ * The sketch is partial.  Of the word directives it gives only include,
+ * account, end, alias and def.  The parser also reads account-rewrite,
+ * apply, assert, bucket, check, comment, commodity, define, eval, expr,
+ * import, payee, payee-rewrite, python, tag, test, value and year (see
+ * src/textual_directives.cc), the indented sub-directives of account,
+ * commodity, payee and tag, and a ';' comment after some directives
+ * (account and commodity among them).
  */
 
 /*
- * There are four special terminals in this grammar, which violate its
- * context free nature:
+ * These terminals violate the grammar's context free nature:
  *
  * TEXT       -- consumes all characters until the next terminal
  *               or EOL (end of line)
+ * LINE       -- every character up to EOL
  * WHITESPACE -- any amount of whitespace, not including EOL
  * STRING     -- characters up to the next WHITESPACE or EOL
+ * FULLSTRING -- characters up to an inline note (a 'spacer' followed
+ *               by ';') or EOL; a spacer not followed by ';' is part
+ *               of the FULLSTRING
+ * ACCOUNTSTR -- characters up to the next 'spacer' or EOL
  * SYMBOL     -- characters up to the next WHITESPACE, EOL, digit, DEL,
  *               or one of . , ; : ? ! - + * / ^ & | = < > ~ ( ) [ ] { } @
  *               (a backslash puts the character after it into the
  *               SYMBOL), other than the words and, div, else, false,
  *               if, not, or and true
+ *
+ * These numeric terminals are ordinary:
  *
  * BIGINT     -- a number of any width, matching [0-9]+
  * INT4       -- a four digit wide number
@@ -58,9 +76,10 @@ journal_item:
 whitespace:
     EOL |
     WHITESPACE EOL |
-    ';' TEXT EOL |              /* these next four are all ignored */
-    '*' TEXT EOL |
+    comment_char TEXT EOL |     /* a comment line, ignored */
     ;
+
+comment_char: ';' | '#' | '%' | '*' | '|' ;
 
 directive:
     '@' word_directive EOL |
@@ -150,7 +169,7 @@ note: ';' TEXT ;
 /* ---------------------------------------------------------------------- */
 
 periodic_xact:
-    '~' period_expr note_opt EOL
+    '~' period_expr EOL
     posting postings ;
 
 /*
@@ -159,12 +178,12 @@ periodic_xact:
  * for lots and lots of things, and is probably horribly ambiguous.
  */
 
-period_expr: FULLSTRING ;
+period_expr: LINE ;
 
 /* ---------------------------------------------------------------------- */
 
 automated_xact:
-    '=' value_expr note_opt EOL
+    '=' LINE EOL                /* a report query, as on the command line */
     posting postings ;
 
 /*
@@ -173,7 +192,7 @@ automated_xact:
  * out also, since it's allowed in many places.
  */
 
-value_expr: FULLSTRING ;
+value_expr: '(' TEXT ')' ;    /* parenthesized; parentheses nest */
 
 /*
  * There is a serious ambiguity here which the parser resolves as
@@ -221,7 +240,7 @@ postings:
 posting:
     WHITESPACE status_opt account values_opt note_opt EOL;
 
-account_name: FULLSTRING ;
+account_name: ACCOUNTSTR ;
 
 values_opt:
     spacer amount_expr price_opt |

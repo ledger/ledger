@@ -1,0 +1,77 @@
+; Lots bought on the same day are consumed in the order they were
+; bought under --lot-matching fifo and in the reverse order under
+; lifo, whatever order the lot commodities were created in.  B1 and
+; B2 hold undated lots (dated by their first posting), B3 and B4 dated
+; ones; each pair buys the same two lots in opposite orders.
+
+2024/01/01 Buy B1 first
+    Assets:B1                10 AAPL {$5}
+    Assets:Cash             $-50
+
+2024/01/01 Buy B1 second
+    Assets:B1                10 AAPL {$6}
+    Assets:Cash             $-60
+
+2024/01/01 Buy B2 first
+    Assets:B2                10 AAPL {$6}
+    Assets:Cash             $-60
+
+2024/01/01 Buy B2 second
+    Assets:B2                10 AAPL {$5}
+    Assets:Cash             $-50
+
+2024/01/01 Buy B3 first
+    Assets:B3                10 AAPL {$5} [2024/01/01]
+    Assets:Cash             $-50
+
+2024/01/01 Buy B3 second
+    Assets:B3                10 AAPL {$6} [2024/01/01]
+    Assets:Cash             $-60
+
+2024/01/01 Buy B4 first
+    Assets:B4                10 AAPL {$6} [2024/01/01]
+    Assets:Cash             $-60
+
+2024/01/01 Buy B4 second
+    Assets:B4                10 AAPL {$5} [2024/01/01]
+    Assets:Cash             $-50
+
+2024/02/01 Sell
+    Assets:B1                -5 AAPL @ $10
+    Assets:B2                -5 AAPL @ $10
+    Assets:B3                -5 AAPL @ $10
+    Assets:B4                -5 AAPL @ $10
+    Assets:Cash             $200
+    Income:Gains
+
+test --lot-matching fifo bal Assets:B --lots --flat
+         5 AAPL {$5}
+        10 AAPL {$6}  Assets:B1
+        10 AAPL {$5}
+         5 AAPL {$6}  Assets:B2
+ 5 AAPL {$5} [2024/01/01]
+10 AAPL {$6} [2024/01/01]  Assets:B3
+10 AAPL {$5} [2024/01/01]
+ 5 AAPL {$6} [2024/01/01]  Assets:B4
+--------------------
+             15 AAPL {$5}
+15 AAPL {$5} [2024/01/01]
+             15 AAPL {$6}
+15 AAPL {$6} [2024/01/01]
+end test
+
+test --lot-matching lifo bal Assets:B --lots --flat
+        10 AAPL {$5}
+         5 AAPL {$6}  Assets:B1
+         5 AAPL {$5}
+        10 AAPL {$6}  Assets:B2
+10 AAPL {$5} [2024/01/01]
+ 5 AAPL {$6} [2024/01/01]  Assets:B3
+ 5 AAPL {$5} [2024/01/01]
+10 AAPL {$6} [2024/01/01]  Assets:B4
+--------------------
+             15 AAPL {$5}
+15 AAPL {$5} [2024/01/01]
+             15 AAPL {$6}
+15 AAPL {$6} [2024/01/01]
+end test

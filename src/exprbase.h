@@ -39,8 +39,9 @@
  *
  * @ingroup expr
  *
- * @brief CRTP base template providing the common expression protocol
- *        (parse, compile, calc, print, dump) for all Ledger expression types.
+ * @brief Abstract base template, parameterized on the result type, that
+ *        provides the common expression protocol (parse, compile, calc,
+ *        print, dump) for Ledger's expression types.
  *
  * Ledger uses several domain-specific expression languages, all sharing the
  * same lifecycle: parse a text string, compile against a scope, and evaluate
@@ -51,14 +52,16 @@
  * The template is parameterized on @c ResultType -- the value produced by
  * evaluation:
  *
- * | Typename    | Description                | ResultType      | Derives     |
- * |-------------|----------------------------|-----------------|-------------|
- * | expr_t      | Value expressions          | value_t         |             |
- * | predicate_t | Special form of expr_t     | bool            | expr_t      |
- * | query_t     | Report queries             | bool            | predicate_t |
- * | period_t    | Time periods and durations | date_interval_t |             |
- * | draft_t     | Partially filled xacts     | xact_t *        |             |
- * | format_t    | Format strings             | string          |             |
+ * | Typename      | Description                    | ResultType | Derives |
+ * |---------------|--------------------------------|------------|---------|
+ * | expr_t        | Value expressions              | value_t    |         |
+ * | merged_expr_t | Composed report option exprs   | value_t    | expr_t  |
+ * | predicate_t   | expr_t tested as a boolean     | value_t    | expr_t  |
+ * | draft_t       | Partially filled xacts         | value_t    |         |
+ * | format_t      | Format strings                 | string     |         |
+ *
+ * query_t (query.h) is not an expression type: it parses report query
+ * arguments into the expr_t that a predicate_t evaluates.
  *
  * Key design decisions:
  *  - **Lazy compilation**: calc() automatically compiles on first use if
@@ -66,8 +69,6 @@
  *  - **Context preservation**: compile() stores the scope pointer for
  *    later no-argument calc() calls, but is careful not to overwrite a
  *    long-lived context set via set_context() with a stack-allocated scope.
- *  - **Preview**: The preview() method shows the full pipeline (input,
- *    parsed text, AST, compiled AST, result) for diagnostic purposes.
  */
 #pragma once
 
@@ -101,26 +102,63 @@ public:
   ~calc_error() noexcept override {}
 };
 
-/// @brief Thrown when expression evaluation or function calls exceed the
-/// maximum recursion depth (256 for function calls, 1024 for AST depth).
+/// @brief Deepest AST node depth, counting the root as 0, that
+/// expr_t::op_t::calc evaluates and expr_t::parser_t will build.
+constexpr int MAX_EXPR_DEPTH = 1024;
+
+/// @brief Thrown when evaluation runs past one of the evaluator's recursion
+/// limits: MAX_EXPR_DEPTH nested op_t::calc frames within one evaluation,
+/// 256 expr_t evaluations nested inside one another (an expression that
+/// re-enters itself through a report function, #1103; see
+/// expr_t::calc_with_scope), or 256 identifier-resolution hops while finding
+/// a callee.  Callers rethrow it without adding context, so the message
+/// stays one line.
 class recursion_error : public std::runtime_error {
 public:
   explicit recursion_error(const string& why) noexcept : std::runtime_error(why) {}
   ~recursion_error() noexcept override {}
 };
 
-/// @brief Thrown for command-line usage errors (wrong number of arguments, etc.).
-class usage_error : public std::runtime_error {
-public:
-  explicit usage_error(const string& why) noexcept : std::runtime_error(why) {}
-  ~usage_error() noexcept override {}
-};
+/// @brief Scan the body of a delimited pattern literal such as `/regex/`,
+/// `'text'` or `"text"`.
+///
+/// On entry @p i is one past the opening delimiter; on return it is one past
+/// the closing delimiter @p closing.  With @p regex true, `\<closing>` yields
+/// `<closing>`, `\\` yields `\`, and every other `\X` is kept whole as `\X`
+/// for the regex engine.  With @p regex false, every `\X` yields `X`.
+///
+/// Throws parse_error "Unexpected '\' at end of pattern" when a backslash is
+/// the last input character, and "Expected '<closing>' at end of pattern"
+/// when the input runs out before the closing delimiter; both are thrown
+/// only with @p i at @p end.  An empty pattern is not an error here; the
+/// callers decide.
+template <typename Iter>
+string scan_pattern_literal(Iter& i, Iter end, char closing, bool regex) {
+  string pat;
+  for (;; ++i) {
+    if (i == end)
+      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+    if (*i == '\\') {
+      if (++i == end)
+        throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      // A regex keeps \X whole; an escaped delimiter and a doubled
+      // backslash stand for the character itself.
+      if (regex && *i != closing && *i != '\\')
+        pat.push_back('\\');
+    } else if (*i == closing) {
+      ++i;
+      return pat;
+    }
+    pat.push_back(*i);
+  }
+}
 
 class scope_t;
 class call_scope_t;
 
 /**
- * @brief CRTP base template for all Ledger expression types.
+ * @brief Abstract base template for Ledger's expression types, dispatching
+ *        through virtual functions and parameterized on the result type.
  *
  * Provides the common lifecycle methods: parse (text to internal
  * representation), compile (resolve symbols), and calc (evaluate to produce
@@ -165,10 +203,6 @@ public:
     }
     return *this;
   }
-  expr_base_t& operator=(const string& _expr) {
-    parse(_expr);
-    return *this;
-  }
 
   /// @brief Boolean conversion: true if the expression has been parsed
   /// (i.e., has non-empty text).
@@ -187,13 +221,13 @@ public:
 
   /// @brief Parse an expression from a string (convenience wrapper).
   void parse(const string& expr_str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(expr_str); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::istringstream stream(expr_str);
     return parse(stream, flags, expr_str);
   }
   /// @brief Parse an expression from a stream.  Derived classes override
   /// this to invoke their specific parser (e.g., parser_t for expr_t).
   virtual void parse(std::istream&, const parse_flags_t& = PARSE_DEFAULT,
-                     const optional<string>& original_string = none) {
+                     const optional<string>& original_string = std::nullopt) {
     set_text(original_string ? *original_string : "<stream>");
   }
 
@@ -201,12 +235,6 @@ public:
 
   /// @brief Mark the expression as needing recompilation on next calc().
   virtual void mark_uncompiled() { compiled = false; }
-
-  /// @brief Force recompilation against @p scope, even if already compiled.
-  void recompile(scope_t& scope) {
-    compiled = false;
-    compile(scope);
-  }
 
   /// @brief Compile the expression against @p scope.
   /// Only compiles once (idempotent).  Stores scope as context for later
@@ -239,14 +267,6 @@ public:
   /// evaluation in the reporting pipeline.
   result_type calc(scope_t& scope) {
     if (!compiled) {
-      // Save context before compile: the scope argument is often a
-      // stack-allocated bind_scope_t that will be destroyed when the
-      // caller returns.  compile() (or a derived override) may store
-      // &scope into context, creating a dangling pointer.  By
-      // restoring the saved context afterwards we ensure that any
-      // long-lived context set via set_context() is preserved.
-      scope_t* saved_context = context;
-
 #if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Before compilation:");
@@ -263,9 +283,6 @@ public:
         dump(*_log_stream);
       }
 #endif // DEBUG_ON
-
-      if (saved_context)
-        context = saved_context;
     }
 
     DEBUG("expr.calc", "Calculating: " << str);
@@ -297,44 +314,11 @@ public:
     print(out);
     return out.str();
   }
-  /// @brief Convenience: dump the AST to a string.
-  string dump_to_str() const {
-    std::ostringstream out;
-    dump(out);
-    return out.str();
-  }
-  string preview_to_str(scope_t&) const {
-    std::ostringstream out;
-    preview(out);
-    return out.str();
-  }
 
   /// @brief Pretty-print the expression in infix form (overridden by derived classes).
   virtual void print(std::ostream&) const {}
   /// @brief Dump the internal AST for debugging (overridden by derived classes).
   virtual void dump(std::ostream&) const {}
-
-  /// @brief Diagnostic method: show the full pipeline from input text to
-  /// computed result.  Useful with `ledger expr 'some expression'` to
-  /// inspect how an expression is parsed, compiled, and evaluated.
-  result_type preview(std::ostream& out, scope_t& scope) const {
-    out << _("--- Input expression ---") << '\n';
-    out << text() << '\n';
-
-    out << '\n' << _("--- Text as parsed ---") << '\n';
-    print(out);
-    out << '\n';
-
-    out << '\n' << _("--- Expression tree ---") << '\n';
-    dump(out);
-
-    out << '\n' << _("--- Compiled tree ---") << '\n';
-    compile(scope);
-    dump(out);
-
-    out << '\n' << _("--- Result value ---") << '\n';
-    return calc();
-  }
 };
 
 /// @brief Stream insertion operator: prints the expression in infix form.

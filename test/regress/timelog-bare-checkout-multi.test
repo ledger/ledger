@@ -1,0 +1,14 @@
+; With two check-ins open, a bare check-out ("o DATE TIME") names no
+; account, so ledger cannot tell which check-in it closes and must say
+; so, rather than read an account from bytes an earlier line left in
+; the reused line buffer.
+
+i 2024/01/01 10:00:00 A
+i 2024/01/01 10:00:00 Work:Project  Some long description here
+o 2024/01/01 11:00:00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+Error: When multiple check-ins are active, checking out requires an account
+end test

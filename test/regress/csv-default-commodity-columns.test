@@ -1,0 +1,18 @@
+; A bare number in the amount, cost or total column of an imported CSV
+; takes the default commodity (D directive), each column parsed alone.
+
+D $1,000.00
+
+test convert test/regress/csv-default-commodity-columns.csv --account Assets:Checking
+2024/01/15 * Exchange
+    Expenses:Unknown                          10 EUR @@ $12.00
+    Assets:Checking                          $-12.00
+
+2024/01/16 * Grocery Store
+    Expenses:Unknown                          $50.00
+    Assets:Checking                          $-50.00 = $550.00
+
+2024/01/17 * Refund
+    Expenses:Unknown                          $-5.00
+    Assets:Checking
+end test

@@ -73,23 +73,8 @@ namespace ledger {
 class xact_t;
 
 /**
- * @brief Path comparator that considers filesystem equivalence.
- *
- * Two paths compare equal if they resolve to the same filesystem entity
- * (via std::filesystem::equivalent), preventing duplicate journal loads
- * when the same file is specified by different relative or absolute paths.
- */
-struct ComparePaths {
-  bool operator()(const path& p1, const path& p2) const {
-    return p1 < p2 && !std::filesystem::equivalent(p1, p2);
-  }
-};
-
-#define COMMA ,
-
-/**
- * @brief Holds all state for a single "open document" -- the journal,
- *        commodity pool, and session-level options.
+ * @brief Holds all state for a single "open document" -- the journal and
+ *        session-level options.
  *
  * session_t extends symbol_scope_t, which means it can define named
  * symbols (functions and options) that are visible to value expressions
@@ -116,9 +101,8 @@ public:
   /// named on the command line.
   bool use_default_price_db;
 
-  boost::shared_ptr<journal_t> journal;  ///< The loaded journal data
+  std::shared_ptr<journal_t> journal;    ///< The loaded journal data
   parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
-  optional<expr_t> value_expr;           ///< User-specified value expression (--value-expr)
 
   explicit session_t();
   ~session_t() override {
@@ -142,7 +126,7 @@ public:
   /// price database.  This is the core data-loading method.
   /// @param master_account  If non-empty, all postings are placed under
   ///                        this account (--master-account).
-  /// @return The number of transactions read.
+  /// @return The total number of transactions in the journal after reading.
   std::size_t read_data(const string& master_account = "");
 
   /// High-level entry point: read all journal files configured via options.
@@ -186,6 +170,7 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
+    HANDLER(getquote_).report(out);
     HANDLER(hashes_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);
@@ -210,30 +195,41 @@ public:
   /// and then delegates to symbol_scope_t for user-defined symbols.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
+  /// Apply every journal option that is in effect to the current journal by
+  /// re-running each option's DO() body, the one place an option writes the
+  /// journal.  Called before each reading, on a journal that may be fresh.
+  void configure_journal();
+
+  /// --strict / --pedantic: raise commodity checking to at least @a style,
+  /// and account/payee/tag checking too unless --permissive is in effect.
+  /// Never lowers either, so the order of the options does not matter.
+  void require_checking(journal_t::checking_style_t style);
+
+  /// Parse a --time-round argument (whole minutes, 1..INT_MAX/60) into seconds; throws
+  /// option_error otherwise.
+  static int parse_time_round(const string& minutes);
+
   /**
    * Option handlers
    */
 
-  OPTION(session_t, account_value_expr_); ///< Default account-level valuation expression
+  /// Default account-level valuation expression.
   OPTION_(
-      session_t, check_in_file_order, DO() {
-        if (parent->journal)
-          parent->journal->check_in_file_order = true;
-      });
+      session_t, account_value_expr_,
+      DO_() { parent->journal->account_value_expr = require_arg(str); });
+  OPTION_(session_t, check_in_file_order, DO() { parent->journal->check_in_file_order = true; });
+  OPTION_(session_t, check_payees, DO() { parent->journal->check_payees = true; });
+  /// Default commodity-level valuation expression.
   OPTION_(
-      session_t, check_payees, DO() {
-        if (parent->journal)
-          parent->journal->check_payees = true;
-      });
-  OPTION(session_t, commodity_value_expr_); ///< Default commodity-level valuation expression
+      session_t, commodity_value_expr_,
+      DO_() { parent->journal->commodity_value_expr = require_arg(str); });
+  OPTION_(session_t, day_break, DO() { parent->journal->day_break = true; });
+  /// Round timelog durations up to N-minute blocks.
   OPTION_(
-      session_t, day_break, DO() {
-        if (parent->journal)
-          parent->journal->day_break = true;
-      });
-  OPTION(session_t, time_round_); ///< Round timelog durations up to N-minute blocks
-  OPTION(session_t, download);    ///< Download commodity prices (-Q)
-  OPTION(session_t, getquote_);   ///< Path to the price-fetching script
+      session_t, time_round_,
+      DO_() { parent->journal->time_round = parse_time_round(require_arg(str)); });
+  OPTION(session_t, download);  ///< Download commodity prices (-Q)
+  OPTION(session_t, getquote_); ///< Path to the price-fetching script
 
   /// Use comma as decimal separator for commodity amounts.
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
@@ -280,51 +276,26 @@ public:
         set_input_date_format(str.c_str());
       });
 
-  OPTION(session_t, explicit);        ///< Only accept explicitly declared accounts/commodities
+  OPTION(session_t, explicit);        ///< Accepted for compatibility; has no effect
   OPTION(session_t, master_account_); ///< Parent account for all postings
-  OPTION_(
-      session_t, pedantic, DO() {
-        if (parent->journal) {
-          parent->journal->checking_style = journal_t::CHECK_ERROR;
-          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
-        }
-      });
+  OPTION_(session_t, pedantic, DO() { parent->require_checking(journal_t::CHECK_ERROR); });
   /// Like --pedantic but applies only to commodity validation (issue #3200).
   OPTION_(
-      session_t, pedantic_commodity, DO() {
-        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
-          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
-      });
+      session_t, pedantic_commodity,
+      DO() { parent->journal->require_commodity_checking(journal_t::CHECK_ERROR); });
   OPTION_(
-      session_t, permissive, DO() {
-        if (parent->journal)
-          parent->journal->checking_style = journal_t::CHECK_PERMISSIVE;
-      });
+      session_t, permissive,
+      DO() { parent->journal->checking_style = journal_t::CHECK_PERMISSIVE; });
   OPTION(session_t, price_db_); ///< Path to the price history database file
-  OPTION_(
-      session_t, strict, DO() {
-        if (parent->journal) {
-          parent->journal->checking_style = journal_t::CHECK_WARNING;
-          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
-        }
-      });
+  OPTION_(session_t, strict, DO() { parent->require_checking(journal_t::CHECK_WARNING); });
   /// Like --strict but applies only to commodity validation (issue #3200).
   OPTION_(
-      session_t, strict_commodity, DO() {
-        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
-          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
-      });
-  OPTION(session_t, value_expr_); ///< Expression used to compute posting values
-  OPTION_(
-      session_t, recursive_aliases, DO() {
-        if (parent->journal)
-          parent->journal->recursive_aliases = true;
-      });
-  OPTION_(
-      session_t, no_aliases, DO() {
-        if (parent->journal)
-          parent->journal->no_aliases = true;
-      });
+      session_t, strict_commodity,
+      DO() { parent->journal->require_commodity_checking(journal_t::CHECK_WARNING); });
+  /// Expression used to compute posting values.
+  OPTION_(session_t, value_expr_, DO_() { parent->journal->value_expr = require_arg(str); });
+  OPTION_(session_t, recursive_aliases, DO() { parent->journal->recursive_aliases = true; });
+  OPTION_(session_t, no_aliases, DO() { parent->journal->no_aliases = true; });
 
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none".
   OPTION_CTOR(
@@ -339,16 +310,18 @@ public:
         else
           throw_(std::invalid_argument,
                  _f("Unknown lot-matching policy '%1%': must be 'fifo', 'lifo', or 'none'") % str);
+        parent->journal->lot_matching_policy = policy;
       });
 };
 
 /**
- * Set the current session context, transferring all static globals to point
- * at the data structures related to this session.  Although Ledger itself is
- * not thread-safe, by locking, switching session context, then unlocking
- * after an operation is done, multiple threads can sequentially make use of
- * the library.  Thus, a session_t maintains all of the information relating
- * to a single usage of the Ledger library.
+ * Initialize (non-null @p session) or shut down (null) the process-global
+ * time, amount and value subsystems.  Initializing also registers the m/h
+ * time conversions; amount_t::initialize() creates the one process-wide
+ * commodity pool unless it is already initialized, so a fresh pool appears
+ * only after a null call has shut the old one down.  The argument is only
+ * tested for null: every session in a process shares these globals, and
+ * Ledger cannot switch between live sessions.
  */
 void set_session_context(session_t* session);
 

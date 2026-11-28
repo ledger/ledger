@@ -1,8 +1,11 @@
 ; Coverage test for expr.cc: script_command function
-; Exercises: script_command - file path
-;   comment skipping, expression evaluation
-;   error catching
+; Exercises: script_command - file path,
+;   comment skipping, expression evaluation, definitions kept across lines
 
-; Script the test file itself (mostly comments - exercises comment skip)
-test -f /dev/null script $sourcepath/test/regress/coverage-expr-source-cmd.test -> 0
+; coverage-expr-source-cmd.dat holds comments, a blank line, a definition
+; and print() calls; each print() writes one line.
+test -f /dev/null script $sourcepath/test/regress/coverage-expr-source-cmd.dat
+one
+10
+5-5
 end test

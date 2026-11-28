@@ -13,16 +13,25 @@
     # revision so that `nix flake update` never moves the oracle; to
     # move it, change the revision here and run `nix flake lock`.
     ledger-semantics.url =
-      "github:ledger/ledger-semantics/368d027";
+      "github:ledger/ledger-semantics/111ab8d";
+    # flake-compat for the non-flake entry points default.nix and
+    # shell.nix, which read its revision and hash from flake.lock.
+    # The flake's own outputs do not use it.
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, ledger-semantics }: let
+  outputs = { self, nixpkgs, ledger-semantics, ... }: let
     usePython = true;
     gpgmeSupport = true;
-    useLibedit = true;
-    useReadline = false;
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
+    # Boost with Boost.Python built against the python3 the package
+    # uses; the package and the dev shell's Boost_DIR share it.
+    boostPythonFor = forAllSystems (system: let pkgs = nixpkgsFor.${system}; in
+      pkgs.boost.override { enablePython = true; python = pkgs.python3; });
     systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
   in {
 
@@ -41,23 +50,15 @@
         outputs = [ "out" "dev" ] ++ lib.optionals usePython [ "py" ];
 
         buildInputs = [
-          gmp mpfr gnused icu
-        ] ++ lib.optionals useLibedit [
-          libedit
-        ] ++ lib.optionals useReadline [
-          readline
+          gmp mpfr gnused icu libedit
         ] ++ lib.optionals gpgmeSupport [
           gpgme gpgmepp
         ] ++ (if usePython
-              then [ python3 (boost.override { enablePython = true; python = python3; }) ]
+              then [ python3 boostPythonFor.${system} ]
               else [ boost ]);
 
         nativeBuildInputs = [
-          cmake texinfo tzdata
-        ] ++ lib.optionals useLibedit [
-          libedit.dev
-        ] ++ lib.optionals useReadline [
-          readline.dev
+          cmake texinfo tzdata libedit.dev
         ];
 
         enableParallelBuilding = true;
@@ -137,9 +138,10 @@
       # The oracle that this flake pins, for a development build's
       # LEDGER_LEAN_DIR (CLAUDE.md).
       oracle = semantics.oracle;
-    });
 
-    defaultPackage = forAllSystems (system: self.packages.${system}.ledger);
+      # `nix build` with no attribute builds this.
+      default = self.packages.${system}.ledger;
+    });
 
     # `nix flake check` (and CI) builds the ledger, whose check phase
     # runs the full ctest suite including SemanticBisimulation.  The
@@ -151,14 +153,6 @@
 
     devShells = forAllSystems (system: let
         pkgs = nixpkgsFor.${system};
-        # Build Boost with Python support, matching exactly what the ledger
-        # package uses.  A local binding lets us reference the same derivation
-        # in both inputsFrom (via the ledger package) and in the explicit
-        # Boost_DIR cmake flag below.
-        boostWithPython = pkgs.boost.override {
-          enablePython = true;
-          python = pkgs.python3;
-        };
       in with pkgs; {
       default = mkShellNoCC {
         name = "ledger-dev";
@@ -206,7 +200,7 @@
           # cached Boost_DIR pointing to the wrong version.  That causes the
           # internal find_package(boost_python) inside BoostConfig.cmake to fail
           # with a version mismatch even though the correct Boost is available.
-          "-DBoost_DIR=${boostWithPython.dev}/lib/cmake/Boost-${boost.version}"
+          "-DBoost_DIR=${boostPythonFor.${system}.dev}/lib/cmake/Boost-${boostPythonFor.${system}.version}"
           # Pin CMake to the Nix-provided Python so it doesn't pick up a
           # Homebrew Python (e.g. 3.14) that mismatches the Boost.Python build.
           "-DPython_EXECUTABLE=${python3}/bin/python3"

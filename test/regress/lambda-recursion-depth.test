@@ -1,0 +1,26 @@
+; Runaway recursion inside one expression stops at MAX_EXPR_DEPTH with a
+; recursion_error, which callers pass through without adding a "While
+; calling function" context per frame (this printed 1026 lines before).
+
+2024/01/15 Grocery Store
+    Expenses:Food              $10.00
+    Assets:Cash
+
+test eval 'rr = n -> rr(n+1); rr(1)' -> 1
+__ERROR__
+Error: Expression evaluation depth limit exceeded
+end test
+
+test eval 'a = b; b = a; a(1)' -> 1
+__ERROR__
+Error: Expression evaluation depth limit exceeded
+end test
+
+; A format expression adds no format context either; the posting
+; handler still names the posting.
+test reg --format '%(rr = n -> rr(n+1); rr(1))\n' -> 1
+__ERROR__
+While handling posting from "$FILE", line 6:
+>     Expenses:Food              $10.00
+Error: Expression evaluation depth limit exceeded
+end test

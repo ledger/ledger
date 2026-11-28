@@ -11,12 +11,12 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
   # Minimum coverage thresholds required. Raise these as coverage improves.
-  # Measured by LLVM instrumentation across all instrumented binaries.
-  # Current measured values: lines ~81%, functions ~85%.
+  # Measured by LLVM instrumentation over ledger, libledger and the unit-test binaries.
+  # Current measured values: lines ~92.3%, functions ~89.6% (2026-11-12).
   # Thresholds are set slightly below measured values to absorb minor
-  # variation between CI (Ubuntu/gcc) and local (Nix/Clang) environments.
-  MIN_LINE_COVERAGE: 80
-  MIN_FUNC_COVERAGE: 84
+  # variation between CI (Ubuntu/system clang) and local (Nix/Clang) environments.
+  MIN_LINE_COVERAGE: 91
+  MIN_FUNC_COVERAGE: 88
 
 jobs:
   build:
@@ -73,7 +73,15 @@ jobs:
         run: npm install -g lefthook
 
       - name: Build and test
-        run: lefthook run cmake-build-and-test
+        # AddressSanitizer frames are several times larger than normal ones,
+        # so the 1024 nested calls MAX_EXPR_DEPTH allows (e.g. runaway lambda
+        # recursion in lambda-recursion-depth.test) need more than the
+        # default 8 MB stack before the depth limit can stop them.
+        run: |
+          if [[ "${{ matrix.config.cmake_args }}" == *USE_SANITIZERS* ]]; then
+            ulimit -s 65536
+          fi
+          lefthook run cmake-build-and-test
         env:
           cmakeFlags: "-DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}"
           ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:log_path=/tmp/asan_log' || '' }}
@@ -84,30 +92,39 @@ jobs:
         if: contains(matrix.config.cmake_args, 'USE_SANITIZERS') && always()
         run: |
           echo "=== Sanitizer Report ==="
-          found=0
-          for prefix in asan_log lsan_log ubsan_log; do
-            files=(/tmp/${prefix}.*)
-            [ -f "${files[0]}" ] || continue
-            echo "--- ${prefix}: ${#files[@]} report(s) ---"
-            # Deduplicate: extract unique error summaries
-            grep -h "SUMMARY\|ERROR\|runtime error" "${files[@]}" 2>/dev/null | sort -u || true
-            echo
-            found=1
-          done
-          if [ "$found" -eq 0 ]; then
-            echo "No sanitizer issues found."
-          else
-            echo "::warning::Sanitizer issues were detected. See above for details."
+          # log_path is one flag shared by every sanitizer in a runtime, and
+          # the options string parsed last wins: GCC's libasan writes ASan
+          # errors to lsan_log.*, clang's runtime to ubsan_log.*.  Classify
+          # reports by content, never by file name.  A leak report's
+          # "SUMMARY: AddressSanitizer: N byte(s) leaked" line is not an error.
+          shopt -s nullglob
+          files=(/tmp/asan_log.* /tmp/lsan_log.* /tmp/ubsan_log.*)
+          if (( ${#files[@]} == 0 )); then
+            echo "No sanitizer reports."
+            exit 0
           fi
+          echo "--- ${#files[@]} report file(s) ---"
+          # Deduplicate: extract unique error summaries
+          grep -h "SUMMARY\|ERROR\|runtime error" "${files[@]}" | sort -u || true
+          echo
+          errors=$(grep -h -e 'ERROR: [A-Za-z]*Sanitizer' -e 'runtime error:' "${files[@]}" \
+                     | grep -v 'ERROR: LeakSanitizer:' || true)
+          if [ -n "$errors" ]; then
+            echo "::error::AddressSanitizer or UndefinedBehaviorSanitizer reported errors. See above for details."
+            exit 1
+          fi
+          if grep -q 'ERROR: LeakSanitizer:' "${files[@]}"; then
+            echo "::warning::LeakSanitizer reported leaks. See above for details."
+          fi
+          echo "No AddressSanitizer or UndefinedBehaviorSanitizer errors."
 
   build-windows:
     # Windows build via MSYS2/UCRT64. Separate job (not part of the build
     # matrix) because Windows needs a different shell, toolchain bootstrap,
-    # and dependency install path than Ubuntu/macOS. While the Windows
-    # toolchain stabilises, Configure and Build are marked
-    # continue-on-error so unrelated PRs are not blocked by Windows-
-    # specific regressions. Once the job runs green on a few merges,
-    # those flags can be removed.
+    # and dependency install path than Ubuntu/macOS. The job is advisory:
+    # Configure and Build are continue-on-error, so a Windows-specific
+    # regression shows in this job's log but never blocks a PR. To make
+    # it blocking, delete both continue-on-error lines once Build passes.
     runs-on: windows-latest
     defaults:
       run:
@@ -202,10 +219,9 @@ jobs:
         # image with either ~145 GB or ~72 GB of root disk depending on
         # availability, so we clean aggressively here to leave headroom on
         # the smaller variant.  Remove preinstalled toolchains that this job
-        # does not need; only target known-unrelated stacks (do not touch
-        # /usr/local/share/boost or /usr/local/share/cmake — apt-installed
-        # Boost works alongside them but hostedtoolcache provides Python
-        # we install via apt instead).
+        # does not need.  Boost and CMake under /usr/local/share are left in
+        # place; hostedtoolcache is removed because this job installs
+        # Python from apt (`acprep dependencies --python`).
         run: |
           df -h /
           sudo rm -rf /usr/local/lib/android

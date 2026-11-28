@@ -2,7 +2,6 @@
 
 import argparse
 import pathlib
-import subprocess
 import sys
 import os
 import re
@@ -73,6 +72,10 @@ class RegressFile(object):
 
             elif in_output:
                 if line.rstrip() == "end test":
+                    # A block with neither expected output nor an __ERROR__
+                    # section asserts that the command prints nothing.
+                    if test.output is None and not in_error:
+                        test.output = []
                     in_output = in_error = False
                     break
                 elif in_error:
@@ -124,20 +127,25 @@ class RegressFile(object):
                         columns=(not re.search(r'--columns', test.command)),
                         now=(None if re.search(r'--now\b', test.command) else NOW))
 
+        stdin = None
         if use_stdin:
-            fd = open(self.filename, encoding='utf-8')
-            try:
+            with open(self.filename, encoding='utf-8') as fd:
                 stdin = fd.read().encode('utf-8')
-                p.stdin.write(stdin)
-            finally:
-                fd.close()
-        p.stdin.close()
+
+        result = harness.communicate(p, stdin)
+        if result is None:
+            self.notify_user("TIMEOUT after %gs in %s:"
+                             % (harness.timeout, self.filename), test)
+            harness.failure(self.filename.name)
+            return
+        process_output = harness.lines(result[0])
+        process_error = harness.lines(result[1])
+        exit_code = p.returncode
 
         success = True
         printed = False
         index   = 0
         if test.output is not None:
-            process_output = harness.readlines(p.stdout)
             expected_output = test.output
             if sys.platform == 'win32':
                 process_output = [l.replace('\r\n', '\n').replace('\\', '/')
@@ -159,34 +167,23 @@ class RegressFile(object):
 
         printed = False
         index   = 0
-        process_error = harness.readlines(p.stderr)
-        if test.error is not None or process_error is not None:
-            if test.error is None:
-                test.error = []
-            if sys.platform == 'win32':
-                process_error = [l.replace('\r\n', '\n').replace('\\', '/')
-                                 for l in process_error]
-                test.error = [l.replace('\\', '/') for l in test.error]
-            for line in unified_diff(test.error, process_error):
-                index += 1
-                if index < 3:
-                    continue
-                if not printed:
-                    if success: print()
-                    self.notify_user("FAILURE in error output from %s:"
-                                     % self.filename, test)
-                    success = False
-                    printed = True
-                print(" ", line,)
+        expected_error = test.error if test.error is not None else []
+        if sys.platform == 'win32':
+            process_error = [l.replace('\r\n', '\n').replace('\\', '/')
+                             for l in process_error]
+            expected_error = [l.replace('\\', '/') for l in expected_error]
+        for line in unified_diff(expected_error, process_error):
+            index += 1
+            if index < 3:
+                continue
+            if not printed:
+                if success: print()
+                self.notify_user("FAILURE in error output from %s:"
+                                 % self.filename, test)
+                success = False
+                printed = True
+            print(" ", line,)
 
-        try:
-            exit_code = p.wait(timeout=60)
-        except subprocess.TimeoutExpired:
-            p.kill()
-            p.wait()
-            self.notify_user("TIMEOUT in %s:" % self.filename, test)
-            harness.failure(self.filename.name)
-            return
         if test.exitcode == exit_code:
             if success:
                 harness.success()
@@ -236,7 +233,7 @@ if __name__ == '__main__':
     parser.add_argument('tests', type=pathlib.Path)
     args = parser.parse_args()
     harness = LedgerHarness(args.ledger, args.sourcepath, args.verify,
-                            args.gmalloc, args.python)
+                            args.gmalloc, args.python, args.timeout)
 
     match = re.match(r'(Baseline|Regress|Manual)Test_(.*)', str(args.tests))
     if match:

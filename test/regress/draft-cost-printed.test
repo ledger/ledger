@@ -1,0 +1,148 @@
+; The xact command keeps the cost written with `@` or `@@` in the drafted
+; transaction, computed exactly as the journal parser computes it: a
+; per-unit `@` cost is multiplied by the amount, and a total `@@` cost is
+; negated for a negative amount.  The printed draft carries the cost, and
+; the transaction the draft books in the session is the one its printed
+; text books when pasted into the journal.
+;
+; A drafted posting is registered with its account once, so account
+; counts after a draft include it once.  A posting copied from history
+; drops that history's cost, the way it was written (calculated, @@,
+; (@), =) and its lot annotation when the draft replaces its amount.
+
+2024/01/01 Grocery Store
+    Expenses:Food    10 AAPL @@ $50.00
+    Assets:Cash   $-50.00
+
+2024/01/02 Broker
+    Assets:Brokerage    10 MSFT
+    Assets:Cash        $-40.00
+
+2024/01/03 Fund
+    Assets:Fund    10 VTI (@)= $3.00
+    Assets:Cash   $-30.00
+
+; Per-unit cost on an uncommoditized amount: the amount takes the
+; account's last commodity before the cost is multiplied.  The matched
+; posting was written with @@; the draft is written with @.
+test xact 2024/06/15 Grocery to Expenses:Food '@' '$6.00' 10 from Assets:Cash
+2024/06/15 Grocery Store
+    Expenses:Food                            10 AAPL @ $6.00
+    Assets:Cash
+end test
+
+; Total cost on an uncommoditized amount.
+test xact 2024/06/15 Grocery to Expenses:Food '@@' '$60.00' 10 from Assets:Cash
+2024/06/15 Grocery Store
+    Expenses:Food                            10 AAPL @@ $60.00
+    Assets:Cash
+end test
+
+; Total cost on a `from` posting: the amount is negated, and so is the
+; stored cost; print shows the cost's magnitude.
+test xact 2024/06/15 Grocery from Assets:Cash '@@' '$5.00' '10 AAPL'
+2024/06/15 Grocery Store
+    Expenses:Food
+    Assets:Cash                             -10 AAPL @@ $5.00
+end test
+
+; The matched posting's cost was calculated (no @ in history); the cost
+; written on the command line is a given cost and is printed.
+test xact 2024/06/15 Broker to Assets:Brokerage '@' '$6.00' '10 MSFT' from Assets:Cash
+2024/06/15 Broker
+    Assets:Brokerage                         10 MSFT @ $6.00
+    Assets:Cash
+end test
+
+; The matched posting's cost was a fixated virtual cost, (@)=; the draft's
+; cost is a plain @ cost.
+test xact 2024/06/15 Fund to Assets:Fund '@' '$4.00' '10 VTI' from Assets:Cash
+2024/06/15 Fund
+    Assets:Fund                               10 VTI @ $4.00
+    Assets:Cash
+end test
+
+; A cost with no amount: the amount is kept from the matched posting, but
+; not the way that posting's cost was written or computed, nor its lot.
+; Broker's history cost was calculated, Grocery's was @@, Fund's (@)=.
+test xact 2024/06/15 Broker to Assets:Brokerage '@' '$6.00' from Assets:Cash
+2024/06/15 Broker
+    Assets:Brokerage                         10 MSFT @ $6.00
+    Assets:Cash
+end test
+
+test xact 2024/06/16 Grocery to Expenses:Food '@@' '$70.00' from Assets:Cash
+2024/06/16 Grocery Store
+    Expenses:Food                            10 AAPL @@ $70.00
+    Assets:Cash
+end test
+
+test xact 2024/06/17 Fund to Assets:Fund '@' '$4.00' from Assets:Cash
+2024/06/17 Fund
+    Assets:Fund                               10 VTI @ $4.00
+    Assets:Cash
+end test
+
+; In one session, the same three drafts book new lots at the drafted
+; costs, not the copied history lots, and each drafted posting is counted
+; once by its account.
+test --script test/regress/draft-cost-kept-amount.dat
+2024/06/15 Broker
+    Assets:Brokerage                         10 MSFT @ $6.00
+    Assets:Cash
+2024/06/16 Grocery Store
+    Expenses:Food                            10 AAPL @@ $70.00
+    Assets:Cash
+2024/06/17 Fund
+    Assets:Fund                               10 VTI @ $4.00
+    Assets:Cash
+2024/01/01 Expenses:Food 10 AAPL {$5.00} [2024/01/01] $50.00
+2024/01/01 Assets:Cash $-50.00 $-50.00
+2024/01/02 Assets:Brokerage 10 MSFT {$4.00} [2024/01/02] $40.00
+2024/01/02 Assets:Cash $-40.00 $-40.00
+2024/01/03 Assets:Fund 10 VTI {=$3.00} [2024/01/03] $30.00
+2024/01/03 Assets:Cash $-30.00 $-30.00
+2024/06/15 Assets:Brokerage 10 MSFT {$6.00} [2024/06/15] $60.00
+2024/06/15 Assets:Cash $-60.00 $-60.00
+2024/06/16 Expenses:Food 10 AAPL {$7.00} [2024/06/16] $70.00
+2024/06/16 Assets:Cash $-70.00 $-70.00
+2024/06/17 Assets:Fund 10 VTI {$4.00} [2024/06/17] $40.00
+2024/06/17 Assets:Cash $-40.00 $-40.00
+Assets:Brokerage 2
+Assets:Cash 6
+Assets:Fund 2
+Expenses:Food 2
+end test
+
+; In one session: a bare-amount @ draft books the new lot at the drafted
+; cost (not the copied history lot), a second draft copied from the first
+; carries no stale cost, a bare amount with no cost takes the plain
+; commodity rather than the history's lot, and each drafted posting is
+; counted once by its account.
+test --script test/regress/draft-cost-printed.dat
+2024/06/15 Grocery Store
+    Expenses:Food                            10 AAPL @ $6.00
+    Assets:Cash
+2024/06/16 Grocery Store
+    Expenses:Food                            20 AAPL
+    Assets:Cash
+2024/06/17 Broker
+    Assets:Brokerage                          5 MSFT
+    Assets:Cash
+2024/01/01 Expenses:Food 10 AAPL {$5.00} [2024/01/01] $50.00
+2024/01/01 Assets:Cash $-50.00 $-50.00
+2024/01/02 Assets:Brokerage 10 MSFT {$4.00} [2024/01/02] $40.00
+2024/01/02 Assets:Cash $-40.00 $-40.00
+2024/01/03 Assets:Fund 10 VTI {=$3.00} [2024/01/03] $30.00
+2024/01/03 Assets:Cash $-30.00 $-30.00
+2024/06/15 Expenses:Food 10 AAPL {$6.00} [2024/06/15] $60.00
+2024/06/15 Assets:Cash $-60.00 $-60.00
+2024/06/16 Expenses:Food 20 AAPL 20 AAPL
+2024/06/16 Assets:Cash -20 AAPL -20 AAPL
+2024/06/17 Assets:Brokerage 5 MSFT 5 MSFT
+2024/06/17 Assets:Cash -5 MSFT -5 MSFT
+Assets:Brokerage 2
+Assets:Cash 6
+Assets:Fund 1
+Expenses:Food 3
+end test

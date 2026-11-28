@@ -1,0 +1,18 @@
+test python test/regress/python-optional-roundtrip.py
+amount.value() None
+amount.value(usd) None
+single.commodity_amount() '10 EUR'
+single.commodity_amount(usd) None
+multi.commodity_amount() ArithmeticError
+multi.commodity_amount(eur) '10 EUR'
+multi.value(eur) '10 EUR\n5 USD'
+multi.value(eur, date) '10 EUR\n5 USD'
+note Noted ' a note'
+note Plain None
+note Noted 'set from python'
+note Plain 'set from python'
+food.amount() ''
+food.total() ''
+food.amount(expr) ArgumentError
+food.total(expr) ArgumentError
+end test

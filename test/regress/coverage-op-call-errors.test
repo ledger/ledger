@@ -1,7 +1,7 @@
 ; Coverage test for op.cc: function call error paths
 ; Exercises: find_definition VALUE error
 ;   calc_call exception context
-;   call_lambda too-few-args
+;   call_lambda too-many-args
 
 ; Calling a non-function variable: exercises VALUE branch in find_definition
 test eval "x = 5; x(3)" -> 1
@@ -19,5 +19,14 @@ While evaluating value expression:
   (null; add(1, 2, 3))
          ^^^^^^^^^^^^
 While calling function 'add (1, 2, <#EXPR {3}>)':
-Error: Too few arguments in function call (saw 3, wanted 2)
+Error: Too many arguments in function call (saw 3, wanted 2)
+end test
+
+test eval 'myf(x)=x; myf(1, 2)' -> 1
+__ERROR__
+While evaluating value expression:
+  (null; myf(1, 2))
+         ^^^^^^^^^
+While calling function 'myf (1, <#EXPR {2}>)':
+Error: Too many arguments in function call (saw 2, wanted 1)
 end test

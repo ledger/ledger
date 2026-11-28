@@ -1,0 +1,12 @@
+; A clock line's time is followed by one separator byte and then the
+; account.  When that byte is a TAB rather than a space, the account,
+; payee and note still read as they do after a space.  The journal is
+; test/regress/timelog-tab-separator.dat (see its header for why).
+
+test -f test/regress/timelog-tab-separator.dat reg --format "%(date)|%(payee)|%(account)|%(note)|%(amount)\n"
+2024/01/18|Tab payee|Epsilon|tabbed|3600s
+end test
+
+test -f test/regress/timelog-tab-separator.dat bal
+               1.00h  Epsilon
+end test

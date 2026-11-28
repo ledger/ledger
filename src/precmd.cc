@@ -65,13 +65,16 @@ namespace {
  *
  * The sample transaction is a hardcoded "Book Store" purchase that
  * exercises many ledger features: metadata, typed metadata, tags, notes,
- * lot prices, and multiple postings.  It is parsed into the session's
- * journal so that the resulting posting can serve as a realistic binding
- * context for compiling and evaluating expressions or format strings.
+ * lot prices, and multiple postings.  It is parsed into the caller-owned
+ * @p journal, never the session's, so that the resulting posting can serve
+ * as a realistic binding context for compiling and evaluating expressions
+ * or format strings without the sample leaking into the user's reports or
+ * being checked against the user's declarations.
  *
+ * @param journal A private journal that must outlive the returned posting.
  * @return A pointer to the first posting of the sample transaction.
  */
-post_t* get_sample_xact(report_t& report) {
+post_t* get_sample_xact(report_t& report, journal_t& journal) {
   {
     string str;
     {
@@ -98,24 +101,18 @@ post_t* get_sample_xact(report_t& report) {
 
       parse_context_stack_t parsing_context;
       parsing_context.push(in);
-      parsing_context.get_current().journal = report.session.journal.get();
+      parsing_context.get_current().journal = &journal;
       parsing_context.get_current().scope = &report.session;
 
       // Temporarily disable decimal-comma mode while parsing the
       // hardcoded sample journal, which uses period-decimal amounts
       // (e.g. $-200.00).  See issue #594.
-      bool saved_decimal_comma = commodity_t::decimal_comma_by_default;
-      commodity_t::decimal_comma_by_default = false;
+      scoped_assign<bool> period_decimals(commodity_t::decimal_comma_by_default, false);
 
-      report.session.journal->read(parsing_context, NO_HASHES);
-
-      commodity_t::decimal_comma_by_default = saved_decimal_comma;
-
-      report.session.journal->clear_xdata();
+      journal.read(parsing_context, NO_HASHES);
     }
   }
-  xact_t* first = report.session.journal->xacts.front();
-  return first->posts.front();
+  return journal.xacts.front()->posts.front();
 }
 } // namespace
 
@@ -142,7 +139,8 @@ value_t parse_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t* post = get_sample_xact(report);
+  journal_t sample_journal;
+  post_t* post = get_sample_xact(report, sample_journal);
 
   out << _("--- Input expression ---") << '\n';
   out << arg << '\n';
@@ -196,7 +194,8 @@ value_t format_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t* post = get_sample_xact(report);
+  journal_t sample_journal;
+  post_t* post = get_sample_xact(report, sample_journal);
 
   out << _("--- Input format string ---") << '\n';
   out << arg << '\n' << '\n';

@@ -116,14 +116,26 @@ templates and using this command to quickly create new transactions, see the
 section
 .Sx ENTRIES .
 .Pp
-The synonym
+The synonyms
 .Ic xact
-is also accepted.
+and
+.Ic draft
+are also accepted.
 .It Ic emacs Oo Ar query Oc
 Output posting and transaction data in a format readily consumed by the Emacs
 editor, in a series of Lisp forms.  This is used by the Emacs ledger-mode to
 process reporting data from
 .Nm .
+.Pp
+The synonym
+.Ic lisp
+is also accepted.
+.It Ic echo Ar string
+Print
+.Ar string
+followed by a newline.
+Only the first argument is printed, so quote a string that contains
+spaces.
 .It Ic equity Oo Ar report-query Oc
 Print a transaction with a series of postings that balance current totals for
 accounts matching the
@@ -153,6 +165,10 @@ file.
 Use
 .Fl \-both-directions
 to also emit the computed inverse of each price entry.
+.Pp
+The synonym
+.Ic pricesdb
+is also accepted.
 .It Ic print Oo Ar report-query Oc
 Print out the full transactions of any matching postings using the same
 format as they would appear in a data file.  This can be used to extract
@@ -344,6 +360,9 @@ Posts in the last 30 days
 .It
 Posts this month
 .El
+.It Ic tags Oo Ar report-query Oc
+List all tags for postings matching the
+.Ar report-query .
 .It Ic xml Oo Ar report-query Oc
 Output data relating to the current report in
 .Tn XML
@@ -383,6 +402,26 @@ reported in a
 or
 .Ic register
 report.
+.It Fl \-account-rewrite Ar PATTERN=REPLACEMENT
+In reports, show every account whose full name matches the regular
+expression
+.Ar PATTERN ,
+ignoring case, as
+.Ar REPLACEMENT .
+The argument is split at its first
+.Ql = .
+The option may be given more than once.
+The first matching rule wins, and these rules are tried before those of
+.Ic account-rewrite
+directives in the journal.
+In a
+.Fl \-script
+file or at the REPL prompt, a rule given with this option applies only
+to the command that gives it; one given on the
+.Nm
+command line, before
+.Fl \-script ,
+applies to every command.
 .It Fl \-account-value-expr Ar VEXPR
 Set a default valuation expression for all accounts that do not already
 have their own
@@ -605,6 +644,19 @@ Format
 report
 according to
 .Ar FMT .
+.It Fl \-csv-separator Ar CHAR
+Use
+.Ar CHAR
+as the field separator when
+.Ic convert
+reads a CSV file.
+.Ql \et
+or
+.Ql tab
+selects a tab; otherwise the first character of
+.Ar CHAR
+is used.
+The default is a comma.
 .It Fl \-current Pq Fl c
 Shorthand for
 .Fl \-limit Ar "\[aq]date <= today\[aq]" .
@@ -850,6 +902,18 @@ or
 The
 .Fn tag
 function is also useful here.
+.It Fl \-group-by-cumulative
+With
+.Fl \-group-by ,
+do not reset totals between groups, so that each group's totals include
+the postings of every group before it.
+Groups are taken in the order of their
+.Ar EXPR
+values, so with
+.Fl \-group-by Ar date
+a
+.Ic balance
+report shows the balance as of each date.
 .It Fl \-no-group-by
 Cancel any prior
 .Fl \-group-by
@@ -888,6 +952,16 @@ Alias for
 .Fl \-first
 .It Fl \-help
 Print this man page.
+.It Fl \-ignore-diacritics
+When matching a regular expression, such as a query term, fold accented
+letters to their base letters in both the pattern and the text, so that
+.Ql cafe
+matches
+.Ql Caf\['e] .
+Only letters of the Latin-1 Supplement and Latin Extended-A blocks are
+folded, and
+.Ic include
+file globs are never folded.
 .It Fl \-immediate
 Evaluate calculations immediately rather than lazily.
 .It Fl \-import Ar FILE
@@ -922,6 +996,12 @@ entries.  Opposite of
 .Fl \-first Ar INT .
 Only useful on a register report.  Alias for
 .Fl \-tail .
+.It Fl \-latest
+With
+.Ic prices
+or
+.Ic pricedb ,
+report only the most recent price of each commodity.
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
 .Fl \-price-exp .
@@ -936,6 +1016,15 @@ time format. Other options are
 .It Fl \-lot-dates
 Report the date on which each commodity in a balance report was
 purchased.
+.It Fl \-lot-matching Ar POLICY
+Match each sale of a commodity that names no lot against the lots already
+held:
+.Ql fifo
+consumes the oldest lot first,
+.Ql lifo
+the newest lot first, and
+.Ql none ,
+the default, matches no lot.
 .It Fl \-lot-notes
 Report the tag attached to each commodity in a balance report.
 .It Fl \-lot-prices
@@ -1035,6 +1124,25 @@ Sets a value expression for formatting the payee.  In the
 .Ic register
 report this prevents the second entry from having
 a date and payee for each transaction.
+.It Fl \-payee-rewrite Ar PATTERN=REPLACEMENT
+In reports, show every payee that matches the regular expression
+.Ar PATTERN ,
+ignoring case, as
+.Ar REPLACEMENT .
+The argument is split at its first
+.Ql = .
+The option may be given more than once.
+The first matching rule wins, and these rules are tried before those of
+.Ic payee-rewrite
+directives in the journal.
+In a
+.Fl \-script
+file or at the REPL prompt, a rule given with this option applies only
+to the command that gives it; one given on the
+.Nm
+command line, before
+.Fl \-script ,
+applies to every command.
 .It Fl \-payee-width Ar INT
 Set the number of columns dedicated to the payee in the register
 report to
@@ -1110,7 +1218,26 @@ Define the output format for a total data plot.
 .It Fl \-prepend-format Ar FMT
 Prepend
 .Ar FMT
-to every line of the output.
+to the start of each entry of the report; an entry that spans several
+lines gets it once, on its first line.
+The
+.Ic register ,
+.Ic csv ,
+.Ic prices ,
+.Ic pricedb ,
+.Ic balance ,
+.Ic budget ,
+.Ic cleared
+and
+.Ic accounts
+reports honor it; the other reports, such as
+.Ic payees ,
+.Ic tags ,
+.Ic commodities ,
+.Ic select
+and
+.Ic print ,
+ignore it.
 .It Fl \-prepend-width Ar INT
 Reserve
 .Ar INT
@@ -1253,7 +1380,17 @@ days.  For example,
 .Fl \-period-shift
 .Ar 15
 makes monthly periods run from the 16th of one month to the 15th of the
-next.  Does not affect weekly or daily periods.  See also
+next.  Does not affect weekly or daily periods.
+Each period starts exactly
+.Ar INT
+days after the first day of its calendar month, quarter or year, so a
+shift of 28 days or more can carry a boundary into the following month:
+in 2024,
+.Fl \-monthly
+.Fl \-period-shift
+.Ar 30
+starts periods on January 31, March 2, March 31 and May 1.
+See also
 .Fl \-start-of-week .
 .It Fl \-start-of-week Ar STR
 Use
@@ -1419,7 +1556,15 @@ by the GenerateTests harness for development testing.
 Evaluate the given period and report how
 .Nm
 interprets it.
-.\".It Ic script
+.It Ic script Op Ar file
+Evaluate each line of
+.Ar file ,
+or of the standard input if no
+.Ar file
+is given, as a value expression.
+Blank lines and lines beginning with
+.Ql \&;
+are skipped.
 .It Ic template
 Shows the insertion template that the
 .Ic xact
@@ -1476,6 +1621,28 @@ Return the absolute value of the given
 Return the posting's account.
 .It Sy account_base
 Return the base account, i.e. everything after the last account delimiter ':'.
+.It Fn account_prefix name n
+Return the first
+.Ar n
+colon-separated components of the account
+.Ar name .
+.It Fn account_skip_prefix name n
+Return the account
+.Ar name
+without its first
+.Ar n
+colon-separated components.
+.It Fn account_skip_suffix name n
+Return the account
+.Ar name
+without its last
+.Ar n
+colon-separated components.
+.It Fn account_suffix name n
+Return the last
+.Ar n
+colon-separated components of the account
+.Ar name .
 .It Sy actual
 .\" Is there a difference between real and actual?
 Return true if the transaction is real, i.e not an automated or virtual
@@ -1531,10 +1698,22 @@ Return the date of the posting.
 .\".It Sy depth_spacer
 .\".It Sy display_amount
 .\".It Sy display_total
+.It Sy display_account
+Return the posting's account name as reports show it: transformed by
+.Fl \-display-account
+if that option is given, and surrounded by
+.Ql \&()
+or
+.Ql []
+for a virtual posting.
 .It Sy end_line
 Line number where entry for posting ends.
 .It Sy end_pos
 Character position where entry for posting ends.
+.It Fn fifo_lots balance
+Return the lots in
+.Ar balance
+sorted by acquisition date, oldest first.
 .It Fn floor value
 Return the next integer of
 .Ar value
@@ -1607,6 +1786,10 @@ is false, then the field is left justified and padded to the full width of the
 field.  If
 .Ar colorize
 is true, then ledger will honor color settings.
+.It Fn lifo_lots balance
+Return the lots in
+.Ar balance
+sorted by acquisition date, newest first.
 .It Fn market value datetime
 Return the price of
 .Ar value
@@ -1676,6 +1859,16 @@ Return
 rounded to
 .Ar n
 digits.  Does not affect formatting.
+.It Fn roundto_commodity value
+Return
+.Ar value
+rounded to the display precision of its commodity.
+Unlike
+.Fn rounded ,
+which changes only how a value is displayed, this changes the value
+itself, so later arithmetic sees the rounded amount.
+.Fl \-round
+rounds each posting's amount with it.
 .It Sy should_bold
 Return true if expression given to
 .Fl \-bold-if
@@ -1685,6 +1878,10 @@ Clean
 .Ar value
 using various transformations such as round,
 stripping value annotations, and more.
+.It Fn scrubbed_display_total
+The same value as
+.Li scrub(display_total) ;
+the default register and plot-total formats use it.
 .\".It Sy status
 .It Fn strip value
 Strip value annotation from
@@ -1739,6 +1936,11 @@ option.
 .It Fn trim value
 Trim leading and trailing whitespace from
 .Ar value .
+.It Fn truncate value
+Truncate
+.Ar value
+to the display precision of its commodity, dropping the digits beyond
+it toward zero.
 .It Fn truncated string total_len account_len
 Truncate
 .Ar string
@@ -1748,6 +1950,11 @@ ensuring that each account is at least
 .Ar account_len
 long.
 .\".It Sy uncleared
+.It Sy value_date
+Return the date at which market prices value the posting: the posting's
+date, unless the report assigns another, such as the last day of each
+.Fl \-period
+interval.
 .It Sy virtual
 Return true if the transaction is virtual, e.g automated, false otherwise.
 .\".It Sy xact
@@ -1911,9 +2118,25 @@ environment variable settings, however.
 .It Pa $XDG_CONFIG_HOME/ledger/ledgerrc
 .It Pa \[ti]/.config/ledger/ledgerrc
 .It Pa \[ti]/.ledgerrc
+.It Pa ./.ledgerrc
 Your personal
 .Nm
 initializations.
+The first of these files that exists is read, unless
+.Fl \-init-file
+names another file or
+.Fl \-args-only
+is given.
+.It Pa \[ti]/.pricedb
+The default price database, read if it exists, unless
+.Fl \-price-db
+names another file or
+.Fl \-args-only
+is given.
+Without
+.Ev HOME ,
+.Pa ./.pricedb
+is read instead.
 .El
 .Sh SEE ALSO
 .Xr beancount 1 ,

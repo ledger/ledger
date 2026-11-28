@@ -1,0 +1,35 @@
+; Comment lines beneath a nested account declaration carry metadata for
+; the account at their own depth: a comment indented under the nested
+; `account` belongs to it, and one back at the outer depth, after the
+; nested block, belongs to the enclosing account again.  Assets:Savings,
+; never declared, inherits only the enclosing account's tags.  A tab
+; counts as one column, so the tab-indented Liabilities block nests the
+; same way.
+
+account Assets
+    ; Owner: family
+    account Checking
+        ; Owner: joint
+        ; Bank: First
+    ; Purpose: spending
+
+account Liabilities
+	; Owner: family
+	account Card
+		; Bank: Second
+	; Purpose: credit
+
+2024-01-01 Paycheck
+    Assets:Checking    $100.00
+    Assets:Savings      $50.00
+    Income:Salary
+
+2024-01-02 Groceries
+    Expenses:Food    $20.00
+    Liabilities:Card
+
+test bal --flat --no-total --balance-format "%(account)|%(tag(\"Owner\"))|%(tag(\"Bank\"))|%(tag(\"Purpose\"))\n" ^Assets ^Liabilities
+Assets:Checking|joint|First|spending
+Assets:Savings|family||spending
+Liabilities:Card|family|Second|credit
+end test

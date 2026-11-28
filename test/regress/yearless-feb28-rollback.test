@@ -1,0 +1,56 @@
+; A date written without a year takes the current year, or the year
+; before when its month is still ahead.  The year must be chosen before
+; the date is built: stepping a built 02/28 back with Boost's years(1)
+; snaps it to 02/29 when the previous year is a leap year.  The -b
+; rollback of a yearless date still ahead of today has the same rule.
+
+02/28 feb end
+    Expenses:Food    $1
+    Assets:Cash
+
+04/30 apr end
+    Expenses:Food    $2
+    Assets:Cash
+
+test print --now 2029/01/15
+2028/02/28 feb end
+    Expenses:Food                                 $1
+    Assets:Cash
+
+2028/04/30 apr end
+    Expenses:Food                                 $2
+    Assets:Cash
+end test
+
+test reg --now 2029/01/15 -b 02/28
+28-Feb-28 feb end               Expenses:Food                    $1           $1
+                                Assets:Cash                     $-1            0
+28-Apr-30 apr end               Expenses:Food                    $2           $2
+                                Assets:Cash                     $-2            0
+end test
+
+test print --now 2029/03/15
+2029/02/28 feb end
+    Expenses:Food                                 $1
+    Assets:Cash
+
+2028/04/30 apr end
+    Expenses:Food                                 $2
+    Assets:Cash
+end test
+
+; A -b Feb 29 that is still ahead of today rolls back into a year
+; without one; the rollback must not throw (it starts at 2027/02/28).
+test reg --now 2028/02/10 -b 02/29
+28-Feb-28 feb end               Expenses:Food                    $1           $1
+                                Assets:Cash                     $-1            0
+27-Apr-30 apr end               Expenses:Food                    $2           $2
+                                Assets:Cash                     $-2            0
+end test
+
+test reg --now 2028/01/15 -b "29 feb"
+27-Feb-28 feb end               Expenses:Food                    $1           $1
+                                Assets:Cash                     $-1            0
+27-Apr-30 apr end               Expenses:Food                    $2           $2
+                                Assets:Cash                     $-2            0
+end test

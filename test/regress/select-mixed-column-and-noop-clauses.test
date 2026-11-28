@@ -1,0 +1,63 @@
+; select: behavior pinned before deleting dead branches in select.cc.
+;
+; A column that mixes principal identifiers is formatted by the last
+; one the expression walk meets (here payee), and account/amount/total
+; inside it still read their display_ variants.  A bare "select" prints
+; nothing and succeeds.  STYLE accepts any name and changes nothing.
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+    (Budget:Transport)    $-30.00
+
+test select 'date, account + " " + payee, amount from posts' --columns=80
+24-Jan-15 Expenses:Food Grocery Store                                    $50.00
+24-Jan-15 Assets:Checking Grocery Store                                 $-50.00
+24-Jan-20 Expenses:Transport Gas Station                                 $30.00
+24-Jan-20 Assets:Checking Gas Station                                   $-30.00
+24-Jan-20 (Budget:Transport) Gas Station                                $-30.00
+end test
+
+test select 'date, payee + " " + account, amount from posts' --columns=80
+24-Jan-15 Grocery Store Expenses:Food                                    $50.00
+24-Jan-15 Grocery Store Assets:Checking                                 $-50.00
+24-Jan-20 Gas Station Expenses:Transport                                 $30.00
+24-Jan-20 Gas Station Assets:Checking                                   $-30.00
+24-Jan-20 Gas Station (Budget:Transport)                                $-30.00
+end test
+
+test select payee, total + amount from posts --columns=80
+Grocery Store                                                           $100.00
+Grocery Store                                                           $-50.00
+Gas Station                                                              $60.00
+Gas Station                                                             $-30.00
+Gas Station                                                             $-60.00
+end test
+
+test select 'payee, 2 * amount from posts' --columns=80
+Grocery Store                                                           $100.00
+Grocery Store                                                          $-100.00
+Gas Station                                                              $60.00
+Gas Station                                                             $-60.00
+Gas Station                                                             $-60.00
+end test
+
+test select
+end test
+
+test select date, amount from posts style bogus
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-20      $-30.00
+end test
+
+test select date, amount from posts style json where account =~ /Expenses/
+24-Jan-15       $50.00
+24-Jan-20       $30.00
+end test

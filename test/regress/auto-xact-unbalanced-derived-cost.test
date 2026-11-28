@@ -19,9 +19,9 @@ While balancing transaction from "$FILE", lines 10-12:
 >     Expenses:Energy    100 kWh @@ 72.00 EUR
 >     Assets:Cash
 Unbalanced remainder is:
-               EUR72
+            EUR72.00
 Amount to balance against:
-              EUR144
+           EUR144.00
 While applying automated transaction from "$FILE", lines 7-8:
 > = /Energy/
 >     Assets:Rebate    1

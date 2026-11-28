@@ -55,7 +55,7 @@
  * and identifiers through arithmetic, comparison, and logical operators,
  * to control-flow keywords (`if`/`else`) and the ternary `?`/`:` pair.
  *
- * @see parser_t   The Pratt parser that consumes these tokens.
+ * @see parser_t   The recursive-descent parser that consumes these tokens.
  * @see op_t       The AST node type the parser builds from tokens.
  * @see expr_t     The user-facing expression wrapper.
  */
@@ -71,12 +71,15 @@ namespace ledger {
  * token_t is a mutable, non-copyable struct reused by the parser as a
  * one-token lookahead buffer.  Each call to next() reads characters from
  * the input stream and populates @c kind, @c symbol, @c value, and
- * @c length.  The parser can push the token back (via rewind()) to let
- * the next precedence level re-examine it.
+ * @c length.  A precedence level that reads a token belonging to its
+ * caller hands it back with parser_t::push_token(), which only sets
+ * parser_t::use_lookahead so the next parser_t::next_token() returns this
+ * same token without reading the stream.
  *
  * Design note: a single token object is reused rather than allocated per
  * token because expression parsing is a hot path during report generation.
- * The assert(false) in operator= enforces this single-instance discipline.
+ * The noncopyable base deletes copy assignment, so the compiler enforces
+ * this single-instance discipline.
  */
 struct expr_t::token_t : public noncopyable {
   /**
@@ -92,12 +95,9 @@ struct expr_t::token_t : public noncopyable {
     ERROR, ///< Tokenization error; triggers a parse_error exception
     VALUE, ///< Literal value: number, amount, date, string, boolean, or regex
     IDENT, ///< Identifier: alphabetic characters and underscores ([A-Za-z_]+)
-    MASK,  ///< Regular expression mask: /regexp/
 
     LPAREN, ///< Left parenthesis `(`  -- grouping / function call
     RPAREN, ///< Right parenthesis `)` -- closes grouping / call
-    LBRACE, ///< Left brace `{`  -- inline amount literal
-    RBRACE, ///< Right brace `}` -- closes inline amount
 
     EQUAL,     ///< Equality `==`
     NEQUAL,    ///< Inequality `!=`
@@ -109,18 +109,17 @@ struct expr_t::token_t : public noncopyable {
     ASSIGN, ///< Assignment `=`
     MATCH,  ///< Regex match `=~`
     NMATCH, ///< Regex non-match `!~`
-    EMATCH, ///< Regex extract `==~` (returns captured group or whole match)
+    EMATCH, ///< Regex extract `==~`: false, the match, or a sequence of match and groups
     MINUS,  ///< Subtraction or unary negation `-`
     PLUS,   ///< Addition `+`
     STAR,   ///< Multiplication `*`
     SLASH,  ///< Division `/` (in operator context; terminal context reads regex)
     ARROW,  ///< Lambda arrow `->` for anonymous function definitions
-    KW_DIV, ///< Integer division keyword `div`
+    KW_DIV, ///< Division keyword `div` (same as `/`)
 
     EXCLAM, ///< Logical NOT `!` or keyword `not`
     KW_AND, ///< Logical AND: `&`, `&&`, or keyword `and`
     KW_OR,  ///< Logical OR: `|`, `||`, or keyword `or`
-    KW_MOD, ///< Modulus `%`
 
     KW_IF,   ///< Conditional keyword `if`
     KW_ELSE, ///< Conditional keyword `else`
@@ -143,14 +142,6 @@ struct expr_t::token_t : public noncopyable {
 
   explicit token_t() : kind(UNKNOWN), length(0) { TRACE_CTOR(expr_t::token_t, ""); }
   ~token_t() noexcept { TRACE_DTOR(expr_t::token_t); }
-
-  /// @brief Assignment is forbidden at runtime; only one token object exists.
-  token_t& operator=(const token_t& other) {
-    if (&other == this)
-      return *this;
-    assert(false); // only one token object is used at a time
-    return *this;
-  }
 
   /// @brief Reset the token to its uninitialized state between uses.
   void clear() {
@@ -184,6 +175,18 @@ struct expr_t::token_t : public noncopyable {
   void parse_ident(std::istream& in);
 
   /**
+   * @brief Try to read an amount literal that began at @p pos.
+   *
+   * Parses without annotations; a comma or plus sign is an operator, not
+   * the start of a quantity (PARSE_IN_EXPR); commodity migration and
+   * reduction follow @p pflags.  On success sets kind to VALUE, value and
+   * length and returns true.  Returns false when no quantity follows,
+   * leaving the stream for the caller to rewind; errors from
+   * amount_t::parse propagate.
+   */
+  bool try_parse_amount(std::istream& in, std::istream::pos_type pos, const parse_flags_t& pflags);
+
+  /**
    * @brief Read the next token from the input stream.
    *
    * This is the main tokenizer entry point.  It skips whitespace, then
@@ -207,11 +210,14 @@ struct expr_t::token_t : public noncopyable {
   void next(std::istream& in, const parse_flags_t& flags);
 
   /**
-   * @brief Push this token back into the stream by seeking backwards.
+   * @brief Seek the stream back over this token's text.
    *
-   * Moves the stream position back by @c length characters so the token
-   * can be re-read.  Used by the parser when a precedence level decides
-   * the token belongs to the caller.
+   * Moves the stream position back by @c length characters.  Called only
+   * by parser_t::parse(), once the expression is complete, to return an
+   * unused lookahead token to the stream, so a caller that parses a prefix
+   * of a longer stream (PARSE_PARTIAL, PARSE_SINGLE) reads on from just
+   * after the expression.  Pushback between precedence levels never seeks;
+   * it is parser_t::push_token().
    *
    * @param in  The input stream to rewind.
    */
@@ -243,7 +249,7 @@ struct expr_t::token_t : public noncopyable {
 
 /// @brief Stream insertion for token kind (for diagnostics and debugging).
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind);
-/// @brief Stream insertion for a complete token (includes value for VALUE/IDENT/MASK).
+/// @brief Stream insertion for a complete token (includes value for VALUE/IDENT).
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token);
 
 } // namespace ledger

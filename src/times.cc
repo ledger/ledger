@@ -95,9 +95,8 @@ int day_of_period = 0;
 /**
  * The temporal_io_t template wraps strptime/strftime for a single format
  * string, paired with date_traits_t that record which date components
- * the format can express.  Two specializations of parse() exist: one for
- * datetime_t and one for date_t, because date_t needs default-year logic
- * (using the year directive or current date when the format lacks %Y).
+ * the format can express.  parse() has two specializations, for datetime_t
+ * and for date_t; the date_t one picks the year of a format without one.
  *
  * Instances are kept in shared_ptrs and organized into:
  *   - input_datetime_io / timelog_datetime_io: the two built-in datetime readers
@@ -105,38 +104,91 @@ int day_of_period = 0;
  *   - readers: a deque of date_io_t tried in order by parse_date_mask()
  */
 namespace {
-template <typename T, typename InputFacetType, typename OutputFacetType>
+/// @brief The year of a date written without one: the year directive's year
+/// when one is active, otherwise today's year, or the year before when the
+/// month is still ahead of today's.
+int yearless_year(int month) {
+  if (year_directive_year)
+    return *year_directive_year;
+  const date_t today = CURRENT_DATE();
+  const int year = today.year();
+  return month > today.month() ? year - 1 : year;
+}
+
+/// @brief The date parts a strftime/strptime format carries, read
+/// case-sensitively from its conversion specifiers.
+date_traits_t traits_of(const string& fmt) {
+  date_traits_t traits;
+  for (std::size_t i = 0; i + 1 < fmt.size(); ++i) {
+    if (fmt[i] != '%')
+      continue;
+    char c = fmt[++i];
+    if ((c == 'E' || c == 'O') && i + 1 < fmt.size()) // POSIX modifiers: %Ey, %Om
+      c = fmt[++i];
+    switch (c) {
+    case 'D': // %m/%d/%y
+    case 'F': // %Y-%m-%d
+    case 'x': // the locale's date (%m/%d/%y in the C locale)
+    case 'c': // the locale's date and time
+      traits.has_year = traits.has_month = traits.has_day = true;
+      break;
+    case 'Y':
+    case 'y':
+      traits.has_year = true;
+      break;
+    case 'm':
+    case 'b':
+    case 'B':
+    case 'h':
+      traits.has_month = true;
+      break;
+    case 'd':
+    case 'e':
+      traits.has_day = true;
+      break;
+    default: // includes "%%", a literal percent sign
+      break;
+    }
+  }
+  return traits;
+}
+
+template <typename T>
 class temporal_io_t : public noncopyable {
   string fmt_str; ///< The strptime/strftime format string.
 
 public:
   date_traits_t traits; ///< Which date components this format can express.
-  bool input;           ///< True if this is an input (parsing) format.
 
-  temporal_io_t(const char* _fmt_str, bool _input)
-      : fmt_str(_fmt_str),
-        traits(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
-               icontains(fmt_str, "%F") || icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
-               icontains(fmt_str, "%F") || icontains(fmt_str, "%d")),
-        input(_input) {}
+  explicit temporal_io_t(const char* fmt) { set_format(fmt); }
 
   /// @brief Replace the format string and recompute traits.
   void set_format(const char* fmt) {
     fmt_str = fmt;
-    traits = date_traits_t(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
-                           icontains(fmt_str, "%F") || icontains(fmt_str, "%m") ||
-                               icontains(fmt_str, "%b"),
-                           icontains(fmt_str, "%F") || icontains(fmt_str, "%d"));
+    traits = traits_of(fmt_str);
   }
 
-  T parse(const char*) {}
+  T parse(const char* str);
 
   /// @brief Format a temporal value using strftime.
   std::string format(const T& when) {
     std::tm data(to_tm(when));
     char buf[128];
-    std::strftime(buf, 127, fmt_str.c_str(), &data);
-    return buf;
+    std::size_t len = std::strftime(buf, sizeof(buf), fmt_str.c_str(), &data);
+    if (len != 0 || fmt_str.empty())
+      return std::string(buf, len);
+    // strftime returns 0 when the output does not fit (or is empty, e.g. a
+    // lone %p in a locale without AM/PM): retry with larger buffers, bounded
+    // well above any output this format can produce.
+    for (std::size_t size = 256; size <= 128 * fmt_str.size() + 128; size *= 2) {
+      std::string out(size, '\0');
+      len = std::strftime(out.data(), size, fmt_str.c_str(), &data);
+      if (len != 0) {
+        out.resize(len);
+        return out;
+      }
+    }
+    return std::string();
   }
 };
 
@@ -147,8 +199,7 @@ public:
  * a Boost ptime.  Returns a not-a-date-time sentinel on failure.
  */
 template <>
-datetime_t temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>::parse(
-    const char* str) {
+datetime_t temporal_io_t<datetime_t>::parse(const char* str) {
   std::tm data;
   std::memset(&data, 0, sizeof(std::tm));
   if (strptime(str, fmt_str.c_str(), &data))
@@ -160,33 +211,26 @@ datetime_t temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::t
 /**
  * @brief date_t parsing specialization.
  *
- * Before calling strptime, pre-fills tm_year with a sensible default:
- * the year directive year if active, otherwise the current year.  This
- * ensures formats without %Y (like "%m/%d") still produce a valid date.
- * Also pre-fills tm_mday=1 for formats without %d (like "%Y/%m").
+ * Pre-fills tm_mday=1 for formats without %d (like "%Y/%m").  After
+ * parsing, picks the year of a format without one (like "%m/%d"): the
+ * year directive's year if active, otherwise today's year, or the
+ * previous year when the month is still ahead.  The date is built once,
+ * in that year, so a Feb 29 in a year without one is an error.
  */
 template <>
-date_t
-temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>::parse(const char* str) {
+date_t temporal_io_t<date_t>::parse(const char* str) {
   std::tm data;
   std::memset(&data, 0, sizeof(std::tm));
-  // When year_directive_year is set (from "apply year" or "year" directive),
-  // use that instead of CURRENT_DATE() to avoid issues with leap year dates
-  if (year_directive_year) {
-    data.tm_year = *year_directive_year - 1900;
-  } else {
-    data.tm_year = CURRENT_DATE().year() - 1900;
-  }
   data.tm_mday = 1; // some formats have no day
-  if (strptime(str, fmt_str.c_str(), &data))
-    return gregorian::date_from_tm(data);
-  else
+  if (!strptime(str, fmt_str.c_str(), &data))
     return date_t();
+  if (!traits.has_year)
+    data.tm_year = yearless_year(data.tm_mon + 1) - 1900;
+  return gregorian::date_from_tm(data);
 }
 
-using datetime_io_t =
-    temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>;
-using date_io_t = temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>;
+using datetime_io_t = temporal_io_t<datetime_t>;
+using date_io_t = temporal_io_t<date_t>;
 
 std::shared_ptr<datetime_io_t> input_datetime_io; ///< Reader for "YYYY/MM/DD HH:MM:SS".
 std::shared_ptr<datetime_io_t>
@@ -203,45 +247,62 @@ std::deque<std::shared_ptr<date_io_t>> readers;
 
 /// When true (the default), '.' and '-' in date strings are converted to '/'
 /// before parsing.  Disabled when a custom --input-date-format is set, since
-/// the custom format may use those characters literally.
+/// the custom format may use those characters literally.  It governs dates
+/// only: parse_datetime() always rewrites the separators.
 bool convert_separators_to_slashes = true;
 
 /*--- Low-Level Date Parsing ---*/
 
 /**
- * @brief Try to parse a date string against a single format.
+ * @brief Copy date or datetime input into a fixed buffer, normalizing
+ *        its separators.
  *
- * This is the workhorse behind parse_date_mask().  It:
- *   1. Copies the date string into a buffer, normalizing separators.
- *   2. Parses via the given io object.
- *   3. Round-trip validates: formats the parsed date back to a string
- *      and verifies it matches the input (catching invalid dates like
- *      "02/30").
- *   4. When the format lacks a year component, infers the year from
- *      the year directive, epoch, or current date -- with month-rollback
- *      logic to avoid dates in the future.
+ * Every date and datetime parser works on this copy, made once per call.
+ * The buffer holds 127 bytes and a terminator: longer input is refused
+ * here, before strptime sees it.  Error messages name the original
+ * date_str, not buf, so the user sees the text as written.
  *
- * @param date_str  The date string to parse.
- * @param io        The format-specific IO object.
- * @param traits    If non-null, receives the format's date_traits_t.
- * @return          The parsed date, or not-a-date on failure.
+ * @param date_str    The text to parse, as the user wrote it.
+ * @param buf         Receives a copy of date_str.
+ * @param to_slashes  When true, every '.' and '-' in buf becomes '/', so
+ *                    users can write 2024.01.15 or 2024-01-15.
+ * @throws date_error if date_str does not fit in buf.
  */
-date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
-                               date_traits_t* traits = nullptr) {
-  char buf[128];
-  if (std::strlen(date_str) >= sizeof(buf)) {
+void normalize_date_input(const char* date_str, char (&buf)[128], bool to_slashes) {
+  if (std::strlen(date_str) >= sizeof(buf))
     throw_(date_error, _f("Invalid date: %1%") % date_str);
-  }
 
   std::strcpy(buf, date_str);
 
-  // Normalize separators so users can write 2024.01.15 or 2024-01-15
-  if (convert_separators_to_slashes) {
+  if (to_slashes) {
     for (char* p = buf; *p; p++)
       if (*p == '.' || *p == '-')
         *p = '/';
   }
+}
 
+/**
+ * @brief Try to parse a date string against a single format.
+ *
+ * This is the workhorse behind parse_date_mask().  It:
+ *   1. Parses buf via the given io object.
+ *   2. Round-trip validates: formats the parsed date back to a string
+ *      and verifies it matches buf, ignoring the case of letters, which
+ *      rejects any text that strptime left unconsumed (e.g.
+ *      "2024/01/05x").  strptime itself rejects out-of-range fields
+ *      such as month 13, and io.parse()'s gregorian::date_from_tm
+ *      rejects impossible days such as "02/30".
+ *   3. Reports the format's traits; the parse itself has already chosen
+ *      the year of a yearless format (see temporal_io_t<date_t>::parse).
+ *
+ * @param date_str  The date string as written, named in error messages.
+ * @param buf       date_str after normalize_date_input().
+ * @param io        The format-specific IO object.
+ * @param traits    If non-null, receives the format's date_traits_t.
+ * @return          The parsed date, or not-a-date on failure.
+ */
+date_t parse_date_mask_routine(const char* date_str, const char* buf, date_io_t& io,
+                               date_traits_t* traits = nullptr) {
   date_t when = io.parse(buf);
 
   if (!when.is_not_a_date()) {
@@ -250,18 +311,23 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
     DEBUG("times.parse", "Parsed result is:    " << when);
     DEBUG("times.parse", "Formatted result is: " << io.format(when));
 
-    // Round-trip validation: format the parsed date back and compare
-    // character by character to catch invalid dates that strptime
-    // silently accepted (e.g. month 13, day 32).  Leading zeros in
-    // the formatted output are skipped during comparison.
-    string when_str = io.format(when); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    // Round-trip validation: format the parsed date back and compare it
+    // with buf character by character, ignoring the case of letters, so
+    // that text strptime left unconsumed (the "x" of "2024/01/05x") is
+    // rejected.  strptime has already range-checked each field, and
+    // date_from_tm has rejected impossible days such as Feb 30.  A
+    // leading zero in the formatted output that buf omits is skipped.
+    string when_str = io.format(when);
 
     const char* p = when_str.c_str();
     const char* q = buf;
     for (; *p && *q; p++, q++) {
-      if (*p != *q && *p == '0')
+      if (std::tolower(static_cast<unsigned char>(*p)) !=
+              std::tolower(static_cast<unsigned char>(*q)) &&
+          *p == '0')
         p++;
-      if (!*p || *p != *q)
+      if (!*p || std::tolower(static_cast<unsigned char>(*p)) !=
+                     std::tolower(static_cast<unsigned char>(*q)))
         break;
     }
     if (*p != '\0' || *q != '\0')
@@ -269,37 +335,6 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
 
     if (traits)
       *traits = io.traits;
-
-    // Year inference: when the format lacks a year component, we must
-    // choose a year.  Priority: year directive > epoch (--now) > current date.
-    // Month rollback prevents inferring a future date when the parsed
-    // month is later than the reference month.
-    if (!io.traits.has_year) {
-      // First check if we have a year directive year to use
-      if (year_directive_year) {
-        // Use the year from the year directive
-        when = date_t(*year_directive_year, when.month(), when.day());
-        DEBUG("times.parse", "Using year directive year: " << *year_directive_year);
-      } else if (epoch) {
-        // When using the epoch (e.g., from --now), use it for the year
-        date_t reference_date = epoch->date();
-        when = date_t(reference_date.year(), when.month(), when.day());
-
-        // Apply month rollback if the parsed month is after the epoch's month
-        if (when.month() > reference_date.month())
-          when -= gregorian::years(1);
-
-        DEBUG("times.parse", "Using epoch year: " << reference_date.year()
-                                                  << ", epoch month: " << reference_date.month()
-                                                  << ", parsed month: " << when.month()
-                                                  << ", final year: " << when.year());
-      } else {
-        // When no epoch, use current date and handle month rollback
-        when = date_t(CURRENT_DATE().year(), when.month(), when.day());
-        if (when.month() > CURRENT_DATE().month())
-          when -= gregorian::years(1);
-      }
-    }
   }
   return when;
 }
@@ -317,8 +352,11 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
  * @throws date_error if no format matches.
  */
 date_t parse_date_mask(const char* date_str, date_traits_t* traits = nullptr) {
+  char buf[128];
+  normalize_date_input(date_str, buf, convert_separators_to_slashes);
+
   for (std::shared_ptr<date_io_t>& reader : readers) {
-    date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
+    date_t when = parse_date_mask_routine(date_str, buf, *reader.get(), traits);
     if (!when.is_not_a_date())
       return when;
   }
@@ -355,65 +393,43 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str) {
   else if (s == _("sat") || s == _("saturday") || s == "6")
     return gregorian::Saturday;
   else
-    return none;
+    return std::nullopt;
 }
 
 /**
- * @brief Map a month name (locale-aware, case-insensitive) or digit to a Boost month.
+ * @brief Map a month name (locale-aware, case-insensitive) to a Boost month.
  *
- * Accepts full names ("january"), abbreviations ("jan"), or digit
- * strings ("0" for January through "11" for December).  Names are
- * matched without regard to case.
+ * Accepts full names ("january") or abbreviations ("jan"), matched
+ * without regard to case.
  */
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str) {
   const string s = lowered(str);
-  if (s == _("jan") || s == _("january") || s == "0")
+  if (s == _("jan") || s == _("january"))
     return gregorian::Jan;
-  else if (s == _("feb") || s == _("february") || s == "1")
+  else if (s == _("feb") || s == _("february"))
     return gregorian::Feb;
-  else if (s == _("mar") || s == _("march") || s == "2")
+  else if (s == _("mar") || s == _("march"))
     return gregorian::Mar;
-  else if (s == _("apr") || s == _("april") || s == "3")
+  else if (s == _("apr") || s == _("april"))
     return gregorian::Apr;
-  else if (s == _("may") || s == "4")
+  else if (s == _("may"))
     return gregorian::May;
-  else if (s == _("jun") || s == _("june") || s == "5")
+  else if (s == _("jun") || s == _("june"))
     return gregorian::Jun;
-  else if (s == _("jul") || s == _("july") || s == "6")
+  else if (s == _("jul") || s == _("july"))
     return gregorian::Jul;
-  else if (s == _("aug") || s == _("august") || s == "7")
+  else if (s == _("aug") || s == _("august"))
     return gregorian::Aug;
-  else if (s == _("sep") || s == _("september") || s == "8")
+  else if (s == _("sep") || s == _("september"))
     return gregorian::Sep;
-  else if (s == _("oct") || s == _("october") || s == "9")
+  else if (s == _("oct") || s == _("october"))
     return gregorian::Oct;
-  else if (s == _("nov") || s == _("november") || s == "10")
+  else if (s == _("nov") || s == _("november"))
     return gregorian::Nov;
-  else if (s == _("dec") || s == _("december") || s == "11")
+  else if (s == _("dec") || s == _("december"))
     return gregorian::Dec;
   else
-    return none;
-}
-
-/**
- * @brief Resolve a single-word relative-date keyword to a concrete date.
- *
- * Recognizes the common shorthand the `xact` command accepts in place of
- * an explicit date: "today"/"tday", "yesterday"/"yday", "tomorrow"/"tmrw".
- * The anchor is `epoch->date()` when --now is in effect, otherwise
- * CURRENT_DATE(), matching the conventions used elsewhere by
- * date_interval_t::determine_when().  Keywords are matched without
- * regard to case.
- */
-optional<date_t> string_to_relative_date(const std::string& str) {
-  const string s = lowered(str);
-  if (s == _("today") || s == _("tday"))
-    return epoch ? epoch->date() : CURRENT_DATE();
-  if (s == _("yesterday") || s == _("yday"))
-    return (epoch ? epoch->date() : CURRENT_DATE()) - gregorian::days(1);
-  if (s == _("tomorrow") || s == _("tmrw"))
-    return (epoch ? epoch->date() : CURRENT_DATE()) + gregorian::days(1);
-  return none;
+    return std::nullopt;
 }
 
 /*--- Top-Level Parse Functions ---*/
@@ -423,20 +439,14 @@ optional<date_t> string_to_relative_date(const std::string& str) {
  *
  * Tries "YYYY/MM/DD HH:MM:SS" first, then "MM/DD/YYYY HH:MM:SS"
  * (the timeclock format).  Separators `.` and `-` are normalized to `/`
- * before parsing.
+ * before parsing.  Command-line options (--begin, --end, --now) use
+ * try_parse_datetime() instead, which also accepts HH:MM and an '@'
+ * separator.
  */
 datetime_t parse_datetime(const char* str) {
-  if (std::strlen(str) > 127) {
-    throw_(date_error, _f("Invalid date: %1%") % str);
-  }
-
+  // Always rewrite separators, even under --input-date-format.
   char buf[128];
-  std::strcpy(buf, str);
-
-  for (char* p = buf; *p; p++) {
-    if (*p == '.' || *p == '-')
-      *p = '/';
-  }
+  normalize_date_input(str, buf, true);
 
   datetime_t when = input_datetime_io->parse(buf);
   if (when.is_not_a_date_time()) {
@@ -454,31 +464,48 @@ datetime_t parse_datetime(const char* str) {
  * Non-throwing parser for inputs that may carry a time component.  A datetime
  * is recognized structurally as `<date><sep><time>`, where `sep` is a space
  * or `@` (the latter avoids shell quoting in forms like "2018/12/16@08:12").
- * Strings without such a separator -- plain dates, period expressions, and
- * relative-date keywords -- return none immediately, sparing the common case
- * a wasted parse-and-throw cycle.  When a separator is present, the date and
- * time portions are parsed independently and combined.
+ * Strings without such a separator -- plain dates, one-word period
+ * expressions and relative-date keywords -- return none at once; a
+ * multi-word period expression such as "last month" has a space, fails the
+ * date parse and returns none through the catch.  The time of day must lie
+ * in [00:00, 24:00): duration_from_string accepts any duration, and a
+ * larger or negative one would shift the date.  When a separator is
+ * present, the date and time portions are parsed independently and
+ * combined.
+ *
+ * This grammar serves command-line options only; journal and expression
+ * datetimes (the P directive, timeclock entries, to_datetime()) go through
+ * parse_datetime(), which accepts just its two fixed formats.
  */
 optional<datetime_t> try_parse_datetime(const std::string& str) {
   if (str.size() > 127)
-    return none;
+    return std::nullopt;
 
   std::string::size_type sep = str.find_first_of(" @");
   if (sep == std::string::npos)
-    return none;
+    return std::nullopt;
 
   try {
     date_t day = parse_date(str.substr(0, sep).c_str());
     time_duration_t tod = posix_time::duration_from_string(str.substr(sep + 1));
+    if (tod.is_negative() || tod >= posix_time::hours(24))
+      return std::nullopt;
     return datetime_t(day, tod);
   } catch (const std::exception&) { // NOLINT(bugprone-empty-catch)
-    return none;
+    return std::nullopt;
   }
 }
 
 /// @brief Parse a date string using the registered format cascade.
 date_t parse_date(const char* str) {
   return parse_date_mask(str);
+}
+
+date_t clamped_date(int year, int month, int day) {
+  const int last = gregorian::gregorian_calendar::end_of_month_day(
+      static_cast<unsigned short>(year), static_cast<unsigned short>(month));
+  return date_t(static_cast<unsigned short>(year), static_cast<unsigned short>(month),
+                static_cast<unsigned short>(std::min(day, last)));
 }
 
 /**
@@ -509,15 +536,45 @@ date_t parse_date_expr(const std::string& str) {
 
 /*--- Date Specifier Resolution ---*/
 
+namespace {
+
+/// Whether month/day exists in year (false for Feb 29 outside a leap year
+/// and for a day past the month's end such as 04/31).
+bool day_exists(int year, date_t::month_type month, date_t::day_type day) {
+  return day <= gregorian::gregorian_calendar::end_of_month_day(
+                    static_cast<date_t::year_type>(year), month);
+}
+
+/// The nearest occurrence of month/day on or before `reference`, skipping
+/// years in which the day does not exist (Feb 29).
+date_t nearest_occurrence(date_t::month_type month, date_t::day_type day, const date_t& reference) {
+  for (int year = reference.year(), tries = 0; tries < 9; ++tries, --year) {
+    if (day_exists(year, month, day)) {
+      date_t when(static_cast<date_t::year_type>(year), month, day);
+      if (when <= reference)
+        return when;
+    }
+  }
+  // No such day in any year (e.g. 04/31): let date_t report it.
+  return date_t(reference.year(), month, day);
+}
+
+} // namespace
+
 /**
- * @brief Resolve a possibly-partial specifier to its earliest concrete date.
+ * @brief Resolve a possibly-partial specifier to the first date of its range.
  *
- * Fills in missing components with the earliest valid value:
- *   - year defaults to the current year
+ * Fills in missing components with defaults:
+ *   - year: when absent and a month is given, the year of the most recent
+ *     occurrence on or before CURRENT_DATE() (which honours --now); when
+ *     month is absent too, the current year
  *   - month defaults to January
  *   - day defaults to the 1st
  *
- * Day and weekday are mutually exclusive (asserted).
+ * Day and weekday are mutually exclusive (asserted).  A weekday alone (no
+ * year, month or day) names its most recent occurrence on or before
+ * CURRENT_DATE(), which honours --now; a weekday with a year or a month is
+ * not consulted.
  */
 date_t date_specifier_t::begin() const {
   year_type the_year = year ? *year : year_type(CURRENT_DATE().year());
@@ -529,12 +586,37 @@ date_t date_specifier_t::begin() const {
   else if (wday)
     assert(!day);
 
-  // jww (2009-11-16): Handle wday.  If a month is set, find the most recent
-  // wday in that month; if the year is set, then in that year.
+  if (month && !year)
+    return nearest_occurrence(*month, the_day, CURRENT_DATE());
+
+  if (wday && !year && !month && !day) {
+    date_t when = CURRENT_DATE();
+    while (when.day_of_week() != *wday)
+      when -= gregorian::days(1);
+    return when;
+  }
 
   return gregorian::date(static_cast<date_t::year_type>(the_year),
                          static_cast<date_t::month_type>(the_month),
                          static_cast<date_t::day_type>(the_day));
+}
+
+date_specifier_t date_specifier_t::with_year_on_or_after(const date_t& anchor,
+                                                         bool inclusive) const {
+  if (year || !month)
+    return *this;
+  date_specifier_t spec(*this);
+  const day_type first_day = day ? *day : day_type(1);
+  for (int y = anchor.year(), tries = 0; tries < 9; ++tries, ++y) {
+    if (!day_exists(y, *month, first_day))
+      continue;
+    spec.year = year_type(y);
+    if (inclusive ? spec.end() > anchor : spec.begin() >= anchor)
+      return spec;
+  }
+  // No such day in any year (e.g. 04/31): let begin() report it.
+  spec.year = year_type(anchor.year());
+  return spec;
 }
 
 /**
@@ -562,19 +644,7 @@ date_t date_specifier_t::end() const {
 
 /// @brief Stream insertion operator for date_duration_t.
 std::ostream& operator<<(std::ostream& out, const date_duration_t& duration) {
-  if (duration.quantum == date_duration_t::DAYS)
-    out << duration.length << " day(s)";
-  else if (duration.quantum == date_duration_t::WEEKS)
-    out << duration.length << " week(s)";
-  else if (duration.quantum == date_duration_t::MONTHS)
-    out << duration.length << " month(s)";
-  else if (duration.quantum == date_duration_t::QUARTERS)
-    out << duration.length << " quarter(s)";
-  else {
-    assert(duration.quantum == date_duration_t::YEARS);
-    out << duration.length << " year(s)";
-  }
-  return out;
+  return out << duration.to_string();
 }
 
 /*--- Period Expression Parser ---*/
@@ -605,6 +675,7 @@ std::ostream& operator<<(std::ostream& out, const date_duration_t& duration) {
  */
 class date_parser_t {
   friend void show_period_tokens(std::ostream& out, const string& arg);
+  friend optional<date_t> string_to_relative_date(const std::string& str);
 
   /**
    * @brief Lexer for period expression tokens.
@@ -616,7 +687,7 @@ class date_parser_t {
    *   - Month names (jan, february, etc.)
    *   - Weekday names (mon, tuesday, etc.)
    *   - Keywords: ago, hence, since, until, in, this, next, last, every,
-   *     today, tomorrow, yesterday
+   *     today/tday, tomorrow/tmrw, yesterday/yday
    *   - Period units: year(s), quarter(s), month(s), week(s), day(s)
    *   - Frequency shortcuts: yearly, quarterly, bimonthly, monthly,
    *     biweekly, weekly, daily
@@ -656,8 +727,8 @@ class date_parser_t {
         TOK_LAST,  ///< The keyword "last" (preceding period).
         TOK_EVERY, ///< The keyword "every" (recurrence prefix).
 
-        TOK_TODAY,     ///< The keyword "today".
-        TOK_TOMORROW,  ///< The keyword "tomorrow".
+        TOK_TODAY,     ///< The keyword "today" or "tday".
+        TOK_TOMORROW,  ///< The keyword "tomorrow" or "tmrw".
         TOK_YESTERDAY, ///< The keyword "yesterday" or "yday".
 
         TOK_YEAR,    ///< The singular unit "year".
@@ -683,6 +754,66 @@ class date_parser_t {
         END_REACHED ///< Sentinel: no more input.
 
       } kind;
+
+      /// @brief The name and canonical text of one token kind.
+      struct kind_info_t {
+        kind_t kind;      ///< The kind this row describes (its index in kinds[]).
+        const char* name; ///< The enumerator's spelling, printed by dump().
+        /// The canonical keyword or punctuation printed by to_string(), or
+        /// nullptr when the token carries a payload that to_string() prints.
+        const char* text;
+      };
+
+      /// @brief One row per kind_t, in enum order, indexed by kind.
+      static constexpr kind_info_t kinds[] = {
+          {UNKNOWN, "UNKNOWN", nullptr},
+          {TOK_DATE, "TOK_DATE", nullptr},
+          {TOK_INT, "TOK_INT", nullptr},
+          {TOK_SLASH, "TOK_SLASH", "/"},
+          {TOK_DASH, "TOK_DASH", "-"},
+          {TOK_DOT, "TOK_DOT", "."},
+          {TOK_A_MONTH, "TOK_A_MONTH", nullptr},
+          {TOK_A_WDAY, "TOK_A_WDAY", nullptr},
+          {TOK_AGO, "TOK_AGO", "ago"},
+          {TOK_HENCE, "TOK_HENCE", "hence"},
+          {TOK_SINCE, "TOK_SINCE", "since"},
+          {TOK_UNTIL, "TOK_UNTIL", "until"},
+          {TOK_IN, "TOK_IN", "in"},
+          {TOK_THIS, "TOK_THIS", "this"},
+          {TOK_NEXT, "TOK_NEXT", "next"},
+          {TOK_LAST, "TOK_LAST", "last"},
+          {TOK_EVERY, "TOK_EVERY", "every"},
+          {TOK_TODAY, "TOK_TODAY", "today"},
+          {TOK_TOMORROW, "TOK_TOMORROW", "tomorrow"},
+          {TOK_YESTERDAY, "TOK_YESTERDAY", "yesterday"},
+          {TOK_YEAR, "TOK_YEAR", "year"},
+          {TOK_QUARTER, "TOK_QUARTER", "quarter"},
+          {TOK_MONTH, "TOK_MONTH", "month"},
+          {TOK_WEEK, "TOK_WEEK", "week"},
+          {TOK_DAY, "TOK_DAY", "day"},
+          {TOK_YEARLY, "TOK_YEARLY", "yearly"},
+          {TOK_QUARTERLY, "TOK_QUARTERLY", "quarterly"},
+          {TOK_BIMONTHLY, "TOK_BIMONTHLY", "bimonthly"},
+          {TOK_MONTHLY, "TOK_MONTHLY", "monthly"},
+          {TOK_BIWEEKLY, "TOK_BIWEEKLY", "biweekly"},
+          {TOK_WEEKLY, "TOK_WEEKLY", "weekly"},
+          {TOK_DAILY, "TOK_DAILY", "daily"},
+          {TOK_YEARS, "TOK_YEARS", "years"},
+          {TOK_QUARTERS, "TOK_QUARTERS", "quarters"},
+          {TOK_MONTHS, "TOK_MONTHS", "months"},
+          {TOK_WEEKS, "TOK_WEEKS", "weeks"},
+          {TOK_DAYS, "TOK_DAYS", "days"},
+          {END_REACHED, "END_REACHED", "<EOF>"},
+      };
+      static_assert(std::size(kinds) == END_REACHED + 1, "kinds[] needs one row per kind_t");
+
+      /// @brief True iff every row of kinds[] sits at the index of its kind.
+      static constexpr bool kinds_in_order() {
+        for (std::size_t i = 0; i < std::size(kinds); ++i)
+          if (static_cast<std::size_t>(kinds[i].kind) != i)
+            return false;
+        return true;
+      }
 
       using content_t = std::variant<unsigned short, string, date_time::months_of_year,
                                      date_time::weekdays, date_specifier_t>;
@@ -711,90 +842,28 @@ class date_parser_t {
       operator bool() const { return kind != END_REACHED; }
 
       /// @brief Render the token as a human-readable string for diagnostics.
+      ///
+      /// Kinds that carry a payload print it; every other kind prints its
+      /// canonical text from kinds[].
       string to_string() const {
         std::ostringstream out;
 
         switch (kind) {
         case UNKNOWN:
-          out << std::get<string>(*value);
-          break;
+          return std::get<string>(*value);
         case TOK_DATE:
           return std::get<date_specifier_t>(*value).to_string();
         case TOK_INT:
           out << std::get<unsigned short>(*value);
           break;
-        case TOK_SLASH:
-          return "/";
-        case TOK_DASH:
-          return "-";
-        case TOK_DOT:
-          return ".";
         case TOK_A_MONTH: // NOLINT(bugprone-branch-clone)
           out << date_specifier_t::month_type(std::get<date_time::months_of_year>(*value));
           break;
         case TOK_A_WDAY:
           out << date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*value));
           break;
-        case TOK_AGO:
-          return "ago";
-        case TOK_HENCE:
-          return "hence";
-        case TOK_SINCE:
-          return "since";
-        case TOK_UNTIL:
-          return "until";
-        case TOK_IN:
-          return "in";
-        case TOK_THIS:
-          return "this";
-        case TOK_NEXT:
-          return "next";
-        case TOK_LAST:
-          return "last";
-        case TOK_EVERY:
-          return "every";
-        case TOK_TODAY:
-          return "today";
-        case TOK_TOMORROW:
-          return "tomorrow";
-        case TOK_YESTERDAY:
-          return "yesterday";
-        case TOK_YEAR:
-          return "year";
-        case TOK_QUARTER:
-          return "quarter";
-        case TOK_MONTH:
-          return "month";
-        case TOK_WEEK:
-          return "week";
-        case TOK_DAY:
-          return "day";
-        case TOK_YEARLY:
-          return "yearly";
-        case TOK_QUARTERLY:
-          return "quarterly";
-        case TOK_BIMONTHLY:
-          return "bimonthly";
-        case TOK_MONTHLY:
-          return "monthly";
-        case TOK_BIWEEKLY:
-          return "biweekly";
-        case TOK_WEEKLY:
-          return "weekly";
-        case TOK_DAILY:
-          return "daily";
-        case TOK_YEARS:
-          return "years";
-        case TOK_QUARTERS:
-          return "quarters";
-        case TOK_MONTHS:
-          return "months";
-        case TOK_WEEKS:
-          return "weeks";
-        case TOK_DAYS:
-          return "days";
-        case END_REACHED:
-          return "<EOF>";
+        default:
+          return kinds[kind].text;
         }
 
         return out.str();
@@ -802,128 +871,16 @@ class date_parser_t {
 
       /// @brief Write the token's kind_t name for debug output.
       void dump(std::ostream& out) const {
-        switch (kind) {
-        case UNKNOWN:
-          out << "UNKNOWN";
-          break;
-        case TOK_DATE:
-          out << "TOK_DATE";
-          break;
-        case TOK_INT:
-          out << "TOK_INT";
-          break;
-        case TOK_SLASH:
-          out << "TOK_SLASH";
-          break;
-        case TOK_DASH:
-          out << "TOK_DASH";
-          break;
-        case TOK_DOT:
-          out << "TOK_DOT";
-          break;
-        case TOK_A_MONTH:
-          out << "TOK_A_MONTH";
-          break;
-        case TOK_A_WDAY:
-          out << "TOK_A_WDAY";
-          break;
-        case TOK_AGO:
-          out << "TOK_AGO";
-          break;
-        case TOK_HENCE:
-          out << "TOK_HENCE";
-          break;
-        case TOK_SINCE:
-          out << "TOK_SINCE";
-          break;
-        case TOK_UNTIL:
-          out << "TOK_UNTIL";
-          break;
-        case TOK_IN:
-          out << "TOK_IN";
-          break;
-        case TOK_THIS:
-          out << "TOK_THIS";
-          break;
-        case TOK_NEXT:
-          out << "TOK_NEXT";
-          break;
-        case TOK_LAST:
-          out << "TOK_LAST";
-          break;
-        case TOK_EVERY:
-          out << "TOK_EVERY";
-          break;
-        case TOK_TODAY:
-          out << "TOK_TODAY";
-          break;
-        case TOK_TOMORROW:
-          out << "TOK_TOMORROW";
-          break;
-        case TOK_YESTERDAY:
-          out << "TOK_YESTERDAY";
-          break;
-        case TOK_YEAR:
-          out << "TOK_YEAR";
-          break;
-        case TOK_QUARTER:
-          out << "TOK_QUARTER";
-          break;
-        case TOK_MONTH:
-          out << "TOK_MONTH";
-          break;
-        case TOK_WEEK:
-          out << "TOK_WEEK";
-          break;
-        case TOK_DAY:
-          out << "TOK_DAY";
-          break;
-        case TOK_YEARLY:
-          out << "TOK_YEARLY";
-          break;
-        case TOK_QUARTERLY:
-          out << "TOK_QUARTERLY";
-          break;
-        case TOK_BIMONTHLY:
-          out << "TOK_BIMONTHLY";
-          break;
-        case TOK_MONTHLY:
-          out << "TOK_MONTHLY";
-          break;
-        case TOK_BIWEEKLY:
-          out << "TOK_BIWEEKLY";
-          break;
-        case TOK_WEEKLY:
-          out << "TOK_WEEKLY";
-          break;
-        case TOK_DAILY:
-          out << "TOK_DAILY";
-          break;
-        case TOK_YEARS:
-          out << "TOK_YEARS";
-          break;
-        case TOK_QUARTERS:
-          out << "TOK_QUARTERS";
-          break;
-        case TOK_MONTHS:
-          out << "TOK_MONTHS";
-          break;
-        case TOK_WEEKS:
-          out << "TOK_WEEKS";
-          break;
-        case TOK_DAYS:
-          out << "TOK_DAYS";
-          break;
-        case END_REACHED:
-          out << "END_REACHED";
-          break;
-        }
+        // Checked here, not beside the size assert: a member function body
+        // is a complete-class context, where kinds_in_order() is defined.
+        static_assert(kinds_in_order(), "kinds[] rows must follow kind_t order");
+        out << kinds[kind].name;
       }
 
       /// @brief Throw a date_error for an unexpected token.
       void unexpected();
       /// @brief Throw a date_error for an unexpected character.
-      static void expected(char wanted, char c = '\0');
+      [[noreturn]] static void expected(char wanted, char c = '\0');
     };
 
     token_t token_cache; ///< One-token lookahead buffer.
@@ -975,7 +932,8 @@ private:
   /// Each handles a specific class of token encountered in the main loop.
   /// @{
 
-  /// @brief Handle a date, integer, month, or weekday token as an inclusion specifier.
+  /// @brief Handle a date, integer, month, weekday or day-keyword token as an
+  /// inclusion specifier.
   void handle_date_token(lexer_t::token_t& tok, optional<date_specifier_t>& inclusion_specifier);
 
   /// @brief Handle the dash operator: converts an inclusion specifier into a
@@ -999,11 +957,6 @@ private:
   void handle_relative_token(lexer_t::token_t& tok, optional<date_specifier_t>& since_specifier,
                              optional<date_specifier_t>& until_specifier,
                              optional<date_specifier_t>& inclusion_specifier, const date_t& today);
-
-  /// @brief Handle "today", "tomorrow", "yesterday" as inclusion specifiers.
-  void handle_simple_period_token(lexer_t::token_t::kind_t kind,
-                                  optional<date_specifier_t>& inclusion_specifier,
-                                  const date_t& today);
 
   /// @brief Handle the "every" keyword followed by a quantity and unit.
   /// Sets the interval's duration (e.g. "every 2 weeks" -> WEEKS/2).
@@ -1035,11 +988,42 @@ private:
   void determine_when(lexer_t::token_t& tok, date_specifier_t& specifier);
 };
 
+namespace {
+
+/**
+ * @brief The first day of the quarter or week after the one that begins
+ * at boundary, on the grid date_duration_t::find_nearest() defines.
+ *
+ * A quarter of that grid is 90-92 days long and a week 7, so the date 92
+ * (or 7) days after a boundary lies in the following period.
+ */
+date_t boundary_after(const date_t& boundary, date_duration_t::skip_quantum_t quantum) {
+  const int longest = quantum == date_duration_t::QUARTERS ? 92 : 7;
+  return date_duration_t::find_nearest(boundary + gregorian::days(longest), quantum);
+}
+
+/**
+ * @brief The [begin, end) of "last", "this" or "next" quarter or week.
+ *
+ * adjust is -1, 0 or 1.  "this" is the grid period that contains today;
+ * both ends of every span are grid boundaries, so adjacent spans meet.
+ */
+std::pair<date_t, date_t> relative_span(int adjust, date_duration_t::skip_quantum_t quantum,
+                                        const date_t& today) {
+  const date_t base = date_duration_t::find_nearest(today, quantum);
+  if (adjust < 0)
+    return {date_duration_t::find_nearest(base - gregorian::days(1), quantum), base};
+  const date_t begin = adjust > 0 ? boundary_after(base, quantum) : base;
+  return {begin, boundary_after(begin, quantum)};
+}
+
+} // namespace
+
 /*--- determine_when: Token-to-Specifier Resolution ---*/
 
 void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
                                    date_specifier_t& specifier) {
-  date_t today = epoch ? epoch->date() : CURRENT_DATE();
+  date_t today = CURRENT_DATE();
 
   switch (tok.kind) {
   case lexer_t::token_t::TOK_DATE:
@@ -1148,7 +1132,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     case lexer_t::token_t::TOK_A_WDAY: {
       // "this monday" / "next friday" / "last wednesday"
       date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-      while (temp.day_of_week() != std::get<date_time::months_of_year>(*tok.value))
+      while (temp.day_of_week() != std::get<date_time::weekdays>(*tok.value))
         temp += gregorian::days(1);
       temp += gregorian::days(static_cast<int>(7 * adjust));
       specifier = date_specifier_t(temp);
@@ -1163,37 +1147,15 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       break;
     }
 
-    case lexer_t::token_t::TOK_QUARTER: {
+    case lexer_t::token_t::TOK_QUARTER:
       // "this quarter" / "next quarter" / "last quarter"
-      date_t base = date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-      date_t temp;
-      if (adjust < 0) {
-        temp = base + gregorian::months(3 * adjust);
-      } else if (adjust == 0) {
-        temp = base + gregorian::months(3);
-      } else if (adjust > 0) {
-        base += gregorian::months(3 * adjust);
-        temp = base + gregorian::months(3 * adjust);
-      }
-      specifier = date_specifier_t(adjust < 0 ? temp : base);
+      specifier = date_specifier_t(relative_span(adjust, date_duration_t::QUARTERS, today).first);
       break;
-    }
 
-    case lexer_t::token_t::TOK_WEEK: {
+    case lexer_t::token_t::TOK_WEEK:
       // "this week" / "next week" / "last week"
-      date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-      date_t temp;
-      if (adjust < 0) {
-        temp = base + gregorian::days(static_cast<int>(7 * adjust));
-      } else if (adjust == 0) {
-        temp = base + gregorian::days(7);
-      } else if (adjust > 0) {
-        base += gregorian::days(static_cast<int>(7 * adjust));
-        temp = base + gregorian::days(static_cast<int>(7 * adjust));
-      }
-      specifier = date_specifier_t(adjust < 0 ? temp : base);
+      specifier = date_specifier_t(relative_span(adjust, date_duration_t::WEEKS, today).first);
       break;
-    }
 
     case lexer_t::token_t::TOK_DAY: {
       // "this day" / "next day" / "last day"
@@ -1253,7 +1215,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
 
 /*--- Parser Helper Methods ---*/
 
-/// @brief Handle date/integer/month/weekday tokens as inclusion specifiers.
+/// @brief Handle date/integer/month/weekday/day-keyword tokens as inclusion specifiers.
 void date_parser_t::handle_date_token(lexer_t::token_t& tok,
                                       optional<date_specifier_t>& inclusion_specifier) {
   if (!inclusion_specifier)
@@ -1277,7 +1239,7 @@ void date_parser_t::handle_dash_operator(lexer_t::token_t& tok,
   if (inclusion_specifier) {
     since_specifier = inclusion_specifier;
     until_specifier = date_specifier_t();
-    inclusion_specifier = none;
+    inclusion_specifier = std::nullopt;
 
     tok = lexer.next_token();
     determine_when(tok, *until_specifier);
@@ -1326,17 +1288,14 @@ void date_parser_t::handle_in_token(lexer_t::token_t& tok,
 }
 
 /**
- * @brief Handle "this"/"next"/"last" followed by a quantity and unit.
+ * @brief Handle "this"/"next"/"last" in the main parsing loop.
  *
- * This method handles the more complex relative expressions that appear
- * in the main parsing loop (as opposed to determine_when, which handles
- * them in the context of since/until/in).  Examples:
- *
- *   - "last 3 months" -> since = today - 3 months, until = today
- *   - "next 2 weeks"  -> since = today, until = today + 2 weeks
- *   - "this quarter"  -> since = start of quarter, until = end of quarter
- *   - "next january"  -> inclusion specifier for jan of next year
- *   - "last monday"   -> inclusion specifier for the previous monday
+ * A count gives a range from today ("last 3 months" -> since = today - 3
+ * months, until = today; "next 2 weeks" -> since = today, until = today +
+ * 2 weeks).  A quarter or week gives since/until bounding that whole
+ * period (relative_span).  Any other unit ("next january", "last monday",
+ * "this year", "next day", "last month") resolves through determine_when
+ * to the inclusion specifier, the same date that since/until/in use.
  */
 void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
                                           optional<date_specifier_t>& since_specifier,
@@ -1349,9 +1308,9 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
   else if (tok.kind == lexer_t::token_t::TOK_LAST)
     adjust = -1;
 
-  tok = lexer.next_token();
-  switch (tok.kind) {
+  switch (lexer.peek_token().kind) {
   case lexer_t::token_t::TOK_INT: {
+    tok = lexer.next_token();
     // "last 3 months" / "next 2 weeks" / "this 5 days"
     unsigned short amount = std::get<unsigned short>(*tok.value);
     date_t base(today);
@@ -1394,111 +1353,26 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
     break;
   }
 
-  case lexer_t::token_t::TOK_A_MONTH: {
-    // "next january" / "last march"
-    inclusion_specifier = date_specifier_t();
-    determine_when(tok, *inclusion_specifier);
-
-    date_t temp(today.year(), *inclusion_specifier->month, 1);
-    temp += gregorian::years(adjust);
-    inclusion_specifier =
-        date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()), temp.month());
-    break;
-  }
-
-  case lexer_t::token_t::TOK_A_WDAY: {
-    // "next monday" / "last friday"
-    inclusion_specifier = date_specifier_t();
-    determine_when(tok, *inclusion_specifier);
-
-    date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-    while (temp.day_of_week() != inclusion_specifier->wday)
-      temp += gregorian::days(1);
-    temp += gregorian::days(static_cast<int>(7 * adjust));
-    inclusion_specifier = date_specifier_t(temp);
-    break;
-  }
-
-  case lexer_t::token_t::TOK_YEAR: {
-    // "next year" / "last year"
-    date_t temp(today);
-    temp += gregorian::years(adjust);
-    inclusion_specifier = date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()));
-    break;
-  }
-
-  case lexer_t::token_t::TOK_QUARTER: {
-    // "this quarter" / "next quarter" / "last quarter"
-    // Produces since/until specifiers bounding the quarter.
-    date_t base = date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-    date_t temp;
-    if (adjust < 0) {
-      temp = base + gregorian::months(3 * adjust);
-    } else if (adjust == 0) {
-      temp = base + gregorian::months(3);
-    } else if (adjust > 0) {
-      base += gregorian::months(3 * adjust);
-      temp = base + gregorian::months(3 * adjust);
-    }
-    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-    break;
-  }
-
+  case lexer_t::token_t::TOK_QUARTER:
   case lexer_t::token_t::TOK_WEEK: {
-    // "this week" / "next week" / "last week"
-    // Produces since/until specifiers bounding the week.
-    date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-    date_t temp;
-    if (adjust < 0) {
-      temp = base + gregorian::days(static_cast<int>(7 * adjust));
-    } else if (adjust == 0) {
-      temp = base + gregorian::days(7);
-    } else if (adjust > 0) {
-      base += gregorian::days(static_cast<int>(7 * adjust));
-      temp = base + gregorian::days(static_cast<int>(7 * adjust));
-    }
-    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-    break;
-  }
-
-  case lexer_t::token_t::TOK_DAY: {
-    // "next day" / "last day"
-    date_t temp(today);
-    temp += gregorian::days(adjust);
-    inclusion_specifier = date_specifier_t(temp);
+    // "this quarter" / "last week": since/until bound the whole period.
+    tok = lexer.next_token();
+    const auto [begin, end] =
+        relative_span(adjust,
+                      tok.kind == lexer_t::token_t::TOK_QUARTER ? date_duration_t::QUARTERS
+                                                                : date_duration_t::WEEKS,
+                      today);
+    since_specifier = date_specifier_t(begin);
+    until_specifier = date_specifier_t(end);
     break;
   }
 
   default:
-  case lexer_t::token_t::TOK_MONTH: {
-    // "this month" / "next month" / "last month"
-    // Also the default case for unrecognized unit tokens.
-    date_t temp(today);
-    temp += gregorian::months(adjust);
-    inclusion_specifier =
-        date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()), temp.month());
-    break;
-  }
-  }
-}
-
-/// @brief Map "today"/"tomorrow"/"yesterday" to an inclusion specifier.
-void date_parser_t::handle_simple_period_token(lexer_t::token_t::kind_t kind,
-                                               optional<date_specifier_t>& inclusion_specifier,
-                                               const date_t& today) {
-  switch (kind) {
-  case lexer_t::token_t::TOK_TODAY:
-    inclusion_specifier = date_specifier_t(today);
-    break;
-  case lexer_t::token_t::TOK_TOMORROW:
-    inclusion_specifier = date_specifier_t(today + gregorian::days(1));
-    break;
-  case lexer_t::token_t::TOK_YESTERDAY:
-    inclusion_specifier = date_specifier_t(today - gregorian::days(1));
-    break;
-  default:
+    // A month or weekday name, year, month or day ("next january", "last
+    // monday", "this year"): the same date or year-month that since, until
+    // and in resolve to.
+    inclusion_specifier = date_specifier_t();
+    determine_when(tok, *inclusion_specifier);
     break;
   }
 }
@@ -1514,6 +1388,8 @@ void date_parser_t::handle_every_token(lexer_t::token_t& tok, optional<date_dura
   if (tok.kind == lexer_t::token_t::TOK_INT) {
     // "every N units" -- explicit count
     int quantity = std::get<unsigned short>(*tok.value);
+    if (quantity == 0)
+      throw_(date_error, _f("Invalid period length: %1%") % quantity);
     tok = lexer.next_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_YEARS:
@@ -1635,7 +1511,7 @@ date_interval_t date_parser_t::parse() {
   optional<date_specifier_t> inclusion_specifier;
 
   date_interval_t period;
-  date_t today = epoch ? epoch->date() : CURRENT_DATE();
+  date_t today = CURRENT_DATE();
   bool end_inclusive = false;
 
   // Main parsing loop - process tokens sequentially
@@ -1648,6 +1524,9 @@ date_interval_t date_parser_t::parse() {
     case lexer_t::token_t::TOK_INT:
     case lexer_t::token_t::TOK_A_MONTH:
     case lexer_t::token_t::TOK_A_WDAY:
+    case lexer_t::token_t::TOK_TODAY:
+    case lexer_t::token_t::TOK_TOMORROW:
+    case lexer_t::token_t::TOK_YESTERDAY:
       handle_date_token(tok, inclusion_specifier);
       break;
 
@@ -1676,13 +1555,6 @@ date_interval_t date_parser_t::parse() {
       handle_relative_token(tok, since_specifier, until_specifier, inclusion_specifier, today);
       break;
 
-    // Simple period tokens (today/tomorrow/yesterday)
-    case lexer_t::token_t::TOK_TODAY:
-    case lexer_t::token_t::TOK_TOMORROW:
-    case lexer_t::token_t::TOK_YESTERDAY:
-      handle_simple_period_token(tok.kind, inclusion_specifier, today);
-      break;
-
     // Recurring period specifications
     case lexer_t::token_t::TOK_EVERY:
       handle_every_token(tok, period.duration);
@@ -1705,11 +1577,6 @@ date_interval_t date_parser_t::parse() {
     }
   }
 
-#if 0
-  if (!period.duration && inclusion_specifier)
-    period.duration = inclusion_specifier->implied_duration();
-#endif
-
   // Finalize the period structure with collected specifiers
   finalize_period(period, since_specifier, until_specifier, inclusion_specifier, end_inclusive);
 
@@ -1724,12 +1591,31 @@ void date_interval_t::parse(const string& str) {
   *this = parser.parse();
 }
 
-date_t date_interval_t::add_duration(const date_t& date, const date_duration_t& duration) {
-  return duration.add(date);
-}
-
-date_t date_interval_t::subtract_duration(const date_t& date, const date_duration_t& duration) {
-  return duration.subtract(date);
+/**
+ * @brief Resolve a whole string that is one day keyword to its date.
+ *
+ * The keywords are the period lexer's today/tday, tomorrow/tmrw and
+ * yesterday/yday, matched without regard to case, so the xact command's
+ * positional date accepts the same words as --begin, --period and `on`.
+ */
+optional<date_t> string_to_relative_date(const std::string& str) {
+  try {
+    date_parser_t::lexer_t lexer(str.begin(), str.end());
+    switch (lexer.next_token().kind) {
+    case date_parser_t::lexer_t::token_t::TOK_TODAY:
+    case date_parser_t::lexer_t::token_t::TOK_TOMORROW:
+    case date_parser_t::lexer_t::token_t::TOK_YESTERDAY:
+      if (lexer.next_token().kind == date_parser_t::lexer_t::token_t::END_REACHED)
+        return date_interval_t(str).begin();
+      break;
+    default:
+      break;
+    }
+  } catch (const std::exception&) { // NOLINT(bugprone-empty-catch)
+    // The lexer rejects the text (e.g. "today," or a number too large for a
+    // day or year), so it is not a day keyword.
+  }
+  return std::nullopt;
 }
 
 /**
@@ -1742,7 +1628,7 @@ date_t date_interval_t::subtract_duration(const date_t& date, const date_duratio
  */
 void date_interval_t::resolve_end() {
   if (start && !end_of_duration) {
-    end_of_duration = duration->add(*start);
+    end_of_duration = next_boundary(*start);
     DEBUG("times.interval", "stabilize: end_of_duration = " << *end_of_duration);
   }
 
@@ -1757,6 +1643,34 @@ void date_interval_t::resolve_end() {
   }
 }
 
+/**
+ * @brief The start of the period after the one starting at boundary.
+ *
+ * Days and weeks step by the duration.  Months, quarters and years step
+ * from the first day of the calendar month the boundary belongs to (a
+ * first of the month never snaps), then keep anchor_day, clamped to the
+ * month's length, and add anchor_shift days.
+ */
+date_t date_interval_t::next_boundary(const date_t& boundary) const {
+  int months;
+  switch (duration->quantum) {
+  case date_duration_t::MONTHS:
+    months = duration->length;
+    break;
+  case date_duration_t::QUARTERS:
+    months = 3 * duration->length;
+    break;
+  case date_duration_t::YEARS:
+    months = 12 * duration->length;
+    break;
+  default:
+    return duration->add(boundary);
+  }
+  const date_t base = boundary - gregorian::days(anchor_shift);
+  const date_t first = date_t(base.year(), base.month(), 1) + gregorian::months(months);
+  return clamped_date(first.year(), first.month(), anchor_day) + gregorian::days(anchor_shift);
+}
+
 /*--- Period Boundary Alignment ---*/
 
 /**
@@ -1769,6 +1683,8 @@ void date_interval_t::resolve_end() {
  *   - MONTHS: first day of the same month
  *   - WEEKS: most recent start_of_week day
  *   - DAYS: the date itself
+ *
+ * With --period-shift N the boundary is the calendar boundary plus N days.
  */
 date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
   date_t result;
@@ -1797,22 +1713,18 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
   }
 
   if (day_of_period != 0 && skip != date_duration_t::WEEKS && skip != date_duration_t::DAYS) {
-    result += gregorian::days(day_of_period);
-    // If the shifted boundary is past the input date, back up one period
-    if (result > date) {
-      switch (skip) {
-      case date_duration_t::YEARS:
-        result -= gregorian::years(1);
-        break;
-      case date_duration_t::QUARTERS:
-        result -= gregorian::months(3);
-        break;
-      case date_duration_t::MONTHS:
-        result -= gregorian::months(1);
-        break;
-      default:
-        break;
-      }
+    // Each period starts day_of_period days after its calendar start.
+    // Back up whole calendar periods (whose first day never snaps) until
+    // that boundary is on or before date; for a shift of 28 days or more
+    // one step may not be enough.
+    const int months = skip == date_duration_t::YEARS      ? 12
+                       : skip == date_duration_t::QUARTERS ? 3
+                                                           : 1;
+    date_t base = result;
+    result = base + gregorian::days(day_of_period);
+    while (result > date) {
+      base -= gregorian::months(months);
+      result = base + gregorian::days(day_of_period);
     }
   }
 
@@ -1828,15 +1740,17 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
  * (which may have relative references like "monthly") into a concrete
  * start/finish/end_of_duration for a specific reference date.  It:
  *
- *   1. Finds the natural period boundary (via find_nearest) for the
- *      duration's quantum that contains or precedes the reference date.
+ *   1. Without an explicit since date, finds the natural period boundary
+ *      (via find_nearest) for the duration's quantum that contains or
+ *      precedes the reference date.
  *
- *   2. For months/quarters/years with an explicit since date, either
- *      preserves the user's day-of-period (advancing by whole intervals)
- *      or snaps to the period boundary.
+ *   2. With an explicit since date (weeks, months, quarters and years),
+ *      starts at the reference date when align_intervals is set, and
+ *      otherwise at the since date advanced by whole intervals, keeping
+ *      the user's day-of-period.
  *
- *   3. For weeks, starts from a point sufficiently far back that the
- *      subsequent scan will find the correct period.
+ *   3. For weeks without a since date, starts from a point sufficiently
+ *      far back that the subsequent scan will find the correct period.
  *
  *   4. Iterates forward through periods until the one containing the
  *      reference date is found.
@@ -1876,69 +1790,36 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
 
       date_t when = start ? *start : *date;
 
-      // Phase 1: Choose a starting point based on the duration quantum
-      switch (duration->quantum) {
-      case date_duration_t::MONTHS:
-      case date_duration_t::QUARTERS:
-      case date_duration_t::YEARS:
-        // These start on most recent period start quantum before when.
-        DEBUG("times.interval", "stabilize: monthly, quarterly or yearly duration");
-        if (align_intervals && since_specified) { // NOLINT(bugprone-branch-clone)
-          start = when;
-        } else if (since_specified && initial_start) {
-          // When the user specified an explicit start date (e.g.
-          // "every 1 months from 2023-01-15"), preserve the day-of-period
-          // rather than snapping to the first of the month.  Advance from
-          // the range begin by whole intervals until we reach the interval
-          // that contains or immediately precedes 'when'.
-          start = *initial_start;
-          {
-            date_t next = duration->add(*start);
-            while (next <= when) {
-              start = next;
-              next = duration->add(*start);
-            }
-          }
-        } else {
-          start = date_duration_t::find_nearest(when, duration->quantum);
-        }
-        break;
-      case date_duration_t::WEEKS:
-        // Weeks start on the beginning of week prior to 400 remainder period length
-        // Either the first quanta of the period or the last quanta of the period seems more
-        // sensible implies period is never less than 400 days not too unreasonable
-        DEBUG("times.interval", "stabilize: weekly duration");
-        {
-          if (align_intervals && since_specified) {
-            start = when;
-          } else if (since_specified && initial_start) {
-            // When the user specified an explicit start date (e.g.
-            // "every 2 weeks from 2010-03-01"), preserve the offset from
-            // that date rather than snapping to a calendar week boundary.
-            // Advance from the range begin by whole intervals until we
-            // reach the interval that contains or immediately precedes
-            // 'when'.
-            start = *initial_start;
-            {
-              date_t next = duration->add(*start);
-              while (next <= when) {
-                start = next;
-                next = duration->add(*start);
-              }
-            }
-          } else {
-            int period = duration->length * 7;
-            start = date_duration_t::find_nearest(when - gregorian::days(period + 400 % period),
-                                                  duration->quantum);
-          }
-        }
-        break;
-      default:
-        // multiples of days have a quanta of 1 day so should not have the start date adjusted to a
-        // quanta
-        DEBUG("times.interval", "stabilize: daily duration - stable by definition");
+      // Phase 1: Choose the first period start and the anchor later
+      // boundaries keep.
+      DEBUG("times.interval", "stabilize: quantum = " << *duration);
+      if (duration->quantum == date_duration_t::DAYS) {
+        // Days are their own quantum: the reference date is a boundary.
         start = when;
-        break;
+      } else if (align_intervals && since_specified) {
+        start = when;
+        anchor_day = when.day();
+      } else if (since_specified && initial_start) {
+        // An explicit since/from date (e.g. "every 1 months from
+        // 2023-01-15") anchors the periods: advance from it by whole
+        // intervals to the one containing or immediately preceding when.
+        start = *initial_start;
+        anchor_day = initial_start->day();
+        for (date_t next = next_boundary(*start); next <= when; next = next_boundary(*start))
+          start = next;
+      } else if (duration->quantum == date_duration_t::WEEKS) {
+        // Back up one period plus (400 mod period) days and snap to the
+        // week start; the forward scan below then finds the period that
+        // contains the date.
+        int period = duration->length * 7;
+        start = date_duration_t::find_nearest(when - gregorian::days(period + 400 % period),
+                                              duration->quantum);
+      } else {
+        // Months, quarters and years start on their calendar boundary,
+        // shifted by --period-shift.
+        start = date_duration_t::find_nearest(when, duration->quantum);
+        anchor_day = 1;
+        anchor_shift = day_of_period;
       }
 
       DEBUG("times.interval", "stabilize: beginning start date = " << *start);
@@ -1952,8 +1833,8 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         if (next_interval.start && *next_interval.start <= *date) {
           *this = next_interval;
         } else {
-          end_of_duration = none;
-          next = none;
+          end_of_duration = std::nullopt;
+          next = std::nullopt;
           break;
         }
       }
@@ -1972,8 +1853,11 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         // If end_of_duration (computed from the old start) is no longer
         // past the clamped start, it is stale and must be recomputed.
         if (end_of_duration && *end_of_duration <= *start) {
-          end_of_duration = none;
-          next = none;
+          end_of_duration = std::nullopt;
+          next = std::nullopt;
+          // The clamped start is off the period grid: later periods step from it.
+          anchor_day = start->day();
+          anchor_shift = 0;
           resolve_end();
         }
 
@@ -2078,7 +1962,7 @@ bool date_interval_t::find_period(const date_t& date, const bool align_intervals
     if (date < end_of_scan) {
       start = scan;
       end_of_duration = end_of_scan;
-      next = none;
+      next = std::nullopt;
 
       DEBUG("times.interval", "true: start           = " << *start);
       DEBUG("times.interval", "true: end_of_duration = " << *end_of_duration);
@@ -2090,8 +1974,8 @@ bool date_interval_t::find_period(const date_t& date, const bool align_intervals
       break;
     }
 
-    scan = duration->add(scan);
-    end_of_scan = duration->add(scan);
+    scan = next_boundary(scan);
+    end_of_scan = next_boundary(scan);
 
     DEBUG("times.interval", "scan        = " << scan);
     DEBUG("times.interval", "end_of_scan = " << end_of_scan);
@@ -2125,12 +2009,12 @@ date_interval_t& date_interval_t::operator++() {
 
   // NOLINTNEXTLINE(bugprone-branch-clone)
   if (finish && *next >= *finish) {
-    start = none;
+    start = std::nullopt;
   } else {
     start = *next;
-    end_of_duration = duration->add(*start);
+    end_of_duration = next_boundary(*start);
   }
-  next = none;
+  next = std::nullopt;
 
   resolve_end();
 
@@ -2248,8 +2132,6 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     break;
   }
 
-  string::const_iterator start = begin;
-
   // Phase 2: If the first character is a digit, try parsing the whole
   // argument as a date using the typical date formats.  This allows not
   // only dates like "2009/08/01", but also dates that fit the user's
@@ -2260,7 +2142,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     for (i = begin; i != end && !std::isspace(static_cast<unsigned char>(*i)); i++) {}
     assert(i != begin);
 
-    string possible_date(start, i); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string possible_date(begin, i);
 
     try {
       date_traits_t traits;
@@ -2279,8 +2161,6 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     }
   }
 
-  start = begin;
-
   // Phase 3: Collect an alphanumeric (or non-alphanumeric) word and
   // match against known tokens.
   string term;
@@ -2291,82 +2171,82 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
        begin++)
     term.push_back(*begin);
 
-  if (!term.empty()) {
-    if (std::isdigit(static_cast<unsigned char>(term[0]))) {
-      // Bare integer (not a full date)
+  assert(!term.empty());
+  if (std::isdigit(static_cast<unsigned char>(term[0]))) {
+    // Bare integer (not a full date)
+    try {
       return token_t(token_t::TOK_INT, token_t::content_t(lexical_cast<unsigned short>(term)));
-    } else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
-      to_lower(term);
-
-      // Try month and weekday names first, then keywords
-      if (optional<date_time::months_of_year> month = string_to_month_of_year(term)) {
-        return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
-      } else if (optional<date_time::weekdays> wday = string_to_day_of_week(term)) {
-        return token_t(token_t::TOK_A_WDAY, token_t::content_t(*wday));
-      } else if (term == _("ago"))
-        return token_t(token_t::TOK_AGO);
-      else if (term == _("hence"))
-        return token_t(token_t::TOK_HENCE);
-      else if (term == _("from") || term == _("since"))
-        return token_t(token_t::TOK_SINCE);
-      else if (term == _("to") || term == _("until"))
-        return token_t(token_t::TOK_UNTIL);
-      else if (term == _("in"))
-        return token_t(token_t::TOK_IN);
-      else if (term == _("this"))
-        return token_t(token_t::TOK_THIS);
-      else if (term == _("next"))
-        return token_t(token_t::TOK_NEXT);
-      else if (term == _("last"))
-        return token_t(token_t::TOK_LAST);
-      else if (term == _("every"))
-        return token_t(token_t::TOK_EVERY);
-      else if (term == _("today"))
-        return token_t(token_t::TOK_TODAY);
-      else if (term == _("tomorrow"))
-        return token_t(token_t::TOK_TOMORROW);
-      else if (term == _("yesterday") or term == _("yday"))
-        return token_t(token_t::TOK_YESTERDAY);
-      else if (term == _("year"))
-        return token_t(token_t::TOK_YEAR);
-      else if (term == _("quarter"))
-        return token_t(token_t::TOK_QUARTER);
-      else if (term == _("month"))
-        return token_t(token_t::TOK_MONTH);
-      else if (term == _("week"))
-        return token_t(token_t::TOK_WEEK);
-      else if (term == _("day"))
-        return token_t(token_t::TOK_DAY);
-      else if (term == _("yearly"))
-        return token_t(token_t::TOK_YEARLY);
-      else if (term == _("quarterly"))
-        return token_t(token_t::TOK_QUARTERLY);
-      else if (term == _("bimonthly"))
-        return token_t(token_t::TOK_BIMONTHLY);
-      else if (term == _("monthly"))
-        return token_t(token_t::TOK_MONTHLY);
-      else if (term == _("biweekly"))
-        return token_t(token_t::TOK_BIWEEKLY);
-      else if (term == _("weekly"))
-        return token_t(token_t::TOK_WEEKLY);
-      else if (term == _("daily"))
-        return token_t(token_t::TOK_DAILY);
-      else if (term == _("years"))
-        return token_t(token_t::TOK_YEARS);
-      else if (term == _("quarters"))
-        return token_t(token_t::TOK_QUARTERS);
-      else if (term == _("months"))
-        return token_t(token_t::TOK_MONTHS);
-      else if (term == _("weeks"))
-        return token_t(token_t::TOK_WEEKS);
-      else if (term == _("days"))
-        return token_t(token_t::TOK_DAYS);
-    } else {
-      token_t::expected('\0', term[0]);
-      begin = ++start;
+    } catch (const bad_lexical_cast&) {
+      throw_(date_error, _f("Invalid number in period: %1%") % term);
     }
+  } else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
+    to_lower(term);
+
+    // Try month and weekday names first, then keywords
+    if (optional<date_time::months_of_year> month = string_to_month_of_year(term)) {
+      return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
+    } else if (optional<date_time::weekdays> wday = string_to_day_of_week(term)) {
+      return token_t(token_t::TOK_A_WDAY, token_t::content_t(*wday));
+    } else if (term == _("ago"))
+      return token_t(token_t::TOK_AGO);
+    else if (term == _("hence"))
+      return token_t(token_t::TOK_HENCE);
+    else if (term == _("from") || term == _("since"))
+      return token_t(token_t::TOK_SINCE);
+    else if (term == _("to") || term == _("until"))
+      return token_t(token_t::TOK_UNTIL);
+    else if (term == _("in"))
+      return token_t(token_t::TOK_IN);
+    else if (term == _("this"))
+      return token_t(token_t::TOK_THIS);
+    else if (term == _("next"))
+      return token_t(token_t::TOK_NEXT);
+    else if (term == _("last"))
+      return token_t(token_t::TOK_LAST);
+    else if (term == _("every"))
+      return token_t(token_t::TOK_EVERY);
+    else if (term == _("today") || term == _("tday"))
+      return token_t(token_t::TOK_TODAY);
+    else if (term == _("tomorrow") || term == _("tmrw"))
+      return token_t(token_t::TOK_TOMORROW);
+    else if (term == _("yesterday") or term == _("yday"))
+      return token_t(token_t::TOK_YESTERDAY);
+    else if (term == _("year"))
+      return token_t(token_t::TOK_YEAR);
+    else if (term == _("quarter"))
+      return token_t(token_t::TOK_QUARTER);
+    else if (term == _("month"))
+      return token_t(token_t::TOK_MONTH);
+    else if (term == _("week"))
+      return token_t(token_t::TOK_WEEK);
+    else if (term == _("day"))
+      return token_t(token_t::TOK_DAY);
+    else if (term == _("yearly"))
+      return token_t(token_t::TOK_YEARLY);
+    else if (term == _("quarterly"))
+      return token_t(token_t::TOK_QUARTERLY);
+    else if (term == _("bimonthly"))
+      return token_t(token_t::TOK_BIMONTHLY);
+    else if (term == _("monthly"))
+      return token_t(token_t::TOK_MONTHLY);
+    else if (term == _("biweekly"))
+      return token_t(token_t::TOK_BIWEEKLY);
+    else if (term == _("weekly"))
+      return token_t(token_t::TOK_WEEKLY);
+    else if (term == _("daily"))
+      return token_t(token_t::TOK_DAILY);
+    else if (term == _("years"))
+      return token_t(token_t::TOK_YEARS);
+    else if (term == _("quarters"))
+      return token_t(token_t::TOK_QUARTERS);
+    else if (term == _("months"))
+      return token_t(token_t::TOK_MONTHS);
+    else if (term == _("weeks"))
+      return token_t(token_t::TOK_WEEKS);
+    else if (term == _("days"))
+      return token_t(token_t::TOK_DAYS);
   } else {
-    token_t::expected('\0', *begin);
+    token_t::expected('\0', term[0]);
   }
 
   return token_t(token_t::UNKNOWN, token_t::content_t(term));
@@ -2381,7 +2261,7 @@ void date_parser_t::lexer_t::token_t::unexpected() {
     kind = UNKNOWN;
     throw_(date_error, _("Unexpected end of expression"));
   default: {
-    string desc = to_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string desc = to_string();
     kind = UNKNOWN;
     throw_(date_error, _f("Unexpected date period token '%1%'") % desc);
   }
@@ -2409,91 +2289,74 @@ datetime_io_map temp_datetime_io;
 
 /// Cache of custom date format objects, keyed by format string.
 date_io_map temp_date_io;
-} // namespace
 
 /**
- * @brief Format a datetime value as a string.
+ * @brief Format a date or datetime value as a string.
  *
  * Dispatches to the appropriate IO object based on format_type:
- *   - FMT_WRITTEN: canonical "YYYY/MM/DD HH:MM:SS" for serialization
- *   - FMT_PRINTED: human-friendly "YY-Mon-DD HH:MM:SS" for display
- *   - FMT_CUSTOM: a caller-supplied strftime format, with caching
+ *   - FMT_WRITTEN: the written IO, for serialization
+ *   - FMT_PRINTED: the printed IO, for display
+ *   - FMT_CUSTOM: a caller-supplied strftime format, with its IO object
+ *     created on first use and kept in cache, keyed by the format string
+ *
+ * written and printed are taken as pointers and dereferenced only on
+ * their own branch, so a FMT_CUSTOM call never touches them.
  */
-std::string format_datetime(const datetime_t& when, const format_type_t format_type,
-                            const optional<const char*>& format) {
+template <typename T, typename IO>
+std::string format_temporal(const T& when, const format_type_t format_type,
+                            const optional<const char*>& format, const std::shared_ptr<IO>& written,
+                            const std::shared_ptr<IO>& printed,
+                            std::map<std::string, std::unique_ptr<IO>>& cache) {
   // NOLINTNEXTLINE(bugprone-branch-clone)
   if (format_type == FMT_WRITTEN) {
-    return written_datetime_io->format(when);
+    return written->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
-    if (auto i = temp_datetime_io.find(*format); i != temp_datetime_io.end()) {
+    if (auto i = cache.find(*format); i != cache.end()) {
       return (*i).second->format(when);
     } else {
-      auto& stored = (temp_datetime_io[*format] = std::make_unique<datetime_io_t>(*format, false));
+      auto& stored = (cache[*format] = std::make_unique<IO>(*format));
       return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
-    return printed_datetime_io->format(when);
+    return printed->format(when);
   } else {
     assert(false);
     return empty_string;
   }
 }
+} // namespace
 
-/**
- * @brief Format a date value as a string.
- *
- * Dispatches to the appropriate IO object based on format_type:
- *   - FMT_WRITTEN: canonical "YYYY/MM/DD" for serialization
- *   - FMT_PRINTED: human-friendly "YY-Mon-DD" for display
- *   - FMT_CUSTOM: a caller-supplied strftime format, with caching
- */
+/// @brief Format a datetime; FMT_WRITTEN is "YYYY/MM/DD HH:MM:SS",
+/// FMT_PRINTED "YY-Mon-DD HH:MM:SS" (see format_temporal()).
+std::string format_datetime(const datetime_t& when, const format_type_t format_type,
+                            const optional<const char*>& format) {
+  return format_temporal(when, format_type, format, written_datetime_io, printed_datetime_io,
+                         temp_datetime_io);
+}
+
+/// @brief Format a date; FMT_WRITTEN is "YYYY/MM/DD", FMT_PRINTED
+/// "YY-Mon-DD" (see format_temporal()).
 std::string format_date(const date_t& when, const format_type_t format_type,
                         const optional<const char*>& format) {
-  // NOLINTNEXTLINE(bugprone-branch-clone)
-  if (format_type == FMT_WRITTEN) {
-    return written_date_io->format(when);
-  } else if (format_type == FMT_CUSTOM && format) {
-    if (auto i = temp_date_io.find(*format); i != temp_date_io.end()) {
-      return (*i).second->format(when);
-    } else {
-      auto& stored = (temp_date_io[*format] = std::make_unique<date_io_t>(*format, false));
-      return stored->format(when);
-    }
-  } else if (format_type == FMT_PRINTED) {
-    return printed_date_io->format(when);
-  } else {
-    assert(false);
-    return empty_string;
-  }
+  return format_temporal(when, format_type, format, written_date_io, printed_date_io, temp_date_io);
 }
 
 /*--- Format Configuration ---*/
 
 namespace {
-bool is_initialized = false;           ///< Guard for times_initialize/times_shutdown.
-bool explicit_date_format = false;     ///< True after set_date_format() is called.
-bool explicit_datetime_format = false; ///< True after set_datetime_format() is called.
+bool is_initialized = false; ///< Guard for times_initialize/times_shutdown.
 } // namespace
 
 /// @brief Override both the written and printed datetime format.
 void set_datetime_format(const char* format) {
-  explicit_datetime_format = true;
   written_datetime_io->set_format(format);
   printed_datetime_io->set_format(format);
 }
 
 /// @brief Override both the written and printed date format.
 void set_date_format(const char* format) {
-  explicit_date_format = true;
   written_date_io->set_format(format);
   printed_date_io->set_format(format);
-}
-
-bool date_format_is_set() {
-  return explicit_date_format;
-}
-bool datetime_format_is_set() {
-  return explicit_datetime_format;
 }
 
 /**
@@ -2504,7 +2367,7 @@ bool datetime_format_is_set() {
  * normalization, since custom formats may use '.' or '-' literally.
  */
 void set_input_date_format(const char* format) {
-  readers.push_front(std::shared_ptr<date_io_t>(new date_io_t(format, true)));
+  readers.push_front(std::shared_ptr<date_io_t>(new date_io_t(format)));
   convert_separators_to_slashes = false;
 }
 
@@ -2531,24 +2394,21 @@ void set_input_date_format(const char* format) {
  */
 void times_initialize() {
   if (!is_initialized) {
-    explicit_date_format = false;
-    explicit_datetime_format = false;
+    input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S"));
+    timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S"));
 
-    input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", true));
-    timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S", true));
+    written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S"));
+    written_date_io.reset(new date_io_t("%Y/%m/%d"));
 
-    written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", false));
-    written_date_io.reset(new date_io_t("%Y/%m/%d", false));
+    printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S"));
+    printed_date_io.reset(new date_io_t("%y-%b-%d"));
 
-    printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S", false));
-    printed_date_io.reset(new date_io_t("%y-%b-%d", false));
-
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m-%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m-%d")));
 
     is_initialized = true;
   }

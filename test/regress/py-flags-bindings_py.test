@@ -1,0 +1,12 @@
+test python test/regress/py-flags-bindings.py
+Account: int=True agree=True add=True drop=True set=True clear=True restore=True
+AccountXData: int=True agree=True add=True drop=True set=True clear=True restore=True
+Commodity: int=True agree=True add=True drop=True set=True clear=True restore=True
+AnnotatedCommodity: int=True agree=True add=True drop=True set=True clear=True restore=True
+Annotation: int=True agree=True add=True drop=True set=True clear=True restore=True
+Transaction: int=True agree=True add=True drop=True set=True clear=True restore=True
+Posting: int=True agree=True add=True drop=True set=True clear=True restore=True
+PostingXData: int=True agree=True add=True drop=True set=True clear=True restore=True
+SupportFlags8: int=True agree=True add=True drop=True set=True clear=True restore=True
+SupportFlags16: int=True agree=True add=True drop=True set=True clear=True restore=True
+end test

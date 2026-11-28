@@ -1,0 +1,15 @@
+; prices and pricedb parse the composed --limit exactly as every other
+; report does.  "()" alone is an empty expression, which limits nothing;
+; the error cases are in prices-limit-empty-term-errors.test.
+2024/01/01 Buy AAPL
+    Assets:AAPL        1 AAPL @ $10
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:MSFT        1 MSFT @ $20
+    Assets:Cash
+
+test prices -l '()'
+2024/01/01 AAPL              $10
+2024/01/02 MSFT              $20
+end test

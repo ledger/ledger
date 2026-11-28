@@ -4,6 +4,8 @@
 
 #include <system.hh>
 
+#include <clocale>
+
 #include "format.h"
 #include "session.h"
 #include "report.h"
@@ -122,12 +124,112 @@ BOOST_AUTO_TEST_CASE(testTruncateAbbreviate)
 }
 
 // -----------------------------------------------------------------------
+// Control characters occupy zero columns (#3291)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testDisplayWidthControlCharacters)
+{
+  // mk_wcwidth() keeps wcwidth()'s -1 for control characters, which
+  // display_width() counts as zero columns.
+  BOOST_CHECK_EQUAL(mk_wcwidth(0x15), -1);
+  BOOST_CHECK_EQUAL(display_width(0x15), 0U); // NAK
+  BOOST_CHECK_EQUAL(display_width(0x0C), 0U); // form feed
+  BOOST_CHECK_EQUAL(display_width(0x7F), 0U); // DEL
+  BOOST_CHECK_EQUAL(display_width(0x85), 0U); // NEL, a C1 control
+  BOOST_CHECK_EQUAL(display_width(0x00), 0U);
+  BOOST_CHECK_EQUAL(display_width('a'), 1U);
+  BOOST_CHECK_EQUAL(display_width(0x0301), 0U); // combining acute accent
+  BOOST_CHECK_EQUAL(display_width(0x4E2D), 2U); // 中
+}
+
+BOOST_AUTO_TEST_CASE(testUnistringWidthControlCharacters)
+{
+  // Eight printable characters and 43 control characters: summing -1 for
+  // each control character used to wrap the width around to nearly 2^64.
+  const string naks(43, '\x15');
+  unistring segment("DemoBa" + naks + "nk");
+  BOOST_CHECK_EQUAL(segment.length(), 51U);
+  BOOST_CHECK_EQUAL(segment.width(), 8U);
+
+  // Zero-width characters are kept along with the text that follows them,
+  // and left out when the range ends just before them.
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 7), "DemoBa" + naks + "n");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 6), "DemoBa");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(6, 2), naks + "nk");
+
+  // "\025" is NAK; the padding counts it as zero columns.
+  std::ostringstream out;
+  justify(out, "a\025b", 5);
+  BOOST_CHECK_EQUAL(out.str(), "a\025b   ");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateControlCharacters)
+{
+  // The account name from #3291 is 29 columns wide.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string naks(43, '\x15');
+  unistring acct("Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(acct.width(), 29U);
+
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 29, 2), "Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 23, 2), "As:Ba:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 22, 2), "As:Ba:DemoBa" + naks + "n:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 20, 2), "As:Ba:DemoB:Checking");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateZeroWidthSegments)
+{
+  // When every segment but the last is zero columns wide, the weight that
+  // shares out the overflow used to divide by zero, and converting the
+  // infinite result to size_t is undefined; clang's UBSan reports it.
+  // There is nothing to take from those segments, so the name is truncated
+  // at the beginning instead.
+  format_t::default_style = format_t::ABBREVIATE;
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("::Checking"), 5, 2), "..ing");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("\025:\025:Checking"), 5, 2), "..ing");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespace)
+{
+  // A shortened segment may not end in whitespace.  The test for it used
+  // to index the segment's UTF-8 bytes by display column, reading the byte
+  // before the segment once only whitespace was left, and looking at the
+  // wrong character when the segment held control or wide characters.
+  format_t::default_style = format_t::ABBREVIATE;
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 13, 1), "A: X:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 12, 1), "A::Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: \f\fXYZ:Checking"), 13, 1),
+                    "A: \f\fX:Checking");
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 abc:Checking"), 13, 2), "日 a:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 xyz:Checking"), 12, 2), "日:Checking");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespaceUtf8Locale)
+{
+  // The embedded Python interpreter sets LC_CTYPE from the environment, and
+  // in a UTF-8 locale isspace() on macOS claims 0xA0, the byte that ends "Р"
+  // and "à".  Neither character is whitespace, so neither may be trimmed.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string saved = std::setlocale(LC_CTYPE, nullptr);
+  if (!std::setlocale(LC_CTYPE, "en_US.UTF-8"))
+    std::setlocale(LC_CTYPE, "C.UTF-8");
+  const string cyrillic = format_t::truncate(unistring("Расходы:Еда"), 5, 1);
+  const string latin = format_t::truncate(unistring("Bànk:Checking"), 11, 2);
+  std::setlocale(LC_CTYPE, saved.c_str());
+
+  BOOST_CHECK_EQUAL(cyrillic, "Р:Еда");
+  BOOST_CHECK_EQUAL(latin, "Bà:Checking");
+}
+
+// -----------------------------------------------------------------------
 // Format element parsing tests - cover format.cc uncovered lines
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatParseEscapeSequences)
 {
-  // Cover format.cc lines 158-187: escape sequences in format strings
+  // Cover format.cc: escape sequences in format strings
   times_initialize();
   amount_t::initialize();
 
@@ -151,7 +253,7 @@ BOOST_AUTO_TEST_CASE(testFormatParseEscapeSequences)
 
 BOOST_AUTO_TEST_CASE(testFormatParsePercent)
 {
-  // Cover format.cc lines 256-258: %% literal percent
+  // Cover format.cc: %% literal percent
   times_initialize();
   amount_t::initialize();
 
@@ -166,9 +268,18 @@ BOOST_AUTO_TEST_CASE(testFormatParsePercent)
   times_shutdown();
 }
 
+// The parsed element list as format_t::dump() prints it; the `format`
+// precommand shows the same text under "--- Format elements ---".
+static string dumped_elements(const format_t& fmt)
+{
+  std::ostringstream out;
+  fmt.dump(out);
+  return out.str();
+}
+
 BOOST_AUTO_TEST_CASE(testFormatParseMinMaxWidth)
 {
-  // Cover format.cc lines 200-217: min/max width parsing
+  // Cover format.cc: min/max width parsing
   times_initialize();
   amount_t::initialize();
 
@@ -177,8 +288,8 @@ BOOST_AUTO_TEST_CASE(testFormatParseMinMaxWidth)
 
   // Format with min.max width: %-20.40(account)
   format_t fmt("%-20.40(account)");
-  // Just exercise the parsing, no real scope needed
-  (void)fmt;
+  BOOST_CHECK_EQUAL(dumped_elements(fmt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: account\n");
 
   amount_t::shutdown();
   times_shutdown();
@@ -186,7 +297,7 @@ BOOST_AUTO_TEST_CASE(testFormatParseMinMaxWidth)
 
 BOOST_AUTO_TEST_CASE(testFormatSingleLetterMapping)
 {
-  // Cover format.cc lines 219-253: single letter format mappings
+  // Cover format.cc: single letter format mappings
   times_initialize();
   amount_t::initialize();
 
@@ -199,8 +310,14 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterMapping)
   format_t fmta("%a");
   format_t fmtN("%N");
 
-  // Just ensure parsing doesn't throw
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(dumped_elements(fmtD),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtP),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmta),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtN),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: note\n");
 
   // Unrecognized format character
   BOOST_CHECK_THROW(format_t("%(bad stuff"), parse_error);
@@ -211,7 +328,7 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterMapping)
 
 BOOST_AUTO_TEST_CASE(testFormatFieldReference)
 {
-  // Cover format.cc lines 261-284: %$ field reference
+  // Cover format.cc: %$ field reference
   times_initialize();
   amount_t::initialize();
 
@@ -224,7 +341,7 @@ BOOST_AUTO_TEST_CASE(testFormatFieldReference)
 
 BOOST_AUTO_TEST_CASE(testFormatUnrecognizedChar)
 {
-  // Cover format.cc line 389: unrecognized formatting character
+  // Cover format.cc: unrecognized formatting character
   times_initialize();
   amount_t::initialize();
 
@@ -252,7 +369,7 @@ BOOST_AUTO_TEST_CASE(testFormatElementDump)
 
 BOOST_AUTO_TEST_CASE(testFormatAlignLeft)
 {
-  // Cover format.cc line 191-198: %-  flag (left alignment)
+  // Cover format.cc: %- flag (left alignment)
   times_initialize();
   amount_t::initialize();
 
@@ -269,7 +386,7 @@ BOOST_AUTO_TEST_CASE(testFormatAlignLeft)
 
 BOOST_AUTO_TEST_CASE(testFormatExpressionEvaluation)
 {
-  // Cover format.cc lines 428-457: expression evaluation in format
+  // Cover format.cc: expression evaluation in format
   times_initialize();
   amount_t::initialize();
 
@@ -287,7 +404,7 @@ BOOST_AUTO_TEST_CASE(testFormatExpressionEvaluation)
 
 BOOST_AUTO_TEST_CASE(testFormatStringOnly)
 {
-  // Cover format.cc lines 394-404: format with only string content (no %)
+  // Cover format.cc: format with only string content (no %)
   times_initialize();
   amount_t::initialize();
 
@@ -303,7 +420,7 @@ BOOST_AUTO_TEST_CASE(testFormatStringOnly)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc line 240: expression after single letter mapping
+// Coverage for format.cc: expression after single letter mapping
 // with $left substitution
 // -----------------------------------------------------------------------
 
@@ -325,8 +442,7 @@ BOOST_AUTO_TEST_CASE(testFormatLeftAlignment)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc lines 361, 364-372: curly brace with colorize
-// (O_CONS expression with color argument)
+// braces without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceNoColor)
@@ -337,7 +453,7 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceNoColor)
   session_t session;
   report_t report(session);
 
-  // Simple curly brace format (no colorize)
+  // A format string with no '%' is literal text, braces included
   format_t fmt("{2+3}");
   string result = fmt.real_calc(report);
   BOOST_CHECK(!result.empty());
@@ -347,7 +463,7 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceNoColor)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc lines 424, 435-438: min/max width truncation
+// Coverage for format.cc: min/max width truncation
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMinMaxWidthTruncation)
@@ -369,7 +485,7 @@ BOOST_AUTO_TEST_CASE(testFormatMinMaxWidthTruncation)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc lines 471-472: min_width padding
+// Coverage for format.cc: min_width padding
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMinWidthPadding)
@@ -390,7 +506,7 @@ BOOST_AUTO_TEST_CASE(testFormatMinWidthPadding)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc lines 104-106, 115: parse escape sequences
+// Coverage for format.cc: parse escape sequences
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatParseMoreEscapeSequences)
@@ -432,7 +548,7 @@ BOOST_AUTO_TEST_CASE(testFormatParseMoreEscapeSequences)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for format.cc line 617: truncation with trailing indicator
+// Coverage for format.cc: truncation with trailing indicator
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatTruncateByWidth)
@@ -453,7 +569,7 @@ BOOST_AUTO_TEST_CASE(testFormatTruncateByWidth)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t parse_elements with percent literal (line 256-258)
+// format_t parse_elements with percent literal
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatPercentLiteralW7)
@@ -474,7 +590,7 @@ BOOST_AUTO_TEST_CASE(testFormatPercentLiteralW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t parse with left-aligned format (line 191-197)
+// format_t parse with left-aligned format
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatLeftAlignedW7)
@@ -495,7 +611,7 @@ BOOST_AUTO_TEST_CASE(testFormatLeftAlignedW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t with min_width padding (lines 470-472)
+// format_t with min_width padding
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingW7)
@@ -516,7 +632,7 @@ BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t unrecognized format character (line 253, 389)
+// format_t unrecognized format character
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatUnrecognizedCharW7)
@@ -532,7 +648,7 @@ BOOST_AUTO_TEST_CASE(testFormatUnrecognizedCharW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t with template $N reference (lines 261-283)
+// format_t with template $N reference
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatTemplateRefW7)
@@ -543,7 +659,7 @@ BOOST_AUTO_TEST_CASE(testFormatTemplateRefW7)
   // Test that %$0 throws via parse_format with template
   format_t tmpl("%(account)");
   format_t fmt;
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
   // Test %$ without template throws (via format_t constructor)
   BOOST_CHECK_THROW(format_t fmt2("%$1"), format_error);
@@ -553,7 +669,7 @@ BOOST_AUTO_TEST_CASE(testFormatTemplateRefW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t with curly brace expression (lines 287-384)
+// format_t with curly brace expression
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceW7)
@@ -564,9 +680,14 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceW7)
   session_t session;
   report_t report(session);
 
-  // The {ident} form wraps in justify/scrub; exercised through
-  // the ledger register --format "%{amount}" regression test.
-  // Here we exercise the %(expr) path with a simple value.
+  // '%{' hands "{...}" to the expression tokenizer, which reads it as a
+  // braced amount literal such as {$50}: an identifier is not an amount,
+  // and an unterminated literal is a parse error.  The working form is
+  // pinned by test/regress/format-braced-amount-literal.test.
+  BOOST_CHECK_THROW(format_t("%{amount}"), amount_error);
+  BOOST_CHECK_THROW(format_t("%{$50"), parse_error);
+
+  // The %(expr) path with a simple value.
   format_t fmt("%(\"hello\")");
   string result = fmt.real_calc(report);
   BOOST_CHECK_EQUAL(result, "hello");
@@ -576,7 +697,7 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t parse_single_expression eof (lines 103-106)
+// format_t parse_single_expression eof
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatSingleExprEofW7)
@@ -597,7 +718,7 @@ BOOST_AUTO_TEST_CASE(testFormatSingleExprEofW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t parse with max_width only (line 207-217)
+// format_t parse with max_width only
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMaxWidthOnlyW7)
@@ -618,7 +739,7 @@ BOOST_AUTO_TEST_CASE(testFormatMaxWidthOnlyW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: format_t truncate styles (lines 483-620)
+// format_t truncate styles
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatTruncateStylesW7)
@@ -645,29 +766,7 @@ BOOST_AUTO_TEST_CASE(testFormatTruncateStylesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 104-106: parse_single_expression eof
-// (when the format string ends inside an expression)
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testFormatParseExprEofW8)
-{
-  times_initialize();
-  amount_t::initialize();
-
-  session_t session;
-  report_t report(session);
-
-  // Test expression that consumes to EOF in parse_single_expression
-  format_t fmt("%(1)");
-  string result = fmt.real_calc(report);
-  BOOST_CHECK_EQUAL(result, "1");
-
-  amount_t::shutdown();
-  times_shutdown();
-}
-
-// -----------------------------------------------------------------------
-// Coverage W8: format.cc line 115: missing closing paren
+// format.cc: missing closing paren
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMissingCloseParenW8)
@@ -683,7 +782,7 @@ BOOST_AUTO_TEST_CASE(testFormatMissingCloseParenW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc line 240: expression after single letter mapping
+// format.cc: expression after single letter mapping
 // with $min, $max, $left substitution keywords
 // -----------------------------------------------------------------------
 
@@ -691,24 +790,35 @@ BOOST_AUTO_TEST_CASE(testFormatSubstitutionKeywordsW8)
 {
   times_initialize();
   amount_t::initialize();
+  // The true/false that $left expands to parse into value_t's shared
+  // boolean storage, which set_session_context() creates in ledger itself
+  value_t::initialize();
 
   session_t session;
   report_t report(session);
 
   // The single-letter format codes map to expressions like
   // "justify(scrub(...), $min, $max, $left, ...)"
-  // The $min, $max, $left substitutions happen in lines 230-237.
+  // The $min, $max, $left substitutions happen in format_t::parse_elements.
   // We exercise this via %-20.40D which maps %D with min=20, max=40
   format_t fmt("%-20.40D");
-  // Just ensure it parses without error
-  BOOST_CHECK(true);
+  // %D's expansion has no keywords, so only the widths and the flag change
+  BOOST_CHECK_EQUAL(dumped_elements(fmt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: date\n");
 
+  // %t's expansion substitutes $min, $max and $left
+  format_t fmtt("%-20.40t");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: "
+                    "justify(scrub(display_amount), {20}, {40}, false, color)\n");
+
+  value_t::shutdown();
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 267-268, 280: field reference parsing
+// format.cc: field reference parsing
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatFieldRefOutOfRangeW8)
@@ -716,21 +826,20 @@ BOOST_AUTO_TEST_CASE(testFormatFieldRefOutOfRangeW8)
   times_initialize();
   amount_t::initialize();
 
-  // Line 266-268: $0 and non-digit reference should throw
+  // $0 and non-digit reference should throw
   format_t tmpl("%(account)");
   format_t fmt;
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
-  // Line 280: reference that exceeds available template elements
-  BOOST_CHECK_THROW(fmt.parse_format("%$9", tmpl), format_error);
+  // reference that exceeds available template elements
+  BOOST_CHECK_THROW(fmt.parse_format("%$9", &tmpl), format_error);
 
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 361-380: curly brace format with colorize
-// (O_CONS expression that has a color argument)
+// braces and commas without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceWithColorW8)
@@ -741,20 +850,18 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceWithColorW8)
   session_t session;
   report_t report(session);
 
-  // The {expr, color_expr} syntax creates an O_CONS node that
-  // triggers lines 360-384 (colorize_op path).
-  // We can exercise this through the parsing:
+  // A format string with no '%' is literal text: braces and commas are
+  // copied through unparsed.
   format_t fmt("{2+3, 1}");
   string result = fmt.real_calc(report);
-  // Just exercise the path; the result depends on ansify_if behavior
-  BOOST_CHECK(!result.empty());
+  BOOST_CHECK_EQUAL(result, "{2+3, 1}");
 
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 424, 435-438: STRING element with min_width
+// format.cc: STRING element with min_width
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatStringMinWidthW8)
@@ -765,7 +872,7 @@ BOOST_AUTO_TEST_CASE(testFormatStringMinWidthW8)
   session_t session;
   report_t report(session);
 
-  // Line 423-425: STRING element with min_width set (not normally triggered
+  // STRING element with min_width set (not normally triggered
   // since min_width is only set for EXPR elements, but we can still test
   // the EXPR path with both min and max).
   format_t fmt("%10.5(\"long enough text\")");
@@ -778,7 +885,7 @@ BOOST_AUTO_TEST_CASE(testFormatStringMinWidthW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 471-472: min_width padding loop
+// format.cc: min_width padding loop
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingLoopW8)
@@ -789,7 +896,7 @@ BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingLoopW8)
   session_t session;
   report_t report(session);
 
-  // Lines 470-472: when min_width > temp.length(), pad with spaces
+  // when min_width > temp.length(), pad with spaces
   format_t fmt("%30(\"hi\")");
   string result = fmt.real_calc(report);
   BOOST_CHECK(result.length() >= 30);
@@ -801,12 +908,12 @@ BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingLoopW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc line 617: abbreviation with adjust logic
+// format.cc: abbreviation with adjust logic
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatAbbreviateW8)
 {
-  // Lines 600-630: The abbreviation code in truncate().
+  // The abbreviation code in truncate().
   // Exercise the ABBREVIATE style with a colon-delimited account name.
   format_t::default_style = format_t::ABBREVIATE;
 
@@ -823,8 +930,7 @@ BOOST_AUTO_TEST_CASE(testFormatAbbreviateW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc line 364-376: curly brace expr with O_CONS
-// that has non-null colorize_op
+// braces without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorizeOpW8)
@@ -835,41 +941,17 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorizeOpW8)
   session_t session;
   report_t report(session);
 
-  // Parse a curly-brace format that uses the "expr, color" syntax
-  // where the expression evaluates to O_CONS (a pair of subexpressions).
-  // {expr, color_condition}
+  // A format string with no '%' is literal text.
   format_t fmt("{1+2, 3 > 2}");
   string result = fmt.real_calc(report);
-  BOOST_CHECK(!result.empty());
+  BOOST_CHECK_EQUAL(result, "{1+2, 3 > 2}");
 
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 104-106 (parse_single_expression eof)
-// When expression consumes the entire format string
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testFormatExprEofW11)
-{
-  times_initialize();
-  amount_t::initialize();
-
-  session_t session;
-  report_t report(session);
-
-  // This expression should consume everything until EOF
-  format_t fmt("%(1+2+3+4)");
-  string result = fmt.real_calc(report);
-  BOOST_CHECK_EQUAL(result, "10");
-
-  amount_t::shutdown();
-  times_shutdown();
-}
-
-// -----------------------------------------------------------------------
-// Coverage W11: format.cc line 115 (whitespace rewind in expression)
+// format.cc (whitespace rewind in expression)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatExprWithTrailingW11)
@@ -891,13 +973,16 @@ BOOST_AUTO_TEST_CASE(testFormatExprWithTrailingW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc line 240 (unrecognized substitution keyword)
+// format.cc (unrecognized substitution keyword)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
 {
   times_initialize();
   amount_t::initialize();
+  // The true/false that $left expands to parse into value_t's shared
+  // boolean storage, which set_session_context() creates in ledger itself
+  value_t::initialize();
 
   session_t session;
   report_t report(session);
@@ -917,14 +1002,40 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
   format_t fmttw("%15t");
   format_t fmtTw("%15T");
 
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(dumped_elements(fmtD),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtP),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmta),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtt),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: "
+                    "justify(scrub(display_amount), {-1}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtT),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: "
+                    "justify(scrubbed_display_total, {-1}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtN),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: note\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtDw),
+                    "Element:    EXPR  flags: 0x1  min: 10  max: 20  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtPw),
+                    "Element:    EXPR  flags: 0x0  min: 20  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtaw),
+                    "Element:    EXPR  flags: 0x1  min: 30  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmttw),
+                    "Element:    EXPR  flags: 0x0  min: 15  max:  0  expr: "
+                    "justify(scrub(display_amount), {15}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtTw),
+                    "Element:    EXPR  flags: 0x0  min: 15  max:  0  expr: "
+                    "justify(scrubbed_display_total, {15}, {-1}, true, color)\n");
 
+  value_t::shutdown();
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 267-268 (source column %$0 error)
+// format.cc (source column %$0 error)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatFieldRefInvalidW11)
@@ -937,18 +1048,17 @@ BOOST_AUTO_TEST_CASE(testFormatFieldRefInvalidW11)
   format_t fmt;
 
   // $0 is invalid
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
   // Non-digit, non A-F is invalid
-  BOOST_CHECK_THROW(fmt.parse_format("%$G", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$G", &tmpl), format_error);
 
   amount_t::shutdown();
   times_shutdown();
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 361, 364-366, 369-372, 375-376,
-// 379-380 (curly brace with colorize expression)
+// braces and commas without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorW11)
@@ -959,12 +1069,12 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorW11)
   session_t session;
   report_t report(session);
 
-  // Curly brace without colorize
+  // Braces without '%' are literal text
   format_t fmt1("{42}");
   string result1 = fmt1.real_calc(report);
   BOOST_CHECK(!result1.empty());
 
-  // Curly brace with colorize expression (O_CONS)
+  // and so are a comma and a second expression inside them
   format_t fmt2("{1+2, true}");
   string result2 = fmt2.real_calc(report);
   BOOST_CHECK(!result2.empty());
@@ -974,7 +1084,7 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 435-438 (function call in EXPR element)
+// format.cc (function call in EXPR element)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatFunctionCallW11)
@@ -996,7 +1106,7 @@ BOOST_AUTO_TEST_CASE(testFormatFunctionCallW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 471-472 (min_width padding with
+// format.cc (min_width padding with
 // Unicode content)
 // -----------------------------------------------------------------------
 
@@ -1018,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(testFormatMinWidthPaddingUnicodeW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: format.cc line 617 (abbreviate adjust==0 path)
+// format.cc (abbreviate adjust==0 path)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatAbbreviateEdgeCaseW11)

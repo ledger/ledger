@@ -51,8 +51,7 @@ generate_posts_iterator::generate_posts_iterator(session_t& _session, unsigned i
 
       truth_range(0, 1), truth_gen(rnd_gen, truth_range), three_range(1, 3),
       three_gen(rnd_gen, three_range), six_range(1, 6), six_gen(rnd_gen, six_range),
-      two_six_range(2, 6), two_six_gen(rnd_gen, two_six_range), strlen_range(1, 40),
-      strlen_gen(rnd_gen, strlen_range),
+      strlen_range(1, 40), strlen_gen(rnd_gen, strlen_range),
 
       neg_number_range(-10000, -1), neg_number_gen(rnd_gen, neg_number_range),
       pos_number_range(1, 10000), pos_number_gen(rnd_gen, pos_number_range) {
@@ -275,9 +274,6 @@ void generate_posts_iterator::generate_state(std::ostream& out) {
   case 2:
     out << "! ";
     break;
-  case 3:
-    out << "";
-    break;
   }
 }
 
@@ -370,10 +366,6 @@ void generate_posts_iterator::increment() {
         post = *posts++;
       }
     } catch (std::exception&) {
-      add_error_context(_f("While parsing generated transaction (seed %1%):") % seed);
-      add_error_context(buf.str());
-      throw;
-    } catch (int) {
       add_error_context(_f("While parsing generated transaction (seed %1%):") % seed);
       add_error_context(buf.str());
       throw;

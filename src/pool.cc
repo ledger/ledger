@@ -128,7 +128,10 @@ commodity_t* commodity_pool_t::find(const string& symbol) {
   return nullptr;
 }
 
-/** @brief Look up a commodity by symbol, creating it if it does not exist. */
+/**
+ * @brief Look up a commodity by symbol, creating it if it does not exist.  Never returns
+ * nullptr: create() throws rather than fail.
+ */
 commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
   DEBUG("pool.commodities", "Find-or-create commodity " << symbol);
   if (commodity_t* commodity = find(symbol))
@@ -144,8 +147,16 @@ commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
  * mapped to a different commodity (e.g., created implicitly by a pricedb
  * parse before the alias directive was seen), the old commodity is moved to
  * retired_commodities to keep it alive -- existing amount_t objects may still
- * hold raw pointers to it.  Any price history on the old commodity is
- * transferred to the referent via commodity_history::alias_commodity.
+ * hold raw pointers to it.
+ *
+ * When @p name was the old commodity's own symbol, its prices join the
+ * referent's (commodity_history_t::alias_commodity) and the referent keeps
+ * its own.  The old commodity and any commodity retired into it value
+ * through the referent's graph vertex, and they share its
+ * COMMODITY_PRIMARY status (mark_primary).  Every other name of the old
+ * commodity moves to the referent as well.  Memoized price lookups are
+ * forgotten.  When @p name was only another commodity's alias, that
+ * commodity keeps its prices and @p name simply moves.
  *
  * Aliasing the same name to the same referent is idempotent.
  */
@@ -159,19 +170,56 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
       // The alias is already registered with the same referent; this is idempotent.
       return iter->second.get();
     }
-    // The name was previously used for a different commodity (e.g., created implicitly
-    // by pricedb parsing before the alias directive was processed, or an include file
-    // with commodity aliases was included multiple times).
-    //
-    // Keep the old commodity alive (to prevent dangling raw pointers held by existing
-    // amount_t objects in the price history), transfer price history to the referent,
-    // then remap the commodities map entry.
-    retired_commodities.push_back(iter->second);
-    commodity_price_history.alias_commodity(*iter->second.get(), referent);
+    // The name was in use for a different commodity (created by a price or
+    // a posting read before this alias, or by an earlier alias).
+    const std::shared_ptr<commodity_t> displaced(iter->second);
+    // Only a commodity created under this name retires.  When the name was
+    // merely another commodity's alias, that commodity keeps its own name,
+    // and so its prices; the name just moves to the referent.
+    if (displaced->base_symbol() == name) {
+      // Keep the commodity alive: amounts parsed before the alias still
+      // point at it.
+      retired_commodities.push_back(displaced);
+      const auto old_index = displaced->graph_index();
+      commodity_price_history.alias_commodity(*displaced, referent);
+      // Every retired commodity that shared the emptied vertex, the
+      // displaced one and any retired into it earlier, now values through
+      // the referent's.
+      for (const auto& retired : retired_commodities)
+        if (retired->graph_index() == old_index)
+          retired->set_graph_index(referent.graph_index());
+      // Being a price target is part of the identity they now share: if
+      // either name was one, -V must not revalue any of them.
+      if (displaced->has_flags(COMMODITY_PRIMARY) || referent.has_flags(COMMODITY_PRIMARY))
+        mark_primary(referent);
+      // Every other name of the retired commodity names the referent too,
+      // so nothing read from here on is stated in a retired commodity.
+      for (auto& entry : commodities)
+        if (entry.second == displaced)
+          entry.second = (*i).second;
+      // Lookups made before the alias were memoized against the old graph.
+      forget_price_lookups();
+    }
     iter->second = (*i).second;
   }
 
   return (*iter).second.get();
+}
+
+void commodity_pool_t::mark_primary(commodity_t& comm) {
+  comm.add_flags(COMMODITY_PRIMARY);
+  for (const auto& retired : retired_commodities)
+    if (retired->graph_index() == comm.graph_index())
+      retired->add_flags(COMMODITY_PRIMARY);
+}
+
+void commodity_pool_t::forget_price_lookups() {
+  // Annotated commodities share the base of the commodity they annotate, so
+  // the base commodities' memos are all there are.
+  for (const auto& pair : commodities)
+    pair.second->base->price_map.clear();
+  for (const std::shared_ptr<commodity_t>& commodity : retired_commodities)
+    commodity->base->price_map.clear();
 }
 
 /// @name Annotated commodity operations
@@ -199,7 +247,7 @@ commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& de
   DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << '\n'
                                                            << details);
 
-  if (auto i = annotated_commodities.find(annotated_commodities_map::key_type(symbol, details));
+  if (auto i = annotated_commodities.find(annotation_key_view_t{symbol, details});
       i != annotated_commodities.end()) {
     DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
                                   << "symbol " << (*i).second->base_symbol() << '\n'
@@ -288,17 +336,8 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
   const auto candidates = annotated_commodities.equal_range(annotation_shape_t{symbol, details});
   for (auto it = candidates.first; it != candidates.second; ++it) {
     const annotation_t& existing = it->first.second;
-    if (!existing.price || !existing.price->has_commodity())
-      continue;
-    if (existing.price->commodity() != details.price->commodity())
-      continue;
-    if (existing.date != details.date || existing.tag != details.tag)
-      continue;
-    if (existing.value_expr.has_value() != details.value_expr.has_value())
-      continue;
-    if (existing.value_expr && details.value_expr &&
-        existing.value_expr->text() != details.value_expr->text())
-      continue;
+    // The range already fixes price commodity, date, tag and value_expr.
+    assert(existing.price);
     if ((existing.flags() & ANNOTATION_SEMANTIC_FLAGS) !=
         (details.flags() & ANNOTATION_SEMANTIC_FLAGS))
       continue;
@@ -338,10 +377,7 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
  * must be non-empty.  The new annotated commodity is inserted into the
  * annotated_commodities map keyed by (base_symbol, details); if that key
  * is taken, it throws std::logic_error, since the map could not keep the
- * new commodity.  Flags on the base commodity are updated to record
- * whether fixated or floating price annotations have been seen
- * (COMMODITY_SAW_ANN_PRICE_FIXATED, COMMODITY_SAW_ANN_PRICE_FLOAT), which
- * influences find_price() behavior.
+ * new commodity.  The base commodity is marked COMMODITY_SAW_ANNOTATED.
  */
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
@@ -363,12 +399,6 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   std::shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
   comm.add_flags(COMMODITY_SAW_ANNOTATED);
-  if (details.price) {
-    if (details.has_flags(ANNOTATION_PRICE_FIXATED))
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FIXATED);
-    else
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FLOAT);
-  }
 
   DEBUG("pool.commodities", "Creating annotated commodity " << "symbol " << commodity->base_symbol()
                                                             << '\n'
@@ -386,18 +416,17 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
  * annotation changes every holder of the lot, which is what a `value`
  * expression applying to a lot asks for (see extend_post()).  The pool's
  * index follows: the lot gains an entry under its new annotation and keeps
- * its old one as an alias, so that a lookup by either annotation finds it
- * (while annotations were edited behind the index, only the old key did).
+ * its old one as an alias, so that a lookup by either annotation finds it.
  *
  * When another lot already carries @p details -- a posting may spell out
  * the very expression an account's `value` gives its lot -- the holders of
  * neither lot can be re-pointed, so the two lots come to carry equal
- * annotations, as they did before the index was kept consistent, and both
- * join duplicate_lots, the class a balance keeps as one component
- * (balance_t::component_key).  An entry that is only the alias of a lot
- * whose annotation has since changed again passes to this lot, which does
- * carry the annotation; a lot whose annotation changes once more leaves
- * its class (the components balances already key under it stay there).
+ * annotations, and both join duplicate_lots, the class a balance keeps as
+ * one component (balance_t::component_key).  An entry that is only the
+ * alias of a lot whose annotation has since changed again passes to this
+ * lot, which does carry the annotation; a lot whose annotation changes
+ * once more leaves its class (the components balances already key under
+ * it stay there).
  */
 void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::reannotate " << "symbol " << comm.base_symbol()
@@ -411,8 +440,8 @@ void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_
   // This lot's own entry: the one keyed by its current annotation, unless
   // something edited the annotation in place (the Python bindings can), in
   // which case it is found by identity.
-  auto current = annotated_commodities.find(
-      annotated_commodities_map::key_type(comm.base_symbol(), comm.details));
+  auto current =
+      annotated_commodities.find(annotation_key_view_t{comm.base_symbol(), comm.details});
   if (current == annotated_commodities.end() || current->second.get() != &comm) {
     current = std::find_if(annotated_commodities.begin(), annotated_commodities.end(),
                            [&comm](const annotated_commodities_map::value_type& entry) {
@@ -469,6 +498,34 @@ void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_
 
 /// @}
 
+/// @name Report precision cap
+/// @{
+
+void commodity_pool_t::cap_precision(amount_t::precision_t places) {
+  for (auto& pair : commodities) {
+    commodity_t& comm(*pair.second);
+    // emplace: a base reached again through an alias key keeps the state
+    // recorded before its first lowering.
+    uncapped_styles.emplace(
+        comm.base.get(),
+        std::make_pair(comm.precision(), comm.has_flags(COMMODITY_STYLE_NO_MIGRATE)));
+    if (comm.precision() > places)
+      comm.set_precision(places);
+    comm.add_flags(COMMODITY_STYLE_NO_MIGRATE);
+  }
+}
+
+void commodity_pool_t::uncap_precision() {
+  for (auto& [base, style] : uncapped_styles) {
+    base->precision = style.first;
+    if (!style.second)
+      base->drop_flags(COMMODITY_STYLE_NO_MIGRATE);
+  }
+  uncapped_styles.clear();
+}
+
+/// @}
+
 /// @name Exchange and price operations
 /// @{
 
@@ -495,8 +552,11 @@ void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit
  * This is the workhorse for "@" and "@@" cost expressions in postings.
  * It performs these steps:
  *   1. Compute the per-unit cost (dividing total cost by quantity for @@).
- *   2. Normalize the per-unit cost to display precision so that lot prices
- *      computed from total costs can be matched by users (issue #1032).
+ *   2. Round the per-unit cost to a stable precision: an @@ cost through
+ *      amount_t::in_place_round_unit_price() (quantity precision + cost
+ *      commodity precision + extend_by_digits, issue #2975), an @ cost to
+ *      its display precision (issue #1032); flag ANNOTATION_PRICE_ROUNDED
+ *      when that changed it.
  *   3. Optionally record a market price in the history graph (skipped for
  *      fixated prices and lot-basis consumption -- issue #1217).
  *   4. Build an annotation_t with price, date, and tag; mark computed
@@ -533,32 +593,15 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   if (cost.has_annotation())
     per_unit_cost = per_unit_cost.strip_annotations(keep_details_t());
 
-  // Normalize per-unit cost to a stable precision so that lot prices are
-  // deterministic regardless of how the total cost was written.  Without
-  // this, `@@ $250` and `@@ $250.00` would produce different per-unit
-  // prices because the internal precision metadata of the cost amount
-  // differs (0 vs 2), leading to different division precisions.
-  //
-  // For costs computed by division (total cost / quantity), the rounding
-  // precision is derived from the divisor (quantity) precision and the
-  // cost commodity's display precision, deliberately excluding the
-  // dividend (total cost) precision.  This ensures that $250 and $250.00
-  // -- which are the same GMP rational -- produce identical per-unit
-  // prices after rounding (fixes #2975).
-  //
-  // For per-unit costs (no division), the existing display_precision()
-  // is used, preserving the user-typed precision (fixes #1032).
+  // A cost divided out of a total gets the precision of
+  // amount_t::in_place_round_unit_price (#2975); a per-unit cost keeps the
+  // precision the user typed (#1032).
   bool per_unit_cost_rounded = false;
-  if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
-    int round_prec;
-    if (!is_per_unit && !amount.is_zero()) {
-      round_prec = boost::numeric_cast<int>(
-          amount.precision() + per_unit_cost.commodity().precision() + amount_t::extend_by_digits);
-    } else {
-      round_prec = boost::numeric_cast<int>(per_unit_cost.display_precision());
-    }
+  if (!is_per_unit && !amount.is_zero()) {
+    per_unit_cost_rounded = per_unit_cost.in_place_round_unit_price(amount.precision());
+  } else if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
     amount_t exact(per_unit_cost);
-    per_unit_cost.in_place_roundto(round_prec);
+    per_unit_cost.in_place_roundto(boost::numeric_cast<int>(per_unit_cost.display_precision()));
     per_unit_cost_rounded = per_unit_cost != exact;
   }
 
@@ -653,7 +696,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     char* time_field_ptr = next_element(date_field_ptr);
     if (!time_field_ptr)
       return std::nullopt;
-    string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string date_field = date_field_ptr;
 
     if (std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
       symbol_and_price = next_element(time_field_ptr);
@@ -668,9 +711,8 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     commodity_t::parse_symbol(symbol_and_price, symbol);
   } else {
     // Without a date, the symbol is still read by parse_symbol, which
-    // removes its quotes; this line used to be split at its first space,
-    // so `P "Fund A" 3.00 USD` priced a commodity named `"Fund` (issue
-    // #3321).  As before, a lone word is not a price line at all.
+    // removes its quotes, so `P "Fund A" 3.00 USD` prices `Fund A`.  A
+    // line holding only a symbol is not a price line.
     commodity_t::parse_symbol(symbol_and_price, symbol);
     if (!*symbol_and_price)
       return std::nullopt;
@@ -721,23 +763,24 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     if (result.is_balance() && result.as_balance().amounts.size() > 1) {
       // Store the literal balance as the commodity's value expression so
       // that find_price_from_expr can reprice it to whatever target
-      // commodity is requested at query time.
+      // commodity is requested at query time.  Each component is written at
+      // its full precision, not its commodity's display precision, and the
+      // text is read back with PARSE_NO_MIGRATE so those digits do not teach
+      // the commodity a wider display style.
       std::ostringstream expr_text;
       expr_text << '(';
       bool first = true;
       result.as_balance().map_sorted_amounts([&](const amount_t& component) {
         if (!first)
           expr_text << " + ";
-        component.print(expr_text);
+        component.unrounded().print(expr_text);
         first = false;
       });
       expr_text << ')';
-      if (commodity_t* commodity = find_or_create(symbol)) {
-        commodity->set_value_expr(expr_t(expr_text.str()));
-        commodity->add_flags(COMMODITY_KNOWN);
-        return std::pair<commodity_t*, price_point_t>(commodity, point);
-      }
-      return std::nullopt;
+      commodity_t* commodity = find_or_create(symbol);
+      commodity->set_value_expr(expr_t(expr_text.str(), PARSE_NO_MIGRATE));
+      commodity->add_flags(COMMODITY_KNOWN);
+      return std::pair<commodity_t*, price_point_t>(commodity, point);
     }
     point.price = result.to_amount();
   }
@@ -745,35 +788,29 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
 
   // Update the price commodity's precision based on the parsed amount.
   // When PARSE_NO_MIGRATE is used, the commodity precision isn't automatically
-  // updated during parsing, so we need to do it manually here. However, only
-  // update if the commodity's precision is at the default value (0) AND the
-  // commodity hasn't been explicitly declared (COMMODITY_KNOWN) or had its
-  // format set (COMMODITY_STYLE_NO_MIGRATE). This ensures we don't override
-  // precision set by commodity directives, D directives, or N directives.
+  // updated during parsing, so we need to do it manually here.  Only while
+  // the precision is still the default 0 and the commodity is not declared
+  // (commodity, D, N directive) or format-locked; see accepts_price_precision().
   if (point.price.has_commodity()) {
     commodity_t& price_commodity = point.price.commodity();
-    if (price_commodity.precision() == 0 && !price_commodity.has_flags(COMMODITY_KNOWN) &&
-        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE)) {
+    if (price_commodity.precision() == 0 && price_commodity.accepts_price_precision()) {
       price_commodity.set_precision(point.price.precision());
       price_commodity.add_flags(COMMODITY_PRECISION_FROM_PRICE);
     }
   }
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
-  if (commodity_t* commodity = find_or_create(symbol)) {
-    if (point.price.has_commodity() && commodity->referent() == point.price.commodity().referent())
-      throw_(parse_error,
-             _f("A price directive may not use the same commodity for both source and price: %1%") %
-                 symbol);
-    DEBUG("commodity.download",
-          "Adding price for " << symbol << ": " << point.when << " " << point.price);
-    if (!do_not_add_price)
-      commodity->add_price(point.when, point.price, true);
-    commodity->add_flags(COMMODITY_KNOWN);
-    return std::pair<commodity_t*, price_point_t>(commodity, point);
-  }
-
-  return std::nullopt;
+  commodity_t* commodity = find_or_create(symbol);
+  if (point.price.has_commodity() && commodity->referent() == point.price.commodity().referent())
+    throw_(parse_error,
+           _f("A price directive may not use the same commodity for both source and price: %1%") %
+               symbol);
+  DEBUG("commodity.download",
+        "Adding price for " << symbol << ": " << point.when << " " << point.price);
+  if (!do_not_add_price)
+    commodity->add_price(point.when, point.price, true);
+  commodity->add_flags(COMMODITY_KNOWN);
+  return std::pair<commodity_t*, price_point_t>(commodity, point);
 }
 
 /**
@@ -790,19 +827,17 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
   string commodity_name = (eq_pos != string::npos) ? str.substr(0, eq_pos) : str;
   boost::trim(commodity_name);
 
-  if (commodity_t* commodity = find_or_create(commodity_name)) {
-    if (eq_pos != string::npos && add_prices) {
-      string prices_str = str.substr(eq_pos + 1);
-      std::vector<string> prices;
-      boost::split(prices, prices_str, boost::is_any_of(";"));
-      for (const string& p : prices) {
-        if (!p.empty())
-          commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
-      }
+  commodity_t* commodity = find_or_create(commodity_name);
+  if (eq_pos != string::npos && add_prices) {
+    string prices_str = str.substr(eq_pos + 1);
+    std::vector<string> prices;
+    boost::split(prices, prices_str, boost::is_any_of(";"));
+    for (const string& p : prices) {
+      if (!p.empty())
+        commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
     }
-    return commodity;
   }
-  return nullptr;
+  return commodity;
 }
 
 /// @}
@@ -814,11 +849,13 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
  * @brief Pre-fetch price quotes for all eligible commodities in batch.
  *
  * Collects every commodity that might need a fresh quote (not builtin,
- * not flagged NOMARKET, and without a last_quote within quote_leeway
- * seconds of the wall clock).  For each candidate, the exchange commodity
- * is inferred from the most recent price in the history graph.  Candidates
- * are grouped by exchange commodity and each group is passed to the batch
- * quote callback in a single invocation.
+ * not flagged NOMARKET, listed once even when aliased, and without a
+ * last_quote within quote_leeway seconds of the wall clock).  A candidate
+ * must have a price of its own (one recorded for it, not the inverted edge
+ * of another commodity's price); it is fetched in terms of the commodity of
+ * its latest such price at or before now.  Candidates are grouped by
+ * exchange commodity and each group is passed to the batch quote callback
+ * in a single invocation.
  *
  * On success, last_quote is set to the wall-clock time so that
  * per-commodity check_for_updated_price() calls during the report skip
@@ -831,56 +868,35 @@ void commodity_pool_t::prefetch_quotes() {
 
   DEBUG("commodity.download", "prefetch_quotes: scanning commodities for batch download");
 
-  // Two-pass grouping: first collect each commodity's candidate exchange,
-  // then exclude commodities that are themselves used as an exchange for
-  // other commodities.  Without this, a currency like "$" would be grouped
-  // for download because the price graph has reverse edges from posting
-  // exchanges (e.g. "10 AAPL / $-1000" creates a $ -> AAPL edge).
-
-  struct candidate_t {
-    commodity_t* comm;
-    const commodity_t* exchange;
-  };
-  std::vector<candidate_t> candidates;
-  std::set<const commodity_t*> exchange_set;
+  std::map<const commodity_t*, std::vector<std::reference_wrapper<commodity_t>>> groups;
 
   for (auto& [symbol, comm_ptr] : commodities) {
     commodity_t& comm = *comm_ptr;
 
+    // An alias is listed under its own name too; request each commodity once.
+    if (symbol != comm.base_symbol())
+      continue;
     if (&comm == null_commodity)
       continue;
-    if (comm.has_flags(COMMODITY_NOMARKET) || comm.has_flags(COMMODITY_BUILTIN))
+    if (comm.has_flags(COMMODITY_NOMARKET | COMMODITY_BUILTIN))
       continue;
 
     // Skip commodities that already have a recent quote this session.
-    if (comm.referent().base->last_quote) {
-      time_duration_t::sec_type secs_since_last =
-          (TRUE_CURRENT_TIME() - *comm.referent().base->last_quote).total_seconds();
-      if (secs_since_last < quote_leeway)
-        continue;
-    }
-
-    // Only consider commodities that have existing price history.
-    if (std::optional<price_point_t> point =
-            commodity_price_history.find_price(comm.referent(), CURRENT_TIME())) {
-      const commodity_t* exchange = nullptr;
-      if (point->price.has_commodity())
-        exchange = point->price.commodity_ptr();
-      candidates.push_back({&comm, exchange});
-      if (exchange)
-        exchange_set.insert(exchange);
-    }
-  }
-
-  // Build groups, skipping any commodity that is itself an exchange
-  // commodity for other commodities (e.g. "$" when stocks are priced
-  // in dollars).
-  std::map<const commodity_t*, std::vector<std::reference_wrapper<commodity_t>>> groups;
-
-  for (auto& [comm, exchange] : candidates) {
-    if (exchange_set.count(&comm->referent()))
+    if (comm.quoted_recently())
       continue;
-    groups[exchange].push_back(std::ref(*comm));
+
+    // Fetch a commodity that has a price of its own, in terms of the
+    // commodity of its latest one at or before now.  map_prices() without
+    // `bidirectionally` never yields the inverted edge that makes "$" look
+    // priced in AAPL once "P AAPL $100" has been read.
+    std::optional<price_point_t> latest;
+    comm.map_prices([&latest](datetime_t when, const amount_t& price) {
+      if (!latest || when > latest->when)
+        latest = price_point_t(when, price);
+    });
+    if (latest)
+      groups[latest->price.has_commodity() ? latest->price.commodity_ptr() : nullptr].push_back(
+          std::ref(comm));
   }
 
   if (groups.empty()) {

@@ -48,8 +48,11 @@
  * entry points that drive the four report modes: posting iteration, account
  * summation, commodity listing, and journal output.
  *
- * Every command invocation creates a fresh report_t (owned by the global
- * session_t) so that option state is not carried across interactive commands.
+ * report_t objects live on global_scope_t's report stack; the session_t owns
+ * the journal.  A command line runs on the one report created at startup, and
+ * each REPL or --script command runs on a copy of the current report that is
+ * discarded when the command ends, so the options a command sets do not carry
+ * over to the next (the push command saves a copy for later commands).
  * The option handlers declared here frequently cross-reference each other
  * using the OTHER() macro -- for example, --basis activates --revalued and
  * sets the amount expression to "rounded(cost)".  This cascading design means
@@ -77,49 +80,22 @@ namespace ledger {
 class session_t;
 class xact_t;
 
-// These are the elements of any report:
-//
-// 1. Formatting string used for outputting the underlying ReportedType.
-//
-// 2. Handler object for the ReportedType.  This is constructed using #1, or
-//    else #1 is ignored completely.  This handler object is also constructed
-//    with the output stream that will be used during formatting.
-//
-// --- The details of #1 and #2 together represent the ItemHandler.
-//
-// 3. Mode of the report.  Currently there are four modes:
-//
-//    a. Posting or commodity iteration.  In this mode, all the journal's
-//       xacts, the postings of a specific xact, or all the journal's
-//       commodities are walked.  In the first two cases, it's the underlying
-//       postings which are passed to #2; in the second case, each
-//       commodity is passed to #2.
-//
-//    b. Account iteration.  This employs step 'a', but add a prologue and
-//       epilogue to it.  In the prologue it "sums" all account totals and
-//       subtotals; in the epilogue it calls yet another handler whose job is
-//       reporting (the handler used in 'a' is only for calculation).
-//
-//       There is one variation on 'b' in which a "totals" line is also
-//       displayed.
-//
-//    c. Write journal.  In this mode, a single function is called that output
-//       the journal object as a textual file.  #2 is used to print out each
-//       posting in the journal.
-//
-//    d. Dump binary file.  This is just like 'c', except that it dumps out a
-//       binary file and #2 is completely ignored.
-//
-// 4. For 'a' and 'b' in #3, there is a different iteration function called,
-//    depending on whether we're iterating:
-//
-//    a. The postings of an xact: walk_postings.
-//    b. The xacts of a journal: walk_xacts.
-//    c. The commodities of a journal: walk_commodities.
-//
-// 5. Finally, for the 'a' and 'b' reporting modes, there is a variant which
-//    says that the formatter should be "flushed" after the entities are
-//    iterated.  This does not happen for the commodities iteration, however.
+/**
+ * @brief Puts ledger::epoch back, when it goes out of scope, to the value it
+ * had when the object was made.
+ *
+ * --now assigns epoch (report_t::now_), and epoch is a process global, so a
+ * session command or Python query that gives --now would otherwise set the
+ * clock for every later command.  An epoch the session itself set (--now
+ * before --script, or the constructor's clock) is the value restored.
+ */
+class epoch_scope_t : public noncopyable {
+  optional<datetime_t> saved;
+
+public:
+  epoch_scope_t() : saved(epoch) {}
+  ~epoch_scope_t() { epoch = saved; }
+};
 
 /**
  * @brief Central report configuration and command dispatch scope.
@@ -142,9 +118,13 @@ class xact_t;
  * - **Symbol lookup** -- lookup() resolves FUNCTION, OPTION, COMMAND, and
  *   PRECOMMAND symbols, delegating to session_t for global symbols.
  *
- * A new report_t is created for each command invocation so that option state
- * is isolated.  The session_t (which owns the journal) persists across
- * commands in interactive mode.
+ * Each REPL or --script command runs on a copy of the current report (see
+ * global_scope_t::push_report), so its option settings end with the command,
+ * while the session_t, which owns the journal, persists across commands.
+ * Options that set process globals (--start-of-week, --period-shift,
+ * --ignore-diacritics, --truncate) are re-derived from the current report by
+ * apply_option_globals(), which runs when a REPL or --script command's report
+ * is pushed and again in normalize_options().
  *
  * @see option_t for the option template machinery.
  * @see chain.h for the post_handler filter chain assembly.
@@ -155,20 +135,38 @@ class report_t : public scope_t {
 public:
   session_t& session;            ///< The owning session (provides journal, global options)
   output_stream_t output_stream; ///< Manages pager, file output, or stdout as configured
-
-  /*--- Budget Mode Flags ---*/
-
-#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default)
-#define BUDGET_BUDGETED 0x01    ///< Show only budgeted accounts (--budget)
-#define BUDGET_UNBUDGETED 0x02  ///< Show only unbudgeted accounts (--unbudgeted)
-#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) pairs for budget command
+  /// The journal's report-account pool while this report (or a copy) uses
+  /// it; see temp_accounts().
+  std::shared_ptr<temporaries_t> accounts_pool;
 
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
+  optional<datetime_t>
+      now_epoch; ///< Instant the last --now assigned to ledger::epoch (copied with the report)
   optional<date_t> origin; ///< Report begin date for budget period initialization (from -p/--begin)
+  optional<date_t>
+      report_begin; ///< Date the last -b/--begin resolved to (empty leading periods start here)
+  optional<date_t>
+      report_end; ///< Date the last -e/--end resolved to (empty trailing periods stop here)
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  /// Recomputed by normalize_period(): -S sorts the postings within each
+  /// period, not the whole report.
+  bool sort_within_periods = false;
+  /// Set by normalize_options: the command displays rounded running totals
+  /// (balance/register text output), so display_filter_posts may emit
+  /// <Adjustment> rows.
+  bool show_rounding_adjustments = false;
+
+  /// Rewrite rules given by --payee-rewrite and --account-rewrite.  They
+  /// belong to the report, not to the journal with the rules its
+  /// directives declare, so that a rule given to one command in an
+  /// interactive session applies to that command alone, and a rule given
+  /// at startup survives the journal being read again.  rewrite_posts
+  /// tries them before the journal's.
+  payee_rewrite_mappings_t payee_rewrite_mappings;
+  account_rewrite_mappings_t account_rewrite_mappings;
 
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
@@ -182,6 +180,16 @@ public:
   /// @brief Close the output stream immediately (used for early cleanup).
   void quick_close() { output_stream.close(); }
 
+  /// The pool that owns the accounts this report's filters hang in the
+  /// journal's account tree, the paths --account, --pivot, --pivot-only,
+  /// --anon, --inject and account rewrites build.  Every filter finds them
+  /// through the tree, so they belong to the journal's pool, which every
+  /// live report on the journal holds and which takes them out of the tree
+  /// when the last of those reports ends.  Each filter that builds paths
+  /// calls it once, when the chain is built, with session.journal the
+  /// journal being reported on.
+  temporaries_t& temp_accounts();
+
   string description() override { return _("current report"); }
 
   /// @brief Reconcile option interactions after all options are parsed.
@@ -189,6 +197,25 @@ public:
   /// normalization, and command-specific defaults (e.g., --related-all for print).
   /// @param verb  The command name (e.g., "balance", "register", "print").
   void normalize_options(const string& verb);
+
+  /// @brief Whether dates are auxiliary (effective) dates for this report:
+  /// --aux-date (--effective) is set and --primary-date, which overrides it,
+  /// is not.  The value of item_t::use_aux_date while the journal is read
+  /// and the report runs.
+  bool wants_aux_date() const { return HANDLED(aux_date) && !HANDLED(primary_date); }
+
+  /// Set the process globals through which report options reach lower
+  /// layers (start_of_week, day_of_period, ledger::ignore_diacritics,
+  /// format_t::default_style and default_style_changed, and the clock
+  /// ledger::epoch when this report holds a --now) from this report's
+  /// options alone: each takes its option's value when the option is
+  /// HANDLED and its default otherwise, as item_t::use_aux_date does.
+  /// normalize_options calls it for every command.  A session also calls
+  /// it when it pushes a command's report, before that command's options
+  /// are parsed, so that the masks those options build (--account-rewrite,
+  /// --payee-rewrite) and precommands see the options given before
+  /// --script, not the previous command's.
+  void apply_option_globals();
 
   /// @brief Extract begin/end dates from --period and propagate to --limit.
   /// If the period has no duration component (just begin/end), turns off --period.
@@ -205,14 +232,33 @@ public:
   /// @brief Run a posting-based report (register, csv, print, etc.).
   /// Assembles the filter chain, iterates all journal postings, and flushes.
   void posts_report(post_handler_ptr handler);
-  /// @brief Overload that preserves the handler chain in @a saved_chain for later use.
-  void posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain);
-  /// @brief Run a posting-based report that only needs query filtering (e.g. stats).
-  /// Applies only the pre-post filter chain (--limit, --begin, --end, -p, account
-  /// queries, budget/forecast synthesis) and skips the calc/display/sort chain
-  /// used by register-style reports.  Suitable for handlers that consume filtered
-  /// posts directly without needing running totals or amount expressions.
+  /// @brief Run a posting report for the listing commands (accounts, payees,
+  /// tags, commodities, stats).  Applies the pre-post chain (--limit,
+  /// budget/forecast, pivot), the name-changing stage (chain_transfer_handlers:
+  /// --date/--account/--payee, rewrites, --related, --inject) and the selection
+  /// stage (chain_selection_handlers: --head/--tail, --display, --only), but not
+  /// calc_posts, grouping, collapsing or display rounding.  Without calc_posts,
+  /// a --display or --only predicate that reads `total` (or the --total
+  /// expression) sees each posting's own amount, not a running total.
   void posts_report_quick(post_handler_ptr handler);
+  /// @brief Walk every journal posting through the pre-post chain into
+  /// @a chain, the post stage the caller built, and flush it.  Under
+  /// --group-by a post_splitter between the two flushes @a chain once per
+  /// group, calling @a preflush before each group (when empty, the
+  /// splitter prints the group title) and @a postflush after it, then
+  /// clearing the journal's xdata unless --group-by-cumulative carries
+  /// totals into the next group; otherwise @a postflush runs once after
+  /// the walk.  Between cumulative groups the postings' xdata stays, since
+  /// calc_posts carries the running total from it, and the accounts' is
+  /// cleared, since their flags decide how a row's virtual status prints;
+  /// a @a postflush that reads the accounts' carried totals (an accounts
+  /// report) resets their display state itself instead, so this clear is
+  /// left to it.  The journal's xdata is always clear on return.
+  /// @return The assembled chain.  It owns every synthetic posting the
+  ///         walk created, so a caller that reads them later holds it.
+  post_handler_ptr walk_posts(post_handler_ptr chain,
+                              const function<void(const value_t&)>& postflush = {},
+                              const function<void(const value_t&)>& preflush = {});
   /// @brief Run a report using randomly generated postings (for testing).
   void generate_report(post_handler_ptr handler);
   /// @brief Run a report over a single transaction's postings (for xact/draft commands).
@@ -240,18 +286,39 @@ public:
   /// @throws option_error for a malformed assignment or unknown name.
   static void assign_colors(const string& assignments, std::map<string, string>& palette);
 
+  /// @brief Widths of the register's date, payee, account, amount and
+  /// total columns.
+  struct column_widths_t {
+    long date;
+    long payee;
+    long account;
+    long amount;
+    long total;
+  };
+
+  /// @brief The report's width in columns: --columns, else $COLUMNS, else
+  /// the terminal's width when stdin is a terminal that reports one, else 80.
+  long terminal_columns() const;
+
+  /// @brief The width of each column in a @p cols wide report: the user's
+  /// --date-width etc. where given, else the default share of @p cols.
+  /// Payee is date + 3 in a --period report (#3216); total follows amount.
+  column_widths_t default_column_widths(long cols) const;
+
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
   // value expressions (e.g., "market(amount, value_date, exchange)").
-  // They are registered in lookup() under symbol_t::FUNCTION.
+  // They are bound by name in report_functions (report.cc), which lookup() reads.
 
   // Core expression evaluators
   value_t fn_amount_expr(call_scope_t& scope);    ///< Evaluate the current --amount expression
   value_t fn_total_expr(call_scope_t& scope);     ///< Evaluate the current --total expression
   value_t fn_display_amount(call_scope_t& scope); ///< Evaluate --display-amount expression
-  value_t
-  fn_display_total(call_scope_t& scope); ///< Evaluate --display-total (with caching fast path)
-  value_t fn_display_account(call_scope_t& scope); ///< Evaluate --display-account expression
+  value_t fn_display_total(call_scope_t& scope);  ///< Evaluate --display-total
+  value_t fn_scrubbed_display_total(call_scope_t& scope); ///< scrub(display_total), reading the
+                                                          ///< cached stripped total when present
+  value_t fn_display_account(call_scope_t& scope); ///< Evaluate --display-account, then wrap a
+                                                   ///< virtual posting's name in ()/[]
   value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
   value_t
   fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting
@@ -278,9 +345,8 @@ public:
   value_t fn_floor(call_scope_t& scope);     ///< Floor: round toward negative infinity
   value_t fn_ceiling(call_scope_t& scope);   ///< Ceiling: round toward positive infinity
   value_t fn_clear_commodity(call_scope_t& scope); ///< Remove commodity from an amount
-  value_t fn_round(call_scope_t& scope);           ///< Round to nearest integer
+  value_t fn_round(call_scope_t& scope);           ///< Round to display precision (or N places)
   value_t fn_roundto(call_scope_t& scope);         ///< Round to N decimal places: roundto(val, N)
-  value_t fn_unround(call_scope_t& scope);         ///< Synonym for unrounded()
   value_t fn_abs(call_scope_t& scope);             ///< Absolute value
 
   // Formatting and display helpers
@@ -299,7 +365,7 @@ public:
   value_t fn_format_date(call_scope_t& scope); ///< Format a date: format_date(d [, fmt])
   value_t
   fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
-  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap text in ANSI color codes if condition is met
+  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap in a color's escape; null/boolean: unchanged
   value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
 
   // Commodity and lot inspection
@@ -307,9 +373,6 @@ public:
   value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
   value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
   value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
-  value_t fn_lot_date(call_scope_t& scope);  ///< Extract the lot date annotation
-  value_t fn_lot_price(call_scope_t& scope); ///< Extract the lot price annotation
-  value_t fn_lot_tag(call_scope_t& scope);   ///< Extract the lot tag (note) annotation
 
   // Type conversion functions (callable as to_boolean(), to_int(), etc.)
   value_t fn_to_boolean(call_scope_t& scope);  ///< Convert to boolean
@@ -347,7 +410,7 @@ public:
   optional<string> maybe_format(option_t<report_t>& option) {
     if (option)
       return option.str();
-    return none;
+    return std::nullopt;
   }
 
   /*--- Interactive Commands ---*/
@@ -363,6 +426,20 @@ public:
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
     return keep_details_t(lots || HANDLED(lot_prices), lots || HANDLED(lot_dates),
                           lots || HANDLED(lot_notes), HANDLED(lots_actual));
+  }
+
+  /// True when --total and --display-total keep their defaults (total, total_expr).
+  bool default_total_exprs() const {
+    return HANDLER(total_).expr.exprs.empty() && HANDLER(total_).expr.base_expr == "total" &&
+           HANDLER(display_total_).expr.exprs.empty() &&
+           HANDLER(display_total_).expr.base_expr == "total_expr";
+  }
+
+  /// True when --amount and --display-amount keep their defaults (amount, amount_expr).
+  bool default_amount_exprs() const {
+    return HANDLER(amount_).expr.exprs.empty() && HANDLER(amount_).expr.base_expr == "amount" &&
+           HANDLER(display_amount_).expr.exprs.empty() &&
+           HANDLER(display_amount_).expr.base_expr == "amount_expr";
   }
 
   /// @brief Print all options that have been set, with their values and sources.
@@ -385,6 +462,7 @@ public:
     HANDLER(base).report(out);
     HANDLER(basis).report(out);
     HANDLER(begin_).report(out);
+    HANDLER(bold_if_).report(out);
     HANDLER(both_directions).report(out);
     HANDLER(budget).report(out);
     HANDLER(budget_format_).report(out);
@@ -397,6 +475,7 @@ public:
     HANDLER(collapse_if_).report(out);
     HANDLER(collapse_if_zero).report(out);
     HANDLER(columns_).report(out);
+    HANDLER(count).report(out);
     HANDLER(csv_format_).report(out);
     HANDLER(csv_separator_).report(out);
     HANDLER(current).report(out);
@@ -431,6 +510,8 @@ public:
     HANDLER(group_by_cumulative).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(historical).report(out);
+    HANDLER(ignore_diacritics).report(out);
     HANDLER(immediate).report(out);
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
@@ -448,8 +529,10 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_color).report(out);
     HANDLER(no_group_by).report(out);
     HANDLER(no_pager).report(out);
+    HANDLER(no_revalued).report(out);
     HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
@@ -465,6 +548,7 @@ public:
     HANDLER(period_shift_).report(out);
     HANDLER(pivot_).report(out);
     HANDLER(pivot_only_).report(out);
+    HANDLER(plopen).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
@@ -556,9 +640,10 @@ public:
    */
   ///@{
 
-  OPTION_CTOR(
-      report_t, abbrev_len_, CTOR(report_t, abbrev_len_) {
-        on(none, "2");
+  OPTION_INT_CTOR(
+      report_t, int, abbrev_len_, abbrev_len_option_t()
+      : int_option_t<report_t>("abbrev_len_") {
+        on(std::nullopt, "2");
       }); ///< Minimum abbreviation length for account names (default: 2)
 
   OPTION(report_t, account_);
@@ -568,7 +653,7 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--account-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->account_rewrite_mappings.push_back(
+        parent->account_rewrite_mappings.push_back(
             account_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 
@@ -601,18 +686,18 @@ public:
 
   OPTION_CTOR(
       report_t, balance_format_, CTOR(report_t, balance_format_) {
-        on(none, "%(ansify_if("
-                 "  justify(scrub(display_total), max(int(amount_width),20),"
-                 "          max(int(amount_width),20) + int(prepend_width), true, color,"
-                 "          true),"
-                 "            bold if should_bold))"
-                 "  %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if("
-                 "   ansify_if(partial_account(options.flat), blue if color),"
-                 "             bold if should_bold))\n%/"
-                 "%$1\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "%(\"-\" * max(int(amount_width),20))\n");
+        on(std::nullopt, "%(ansify_if("
+                         "  justify(scrub(display_total), max(int(amount_width),20),"
+                         "          max(int(amount_width),20) + int(prepend_width), true, color,"
+                         "          true),"
+                         "            bold if should_bold))"
+                         "  %(!options.flat ? depth_spacer : \"\")"
+                         "%-(ansify_if("
+                         "   ansify_if(partial_account(options.flat), blue if color),"
+                         "             bold if should_bold))\n%/"
+                         "%$1\n%/"
+                         "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                         "%(\"-\" * max(int(amount_width),20))\n");
       });
 
   OPTION(report_t, base);
@@ -634,17 +719,13 @@ public:
           date_t begin_date = begin_dt->date();
           if (!parent->origin || begin_date < *parent->origin)
             parent->origin = begin_date;
+          parent->report_begin = begin_date;
           return;
         }
 
         date_interval_t interval(str);
         if (optional<date_t> begin = interval.begin()) {
-          // When no explicit year was given (e.g. "-b 10/01" or "-b Oct"),
-          // and the resolved begin date lies in the future, roll back one year.
-          // The user most likely wants the most recent past occurrence of that
-          // date rather than a future one.
-          if (!interval.begin_has_year() && *begin > CURRENT_DATE())
-            begin = *begin - gregorian::years(1);
+          parent->report_begin = begin;
           OTHER(limit_).on(whence, "date>=[" + to_iso_extended_string(*begin) + "]");
           if (!parent->origin || *begin < *parent->origin)
             parent->origin = begin;
@@ -661,29 +742,30 @@ public:
 
   OPTION_CTOR(
       report_t, budget_format_, CTOR(report_t, budget_format_) {
-        on(none, "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
-                 " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
-                 "           int(amount_width) + 1 + int(amount_width), true, color))"
-                 " %(justify(scrub((get_at(display_total, 1) || 0) + "
-                 "                 (get_at(display_total, 0) || 0)), int(amount_width), "
-                 "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), "
-                 "true, color))"
-                 " %(ansify_if("
-                 "   justify((get_at(display_total, 1) and "
-                 "            quantity(scrub(get_at(display_total, 1))) ? "
-                 "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
-                 "             -quantity(scrub(get_at(display_total, 1))) : 0), "
-                 "           5, -1, true, false),"
-                 "   magenta if (color and get_at(display_total, 1) and "
-                 "               quantity(scrub(get_at(display_total, 1))) and "
-                 "               (abs(quantity(scrub(get_at(display_total, 0))) / "
-                 "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
-                 "  %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if(partial_account(options.flat), blue if color))\n"
-                 "%/%$1 %$2 %$3 %$4\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "%(\"-\" * int(amount_width)) %(\"-\" * int(amount_width))"
-                 " %(\"-\" * int(amount_width)) -----\n");
+        on(std::nullopt,
+           "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
+           " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
+           "           int(amount_width) + 1 + int(amount_width), true, color))"
+           " %(justify(scrub((get_at(display_total, 1) || 0) + "
+           "                 (get_at(display_total, 0) || 0)), int(amount_width), "
+           "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), "
+           "true, color))"
+           " %(ansify_if("
+           "   justify((get_at(display_total, 1) and "
+           "            quantity(scrub(get_at(display_total, 1))) ? "
+           "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
+           "             -quantity(scrub(get_at(display_total, 1))) : 0), "
+           "           5, -1, true, false),"
+           "   magenta if (color and get_at(display_total, 1) and "
+           "               quantity(scrub(get_at(display_total, 1))) and "
+           "               (abs(quantity(scrub(get_at(display_total, 0))) / "
+           "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
+           "  %(!options.flat ? depth_spacer : \"\")"
+           "%-(ansify_if(partial_account(options.flat), blue if color))\n"
+           "%/%$1 %$2 %$3 %$4\n%/"
+           "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+           "%(\"-\" * int(amount_width)) %(\"-\" * int(amount_width))"
+           " %(\"-\" * int(amount_width)) -----\n");
       });
 
   OPTION(report_t, by_payee); // -P
@@ -695,16 +777,16 @@ public:
 
   OPTION_CTOR(
       report_t, cleared_format_, CTOR(report_t, cleared_format_) {
-        on(none, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
-                 " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
-                 " 36 + int(prepend_width), true, color))"
-                 "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
-                 " int(date_width)))"
-                 "    %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-                 "%$1  %$2    %$3\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "----------------  ------------------    %(\"-\" * int(date_width))\n");
+        on(std::nullopt, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
+                         " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
+                         " 36 + int(prepend_width), true, color))"
+                         "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
+                         " int(date_width)))"
+                         "    %(!options.flat ? depth_spacer : \"\")"
+                         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+                         "%$1  %$2    %$3\n%/"
+                         "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                         "----------------  ------------------    %(\"-\" * int(date_width))\n");
       });
 
   OPTION(report_t, color);
@@ -733,19 +815,19 @@ public:
 
   OPTION_(report_t, collapse_if_zero, DO() { OTHER(collapse).on(whence); });
 
-  OPTION(report_t, columns_);
+  OPTION_INT(report_t, columns_);
   OPTION(report_t, count);
 
   OPTION_CTOR(
       report_t, csv_format_, CTOR(report_t, csv_format_) {
-        on(none, "%(quoted(date)),"
-                 "%(quoted(code)),"
-                 "%(quoted(payee)),"
-                 "%(quoted(display_account)),"
-                 "%(quoted(commodity(scrub(display_amount)))),"
-                 "%(quoted(quantity(scrub(display_amount)))),"
-                 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-                 "%(quoted(join(note | xact.note)))\n");
+        on(std::nullopt, "%(quoted(date)),"
+                         "%(quoted(code)),"
+                         "%(quoted(payee)),"
+                         "%(quoted(display_account)),"
+                         "%(quoted(commodity(scrub(display_amount)))),"
+                         "%(quoted(quantity(scrub(display_amount)))),"
+                         "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+                         "%(quoted(join(note | xact.note)))\n");
       });
 
   OPTION(report_t, csv_separator_);
@@ -767,7 +849,11 @@ public:
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
-  OPTION(report_t, decimal_places_);
+  OPTION_INT_(
+      report_t, decimal_places_, DO_() {
+        if (parse_int(str) < 0)
+          invalid(str);
+      });
 
   OPTION(report_t, lisp_date_format_);
 
@@ -777,85 +863,91 @@ public:
                                           " (amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
 
         OTHER(register_format_)
-            .on(none, "%(ansify_if("
-                      "  ansify_if(justify(format_date(date), int(date_width)),"
-                      "            green if color and date > today),"
-                      "            bold if should_bold))"
-                      " %(ansify_if("
-                      "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
-                      "             bold if color and !cleared and actual),"
-                      "             bold if should_bold))"
-                      " %(ansify_if("
-                      "   ansify_if(justify(truncated(display_account, int(account_width), "
-                      "                               int(abbrev_len)), int(account_width)),"
-                      "             blue if color),"
-                      "             bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub(abs(get_at(display_amount, 0) || 0)), int(amount_width), "
-                      "           3 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(prepend_width),"
-                      "           true, color),"
-                      "           bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub(abs(get_at(display_amount, 1) || 0)), int(amount_width), "
-                      "           4 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(amount_width) + "
-                      "int(prepend_width),"
-                      "           true, color),"
-                      "           bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, "
-                      "1) || 0)), "
-                      "int(total_width), "
-                      "           5 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(amount_width) + "
-                      "int(total_width)"
-                      "             + int(prepend_width), true, color),"
-                      "           bold if should_bold))\n%/"
-                      "%(justify(\" \", int(date_width)))"
-                      " %(ansify_if("
-                      "   justify(truncated(payee_changed ? payee : \" \", "
-                      "                     int(payee_width)), int(payee_width)),"
-                      "             bold if should_bold))"
-                      " %$3 %$4 %$5 %$6\n");
+            .on(std::nullopt,
+                "%(ansify_if("
+                "  ansify_if(justify(format_date(date), int(date_width)),"
+                "            green if color and date > today),"
+                "            bold if should_bold))"
+                " %(ansify_if("
+                "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+                "             bold if color and !cleared and actual),"
+                "             bold if should_bold))"
+                " %(ansify_if("
+                "   ansify_if(justify(truncated(display_account, int(account_width), "
+                "                               int(abbrev_len)), int(account_width)),"
+                "             blue if color),"
+                "             bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub(abs(get_at(display_amount, 0) || 0)), int(amount_width), "
+                "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(prepend_width),"
+                "           true, color),"
+                "           bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub(abs(get_at(display_amount, 1) || 0)), int(amount_width), "
+                "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(amount_width) + "
+                "int(prepend_width),"
+                "           true, color),"
+                "           bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, "
+                "1) || 0)), "
+                "int(total_width), "
+                "           5 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(amount_width) + "
+                "int(total_width)"
+                "             + int(prepend_width), true, color),"
+                "           bold if should_bold))\n%/"
+                "%(justify(\" \", int(date_width)))"
+                " %(ansify_if("
+                "   justify(truncated(payee_changed ? payee : \" \", "
+                "                     int(payee_width)), int(payee_width)),"
+                "             bold if should_bold))"
+                " %$3 %$4 %$5 %$6\n");
 
         OTHER(balance_format_)
-            .on(none, "%(ansify_if("
-                      "  justify(scrub(abs(get_at(display_total, 0) || 0)), 14,"
-                      "          14 + int(prepend_width), true, color),"
-                      "            bold if should_bold)) "
-                      "%(ansify_if("
-                      "  justify(scrub(abs(get_at(display_total, 1) || 0)), 14,"
-                      "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
-                      "            bold if should_bold)) "
-                      "%(ansify_if("
-                      "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) "
-                      "|| 0)), 14,"
-                      "          14 + 2 + int(prepend_width) + int(total_width) + "
-                      "int(total_width), true, color),"
-                      "            bold if should_bold))"
-                      "  %(!options.flat ? depth_spacer : \"\")"
-                      "%-(ansify_if("
-                      "   ansify_if(partial_account(options.flat), blue if color),"
-                      "             bold if should_bold))\n%/"
-                      "%$1 %$2 %$3\n%/"
-                      "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                      "-------------- -------------- --------------\n");
+            .on(std::nullopt,
+                "%(ansify_if("
+                "  justify(scrub(abs(get_at(display_total, 0) || 0)), 14,"
+                "          14 + int(prepend_width), true, color),"
+                "            bold if should_bold)) "
+                "%(ansify_if("
+                "  justify(scrub(abs(get_at(display_total, 1) || 0)), 14,"
+                "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
+                "            bold if should_bold)) "
+                "%(ansify_if("
+                "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) "
+                "|| 0)), 14,"
+                "          14 + 2 + int(prepend_width) + int(total_width) + "
+                "int(total_width), true, color),"
+                "            bold if should_bold))"
+                "  %(!options.flat ? depth_spacer : \"\")"
+                "%-(ansify_if("
+                "   ansify_if(partial_account(options.flat), blue if color),"
+                "             bold if should_bold))\n%/"
+                "%$1 %$2 %$3\n%/"
+                "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                "-------------- -------------- --------------\n");
 
         OTHER(csv_format_)
-            .on(none, "%(quoted(date)),"
-                      "%(quoted(code)),"
-                      "%(quoted(payee)),"
-                      "%(quoted(display_account)),"
-                      "%(quoted(commodity(scrub("
-                      "get_at(display_amount, 0) || get_at(display_amount, 1) || 0)))),"
-                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 0) || 0))))),"
-                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 1) || 0))))),"
-                      "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-                      "%(quoted(join(note | xact.note)))\n");
+            .on(std::nullopt, "%(quoted(date)),"
+                              "%(quoted(code)),"
+                              "%(quoted(payee)),"
+                              "%(quoted(display_account)),"
+                              "%(quoted(commodity(scrub("
+                              "get_at(display_amount, 0) || get_at(display_amount, 1) || 0)))),"
+                              "%(quoted(quantity(scrub(abs(get_at(display_amount, 0) || 0))))),"
+                              "%(quoted(quantity(scrub(abs(get_at(display_amount, 1) || 0))))),"
+                              "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+                              "%(quoted(join(note | xact.note)))\n");
       });
 
-  OPTION_(report_t, depth_, DO_() { OTHER(display_).on(whence, string("depth<=") + str); });
+  // Like --collapse, limit only account rows through display_;
+  // chain_selection_handlers() limits the postings of a collapsing chain.
+  OPTION_INT_(
+      report_t, depth_,
+      DO_() { OTHER(display_).on(whence, "post|depth<=" + std::to_string(parse_int(str))); });
 
   OPTION_(
       report_t, deviation,
@@ -896,8 +988,10 @@ public:
         if (optional<datetime_t> end_dt = try_parse_datetime(str)) {
           OTHER(limit_).on(whence, "datetime<to_datetime(\"" +
                                        format_datetime(*end_dt, FMT_WRITTEN) + "\")");
-          // The instant itself is excluded, so value prices one second earlier.
+          // The instant itself is excluded, so value prices one second earlier
+          // (a --now given after --end sets terminus again).
           parent->terminus = *end_dt - seconds(1);
+          parent->report_end = end_dt->date();
           return;
         }
 
@@ -907,13 +1001,15 @@ public:
         date_interval_t interval(str);
         if (optional<date_t> end = interval.begin()) {
           OTHER(limit_).on(whence, "date<[" + to_iso_extended_string(*end) + "]");
+          parent->report_end = end;
 
           // Set terminus to the day before --end so that price lookups do not
           // use prices from the (exclusive) end date itself.  This makes
           // "--end X" equivalent to "--now X-1" for market-value purposes, so
           // that commodities are valued as of the last included day rather than
-          // the first excluded day.  (--now still overrides this when the user
-          // needs to pin the valuation date explicitly.)
+          // the first excluded day.  --end and --now each set terminus as they
+          // are parsed, so the one given last wins: give --now after --end to
+          // pin the valuation date explicitly.
           parent->terminus = datetime_t(*end - gregorian::days(1));
         } else {
           throw_(std::invalid_argument, _f("Could not determine end of period '%1%'") % str);
@@ -935,40 +1031,16 @@ public:
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);
-  OPTION(report_t, forecast_years_);
+  OPTION_INT(report_t, forecast_years_);
   OPTION(report_t, format_); // -F
 
   OPTION_(
       report_t, gain, DO() { // -G
         OTHER(revalued).on(whence);
-        OTHER(amount_).expr.set_base_expr("(amount, cost)");
-
-        // Since we are displaying the amounts of revalued postings, they
-        // will end up being composite totals, and hence a pair of pairs.
-        // When --subtotal collapses compound postings the amount expression
-        // evaluates to a nested pair ((amount, cost), (amount, cost)).  We
-        // distinguish two sub-cases by looking at the inner cost element:
-        //
-        //  inner[1] != 0  →  subtotaled post: compute market(inner[0]) - inner[1]
-        //  inner[1] == 0  →  revalued post from changed_value_posts: the delta
-        //                    market(repriced) - market(last) is already computed as
-        //                    inner[0], so return it unchanged (issue #965).
-        OTHER(display_amount_)
-            .on(whence, "use_direct_amount ? amount :"
-                        " (is_seq(get_at(amount_expr, 0)) ?"
-                        "  (get_at(get_at(amount_expr, 0), 1) ?"
-                        "    market(get_at(get_at(amount_expr, 0), 0), value_date, exchange)"
-                        "    - get_at(get_at(amount_expr, 0), 1) :"
-                        "    get_at(get_at(amount_expr, 0), 0)) :"
-                        "  market(get_at(amount_expr, 0), value_date, exchange)"
-                        "  - get_at(amount_expr, 1))");
+        parent->set_gain_display_exprs(whence, "value_date");
         OTHER(revalued_total_)
             .on(whence, "(market(get_at(total_expr, 0), value_date, exchange), "
                         "get_at(total_expr, 1))");
-        OTHER(display_total_)
-            .on(whence, "use_direct_amount ? total_expr :"
-                        " market(get_at(total_expr, 0), value_date, exchange)"
-                        " - get_at(total_expr, 1)");
       });
 
   OPTION(report_t, generated);
@@ -990,9 +1062,9 @@ public:
 
   OPTION_CTOR(
       report_t, group_title_format_,
-      CTOR(report_t, group_title_format_) { on(none, "%(value)\n"); });
+      CTOR(report_t, group_title_format_) { on(std::nullopt, "%(value)\n"); });
 
-  OPTION(report_t, head_);
+  OPTION_INT(report_t, head_);
 
   OPTION_(
       report_t, historical, DO() { // -H
@@ -1078,12 +1150,12 @@ public:
         // "2018/12/16@08:12:33") so that the report epoch can be pinned to a
         // precise instant -- useful with sub-daily price entries.
         if (optional<datetime_t> when = try_parse_datetime(str)) {
-          ledger::epoch = parent->terminus = *when;
+          ledger::epoch = parent->now_epoch = parent->terminus = *when;
           return;
         }
         date_interval_t interval(str);
         if (optional<date_t> begin = interval.begin()) {
-          ledger::epoch = parent->terminus = datetime_t(*begin);
+          ledger::epoch = parent->now_epoch = parent->terminus = datetime_t(*begin);
         } else {
           throw_(std::invalid_argument, _f("Could not determine beginning of period '%1%'") % str);
         }
@@ -1109,11 +1181,11 @@ public:
               have_less = true;
 
             if (have_less) {
-              on(none, "less");
+              on(std::nullopt, "less");
               setenv("LESS", "-FRSX", 0); // don't overwrite
             }
           } else {
-            on(none, std::getenv("PAGER"));
+            on(std::nullopt, std::getenv("PAGER"));
             setenv("LESS", "-FRSX", 0); // don't overwrite
           }
         }
@@ -1131,14 +1203,11 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--payee-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->payee_rewrite_mappings.push_back(
+        parent->payee_rewrite_mappings.push_back(
             payee_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 
-  OPTION_(
-      report_t, pending, DO() { // -C
-        OTHER(limit_).on(whence, "pending");
-      });
+  OPTION_(report_t, pending, DO() { OTHER(limit_).on(whence, "pending"); });
 
   OPTION_(
       report_t, percent, DO() { // -%
@@ -1153,7 +1222,7 @@ public:
           value += string(" ") + str;
       });
 
-  OPTION(report_t, period_shift_);
+  OPTION_INT(report_t, period_shift_);
 
   OPTION(report_t, pivot_);
   OPTION(report_t, pivot_only_);
@@ -1165,31 +1234,18 @@ public:
         // postings are generated.  Prices are looked up at today (not
         // value_date) so each posting reflects its current mark-to-market
         // gain rather than the historical gain at the posting date.
-        OTHER(amount_).expr.set_base_expr("(amount, cost)");
-
-        OTHER(display_amount_)
-            .on(whence, "use_direct_amount ? amount :"
-                        " (is_seq(get_at(amount_expr, 0)) ?"
-                        "  (get_at(get_at(amount_expr, 0), 1) ?"
-                        "    market(get_at(get_at(amount_expr, 0), 0), today, exchange)"
-                        "    - get_at(get_at(amount_expr, 0), 1) :"
-                        "    get_at(get_at(amount_expr, 0), 0)) :"
-                        "  market(get_at(amount_expr, 0), today, exchange)"
-                        "  - get_at(amount_expr, 1))");
-        OTHER(display_total_)
-            .on(whence, "use_direct_amount ? total_expr :"
-                        " market(get_at(total_expr, 0), today, exchange)"
-                        " - get_at(total_expr, 1)");
+        parent->set_gain_display_exprs(whence, "today");
       });
 
   OPTION_CTOR(
       report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
+        on(std::nullopt, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
       });
 
   OPTION_CTOR(
       report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
+        on(std::nullopt,
+           "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n");
       });
 
   OPTION(report_t, prepend_format_);
@@ -1209,14 +1265,15 @@ public:
         // display_total whenever one of them is active (otherwise the report
         // reflects raw prices and the options appear to have no effect,
         // issue #753).
-        on(none, "%(date) %-8(display_account) %(justify(scrub("
-                 "options.average or options.deviation ? display_total : display_amount), 12, "
-                 "    2 + 9 + 8 + 12, true, color))\n");
+        on(std::nullopt,
+           "%(date) %-8(display_account) %(justify(scrub("
+           "options.average or options.deviation ? display_total : display_amount), 12, "
+           "    2 + 9 + 8 + 12, true, color))\n");
       });
 
   OPTION_CTOR(
       report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
-        on(none, "P %(datetime) %(display_account) %(scrub(display_amount))\n");
+        on(std::nullopt, "P %(datetime) %(display_account) %(scrub(display_amount))\n");
       });
 
   OPTION(report_t, primary_date);
@@ -1240,37 +1297,38 @@ public:
 
   OPTION_CTOR(
       report_t, register_format_, CTOR(report_t, register_format_) {
-        on(none, "%(ansify_if("
-                 "  ansify_if(justify(format_date(date), int(date_width)),"
-                 "            green if color and date > today),"
-                 "            bold if should_bold))"
-                 " %(ansify_if("
-                 "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
-                 "             bold if color and !cleared and actual),"
-                 "             bold if should_bold))"
-                 " %(ansify_if("
-                 "   ansify_if(justify(truncated(display_account, int(account_width), "
-                 "                               int(abbrev_len)), int(account_width)),"
-                 "             blue if color),"
-                 "             bold if should_bold))"
-                 " %(ansify_if("
-                 "   justify(scrub(display_amount), int(amount_width), "
-                 "           3 + int(meta_width) + int(date_width) + int(payee_width)"
-                 "             + int(account_width) + int(amount_width) + int(prepend_width),"
-                 "           true, color),"
-                 "           bold if should_bold))"
-                 " %(ansify_if("
-                 "   justify(scrub(display_total), int(total_width), "
-                 "           4 + int(meta_width) + int(date_width) + int(payee_width)"
-                 "             + int(account_width) + int(amount_width) + int(total_width)"
-                 "             + int(prepend_width), true, color),"
-                 "           bold if should_bold))\n%/"
-                 "%(justify(\" \", int(date_width)))"
-                 " %(ansify_if("
-                 "   justify(truncated(payee_changed ? payee : \" \", "
-                 "                     int(payee_width)), int(payee_width)),"
-                 "             bold if should_bold))"
-                 " %$3 %$4 %$5\n");
+        on(std::nullopt,
+           "%(ansify_if("
+           "  ansify_if(justify(format_date(date), int(date_width)),"
+           "            green if color and date > today),"
+           "            bold if should_bold))"
+           " %(ansify_if("
+           "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+           "             bold if color and !cleared and actual),"
+           "             bold if should_bold))"
+           " %(ansify_if("
+           "   ansify_if(justify(truncated(display_account, int(account_width), "
+           "                               int(abbrev_len)), int(account_width)),"
+           "             blue if color),"
+           "             bold if should_bold))"
+           " %(ansify_if("
+           "   justify(scrub(display_amount), int(amount_width), "
+           "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+           "             + int(account_width) + int(amount_width) + int(prepend_width),"
+           "           true, color),"
+           "           bold if should_bold))"
+           " %(ansify_if("
+           "   justify(scrubbed_display_total, int(total_width), "
+           "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+           "             + int(account_width) + int(amount_width) + int(total_width)"
+           "             + int(prepend_width), true, color),"
+           "           bold if should_bold))\n%/"
+           "%(justify(\" \", int(date_width)))"
+           " %(ansify_if("
+           "   justify(truncated(payee_changed ? payee : \" \", "
+           "                     int(payee_width)), int(payee_width)),"
+           "             bold if should_bold))"
+           " %$3 %$4 %$5\n");
       });
 
   OPTION(report_t, related); // -r
@@ -1284,7 +1342,8 @@ public:
 
   OPTION(report_t, rich_data);
 
-  OPTION(report_t, seed_);
+  OPTION_INT_CTOR(report_t, unsigned int, seed_, seed_option_t()
+                  : int_option_t<report_t, unsigned int>("seed_"){});
 
   OPTION_(
       report_t, sort_, DO_() { // -S
@@ -1301,28 +1360,28 @@ public:
 
   OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s
-  OPTION(report_t, tail_);
+  OPTION_INT(report_t, tail_);
 
   OPTION_(
       report_t, time_report, DO() {
         OTHER(balance_format_)
-            .on(none, "%(ansify_if(justify(earliest_checkin ? "
-                      "     format_datetime(earliest_checkin) : \"\", 19, -1, true),"
-                      "     bold if latest_checkout_cleared))  "
-                      "%(ansify_if(justify(latest_checkout ? "
-                      "     format_datetime(latest_checkout) : \"\", 19, -1, true), "
-                      "     bold if latest_checkout_cleared)) "
-                      "%(latest_checkout_cleared ? \"*\" : \" \")  "
-                      "%(ansify_if("
-                      "  justify(scrub(display_total), 8,"
-                      "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
-                      "  %(!options.flat ? depth_spacer : \"\")"
-                      "%-(ansify_if("
-                      "   ansify_if(partial_account(options.flat), blue if color),"
-                      "             bold if should_bold))\n%/"
-                      "%$1  %$2  %$3\n%/"
-                      "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                      "--------------------------------------------------\n");
+            .on(std::nullopt, "%(ansify_if(justify(earliest_checkin ? "
+                              "     format_datetime(earliest_checkin) : \"\", 19, -1, true),"
+                              "     bold if latest_checkout_cleared))  "
+                              "%(ansify_if(justify(latest_checkout ? "
+                              "     format_datetime(latest_checkout) : \"\", 19, -1, true), "
+                              "     bold if latest_checkout_cleared)) "
+                              "%(latest_checkout_cleared ? \"*\" : \" \")  "
+                              "%(ansify_if("
+                              "  justify(scrub(display_total), 8,"
+                              "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
+                              "  %(!options.flat ? depth_spacer : \"\")"
+                              "%-(ansify_if("
+                              "   ansify_if(partial_account(options.flat), blue if color),"
+                              "             bold if should_bold))\n%/"
+                              "%$1  %$2  %$3\n%/"
+                              "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                              "--------------------------------------------------\n");
       });
 
   OPTION_CTOR(
@@ -1390,7 +1449,7 @@ public:
 
   /*--- Column Width Options ---*/
 
-  OPTION(report_t, meta_width_);        ///< Width of the meta-tag prepend column
+  OPTION_INT(report_t, meta_width_);    ///< Width of the meta-tag prepend column
   OPTION_INT(report_t, date_width_);    ///< Width of the date column in register reports
   OPTION_INT(report_t, payee_width_);   ///< Width of the payee column in register reports
   OPTION_INT(report_t, account_width_); ///< Width of the account column in register reports
@@ -1399,6 +1458,12 @@ public:
   OPTION(report_t, values);             ///< Show computed expression values (for debugging)
 
   ///@}
+
+private:
+  /// @brief Set --amount, --display-amount and --display-total to report
+  /// market value less cost, valuing at @p when ("value_date" for --gain,
+  /// "today" for --plopen).
+  void set_gain_display_exprs(const optional<string>& whence, const char* when);
 };
 
 /**

@@ -221,6 +221,78 @@ BOOST_AUTO_TEST_CASE(testAddAndRemovePost)
   BOOST_CHECK(root.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testRemovePostKeepsOthersInOrder)
+{
+  account_t root;
+  account_t* expenses = root.find_account("Expenses");
+  post_t post1(expenses);
+  post_t post2(expenses);
+  post_t post3(expenses);
+  expenses->add_post(&post1);
+  expenses->add_post(&post2);
+  expenses->add_post(&post3);
+
+  // The posting appended last, as a report-time copy is, goes; the rest stay.
+  BOOST_CHECK(expenses->remove_post(&post3));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(expenses->posts.front() == &post1);
+  BOOST_CHECK(expenses->posts.back() == &post2);
+  BOOST_CHECK(post3.account == nullptr);
+
+  // A posting in the middle is found as well.
+  expenses->add_post(&post3);
+  BOOST_CHECK(expenses->remove_post(&post2));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(expenses->posts.front() == &post1);
+  BOOST_CHECK(expenses->posts.back() == &post3);
+
+  // A posting not in the list leaves it as it was.
+  post_t stranger(expenses);
+  BOOST_CHECK(expenses->remove_post(&stranger));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(stranger.account == nullptr);
+
+  expenses->remove_post(&post1);
+  expenses->remove_post(&post3);
+  BOOST_CHECK(expenses->posts.empty());
+  BOOST_CHECK(root.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testSelfTotalRunningTotal)
+{
+  account_t root;
+  account_t* bank = root.find_account("Assets:Bank");
+
+  post_t later(bank, amount_t(100L));
+  later._date = date_t(2024, 3, 1);
+  post_t first(bank, amount_t(10L));
+  first._date = date_t(2024, 1, 1);
+  post_t virt(bank, amount_t(50L), POST_VIRTUAL);
+  virt._date = date_t(2024, 1, 2);
+
+  // A later-dated post written first: a cutoff before it leaves it out.
+  bank->add_post(&later);
+  bank->add_post(&first);
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(110L)));
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 1, 15)) == value_t(amount_t(10L)));
+
+  // Real and combined totals are kept apart.
+  bank->add_post(&virt);
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 3, 1)) == value_t(amount_t(160L)));
+  BOOST_CHECK(bank->self_total(true, date_t(2024, 3, 1)) == value_t(amount_t(110L)));
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 2, 1)) == value_t(amount_t(60L)));
+
+  // Removing posts the running total already counted.
+  bank->remove_post(&later);
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(60L)));
+  BOOST_CHECK(bank->self_total(true) == value_t(amount_t(10L)));
+  bank->remove_posts(std::set<post_t*>{&virt});
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(10L)));
+
+  bank->remove_post(&first);
+  BOOST_CHECK(bank->self_total(false).is_null());
+}
+
 BOOST_AUTO_TEST_CASE(testXdata)
 {
   account_t root;
@@ -333,6 +405,36 @@ BOOST_AUTO_TEST_CASE(testOutputStream)
   std::ostringstream out;
   out << bank;
   BOOST_CHECK_EQUAL(string("Assets:Checking"), out.str());
+}
+
+BOOST_AUTO_TEST_CASE(testChildrenWithFlagsLimit)
+{
+  // children_with_flags counts the children that carry the flag or have a
+  // descendant that does; a limit stops counting once it is reached.
+  account_t root;
+  root.find_account("A")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  root.find_account("B:Deep")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  root.find_account("C")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  BOOST_REQUIRE(root.find_account("D:One")); // nothing below D is flagged
+
+  BOOST_CHECK_EQUAL(std::size_t(3), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY));
+  BOOST_CHECK_EQUAL(std::size_t(2), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(1), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
+  BOOST_CHECK_EQUAL(std::size_t(1),
+                    root.find_account("B")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(0),
+                    root.find_account("D")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY));
+  BOOST_CHECK_EQUAL(std::size_t(0),
+                    root.find_account("D")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
+  BOOST_CHECK_EQUAL(std::size_t(0), root.children_with_flags(ACCOUNT_EXT_VISITED, 2));
+
+  // A first child that leads nowhere must not use up the limit.
+  account_t r2;
+  BOOST_REQUIRE(r2.find_account("A:Empty"));
+  r2.find_account("B")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  r2.find_account("C")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  BOOST_CHECK_EQUAL(std::size_t(2), r2.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(1), r2.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

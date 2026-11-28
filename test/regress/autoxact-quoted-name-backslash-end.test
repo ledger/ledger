@@ -1,0 +1,16 @@
+; A quoted automated-transaction name ending in a lone backslash is an
+; error; the scanner must not read past the end of the line.
+
+= 'abc\
+    Savings    10%
+    Assets
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Unexpected '\' at end of pattern
+end test

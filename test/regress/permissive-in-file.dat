@@ -1,0 +1,4 @@
+; Included by permissive-in-file.test after its --permissive line.
+2024/01/02 Included
+    A                                      1 = 7
+    B

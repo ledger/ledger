@@ -1,4 +1,3 @@
-[![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build Status main](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
@@ -62,18 +61,17 @@ Dependency  | Version (or greater)
 [Boost]     | 1.72
 [Gmp]       | 6.1.2
 [Mpfr]      | 4.0.2
-[utfcpp]    | 3.2.3
-[immer]     | 0.9.1
+[utfcpp]    | 3.2.3 _bundled in `lib/`; a system copy is used if found_
+[immer]     | 0.9.1 _bundled in `lib/`; a system copy is used if found_
 [ICU]       | 63 _optional_
-[gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.10 _optional_
 [Gpgmepp]   | 1.13.1 _optional_
-[doxygen]   | 1.9.5 _optional_, for `make docs`
-[graphviz]  | 2.20.3 _optional_, for `make docs`
-[texinfo]   | 4.13 _optional_, for `make docs`
-[lcov]      | 1.6 _optional_, for `make report`, used with `./acprep gcov`
-[sloccount] | 2.26 _optional_, for `make sloc`
+[doxygen]   | 1.9.5 _optional_, for `make doc` with `-DUSE_DOXYGEN=ON`
+[graphviz]  | 2.20.3 _optional_, for `make doc` with `-DUSE_DOXYGEN=ON`
+[texinfo]   | 4.13 _optional_, for `make doc` with `-DBUILD_DOCS=ON`
+[lcov]      | 1.6 _optional_, for `make coverage`, used with `./acprep gcov` or `./acprep lcov`
+[sloccount] | 2.26 _optional_, for `./acprep sloc`
 
 ### macOS
 
@@ -91,11 +89,11 @@ If you use Homebrew, to install the dependencies you would run:
 If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
-    $ sudo port install -f cmake python37 \
+    $ sudo port install -f cmake python312 \
          libiconv zlib gmp \
          mpfr ncurses ncursesw \
-         gettext libedit boost-jam \
-         boost +st+python37+icu texlive doxygen graphviz \
+         libedit boost-jam \
+         boost +st+python312+icu texlive doxygen graphviz \
          texinfo lcov sloccount
 
 ### Conda
@@ -106,39 +104,41 @@ platforms (for example, `linux-64`), which can be used with [Conda] or [mamba].
 With Conda you could run:
 
     $ conda install -c conda-forge python=3 cmake boost gmp mpfr \
-         gettext libedit texinfo doxygen graphviz
+         libedit texinfo doxygen graphviz
 
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
-following packages (current as of Ubuntu 18.04):
+following packages (Ubuntu 22.04 or later; earlier releases ship a Boost
+older than 1.72):
 
     $ sudo apt-get install build-essential cmake doxygen \
-         libboost-system-dev libboost-dev python3-dev gettext git \
-         libboost-date-time-dev libboost-filesystem-dev \
+         libboost-dev python3-dev git \
+         libboost-date-time-dev \
          libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
          libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
 
 ### Debian
 
-Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
-unstable (sid) contain all components needed to build ledger.  You can
+Debian 12 (bookworm) and later, Debian testing and Debian unstable (sid)
+contain all components needed to build ledger, including Python 3.10 or
+later for the bindings.  You can
 install all required build dependencies using the following command:
 
-    $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
-         zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
-         libboost-date-time-dev libboost-filesystem-dev \
-         libboost-graph-dev libboost-iostreams-dev \
+    $ sudo apt-get install build-essential cmake texinfo python3-dev \
+         zlib1g-dev libbz2-dev libgmp3-dev libmpfr-dev \
+         libboost-date-time-dev libboost-iostreams-dev \
          libboost-python-dev libboost-regex-dev libboost-test-dev
 
 ### Fedora
 
 You can install all required build dependencies under Fedora using the
-following command (tested with Fedora 32):
+following command (Fedora 35 or later; earlier releases ship a Python older
+than 3.10):
 
-    $ sudo dnf install boost-date-time boost-devel boost-filesystem \
-        boost-iostreams boost-python3-devel boost-regex boost-system \
-        boost-test cmake doxygen gettext git gmp-devel libedit-devel \
+    $ sudo dnf install boost-date-time boost-devel \
+        boost-iostreams boost-python3-devel boost-regex \
+        boost-test cmake doxygen git gmp-devel libedit-devel \
         mpfr-devel python3-devel texinfo tzdata
 
 ## Building
@@ -152,8 +152,9 @@ footwork for you:
     # $HOME/local and build with 2 processes in parallel
     $ ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
-Please read the contents of `CMakeFiles/CMakeOutput.log` and
-`CMakeFiles/CMakeError.log` if the configure step fails.  Also,
+Please read the contents of `CMakeFiles/CMakeConfigureLog.yaml` (CMake 3.26
+and later) or `CMakeFiles/CMakeOutput.log` and `CMakeFiles/CMakeError.log`
+(earlier releases) if the configure step fails.  Also,
 see the `help` subcommand to `acprep`, which explains some of its many
 options.  It's pretty much the only command I run for configuring, building
 and testing Ledger.
@@ -247,7 +248,6 @@ hack as much as you like, then [open a pull request on GitHub](https://github.co
 [utfcpp]: https://utfcpp.sourceforge.net
 [immer]: https://github.com/arximboldi/immer
 [ICU]: https://icu.unicode.org
-[gettext]: https://www.gnu.org/software/gettext/
 [libedit]: https://thrysoee.dk/editline/
 [Python]: https://python.org
 [Gpgmepp]: https://www.gnupg.org/related_software/gpgme/
@@ -256,14 +256,6 @@ hack as much as you like, then [open a pull request on GitHub](https://github.co
 [texinfo]: https://www.gnu.org/software/texinfo/
 [lcov]: https://ltp.sourceforge.net/coverage/lcov.php
 [sloccount]: https://www.dwheeler.com/sloccount/
-[pcre]: https://www.pcre.org/
-[libofx]: https://libofx.sourceforge.net
-[expat]: https://libexpat.github.io
-<!--
-xmlsoft url kept as http since its TLS certificate setup is incorrect and browser show
-a "This Connection Is Not Private" message. [Last checked: 2023-03-13]
--->
-[libxml2]: http://xmlsoft.org
 [openhub]: https://www.openhub.net/p/ledger
 [conda-forge]: https://conda-forge.org
 [Conda]: https://conda.io

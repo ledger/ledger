@@ -1,0 +1,7 @@
+reg --payee-width 6 Books
+reg --truncate middle --payee-width 6 Books
+reg --payee-width 6 Books
+reg -W Books
+reg cafe
+reg --now 2024/02/20 --current Books
+reg --current Books

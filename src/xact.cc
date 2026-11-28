@@ -58,6 +58,7 @@
 #include "format.h"
 #include "pool.h"
 #include "annotate.h"
+#include "sha512.h"
 
 namespace ledger {
 
@@ -153,6 +154,17 @@ value_t xact_base_t::magnitude() const {
 /*----------------------------------------------------------------------*/
 
 namespace {
+/// The cost implied by @p amt's lot price: the per-unit price times the
+/// amount, in the price's commodity, unrounded.  A `{{total}}` lot price is
+/// stored per unit as well (amount_t::parse divides it by the quantity), so
+/// ANNOTATION_PRICE_NOT_PER_UNIT only steers printing and needs no case here.
+amount_t cost_from_lot_annotation(const amount_t& amt) {
+  amount_t cost(*amt.annotation().price);
+  cost.in_place_unround();
+  cost.multiply(amt, true);
+  return cost;
+}
+
 /// Helper: detect account names ending with digits, `)`, `}`, or `]`,
 /// which often indicate typos or auto-complete artifacts.  Used to
 /// produce a more helpful error message when two null-amount postings
@@ -185,10 +197,7 @@ struct add_balancing_post {
       : first(true), xact(_xact), null_post(_null_post) {
     TRACE_CTOR(add_balancing_post, "xact_base_t&, post_t *");
   }
-  add_balancing_post(const add_balancing_post& other)
-      : first(other.first), xact(other.xact), null_post(other.null_post) {
-    TRACE_CTOR(add_balancing_post, "copy");
-  }
+  add_balancing_post(const add_balancing_post&) = delete;
   ~add_balancing_post() noexcept { TRACE_DTOR(add_balancing_post); }
 
   void set_cost_prec_if_needed(amount_t& amt) {
@@ -255,6 +264,125 @@ inline bool balances_in_group(const post_t* post, bool virtual_group) {
   return post->must_balance() && post->has_flags(POST_VIRTUAL) == virtual_group;
 }
 
+/// Give @p part the fewest decimals, at least @p least, at which it is
+/// exact.  The arithmetic that made it left it more, which print would
+/// write as zeros; a value that does not terminate within its decimals
+/// keeps them.
+void settle_decimals(amount_t& part, const amount_t::precision_t least) {
+  const int last = std::max(least, part.precision());
+  for (int prec = least; prec <= last; ++prec)
+    if (part.set_precision_if_exact(static_cast<amount_t::precision_t>(prec)))
+      return;
+}
+
+/// The written cost of the part of a sale that sells @p quantity, which
+/// is @p share of the sale: @p given, the sale's written cost, times
+/// @p share, with the decimals the journal would have written for that
+/// part (print writes them, #1151).  A per-unit cost was multiplied by
+/// the sale's amount, @p total_sale, so it has the price's decimals plus
+/// the amount's; the part's has the price's plus @p quantity's.  A share
+/// of a total has the total's decimals, or the fewest more that it
+/// needs ($10.01 in halves is $5.005 each).
+amount_t part_of_given_cost(const amount_t& given, const bool in_full, const amount_t& total_sale,
+                            const amount_t& quantity, const amount_t& share) {
+  amount_t part(given * share);
+  if (in_full) {
+    settle_decimals(part, given.precision());
+  } else {
+    const amount_t::precision_t sale_prec = total_sale.precision();
+    const amount_t::precision_t price_prec =
+        given.precision() > sale_prec
+            ? static_cast<amount_t::precision_t>(given.precision() - sale_prec)
+            : 0;
+    settle_decimals(part, static_cast<amount_t::precision_t>(price_prec + quantity.precision()));
+  }
+  return part;
+}
+
+/// Add to @p xact, just before @p where, a part of @p sale that sells
+/// @p quantity: a copy of the sale's details (flags, state, note, tags,
+/// position and dates) with @p share of its cost and of its written
+/// cost (part_of_given_cost(); @p total_sale is the sale's whole
+/// quantity).  The part is a real posting, as the sale was.
+post_t* add_sale_leg(xact_base_t& xact, posts_list::iterator where, const post_t& sale,
+                     const amount_t& total_sale, const amount_t& quantity, const amount_t& share) {
+  auto* leg = new post_t(sale.account, quantity);
+  leg->copy_details(sale);
+  if (sale.cost)
+    leg->cost = *sale.cost * share;
+  if (sale.given_cost)
+    leg->given_cost = part_of_given_cost(*sale.given_cost, sale.has_flags(POST_COST_IN_FULL),
+                                         total_sale, quantity, share);
+  xact.add_post(leg);
+  xact.posts.splice(where, xact.posts, std::prev(xact.posts.end()));
+  return leg;
+}
+
+/// Phase 5 of finalize(): match each unannotated sale in @p copy
+/// against the lots its own account holds, ordered by @p policy, and
+/// split it across them.  The first lot takes the sale itself; each
+/// further lot, and any quantity no lot covers, gets a part of its own
+/// (add_sale_leg()), placed after the sale and appended to @p copy.
+void match_lots(xact_base_t& xact, std::vector<post_t*>& copy, lot_policy_t policy) {
+  const std::size_t unmatched_end = copy.size(); // legs are appended past this
+  for (std::size_t idx = 0; idx < unmatched_end; ++idx) {
+    post_t* post = copy[idx];
+
+    // Only match unannotated negative amounts for commodities with lots
+    if (post->amount.is_null() || post->amount.sign() >= 0 || post->amount.has_annotation() ||
+        !post->amount.has_commodity() ||
+        !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
+      continue;
+
+    // This account's postings already passed in this transaction, and
+    // every leg added so far.
+    std::vector<const post_t*> pending;
+    for (std::size_t j = 0; j < copy.size(); ++j)
+      if ((j < idx || j >= unmatched_end) && copy[j]->account == post->account)
+        pending.push_back(copy[j]);
+    std::vector<account_lot_t> lots =
+        post->account->held_lots(post->amount.commodity().referent(), pending);
+    if (lots.empty())
+      continue;
+    if (policy == lot_policy_t::lifo)
+      std::reverse(lots.begin(), lots.end());
+
+    const amount_t total_sale = post->amount.abs(); // positive total to sell
+    amount_t remaining = total_sale;
+    amount_t first_consumed;
+    const auto where = std::next(std::find(xact.posts.begin(), xact.posts.end(), post));
+    for (const account_lot_t& lot : lots) {
+      if (remaining.is_realzero())
+        break;
+      amount_t consumed = (remaining <= lot.quantity) ? remaining : lot.quantity;
+      amount_t sale_amt(consumed.negated());
+      sale_amt.set_commodity(*lot.commodity);
+      if (first_consumed.is_null()) {
+        first_consumed = consumed;
+        post->amount = sale_amt;
+        post->amount_expr.reset(); // print must show the lot, not the expression
+      } else {
+        copy.push_back(
+            add_sale_leg(xact, where, *post, total_sale, sale_amt, consumed / total_sale));
+      }
+      remaining -= consumed;
+    }
+    if (!remaining.is_realzero()) { // oversold: book the rest without a lot
+      amount_t rest(remaining.negated());
+      rest.set_commodity(post->amount.commodity().referent());
+      copy.push_back(add_sale_leg(xact, where, *post, total_sale, rest, remaining / total_sale));
+    }
+    if (first_consumed != total_sale) {
+      const amount_t share = first_consumed / total_sale;
+      if (post->cost)
+        *post->cost *= share;
+      if (post->given_cost)
+        post->given_cost = part_of_given_cost(*post->given_cost, post->has_flags(POST_COST_IN_FULL),
+                                              total_sale, post->amount, share);
+    }
+  }
+}
+
 // Widen precision-zero cost commodities to this group's greatest explicit
 // cost precision, so fractional remainders cannot round away (#1114).
 // Restore their precision even if the check throws.
@@ -288,11 +416,13 @@ public:
 
 // Finalization and automated-posting verification use the same zero test
 // and per-unit cost rounding allowance, without changing any postings.
+// The caller holds a cost_precision_scope_t for the group around this test
+// and around any report of its failure, so that the remainder prints at the
+// precision the test used (#1114).
 bool group_balances(const posts_list& posts, const value_t& balance, bool virtual_group) {
   if (balance.is_null())
     return true;
 
-  cost_precision_scope_t precision_scope(posts, virtual_group);
   if (balance.is_zero())
     return true;
 
@@ -423,8 +553,9 @@ void drop_lot_rounding_residue(amount_t& gain_loss, const amount_t& error) {
  * computed, derive their costs from the fixated price.
  *
  * **Phase 5 -- Lot matching (FIFO/LIFO).**
- * For unannotated sales (negative amounts), match against the
- * account's lot holdings to split the sale across specific lots.
+ * For unannotated sales (negative amounts), match against the selling
+ * account's lots (match_lots()) and split the sale across them; each
+ * part keeps the sale's details and its share of the cost.
  *
  * **Phase 6 -- Exchange amounts through the commodity pool.**
  * Process postings with explicit costs (@ or @@), converting them
@@ -598,12 +729,14 @@ bool xact_base_t::finalize() {
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
-      // The primary commodity, x, is top_post's when that is one of the two
-      // components, and otherwise the component that entered the balance
-      // first (first_component), which is what the former unordered map's
-      // two-entry order amounted to.  The persistent map's order is a hash
-      // order, and the direction of the inferred price must not depend on
-      // it.
+      // x, the component that is priced, is top_post's when that is one of
+      // the two components, otherwise the component that entered the
+      // balance first (first_component), and otherwise the first in
+      // sorted_amounts() order.  Below, when neither amount is zero, an x
+      // whose commodity is COMMODITY_PRIMARY is swapped with a y whose
+      // commodity is not, so the cost is stated in the primary commodity.
+      // The balance map's own order is a hash order, so the price's
+      // direction never depends on it.
       balance_t::amounts_array sorted;
       bal.sorted_amounts(sorted);
       assert(sorted.size() == 2);
@@ -704,17 +837,7 @@ bool xact_base_t::finalize() {
       if (!post->cost && !post->amount.is_null() && balances_in_group(post, group.is_virtual) &&
           post->amount.has_annotation() && post->amount.annotation().price &&
           post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-        const annotation_t& ann(post->amount.annotation());
-        post->cost = *ann.price;
-        post->cost->in_place_unround();
-        if (ann.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-          if (post->amount.sign() < 0)
-            post->cost->in_place_negate();
-        } else {
-          commodity_t& cost_commodity(post->cost->commodity());
-          *post->cost *= post->amount;
-          post->cost->set_commodity(cost_commodity);
-        }
+        post->cost = cost_from_lot_annotation(post->amount);
         post->add_flags(POST_COST_CALCULATED);
         post->add_flags(POST_COST_FIXATED);
         recompute = true;
@@ -736,153 +859,9 @@ bool xact_base_t::finalize() {
   std::vector<post_t*> copy(posts.begin(), posts.end());
 
   if (has_date()) {
-    // Phase 5: Lot matching (FIFO/LIFO) for commodity sales.
-    // When a posting sells a commodity (negative unannotated amount) and
-    // the journal has a lot matching policy, find the account's lot
-    // holdings and split the sale across specific lots.  Each lot gets
-    // its own annotated posting so cost basis is tracked correctly.
-    if (journal && journal->lot_matching_policy != lot_policy_t::none) {
-      for (std::size_t idx = 0; idx < copy.size(); ++idx) {
-        post_t* post = copy[idx];
-
-        // Only match unannotated negative amounts for commodities with lots
-        if (post->amount.is_null() || post->amount.sign() >= 0 || post->amount.has_annotation() ||
-            !post->amount.has_commodity() ||
-            !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
-          continue;
-
-        const string& base_symbol = post->amount.commodity().base_symbol();
-
-        // Collect lot holdings from account's prior postings
-        // account->posts contains all posts from prior transactions (not current)
-        std::map<commodity_t*, amount_t> lot_holdings;
-        for (const post_t* prior : post->account->posts) {
-          if (prior->amount.has_commodity() && prior->amount.has_annotation() &&
-              prior->amount.commodity().base_symbol() == base_symbol) {
-            auto [it, inserted] =
-                lot_holdings.try_emplace(&prior->amount.commodity(), prior->amount);
-            if (!inserted)
-              it->second += prior->amount;
-          }
-        }
-
-        // Also account for earlier postings in this same transaction that were
-        // already matched (they modify the effective lot balance)
-        for (std::size_t j = 0; j < idx; ++j) {
-          post_t* earlier = copy[j];
-          if (earlier->amount.has_commodity() && earlier->amount.has_annotation() &&
-              earlier->amount.commodity().base_symbol() == base_symbol) {
-            auto [it, inserted] =
-                lot_holdings.try_emplace(&earlier->amount.commodity(), earlier->amount);
-            if (!inserted)
-              it->second += earlier->amount;
-          }
-        }
-
-        // Build sorted vector of lots with positive holdings
-        // For lots without explicit dates, use the earliest transaction date
-        // from the account's postings for that lot as a fallback.
-        struct lot_info {
-          commodity_t* commodity;
-          amount_t quantity; // stripped (unannotated) for comparison
-          date_t date;
-        };
-        std::vector<lot_info> lots;
-        for (auto& [comm, qty] : lot_holdings) {
-          if (qty.sign() > 0 && comm->has_annotation()) {
-            const annotation_t& ann = as_annotated_commodity(*comm).details;
-            if (ann.date) {
-              lots.push_back({comm, qty.strip_annotations(keep_details_t()), *ann.date});
-            } else {
-              // Fallback: find the earliest transaction date for this lot
-              std::optional<date_t> earliest;
-              for (const post_t* prior : post->account->posts) {
-                if (&prior->amount.commodity() == comm &&
-                    (prior->has_date() || (prior->xact && prior->xact->has_date()))) {
-                  date_t d = prior->primary_date();
-                  if (!earliest || d < *earliest)
-                    earliest = d;
-                }
-              }
-              if (earliest)
-                lots.push_back({comm, qty.strip_annotations(keep_details_t()), *earliest});
-            }
-          }
-        }
-
-        if (lots.empty())
-          continue;
-
-        // Sort by date according to policy
-        if (journal->lot_matching_policy == lot_policy_t::fifo) {
-          std::sort(lots.begin(), lots.end(),
-                    [](const lot_info& a, const lot_info& b) { return a.date < b.date; });
-        } else {
-          std::sort(lots.begin(), lots.end(),
-                    [](const lot_info& a, const lot_info& b) { return a.date > b.date; });
-        }
-
-        // Consume lots in order
-        const amount_t total_sale = post->amount.abs(); // positive total to sell
-        const std::optional<amount_t> original_cost = post->cost;
-        amount_t remaining = total_sale;
-        amount_t first_consumed;
-        bool first = true;
-
-        for (const lot_info& lot : lots) {
-          if (remaining.is_zero())
-            break;
-
-          amount_t consumed = (remaining <= lot.quantity) ? remaining : lot.quantity;
-
-          // Create the annotated sale amount (NEGATIVE - it's a sale)
-          amount_t sale_amt(consumed.negated());
-          sale_amt.set_commodity(*lot.commodity);
-
-          if (first) {
-            // Modify the original posting
-            post->amount = sale_amt;
-            first_consumed = consumed;
-            first = false;
-          } else {
-            // Create a new posting for this lot, in the posting's group
-            post_t* split = new post_t(post->account, sale_amt);
-            split->set_state(post->state());
-            split->add_flags(ITEM_GENERATED | POST_CALCULATED |
-                             (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
-            if (original_cost) {
-              // Split cost proportionally: this lot's share of total
-              split->cost = *original_cost * (consumed / total_sale);
-            }
-            add_post(split);
-            copy.push_back(split);
-          }
-
-          remaining -= consumed;
-        }
-
-        // Adjust the first posting's cost to its proportional share
-        if (!first && original_cost && !first_consumed.is_null() && first_consumed != total_sale) {
-          post->cost = *original_cost * (first_consumed / total_sale);
-        }
-
-        // If there's unmatched remainder (oversell), create an unannotated
-        // posting for it so accounting remains correct
-        if (!remaining.is_zero() && !first) {
-          amount_t remainder_amt(remaining.negated());
-          remainder_amt.set_commodity(post->amount.commodity().referent());
-          post_t* remainder = new post_t(post->account, remainder_amt);
-          remainder->set_state(post->state());
-          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED |
-                               (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
-          if (original_cost) {
-            remainder->cost = *original_cost * (remaining / total_sale);
-          }
-          add_post(remainder);
-          copy.push_back(remainder);
-        }
-      }
-    }
+    // Phase 5: Lot matching (FIFO/LIFO) for commodity sales; see match_lots().
+    if (journal && journal->lot_matching_policy != lot_policy_t::none)
+      match_lots(*this, copy, journal->lot_matching_policy);
 
     // Phase 6: Exchange amounts through the commodity pool.
     // For every posting with an explicit or computed cost, pass it
@@ -926,23 +905,7 @@ bool xact_base_t::finalize() {
             if (post->must_balance())
               add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
                                gain_loss.reduced());
-#if 0
-            account_t * account;
-            if (gain_loss.sign() > 0)
-              account = journal->find_account(_("Equity:Capital Gains"));
-            else
-              account = journal->find_account(_("Equity:Capital Losses"));
-
-            post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
-            p->set_state(post->state());
-            if (post->has_flags(POST_VIRTUAL)) {
-              DEBUG("xact.finalize", "gain_loss came from a virtual post");
-              p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
-            }
-            add_post(p);
-#else
             *post->cost += gain_loss;
-#endif
             DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
@@ -981,11 +944,10 @@ bool xact_base_t::finalize() {
               // currency, even when the gain/loss is zero (i.e. both
               // commodities have the same base-currency value).  The
               // base-currency cost is `to_cost + gain_loss`, which equals
-              // `from_cost`.  Skipping this assignment in the zero-gain case
-              // left the cost denominated in the secondary commodity, so
-              // `--basis` reported the lot in that commodity rather than the
-              // base currency -- or produced no output at all when the two
-              // sides cancelled (#3227).
+              // `from_cost`.  A zero-gain swap needs it too: otherwise the
+              // cost stays in the secondary commodity, and --basis reports
+              // the lot in that commodity, or nothing when the two sides
+              // cancel (#3227).
               *post->cost = to_cost + gain_loss;
 
               DEBUG("xact.finalize",
@@ -994,19 +956,14 @@ bool xact_base_t::finalize() {
           }
         } else if (post->has_flags(POST_COST_CALCULATED) && !post->has_flags(POST_COST_VIRTUAL) &&
                    !post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-          // Issue #3232: the posting acquires a commodity with a lot price
-          // whose commodity (e.g. C) differs from the cost commodity (e.g.
-          // B), and the cost was *inferred* from balancing the transaction's
-          // legs (POST_COST_CALCULATED) rather than written explicitly.
-          // exchange() above recorded the implied amount-to-cost rate
-          // (A -> B), but the declared lot price (A -> C) was never entered
-          // into the price history.  As a result a report repricing into C
-          // (`--exchange C`) could not chain B -> A -> C and silently fell
-          // back to mixed-commodity output.  Record the lot price so the
-          // valuation graph can traverse it, the same way an "@" cost would
-          // have.  This is restricted to inferred costs so that a lot's cost
-          // basis is never re-published as a spurious market price when the
-          // lot is later sold (an explicit "@" disposal).
+          // The posting acquires a commodity A with a lot price in C while
+          // its cost, inferred by balancing the legs (POST_COST_CALCULATED),
+          // is in B.  exchange() above recorded only the A -> B rate, so
+          // record the declared lot price A -> C as well, as an "@" cost
+          // would, letting `--exchange C` chain B -> A -> C (#3232).  Only
+          // inferred costs do this, so that a lot's basis is never
+          // re-published as a market price when the lot is later sold at
+          // an explicit "@" price.
           commodity_pool_t::current_pool->exchange(
               post->amount.commodity(), *post->amount.annotation().price,
               datetime_t(post->date(), time_duration(0, 0, 0, 0)));
@@ -1096,9 +1053,10 @@ bool xact_base_t::finalize() {
     // assigned posting so the group balances.  This lets users
     // write `Account = $target` and have --permissive accept the
     // transaction even when the assigned amount conflicts with the
-    // other postings.  Balance assignments that DO balance (issue
-    // #2944) never reach this point because Phase 7 already cleared
-    // the balance.
+    // other postings.  A balance assignment that balances never gets
+    // here, because group_balances() has already accepted its group:
+    // either the group's postings sum to zero, or the group had a null
+    // posting and Phase 7 balanced it and cleared the balance (#2944).
     if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
       for (post_t* post : posts) {
         if (post->has_flags(POST_CALCULATED) && post->assigned_amount &&
@@ -1118,6 +1076,7 @@ bool xact_base_t::finalize() {
   };
 
   for (const balancing_group_t& group : groups) {
+    cost_precision_scope_t precision_scope(posts, group.is_virtual);
     if (!group_balances(posts, group.balance, group.is_virtual) &&
         !adjust_balance_assignment(group))
       throw_unbalanced(*this, group.balance, group.is_virtual);
@@ -1125,8 +1084,13 @@ bool xact_base_t::finalize() {
 
   // Phase 9: Register postings with their accounts.
   // Each posting is added to its account's post list so that account
-  // balances are maintained incrementally.  Deferred postings (for
-  // future-dated entries) are handled separately.
+  // balances are maintained incrementally.  A posting to <Account>
+  // (POST_DEFERRED) with a non-null amount is instead parked with
+  // add_deferred_post() under this transaction's id().  When a later
+  // transaction with the same UUID arrives, journal_t::add_xact() applies
+  // the postings parked on the accounts that transaction posts to;
+  // apply_deferred_posts() applies whatever is still parked at the end of
+  // the parse.
 
   if (dynamic_cast<xact_t*>(this)) {
     bool all_null = true;
@@ -1207,20 +1171,18 @@ bool xact_base_t::verify() {
   VERIFY(balance.valid());
   VERIFY(virtual_balance.valid());
 
-  // Now that the post list has its final form, calculate the balance once
-  // more in terms of total cost, accounting for any possible gain/loss
-  // amounts.
-
+  // A cost must be in another commodity than its amount, as finalize() requires.
   for (post_t* post : posts) {
     if (!post->cost)
       continue;
 
     if (post->amount.commodity() == post->cost->commodity())
-      throw_(amount_error, _("A posting's cost must be of a different commodity than its amount"));
+      throw_(balance_error, _("A posting's cost must be of a different commodity than its amount"));
   }
 
   for (const bool virtual_group : {false, true}) {
     const value_t& group_balance = virtual_group ? virtual_balance : balance;
+    cost_precision_scope_t precision_scope(posts, virtual_group);
     if (!group_balances(posts, group_balance, virtual_group))
       throw_unbalanced(*this, group_balance, virtual_group);
   }
@@ -1272,34 +1234,6 @@ template <value_t (*Func)(xact_t&)>
 value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<xact_t>(scope));
 }
-
-/// Expression function: `any(expr)` -- returns true if any posting in the
-/// transaction satisfies the given expression.
-value_t fn_any(call_scope_t& args) {
-  post_t& post(args.context<post_t>());
-  expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
-
-  for (post_t* p : post.xact->posts) {
-    bind_scope_t bound_scope(args, *p);
-    if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
-      return true;
-  }
-  return false;
-}
-
-/// Expression function: `all(expr)` -- returns true if every posting in
-/// the transaction satisfies the given expression.
-value_t fn_all(call_scope_t& args) {
-  post_t& post(args.context<post_t>());
-  expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
-
-  for (post_t* p : post.xact->posts) {
-    bind_scope_t bound_scope(args, *p);
-    if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean())
-      return false;
-  }
-  return true;
-}
 } // namespace
 
 /**
@@ -1309,8 +1243,8 @@ value_t fn_all(call_scope_t& args) {
  *   - `payee` / `p` -- the payee string
  *   - `code` -- the check number or transaction code
  *   - `magnitude` -- absolute value of the positive (debit) side
- *   - `any(expr)` -- existential quantifier over postings
- *   - `all(expr)` -- universal quantifier over postings
+ *   - `any(expr[, include_self])` -- existential quantifier over postings
+ *   - `all(expr[, include_self])` -- universal quantifier over postings
  *
  * Unrecognized names fall through to item_t::lookup().
  */
@@ -1322,9 +1256,9 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind, const string& name)
   switch (name[0]) {
   case 'a':
     if (name == "any")
-      return WRAP_FUNCTOR(&fn_any);
+      return WRAP_FUNCTOR(&fn_post_any);
     else if (name == "all")
-      return WRAP_FUNCTOR(&fn_all);
+      return WRAP_FUNCTOR(&fn_post_all);
     break;
 
   case 'c':
@@ -1366,8 +1300,6 @@ bool xact_t::valid() const {
 /*  Hashing                                                             */
 /*----------------------------------------------------------------------*/
 
-extern "C" unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
-
 namespace {
 /// Convert a binary buffer to a lowercase hexadecimal string.
 std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
@@ -1377,22 +1309,35 @@ std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
     oss << std::setw(2) << static_cast<int>(buffer[i]);
   return oss.str();
 }
+
+/// Write an optional hash input as boost's optional operator<< spelled it:
+/// "--" when empty, else a space and the value.  Hash: tags already written
+/// into journals depend on that spelling, so it must not change.
+template <typename T>
+void put_hash_field(std::ostream& out, const optional<T>& field) {
+  if (field)
+    out << ' ' << *field;
+  else
+    out << "--";
+}
 } // namespace
 
 /**
- * @brief Compute a SHA-512 hash of this transaction for deduplication.
+ * @brief Compute this transaction's link in the --hashes chain.
  *
- * Builds a canonical string representation from the nonce, dates, code,
- * payee, and all postings (sorted alphabetically for determinism), then
- * hashes it with SHA-512.  The result can be stored as a UUID tag to
- * detect duplicate imports.
+ * Builds a canonical string from the nonce, dates, code, payee, and all
+ * postings (sorted for determinism), then hashes it with SHA-512.  The
+ * parser (textual_xacts.cc) passes the previous transaction's Hash tag as
+ * the nonce and checks the result against this transaction's Hash tag, or
+ * stores it there when the tag is absent, so each Hash is chained to the
+ * one before it.  UUID deduplication does not use this hash.
  */
 string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
 
   repr << nonce;
   repr << date();
-  repr << aux_date();
+  put_hash_field(repr, aux_date());
   if (code)
     repr << ' ' << *code;
   else
@@ -1401,16 +1346,15 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
 
   std::vector<std::string> strings;
 
-  posts_list all_posts(posts.begin(), posts.end());
-  for (post_t* post : all_posts) {
+  for (post_t* post : posts) {
     std::ostringstream posting;
     posting << post->account->fullname();
     if (!post->amount.is_null())
       posting << post->amount.to_fullstring();
     if (post->cost)
       posting << post->cost->to_fullstring();
-    posting << post->checkin;
-    posting << post->checkout;
+    put_hash_field(posting, post->checkin);
+    put_hash_field(posting, post->checkout);
     strings.push_back(posting.str());
   }
 
@@ -1420,10 +1364,10 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
     repr << str;
   }
 
-  unsigned char data[128];
-  string repr_str(repr.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  unsigned char data[64];
+  string repr_str(repr.str());
 
-  SHA512(const_cast<char*>(repr_str.c_str()), repr_str.length(), data);
+  sha512(repr_str.data(), repr_str.size(), data);
 
   return bufferToHex(data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
@@ -1507,6 +1451,35 @@ static string apply_format(const string& str, scope_t& scope) {
   }
 }
 
+/// Replace each `$name` in an automated posting's account name with
+/// the string value of `name`, evaluated against the matched posting's
+/// account.  A name the scope does not define, or whose value is not a
+/// string, is kept as written, as v3.4.1 kept every `$word` other than
+/// `$account`; a defined name whose evaluation fails (a function that
+/// needs arguments, such as `$abs`) reports that error, as on base.
+/// Substituted text is not rescanned.
+static string expand_account_variables(const string& name, scope_t& parent, account_t& matched) {
+  static const boost::regex var_re("\\$([A-Za-z_]+)");
+  bind_scope_t scope(parent, matched);
+  string result;
+  string::const_iterator rest = name.begin();
+  for (boost::sregex_iterator i(name.begin(), name.end(), var_re), end; i != end; ++i) {
+    const boost::smatch& match(*i);
+    result.append(rest, match[0].first);
+    const string ident(match[1]);
+    value_t value;
+    if (scope.lookup(symbol_t::FUNCTION, ident))
+      value = expr_t(ident).calc(scope);
+    if (value.is_string())
+      result += value.as_string();
+    else
+      result.append(match[0].first, match[0].second);
+    rest = match[0].second;
+  }
+  result.append(rest, name.end());
+  return result;
+}
+
 /**
  * @brief Apply this automated transaction's rules to a regular transaction.
  *
@@ -1533,8 +1506,10 @@ static string apply_format(const string& str, scope_t& scope) {
  *       - Compute the amount: if the template's amount has no commodity,
  *         it is treated as a multiplier (e.g., `0.10` means 10% of the
  *         matched posting's amount); otherwise it is used as-is.
- *       - Resolve `$variable` and `%(format)` expressions in the account
- *         name against the matched posting's scope.
+ *       - Expand `%(format)` expressions in the account name against the
+ *         matched posting; then, if the template contains `$`, replace
+ *         each `$name` with that name's string value against the matched
+ *         posting's account (unknown or non-string names stay as written).
  *       - Clone the template posting with the computed amount and account.
  *       - Inherit the parent transaction's clearing state.
  *       - Apply deferred notes targeted at this template posting.
@@ -1543,11 +1518,11 @@ static string apply_format(const string& str, scope_t& scope) {
  * 5. **After processing all postings**, if any must-balance posting was
  *    generated, call verify() to ensure the transaction still balances.
  */
-void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
-  posts_list initial_posts(xact.posts.begin(), xact.posts.end());
-
+void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context) {
   if (!enabled)
     return;
+
+  posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
   try {
 
@@ -1575,13 +1550,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
       // two and breaking predicates that distinguish them (fixes #2945).
       bool matches_predicate = false;
       {
-        bool saved = item_t::use_aux_date;
-        item_t::use_aux_date = false;
-        struct restore_guard {
-          bool& flag;
-          bool val;
-          ~restore_guard() { flag = val; }
-        } guard{item_t::use_aux_date, saved};
+        scoped_assign<bool> aux_date_guard(item_t::use_aux_date, false);
 
         if (try_quick_match) {
           try {
@@ -1622,24 +1591,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
             }
           }
 
-          if (check_exprs) {
-            for (expr_t::check_expr_pair& pair : *check_exprs) {
-              if (pair.second == expr_t::EXPR_GENERAL) {
-                pair.first.calc(bound_scope);
-              } else if (!pair.first.calc(bound_scope).to_boolean()) {
-                if (pair.second == expr_t::EXPR_ASSERTION)
-                  throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-                else
-                  warning_func((xact.pos ? file_context(*xact.pos->pathname, xact.pos->beg_line)
-                                         : context.location()) +
-                               " " + (_f("Transaction check failed: %1%") % pair.first).str() +
-                               (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                                pos->pathname->string() % pos->beg_line)
-                                                   .str()
-                                    : ""));
-              }
-            }
-          }
+          if (check_exprs)
+            run_check_exprs(bound_scope, &xact, context);
         }
       } // use_aux_date restored here by guard destructor
 
@@ -1650,14 +1603,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
             if (!post->amount_expr)
               throw_(amount_error, _("Automated transaction's posting has no amount"));
 
-            value_t result(post->amount_expr->calc(bound_scope));
-            if (result.is_long()) {
-              post_amount = result.to_amount();
-            } else {
-              if (!result.is_amount())
-                throw_(amount_error, _("Amount expressions must result in a simple amount"));
-              post_amount = result.as_amount();
-            }
+            post_amount = initial_post->resolve_expr(*scope_t::default_scope, *post->amount_expr);
           } else {
             post_amount = post->amount;
           }
@@ -1691,28 +1637,17 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 #endif // DEBUG_ON
 
           account_t* account = post->account;
-          string fullname = account->fullname();
-          assert(!fullname.empty());
-
-          const regex re("\\$([A-Za-z_]+)");
-          smatch matches;
-          if (regex_search(fullname, matches, re)) {
-            bind_scope_t bound_scope(*context.scope, *initial_post->account);
-            const string subexpr = matches[1];
-            value_t result = expr_t(subexpr).calc(bound_scope);
-            if (result.is_string()) {
-              fullname = regex_replace(fullname, re, result.as_string());
-              while (account->parent)
-                account = account->parent;
-              account = account->find_account(fullname);
-            }
-          } else if (contains(fullname, "%(")) {
-            format_t account_name(fullname);
-            std::ostringstream buf;
-            buf << account_name(bound_scope);
+          const string template_name = account->fullname();
+          assert(!template_name.empty());
+          string fullname = apply_format(template_name, bound_scope);
+          if (template_name.find('$') != string::npos)
+            fullname = expand_account_variables(fullname,
+                                                context ? *context->scope : *scope_t::default_scope,
+                                                *initial_post->account);
+          if (fullname != template_name) {
             while (account->parent)
               account = account->parent;
-            account = account->find_account(buf.str());
+            account = account->find_account(fullname);
           }
 
           // Copy over details so that the resulting post is a mirror of
@@ -1728,22 +1663,17 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           if (!post->_date_aux && initial_post->_date_aux)
             new_post->_date_aux = initial_post->_date_aux;
 
+          // copy_details copies the flags but not the cost fields; the
+          // generated amount is the template's, so it keeps the total the
+          // template wrote.
+          new_post->given_lot_total = post->given_lot_total;
           if (post->cost)
             new_post->cost = post->cost;
           else if (initial_post->cost && amt.has_annotation() && amt.annotation().price) {
             // When the auto-generated amount has a price annotation (e.g., copied
             // from a posting with cost like "100 kWh @@ 72€"), derive the cost
             // from the annotation so verify() can check the balance correctly.
-            new_post->cost = *amt.annotation().price;
-            new_post->cost->in_place_unround();
-            if (amt.annotation().has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-              if (amt.sign() < 0)
-                new_post->cost->in_place_negate();
-            } else {
-              commodity_t& cost_commodity(new_post->cost->commodity());
-              *new_post->cost *= amt;
-              new_post->cost->set_commodity(cost_commodity);
-            }
+            new_post->cost = cost_from_lot_annotation(amt);
             new_post->add_flags(POST_COST_CALCULATED);
           }
 
@@ -1764,14 +1694,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           // initial_post->xact where the payee is available.  The new post has
           // not yet been linked to a transaction at this point, so
           // register_account cannot perform the lookup on its own.
-          if (account->name == _("Unknown") && initial_post->xact) {
-            for (account_mapping_t& value : journal->payees_for_unknown_accounts) {
-              if (value.first.match(initial_post->xact->payee)) {
-                account = value.second;
-                break;
-              }
-            }
-          }
+          if (account->name == _("Unknown") && initial_post->xact)
+            if (account_t* mapped = journal->account_for_payee(initial_post->xact->payee))
+              account = mapped;
           new_post->account =
               journal->register_account(account->fullname(), new_post.get(), journal->master);
 
@@ -1815,14 +1740,13 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
  *        predicate and posting-generation phases of extend_xact().
  *
  * This fast path is used by journal_t::extend_xact() for account-scoped
- * check directives (see `scoped_to_account`).  The caller has already
+ * check directives (journal_t::account_check_xacts).  The caller has already
  * verified via index lookup that the posting belongs to the scoped
  * account, so predicate evaluation is unnecessary.  Because account
  * directives cannot carry template postings or deferred notes, only
- * check expressions need to run; the logic mirrors the check_exprs
- * branch of the main extend_xact() loop.
+ * check expressions need to run; both paths share run_check_exprs().
  */
-void auto_xact_t::apply_checks_to_post(post_t& initial_post, parse_context_t& context) {
+void auto_xact_t::apply_checks_to_post(post_t& initial_post, const parse_context_t* context) {
   if (!enabled || !check_exprs)
     return;
 
@@ -1833,37 +1757,40 @@ void auto_xact_t::apply_checks_to_post(post_t& initial_post, parse_context_t& co
     // date() returns the primary date and expressions like
     // "aux_date != date" behave correctly; mirrors extend_xact() above
     // (fixes #2945).
-    bool saved = item_t::use_aux_date;
-    item_t::use_aux_date = false;
-    struct restore_guard {
-      bool& flag;
-      bool val;
-      ~restore_guard() { flag = val; }
-    } guard{item_t::use_aux_date, saved};
+    scoped_assign<bool> aux_date_guard(item_t::use_aux_date, false);
 
-    for (expr_t::check_expr_pair& pair : *check_exprs) {
-      if (pair.second == expr_t::EXPR_GENERAL) {
-        pair.first.calc(bound_scope);
-      } else if (!pair.first.calc(bound_scope).to_boolean()) {
-        const xact_base_t* parent_xact = initial_post.xact;
-        if (pair.second == expr_t::EXPR_ASSERTION)
-          throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-        else
-          warning_func((parent_xact && parent_xact->pos
-                            ? file_context(*parent_xact->pos->pathname, parent_xact->pos->beg_line)
-                            : context.location()) +
-                       " " + (_f("Transaction check failed: %1%") % pair.first).str() +
-                       (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                        pos->pathname->string() % pos->beg_line)
-                                           .str()
-                            : ""));
-      }
-    }
+    run_check_exprs(bound_scope, initial_post.xact, context);
   } catch (const std::exception&) {
     add_error_context(item_context(*this, _("While applying automated transaction")));
     if (initial_post.xact)
       add_error_context(item_context(*initial_post.xact, _("While extending transaction")));
     throw;
+  }
+}
+
+/**
+ * @brief Evaluate check_exprs in @p bound_scope for extend_xact() and
+ *        apply_checks_to_post() (see the declaration in xact.h).
+ *
+ * A failed `check` warns at @p xact_for_location's position (or the parse
+ * context's), followed by the check expression's own position.
+ */
+void auto_xact_t::run_check_exprs(bind_scope_t& bound_scope, const xact_base_t* xact_for_location,
+                                  const parse_context_t* context) {
+  for (expr_t::check_expr_pair& pair : *check_exprs) {
+    if (pair.second == expr_t::EXPR_GENERAL) {
+      pair.first.calc(bound_scope);
+    } else if (!pair.first.calc(bound_scope).to_boolean()) {
+      if (pair.second == expr_t::EXPR_ASSERTION)
+        throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
+      else
+        warning_func(check_location(xact_for_location, context) +
+                     (_f("Transaction check failed: %1%") % pair.first).str() +
+                     (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
+                                      pos->pathname->string() % pos->beg_line)
+                                         .str()
+                          : ""));
+    }
   }
 }
 

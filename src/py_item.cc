@@ -94,15 +94,6 @@ void py_position_set_pathname(position_t& pos, string const& s) {
 
 } // unnamed namespace
 
-#if 0
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-//EXC_TRANSLATOR(item_error)
-#endif
-
 void export_item() {
   class_<position_t>("Position")
       .add_property("pathname", make_function(py_position_pathname),
@@ -123,19 +114,8 @@ void export_item() {
       .value("Cleared", item_t::CLEARED)
       .value("Pending", item_t::PENDING);
 
-#if 0
-  class_< item_t, bases<scope_t> > ("JournalItem", init<uint_least8_t>())
-#else
   class_<item_t, noncopyable>("JournalItem", no_init)
-#endif
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<uint_least16_t>>())
 
       .add_property("note", make_getter(&item_t::note, return_value_policy<return_by_value>()),
                     make_setter(&item_t::note, return_value_policy<return_by_value>()))

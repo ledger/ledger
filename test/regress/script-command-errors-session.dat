@@ -1,0 +1,6 @@
+# --script input for script-command-errors-errors.test: the failing `script`
+# stops the run, so `bal --bogus` never runs and no stale context reaches it.
+# The path is relative because $sourcepath is not expanded inside data files;
+# the harness runs ledger from the source tree.
+script test/regress/script-command-errors.dat
+bal --bogus

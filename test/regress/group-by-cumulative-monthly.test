@@ -1,0 +1,67 @@
+; Under --group-by-cumulative each group reports its own postings once,
+; and the running total (reg) or the account totals (bal) carry over from
+; the groups before it.  With -M the second group's report failed with
+; "Year is out of valid range": interval_posts kept the first group's
+; postings and its advanced period after flushing them, so the next flush
+; re-sorted them in front of the new group's postings and walked the
+; period forward past the year 9999 looking for them.
+
+2024/01/05 Alice
+    Expenses:Food              $10.00
+    Assets:Checking
+
+2024/01/20 Bob
+    Expenses:Rent             $100.00
+    Assets:Checking
+
+2024/02/05 Bob
+    Expenses:Rent             $100.00
+    Assets:Checking
+
+2024/02/10 Alice
+    Expenses:Food              $20.00
+    Assets:Checking
+
+test reg --group-by payee --group-by-cumulative -M Expenses
+Alice
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $10.00       $10.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $20.00       $30.00
+
+Bob
+24-Jan-01 - 24-Jan-31  Expenses:Rent                 $100.00      $130.00
+24-Feb-01 - 24-Feb-29  Expenses:Rent                 $100.00      $230.00
+end test
+
+test reg --group-by payee --group-by-cumulative -M -E -e 2024/04/01 Expenses
+Alice
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $10.00       $10.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $20.00       $30.00
+24-Mar-01 - 24-Mar-31  <None>                              0       $30.00
+
+Bob
+24-Jan-01 - 24-Jan-31  Expenses:Rent                 $100.00      $130.00
+24-Feb-01 - 24-Feb-29  Expenses:Rent                 $100.00      $230.00
+24-Mar-01 - 24-Mar-31  <None>                              0      $230.00
+end test
+
+test bal --group-by payee --group-by-cumulative -M Expenses
+Alice
+              $30.00  Expenses:Food
+
+Bob
+             $230.00  Expenses
+              $30.00    Food
+             $200.00    Rent
+--------------------
+             $230.00
+end test
+
+test reg --group-by payee --group-by-cumulative --dow Expenses
+Alice
+24-Jan-05 Fridays               Expenses:Food                $10.00       $10.00
+24-Feb-10 Saturdays             Expenses:Food                $20.00       $30.00
+
+Bob
+24-Feb-05 Mondays               Expenses:Rent               $100.00      $130.00
+24-Jan-20 Saturdays             Expenses:Rent               $100.00      $230.00
+end test

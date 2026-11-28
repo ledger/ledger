@@ -96,12 +96,15 @@ protected:
   xact_t* last_xact;          ///< Tracks the previous transaction to detect boundaries.
   post_t* last_post;          ///< Tracks the previous posting to detect date changes.
   bool first_report_title;    ///< True until the first group title has been printed.
+  bool next_lines_use_first;  ///< True when the format has no %/: later postings reuse
+                              ///< first_line_format (and its accumulators).
   string report_title;        ///< Current group title (set by upstream grouping filters).
 
 public:
   format_posts(report_t& _report, const string& format,
-               const optional<string>& _prepend_format = none, std::size_t _prepend_width = 0,
-               const optional<string>& _append_format = none);
+               const optional<string>& _prepend_format = std::nullopt,
+               std::size_t _prepend_width = 0,
+               const optional<string>& _append_format = std::nullopt);
   ~format_posts() override { TRACE_DTOR(format_posts); }
 
   /// @brief Set the group title to be printed before the next posting.
@@ -155,21 +158,30 @@ protected:
 
 public:
   format_accounts(report_t& _report, const string& _format,
-                  const optional<string>& _prepend_format = none, std::size_t _prepend_width = 0,
-                  const optional<string>& _append_format = none);
+                  const optional<string>& _prepend_format = std::nullopt,
+                  std::size_t _prepend_width = 0,
+                  const optional<string>& _append_format = std::nullopt);
   ~format_accounts() override { TRACE_DTOR(format_accounts); }
 
   /**
    * @brief Recursively mark which accounts should be displayed.
    *
-   * Walks the account hierarchy depth-first.  An account is marked for
-   * display if it (or its children) have been visited, it passes the
-   * display predicate, and it has a non-trivial display total.  The
-   * --flat flag changes the visibility logic so that intermediate
-   * parent accounts are not shown.  With --empty, an account declared by
-   * an `account` directive is shown even when no posting in the report
-   * reaches it, unless the account terms of the --limit predicate (those
-   * testing its name or depth) rule it out; terms about postings never do.
+   * Walks the account hierarchy depth-first, children before parents.  An
+   * account is considered only when it or a descendant was visited (received
+   * a reported posting) or admitted (under --empty, declared by an `account`
+   * directive and not ruled out by the account terms of --limit, those
+   * testing its name or depth; terms about postings never do).
+   *
+   * In tree mode a parent with two or more displayed children, or one
+   * displayed child plus journal postings of its own, is always shown,
+   * whatever --display and its total say, so the tree keeps its shape.  A
+   * parent with exactly one displayed child and no journal postings of its
+   * own is not shown; the child's line carries the joined name (`Bank:Checking`).
+   * Every other account is shown when it passes --display and its display
+   * total is non-zero (any total under --empty).  With --flat a parent is
+   * never shown for its children's sake: it is considered only when it
+   * was visited itself, was admitted itself, or none of its visited
+   * descendants is shown.
    *
    * When a --collapse-if predicate is active and matches an account, that
    * account becomes a collapse point: its descendants are not marked for
@@ -194,7 +206,7 @@ public:
    *        hierarchical (non-flat) mode.
    * @return 1 if the account was displayed, 0 otherwise.
    */
-  virtual std::size_t post_account(account_t& account, const bool flat);
+  std::size_t post_account(account_t& account, const bool flat);
 
   /// @brief Mark accounts, render all queued accounts, and print the total.
   void flush() override;
@@ -257,8 +269,6 @@ protected:
   report_t& report;                     ///< The report context.
   std::map<string, std::size_t> payees; ///< Map of payee names to posting counts.
 
-  using payees_pair = std::map<string, std::size_t>::value_type;
-
 public:
   report_payees(report_t& _report) : report(_report) { TRACE_CTOR(report_payees, "report&"); }
   ~report_payees() override { TRACE_DTOR(report_payees); }
@@ -286,8 +296,6 @@ protected:
   report_t& report;                   ///< The report context.
   std::map<string, std::size_t> tags; ///< Map of tag strings to occurrence counts.
 
-  using tags_pair = std::map<string, std::size_t>::value_type;
-
 public:
   report_tags(report_t& _report) : report(_report) { TRACE_CTOR(report_tags, "report&"); }
   ~report_tags() override { TRACE_DTOR(report_tags); }
@@ -295,7 +303,7 @@ public:
   /// @brief Output all collected tag names.
   void flush() override;
   /// @brief Extract metadata tags from a single item (transaction or posting).
-  virtual void gather_metadata(item_t& item);
+  void gather_metadata(item_t& item);
   /// @brief Gather tags from both the transaction and the posting.
   void operator()(post_t& post) override;
 
@@ -315,7 +323,6 @@ class report_commodities : public item_handler<post_t> {
 protected:
   report_t& report; ///< The report context.
 
-  using commodities_pair = std::map<commodity_t*, std::size_t>::value_type;
   using commodities_report_map = std::map<commodity_t*, std::size_t, commodity_compare>;
 
   commodities_report_map commodities; ///< Map of commodities to occurrence counts.

@@ -1,0 +1,43 @@
+; A commodity quoted in two currencies: --latest reports its newest price
+; and --monthly the newest price of each month, whichever currency each
+; is quoted in.  The price graph yields a commodity's prices date-ordered
+; only within each currency, so the last price it yields is not always
+; the newest.  XYZ has no price at all and so no row in any of these
+; reports.
+
+P 2024/03/01 AAPL $150
+P 2024/01/05 AAPL $120
+P 2024/01/01 AAPL 100 EUR
+P 2024/02/01 AAPL $140
+P 2023/12/01 AAPL 90 EUR
+
+2023/11/15 Buy
+    Assets:Brokerage     1 AAPL
+    Assets:Cash
+
+2023/11/16 Unpriced
+    Assets:Other         5 XYZ
+    Equity:Opening
+
+test prices --now 2024/06/30
+2023/12/01 AAPL            EUR90
+2024/01/01 AAPL           EUR100
+2024/01/05 AAPL             $120
+2024/02/01 AAPL             $140
+2024/03/01 AAPL             $150
+end test
+
+test prices --latest --now 2024/06/30
+2024/03/01 AAPL             $150
+end test
+
+test pricedb --latest --now 2024/06/30
+P 2024/03/01 00:00:00 AAPL $150
+end test
+
+test prices --monthly --now 2024/06/30
+2023/12/01 AAPL            EUR90
+2024/01/01 AAPL             $120
+2024/02/01 AAPL             $140
+2024/03/01 AAPL             $150
+end test

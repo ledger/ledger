@@ -1,0 +1,30 @@
+; Under --group-by the emacs (lisp) report is flushed once per group.
+; flush() closed the list but kept its memory of the last transaction,
+; so the next group began with ")" and the output was unbalanced.  Each
+; group is now one complete list.
+
+2024/01/01 Landlord
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+2024/01/02 Grocer
+    Expenses:Food    $40.00
+    Assets:Checking
+
+test emacs --group-by payee --lisp-date-format %Y/%m/%d
+(("$FILE" 10 "2024/01/02" nil "Grocer"
+  (11 "Expenses:Food" "$40.00" nil)
+  (12 "Assets:Checking" "$-40.00" nil)))
+(("$FILE" 6 "2024/01/01" nil "Landlord"
+  (7 "Expenses:Rent" "$500.00" nil)
+  (8 "Assets:Checking" "$-500.00" nil)))
+end test
+
+test emacs --lisp-date-format %Y/%m/%d
+(("$FILE" 6 "2024/01/01" nil "Landlord"
+  (7 "Expenses:Rent" "$500.00" nil)
+  (8 "Assets:Checking" "$-500.00" nil))
+ ("$FILE" 10 "2024/01/02" nil "Grocer"
+  (11 "Expenses:Food" "$40.00" nil)
+  (12 "Assets:Checking" "$-40.00" nil)))
+end test

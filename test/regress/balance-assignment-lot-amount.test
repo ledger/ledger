@@ -1,0 +1,22 @@
+; A balance assignment computes the posting amount from the account total.
+; With an unannotated target, the amount keeps the lot annotation when the
+; annotated difference is a single amount, and falls back to the stripped
+; difference when it spans several lots or commodities.  With an annotated
+; target, the difference is restricted to that one lot, so it is always a
+; single amount and keeps its annotation, also when the target is zero or
+; names a lot the account does not yet hold.
+;
+; The journal lives in balance-assignment-lot-amount.dat, which says why.
+
+test -f test/regress/balance-assignment-lot-amount.dat reg Assets:Broker Assets:Stocks --lot-prices --format '%(payee): %(account) %(amount)\n'
+Opening: Assets:Broker 3 AAPL
+Opening: Assets:Broker 2 AAPL {$90}
+Single lot left over: Assets:Broker -2 AAPL {$90}
+Two lots: Assets:Stocks 10 AAPL {$100}
+Two lots: Assets:Stocks 5 AAPL {$110}
+Several lots: Assets:Stocks 5 AAPL
+Annotated target: Assets:Stocks 2 AAPL {$100}
+Other commodity: Assets:Broker 5 EUR
+Annotated other lot: Assets:Stocks 3 AAPL {$120}
+Annotated zero: Assets:Stocks -12 AAPL {$100}
+end test

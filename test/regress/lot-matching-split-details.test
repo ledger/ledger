@@ -1,0 +1,111 @@
+; When --lot-matching splits a sale across lots, every part keeps the
+; sale's tags, note and source position and its share of the cost.
+; Every part is a real posting, as the sale was: print writes it, so
+; its output reads back to the same lots, and --actual counts it.
+; B1 sells two lots, B2 sells one lot and an unmatched remainder, and
+; B3's sale is written as an expression with a total cost.
+
+2024/01/01 Buy
+    Assets:B1                 1 AAPL {$50} [2024/01/01]
+    Assets:B2                 1 AAPL {$50} [2024/01/01]
+    Assets:B3                 1 AAPL {$50} [2024/01/01]
+    Assets:Cash            $-150
+
+2024/02/01 Buy
+    Assets:B1                 1 AAPL {$60} [2024/02/01]
+    Assets:B3                 1 AAPL {$60} [2024/02/01]
+    Assets:Cash            $-120
+
+2024/03/01 Sell
+    Assets:B1                -2 AAPL @ $100  ; Trade: T42
+    Assets:Cash             $200
+    Income:Gains
+
+2024/03/02 Oversell
+    Assets:B2                -3 AAPL @ $100  ; Trade: T43
+    Assets:Cash             $300
+    Income:Gains
+
+2024/03/03 Sell by expression
+    Assets:B3        (-1 AAPL * 2) @@ $200
+    Assets:Cash             $200
+    Income:Gains
+
+test --lot-matching fifo reg Assets:B and %Trade --lots
+24-Mar-01 Sell                  Assets:B1              -1 AAPL {$50} [2024/01/01] -1 AAPL {$50} [2024/01/01]
+                                Assets:B1              -1 AAPL {$60} [2024/02/01] -1 AAPL {$50} [2024/01/01]
+                                                      -1 AAPL {$60} [2024/02/01]
+24-Mar-02 Oversell              Assets:B2              -1 AAPL {$50} [2024/01/01] -2 AAPL {$50} [2024/01/01]
+                                                      -1 AAPL {$60} [2024/02/01]
+                                Assets:B2              -2 AAPL {$100} [2024/03/02] -2 AAPL {$50} [2024/01/01]
+                                                      -1 AAPL {$60} [2024/02/01]
+                                                     -2 AAPL {$100} [2024/03/02]
+end test
+
+test --lot-matching fifo reg Assets:B -F '%(beg_line)|%(amount)|%(tag("Trade"))|%(note)|%(calculated)|%(actual)\n'
+9|1 AAPL {$50} [2024/01/01]|||false|true
+10|1 AAPL {$50} [2024/01/01]|||false|true
+11|1 AAPL {$50} [2024/01/01]|||false|true
+15|1 AAPL {$60} [2024/02/01]|||false|true
+16|1 AAPL {$60} [2024/02/01]|||false|true
+20|-1 AAPL {$50} [2024/01/01]|T42| Trade: T42|false|true
+20|-1 AAPL {$60} [2024/02/01]|T42| Trade: T42|false|true
+25|-1 AAPL {$50} [2024/01/01]|T43| Trade: T43|false|true
+25|-2 AAPL {$100} [2024/03/02]|T43| Trade: T43|false|true
+30|-1 AAPL {$50} [2024/01/01]|||false|true
+30|-1 AAPL {$60} [2024/02/01]|||false|true
+end test
+
+test --lot-matching fifo print
+2024/01/01 Buy
+    Assets:B1                           1 AAPL {$50} [2024/01/01]
+    Assets:B2                           1 AAPL {$50} [2024/01/01]
+    Assets:B3                           1 AAPL {$50} [2024/01/01]
+    Assets:Cash                                $-150
+
+2024/02/01 Buy
+    Assets:B1                           1 AAPL {$60} [2024/02/01]
+    Assets:B3                           1 AAPL {$60} [2024/02/01]
+    Assets:Cash                                $-120
+
+2024/03/01 Sell
+    Assets:B1                           -1 AAPL {$50} [2024/01/01] @ $100  ; Trade: T42
+    Assets:B1                           -1 AAPL {$60} [2024/02/01] @ $100  ; Trade: T42
+    Assets:Cash                                 $200
+    Income:Gains
+
+2024/03/02 Oversell
+    Assets:B2                           -1 AAPL {$50} [2024/01/01] @ $100  ; Trade: T43
+    Assets:B2                                -2 AAPL @ $100  ; Trade: T43
+    Assets:Cash                                 $300
+    Income:Gains
+
+2024/03/03 Sell by expression
+    Assets:B3                           -1 AAPL {$50} [2024/01/01] @@ $100
+    Assets:B3                           -1 AAPL {$60} [2024/02/01] @@ $100
+    Assets:Cash                                 $200
+    Income:Gains
+end test
+
+test --lot-matching fifo bal Assets:B --lots --flat
+-2 AAPL {$100} [2024/03/02]  Assets:B2
+end test
+
+test --lot-matching fifo bal Assets:B --actual --flat
+             -2 AAPL  Assets:B2
+end test
+
+test --lot-matching fifo reg Assets:B1 Assets:B3 -I
+24-Jan-01 Buy                   Assets:B1                       $50          $50
+                                Assets:B3                       $50         $100
+24-Feb-01 Buy                   Assets:B1                       $60         $160
+                                Assets:B3                       $60         $220
+24-Mar-01 Sell                  Assets:B1                     $-100         $120
+                                Assets:B1                     $-100          $20
+24-Mar-03 Sell by expression    Assets:B3                     $-100         $-80
+                                Assets:B3                     $-100        $-180
+end test
+
+test -f $FILE --lot-matching fifo print | $ledger -f - bal Assets:B --lots --flat
+-2 AAPL {$100} [2024/03/02]  Assets:B2
+end test

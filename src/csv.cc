@@ -98,7 +98,7 @@ string csv_reader::read_field(std::istream& in) {
         field += x;
     }
   } else {
-    // Unquoted field: read until comma or end of line
+    // Unquoted field: read until the separator or end of line
     while (in.good() && !in.eof()) {
       in.get(c);
       if (in.good()) {
@@ -114,13 +114,18 @@ string csv_reader::read_field(std::istream& in) {
 }
 
 char* csv_reader::next_line(std::istream& in) {
-  while (in.good() && !in.eof() && in.peek() == '#')
+  // Count every physical line read, comments included, so that
+  // context.linenum is the 1-based line number of context.linebuf.
+  while (in.good() && !in.eof() && in.peek() == '#') {
     std::getline(in, context.linebuf);
+    context.linenum++;
+  }
 
   if (!in.good() || in.eof() || in.peek() == -1)
     return nullptr;
 
   std::getline(in, context.linebuf);
+  context.linenum++;
 
   return context.linebuf.data();
 }
@@ -135,7 +140,7 @@ void csv_reader::read_index(std::istream& in) {
   std::istringstream instr(line);
 
   while (instr.good() && !instr.eof()) {
-    string field = read_field(instr); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string field = read_field(instr);
     names.push_back(field);
 
     DEBUG("csv.parse", "Header field: " << field);
@@ -148,13 +153,37 @@ void csv_reader::read_index(std::istream& in) {
   }
 }
 
+namespace {
+/// @brief Parse one CSV amount column (amount, cost or total).
+///
+/// The field is read alone with PARSE_NO_REDUCE, and a bare number takes
+/// the journal's default commodity (the `D` directive), if one is set.
+amount_t parse_csv_amount(const string& field) {
+  amount_t amt;
+  std::istringstream amount_str(field);
+  (void)amt.parse(amount_str, PARSE_NO_REDUCE);
+  if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
+    amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+  return amt;
+}
+
+/// @brief Stamp @p item with the position of the CSV line just read, and
+///        give it the next item sequence number of @p context.
+void set_csv_position(item_t& item, parse_context_t& context) {
+  item.pos = position_t();
+  item.pos->pathname = context.pathname_ref;
+  item.pos->beg_pos = context.stream->tellg();
+  item.pos->beg_line = context.linenum;
+  item.pos->sequence = context.sequence++;
+}
+} // namespace
+
 /*--- Transaction Construction ---*/
 
 xact_t* csv_reader::read_xact(bool rich_data) {
   char* line = next_line(*context.stream.get());
   if (!line || index.empty())
     return nullptr;
-  context.linenum++;
 
   std::istringstream instr(line);
 
@@ -166,19 +195,11 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   xact->set_state(item_t::CLEARED);
 
-  xact->pos = position_t();
-  xact->pos->pathname = context.pathname_ref;
-  xact->pos->beg_pos = context.stream->tellg();
-  xact->pos->beg_line = context.linenum;
-  xact->pos->sequence = context.sequence++;
+  set_csv_position(*xact, context);
 
   post->xact = xact.get();
 
-  post->pos = position_t();
-  post->pos->pathname = context.pathname_ref;
-  post->pos->beg_pos = context.stream->tellg();
-  post->pos->beg_line = context.linenum;
-  post->pos->sequence = context.sequence++;
+  set_csv_position(*post, context);
 
   post->set_state(item_t::CLEARED);
   post->account = nullptr;
@@ -186,7 +207,6 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   // Phase 2: Walk the CSV columns and populate transaction fields
   // according to the header index built during construction.
   std::vector<int>::size_type n = 0;
-  amount_t amt;
   string total;
   string field;
 
@@ -209,29 +229,15 @@ xact_t* csv_reader::read_xact(bool rich_data) {
         xact->code = field;
       break;
 
-    case FIELD_PAYEE: {
-      bool found = false;
-      for (payee_alias_mapping_t& value : context.journal->payee_alias_mappings) {
-        DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
-        if (value.first.match(field)) {
-          xact->payee = value.second;
-          found = true;
-          break;
-        }
-      }
-      if (!found)
-        xact->payee = field;
+    case FIELD_PAYEE:
+      xact->payee = context.journal->translate_payee_name(field);
       break;
-    }
 
     case FIELD_DEBIT:
     case FIELD_CREDIT: {
       if (field.length() == 0)
         break;
-      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      amount_t amt = parse_csv_amount(field);
       // For a debit column: negate only if the value is positive (unsigned
       // convention where the bank gives the debit amount as a positive number).
       // If the value is already negative (signed convention, e.g. some credit
@@ -249,12 +255,9 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_COST: {
       if (field.length() == 0)
         break;
-      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-      post->cost = amt;
-      post->given_cost = amt;
+      amount_t cost = parse_csv_amount(field);
+      post->cost = cost;
+      post->given_cost = cost;
       post->add_flags(POST_COST_IN_FULL);
       break;
     }
@@ -288,8 +291,17 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     post->cost = std::nullopt;
     post->given_cost = std::nullopt;
     post->drop_flags(POST_COST_IN_FULL);
-    amt = post->amount;
   }
+
+  // A cost column holds the price of the whole amount; like "@@" in a
+  // journal it carries the amount's sign, so a debit with a cost balances.
+  if (post->cost && !post->amount.is_null() &&
+      (post->cost->sign() < 0) != (post->amount.sign() < 0)) {
+    post->cost->in_place_negate();
+    post->given_cost = post->cost;
+  }
+  // The master-account posting balances the cost when there is one.
+  const amount_t balance = post->cost ? *post->cost : post->amount;
 
   // Phase 3: Attach rich metadata if requested (import timestamp and
   // the original CSV line for auditability).
@@ -300,13 +312,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   // Phase 4: Resolve the primary posting's account using the journal's
   // payee-to-account mappings (from `account` directives with payee conditions).
-
-  for (account_mapping_t& value : context.journal->payees_for_unknown_accounts) {
-    if (value.first.match(xact->payee)) {
-      post->account = value.second;
-      break;
-    }
-  }
+  if (account_t* mapped = context.journal->account_for_payee(xact->payee))
+    post->account = mapped;
 
   xact->add_post(post.release());
 
@@ -318,25 +325,16 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   post->xact = xact.get();
 
-  post->pos = position_t();
-  post->pos->pathname = context.pathname_ref;
-  post->pos->beg_pos = context.stream->tellg();
-  post->pos->beg_line = context.linenum;
-  post->pos->sequence = context.sequence++;
+  set_csv_position(*post, context);
 
   post->set_state(item_t::CLEARED);
   post->account = context.master;
 
-  if (!amt.is_null())
-    post->amount = -amt;
+  if (!balance.is_null())
+    post->amount = -balance;
 
-  if (!total.empty()) {
-    std::istringstream assigned_amount_str(total);
-    (void)amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
-    if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-      amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-    post->assigned_amount = amt;
-  }
+  if (!total.empty())
+    post->assigned_amount = parse_csv_amount(total);
 
   xact->add_post(post.release());
 

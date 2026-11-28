@@ -1,0 +1,24 @@
+; --sort-xacts with an empty argument is an error, as --sort with one is.
+; Before the period-sorting flag moved out of --sort-xacts, an empty value
+; was how normalize_period marked a period report, so a user's empty
+; --sort-xacts was silently taken for that marker: alone it did nothing,
+; and beside -S it dropped the report-wide sort.
+
+2024/01/05 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Payee B
+    Expenses:Rent    $5.00
+    Expenses:Food    $1.00
+    Assets:Cash
+
+test reg --sort-xacts '' -> 1
+__ERROR__
+Error: No argument provided for --sort-xacts
+end test
+
+test reg -S amount --sort-xacts '' -> 1
+__ERROR__
+Error: No argument provided for --sort-xacts
+end test

@@ -1,0 +1,16 @@
+; A --value-expr given on a --script line configures the journal that is
+; already read, as it does on the command line: the draft's posting carries
+; the expression, and the expression stays for the lines after it.
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+test --script test/regress/session-option-script-value-expr.dat
+2015/02/01 Buy stocks
+    Assets:Investments                  1 FOO (({25.00 EUR}))
+    Assets:Cash
+2015/02/01 Buy stocks
+    Assets:Investments                  1 FOO (({25.00 EUR}))
+    Assets:Cash
+end test

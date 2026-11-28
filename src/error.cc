@@ -60,7 +60,7 @@ thread_local std::ostringstream _ctxt_buffer;
 thread_local std::ostringstream _desc_buffer;
 
 string error_context() {
-  string context = _ctxt_buffer.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string context = _ctxt_buffer.str();
   discard_error_context();
   return context;
 }
@@ -117,21 +117,7 @@ string source_context(const path& file, const std::istream::pos_type pos,
 
   std::ostringstream out;
 
-  std::unique_ptr<std::istream> in(
-#if HAVE_GPGME
-      decrypted_stream_t::open_stream(file)
-#else
-      new ifstream(file, std::ios::binary)
-#endif
-  );
-  in->seekg(pos, std::ios::beg);
-
-  std::vector<char> buf(static_cast<std::size_t>(read_len) + 1);
-  in->read(buf.data(), static_cast<std::streamsize>(read_len));
-  const std::streamsize got = in->gcount();
-  buf[static_cast<std::ptrdiff_t>(got)] = '\0';
-
-  string content(buf.data(), static_cast<std::size_t>(got));
+  string content = read_source(file, pos, read_len);
   std::vector<string> lines;
   boost::split(lines, content, boost::is_any_of("\r\n"), boost::token_compress_on);
 
@@ -150,6 +136,22 @@ string source_context(const path& file, const std::istream::pos_type pos,
     out << '\n' << prefix << "...(context truncated)";
 
   return out.str();
+}
+
+string read_source(const path& file, const std::istream::pos_type pos, const std::streamoff len) {
+  std::unique_ptr<std::istream> in(
+#if HAVE_GPGME
+      decrypted_stream_t::open_stream(file)
+#else
+      new ifstream(file, std::ios::binary)
+#endif
+  );
+  in->seekg(pos, std::ios::beg);
+
+  string content(static_cast<std::size_t>(len), '\0');
+  in->read(content.data(), static_cast<std::streamsize>(len));
+  content.resize(static_cast<std::size_t>(in->gcount()));
+  return content;
 }
 
 } // namespace ledger

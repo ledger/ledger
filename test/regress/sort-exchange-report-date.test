@@ -1,0 +1,66 @@
+; With --exchange, a sort key that is an amount is converted at the date
+; the report values the row: an account at the report's valuation date
+; (--end here, which --now does not override when it comes first), a
+; posting at its own value date, with or without --historical.  The sort
+; used to convert every key at the latest price, so rows came out of order
+; against the values printed beside them.
+
+P 2024/01/01 AAPL $100
+P 2024/01/01 MSFT $200
+P 2024/01/01 EUR $1
+P 2024/06/01 EUR $3
+P 2025/01/01 AAPL $300
+P 2025/01/01 MSFT $100
+
+2024/01/02 Buy
+    Assets:A             10 AAPL
+    Assets:M             10 MSFT
+    Equity
+
+2024/01/02 a
+    Cash                10 EUR
+    Equity
+
+2024/01/03 b
+    Cash                   $20
+    Equity
+
+2024/06/01 c
+    Bank                10 EUR
+    Equity
+
+2024/06/02 d
+    Bank                   $25
+    Equity
+
+test --now 2025/06/01 bal ^Assets -X '$' --end 2024/06/01 -S amount --flat
+               $1000  Assets:A
+               $2000  Assets:M
+--------------------
+               $3000
+end test
+
+test --now 2025/06/01 bal ^Assets -X '$' --end 2024/06/01 -S amount
+               $3000  Assets
+               $1000    A
+               $2000    M
+--------------------
+               $3000
+end test
+
+test reg ^Cash -X '$' -S amount --now 2024/12/01
+24-Jan-02 a                     Cash                            $10          $10
+24-Jan-03 b                     Cash                            $20          $30
+24-Jun-01 Commodities revalued  <Revalued>                      $20          $50
+end test
+
+test reg ^Cash -X '$' -H -S amount --now 2024/12/01
+24-Jan-02 a                     Cash                            $10          $10
+24-Jan-03 b                     Cash                            $20          $30
+end test
+
+; A price dated on the posting's own date applies to it.
+test reg ^Bank -X '$' -S amount --now 2024/12/01
+24-Jun-02 d                     Bank                            $25          $25
+24-Jun-01 c                     Bank                            $30          $55
+end test

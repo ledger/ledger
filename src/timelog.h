@@ -48,7 +48,6 @@
 namespace ledger {
 
 class account_t;
-class journal_t;
 class parse_context_t;
 
 class time_xact_t {
@@ -60,7 +59,7 @@ public:
   string note;
   position_t position;
 
-  time_xact_t() : account(nullptr) { TRACE_CTOR(time_xact_t, ""); }
+  time_xact_t() : completed(false), account(nullptr) { TRACE_CTOR(time_xact_t, ""); }
   time_xact_t(const optional<position_t>& _position, const datetime_t& _checkin,
               const bool _completed = false, account_t* _account = nullptr,
               const string& _desc = "", const string& _note = "")

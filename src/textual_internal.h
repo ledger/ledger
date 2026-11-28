@@ -71,14 +71,12 @@
 #include "session.h"
 #include <algorithm>
 #include <utility>
+#include <functional>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #endif
 
-#define TIMELOG_SUPPORT 1 ///< Enable time-tracking (clock-in/out) directives
-#if TIMELOG_SUPPORT
 #include "timelog.h"
-#endif
 
 namespace ledger::detail {
 
@@ -98,11 +96,15 @@ using fixed_rate_t = std::pair<commodity_t*, amount_t>;
  *   - string               -- `apply tag` (tags added to every item)
  *   - fixed_rate_t         -- `apply fixed` / `apply rate` (price override)
  *
- * The label field records the directive keyword (e.g. "account", "tag") so
- * that `end apply <keyword>` can verify it matches the most recent entry.
+ * The label field records the canonical apply keyword: "account", "tag",
+ * "year" or "fixed" (`apply rate` records "fixed" too).  end_apply_directive()
+ * checks `end apply <keyword>`, and the older `end <keyword>`, against the
+ * most recent entry's label, reading `rate` as `fixed`, so either spelling
+ * closes either block.  A bare `end` or `end apply` closes the most recent
+ * entry unchecked.
  */
 struct application_t {
-  string label; ///< The apply keyword ("account", "tag", "year", "fixed")
+  string label; ///< Canonical apply keyword; `apply rate` records "fixed"
   std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t>
       value;                          ///< Type-specific payload
   optional<int> saved_year_directive; ///< Year directive value saved before `apply year` changed it
@@ -113,6 +115,17 @@ struct application_t {
   application_t(string _label, string tag) : label(std::move(_label)), value(tag) {}
   application_t(string _label, fixed_rate_t rate) : label(std::move(_label)), value(rate) {}
 };
+
+/// One directory's entries, as include_directive's glob expansion saw them.
+struct directory_listing_t {
+  std::vector<path> entries; ///< Full paths `dir / name`, sorted; empty when @c error is set
+  std::error_code error;     ///< Set when the directory could not be listed
+  std::filesystem::file_time_type stamp; ///< The directory's modification time, read before listing
+  bool racy = true; ///< Listed too soon after @c stamp to trust, or @c stamp is unknown
+};
+
+/// Directory listings taken during one parse, keyed by directory path.
+using directory_cache_t = std::map<path, directory_listing_t>;
 
 /**
  * @brief The parser instance for a single journal file.
@@ -138,17 +151,14 @@ public:
   instance_t* parent; ///< Parent instance when parsing an included file (nullptr for top-level)
   std::list<application_t>
       apply_stack;       ///< Stack of active `apply` directives (front = most recent)
-  bool no_assertions;    ///< True when --permissive is active (skip balance assertions)
   hash_type_t hash_type; ///< Hash algorithm for transaction chaining (NO_HASHES to disable)
-#if TIMELOG_SUPPORT
-  time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
-#endif
+  time_log_t timelog;    ///< Accumulates clock-in/out events for time tracking
+  directory_cache_t directory_cache; ///< Include directory listings (only the root's is used)
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
-             instance_t* _parent = nullptr, const bool _no_assertions = false,
-             const hash_type_t _hash_type = NO_HASHES)
+             instance_t* _parent = nullptr, const hash_type_t _hash_type = NO_HASHES)
       : context_stack(_context_stack), context(_context), in(*context.stream.get()),
-        parent(_parent), no_assertions(_no_assertions), hash_type(_hash_type), timelog(context) {}
+        parent(_parent), hash_type(_hash_type), timelog(context) {}
 
   string description() override { return _("textual parser"); }
 
@@ -173,8 +183,12 @@ public:
       if (std::holds_alternative<T>(state.value))
         return std::get<T>(state.value);
     }
-    return parent ? parent->get_application<T>() : none;
+    return parent ? parent->get_application<T>() : std::nullopt;
   }
+
+  /// @brief The directory listing cache shared by every file of this parse:
+  ///        the one owned by the instance that began it.
+  directory_cache_t& listing_cache() { return parent ? parent->listing_cache() : directory_cache; }
 
   /// @brief Return the innermost `apply account` target, or nullptr if none.
   account_t* top_account() {
@@ -220,15 +234,46 @@ public:
    */
   xact_t* read_next_directive(bool& error_flag, xact_t* previous_xact);
 
-#if TIMELOG_SUPPORT
+  /// Parse "i|o DATE TIME[ ACCOUNT[  PAYEE][  ; NOTE]]"; account is null when the line names none.
+  time_xact_t parse_clock_event(char* line, bool capitalized);
   void clock_in_directive(char* line, bool capitalized);
   void clock_out_directive(char* line, bool capitalized);
-#endif
 
   /// @brief Dispatch table for word-based directives (account, commodity, include, etc.).
   /// @return true if a known directive was handled, false to fall through to legacy single-char
   /// directives.
   bool general_directive(char* line);
+
+  /// @brief One indented line beneath a block directive (`account`,
+  ///        `commodity`, `payee`, `tag`), split into keyword and argument.
+  struct subdirective_t {
+    const char* kind;   ///< The block's name in errors: "account", "commodity", ...
+    string keyword;     ///< The line's first word
+    char* arg;          ///< The rest of the line, or nullptr if there is none
+    std::size_t indent; ///< The line's indentation: the outer indent of a nested block
+
+    /// @brief The argument of a recognized keyword that takes one.  A
+    ///        keyword is checked for a missing argument only once it has
+    ///        been recognized, so an unknown one is reported as
+    ///        unrecognized instead (issue #3260).
+    /// @throws parse_error "<Kind> directive '<keyword>' requires an argument"
+    ///         if the line has none.
+    char* argument() const;
+  };
+
+  /// @brief Read the sub-directives beneath a block directive whose own
+  ///        line is indented @p outer_indent columns (0 at top level).
+  ///
+  /// Reads each following line indented more deeply, stopping before the
+  /// first line that is not, or after a blank line.  A comment line is
+  /// passed, past its comment character and the whitespace after it, to
+  /// @p on_comment when one is given, and is skipped otherwise.  Every
+  /// other line goes to @p on_keyword, which returns false for a keyword it
+  /// does not recognize; that is reported as
+  /// "Unrecognized <kind> directive '<keyword>'".
+  void read_subdirectives(std::size_t outer_indent, const char* kind,
+                          const std::function<bool(const subdirective_t&)>& on_keyword,
+                          const std::function<void(char*)>& on_comment = nullptr);
 
   /*--- Account Directives ---*/
 
@@ -302,7 +347,9 @@ public:
       char* line, bool use_apply_stack =
                       false); ///< Set the default year (optionally via apply stack for `end apply`)
   void end_apply_directive(
-      char* line); ///< Pop the most recent apply-stack entry, verifying the keyword matches
+      char* line);        ///< Pop the most recent apply-stack entry, verifying the keyword matches
+  void pop_application(); ///< Pop apply_stack.front(), restoring the year state an `apply year`
+                          ///< entry saved
 
   /*--- Transaction Directives ---*/
 
@@ -348,13 +395,18 @@ public:
    * @param account    The current root account (from apply account or master).
    * @param xact       The owning transaction (nullptr for automated/period xacts).
    * @param defer_expr If true, amount expressions are stored but not evaluated yet.
-   * @return A heap-allocated post_t, or nullptr on failure.
+   * @return A heap-allocated post_t owned by the caller; failures throw parse_error.
    */
   post_t* parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                      bool defer_expr = false);
 
   /**
-   * @brief Read and parse all indented posting lines following a transaction header.
+   * @brief Read the posting lines of a periodic (`~`) transaction.
+   *
+   * Reads indented lines until a blank or unindented one.  `;` note and
+   * metadata lines are skipped, not attached to the transaction or its
+   * postings.  Regular and automated transactions read their own posting
+   * lines (parse_xact(), automated_xact_directive()).
    * @return true if at least one posting was added.
    */
   bool parse_posts(account_t* account, xact_base_t& xact, const bool defer_expr = false);
@@ -372,7 +424,7 @@ public:
    * @param len            Length of the header line.
    * @param account        Current root account.
    * @param previous_xact  Previous transaction for hash chaining (may be nullptr).
-   * @return A heap-allocated xact_t, or nullptr on failure.
+   * @return A heap-allocated xact_t owned by the caller; failures throw parse_error.
    */
   xact_t* parse_xact(char* line, std::streamsize len, account_t* account, xact_t* previous_xact);
 

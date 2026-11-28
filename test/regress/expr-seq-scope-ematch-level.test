@@ -1,0 +1,31 @@
+; Pins two claims the expression-parser comments make (src/op.cc
+; calc_seq, src/parser.h precedence table):
+;  - every statement of a `;` sequence runs in the caller's scope, so a
+;    name defined by an earlier statement is visible to later ones, even
+;    from inside a parenthesized inner sequence;
+;  - `==~` parses at the comparison level: `+` binds tighter, `or`
+;    binds looser.
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test eval 'triple(a) = a * 3; y = 2; triple(y)'
+6
+end test
+
+test eval '(y = 2; y + 1) + y'
+5
+end test
+
+test eval '"Ex" + "penses" ==~ /^(E)x/'
+(Ex, E)
+end test
+
+test eval '"ab" ==~ /q/ or "zz"'
+zz
+end test
+
+test eval '"ab" ==~ /a/ or "zz"'
+a
+end test

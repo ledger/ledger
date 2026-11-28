@@ -2,10 +2,9 @@
 
 ## 3.5.0
 
-This is a substantial release representing more than 575 merged pull requests.
-It modernizes the C++ codebase, dramatically expands test coverage, fixes a
-long list of crashes and correctness bugs, and adds several new options,
-directives, and commands.
+This is a substantial release.  It modernizes the C++ codebase, dramatically
+expands test coverage, fixes a long list of crashes and correctness bugs, and
+adds several new options, directives, and commands.
 
 ### Critical Bug Fixes
 
@@ -19,8 +18,9 @@ directives, and commands.
   converter
 
 - Fix null pointer dereferences in `get_code()`, `post_pred` (issue #1219),
-  `apply` directive functions (#1221), and `magnitude()` when a posting has a
-  null amount (#2212)
+  `apply` directive functions (#1221), `magnitude()` when a posting has a
+  null amount (#2212), and a `tag` directive's `check` or `assert` given no
+  expression (#3260)
 
 - Fix dangling context pointers from stack-allocated `bind_scope_t` and from
   tag-assertion expressions in the journal
@@ -42,9 +42,27 @@ directives, and commands.
 - Fix buffer overread in the quantity punctuation-stripping loop and add
   `numeric_cast` guards against narrowing overflows
 
+- Fix out-of-bounds reads in `truncate()` when it abbreviates an account
+  name: control characters were counted as -1 columns, so a name holding
+  enough of them wrapped its width around (#3291), and a shortened segment
+  whose remaining text was only whitespace was scanned past its start.
+  Control characters now count as zero columns when `justify()` and
+  `truncate()` measure text, and an abbreviated segment holding wide
+  characters no longer keeps a trailing space
+
 - Fix infinite recursion with `--unround` and `--group-by` (issue #518) and
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
+
+- Fix crashes in the `xact` command: a later command in the same REPL
+  session used the transaction it had generated after freeing it, and a
+  draft whose metadata a `tag ... assert` or `tag ... check` expression
+  tests crashed the command; also fix the crash in Python's
+  `Journal.register_account` under `--strict` after parsing (#3244)
+
+- Report an error instead of crashing when a commodity would be filed twice
+  under one name, as `--anon` could do after an `alias` named a commodity
+  with lots (#3341)
 
 - Fix the parser looping forever on `==` in a posting's amount or cost
   expression, such as `(1 == 1)`.  `==` now compares there, as `!=` already did
@@ -55,86 +73,47 @@ directives, and commands.
 
 ### Performance
 
-- Performance: the `balance`, `print` and `register` reports no longer slow
-  down or exhaust memory as lots accumulate, and the common reports are
-  substantially faster.  Creating a lot during parsing scanned every lot of the
-  same commodity (quadratic parsing, introduced after 3.4.1); adding a lot to a
-  balance scanned the balance (quadratic account totals); and every posting of
-  a register or print report kept a full copy of the running total (memory
-  proportional to postings times lots: 4 GB for a 10k-transaction journal).
-  Balances are now stored in a persistent map (the vendored `immer` library
-  under lib/), amounts are formatted with exact integer arithmetic instead of
-  MPFR except on exact ties, most of the expression evaluator's scope lookups
-  no longer use `dynamic_cast`, revaluation reads only the price points it
-  needs instead of an edge's whole history, and the printing path allocates far
-  less.  On hledger's 100k-transaction benchmark journal the flat balance
-  report went from 16s to 0.7s, and `print` and `register`, which needed 4 GB
-  at 10k transactions and could not finish at 100k within 23 GB, now take 0.3
-  GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
-  unusable, is read in 4s, balanced in 7s and printed in 8s.  `print` no longer
-  computes running totals it never displays, unless an option that may read
-  them is given: `--amount` or `--display-amount` (which `-V`, `-X`, `-G` and
-  `--unround` set), `--revalued` (`-B`), `--display`, `--only`, `--forecast`,
-  `--average`, `--deviation` or `--percent`.  A journal with more than about
-  32,000 lots valued by one `value` expression no longer aborts.  Two costs
-  remain: creating a lot still examines the lots that share its day, or like it
-  have none, one by one (the price matching added after 3.4.1), so many such
-  lots of one commodity take time quadratic in their number; and a report that
-  visits every lot of the running total at every posting still takes time
-  proportional to postings times lots: one that revalues the total (`-V`, `-X`,
-  `-G`, and `--unrealized` with them), `--invert`, `--round`, `--unround`,
+- The `balance`, `print` and `register` reports no longer slow down or
+  exhaust memory as lots accumulate, and the common reports are
+  substantially faster.  Adding a lot to a balance scanned the balance
+  (quadratic account totals), and every posting of a register or print
+  report kept a full copy of the running total (memory proportional to
+  postings times lots: 4 GB for a 10k-transaction journal).  Balances are
+  now stored in a persistent map (the vendored `immer` library under lib/),
+  amounts are formatted with exact integer arithmetic instead of MPFR except
+  on exact ties, most of the expression evaluator's scope lookups no longer
+  use `dynamic_cast`, revaluation reads only the price points it needs
+  instead of an edge's whole history, and the printing path allocates far
+  less.  `register` also skips evaluating the trivial `amount` expression
+  and keeps its running total stripped of lot annotations incrementally.
+  On hledger's 100k-transaction benchmark journal the flat balance report
+  went from 16s to 0.7s, and `print` and `register`, which needed 4 GB at
+  10k transactions and could not finish at 100k within 23 GB, now take
+  0.3 GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal,
+  previously unusable, is read in 4s, balanced in 7s and printed in 8s.
+
+- `print` no longer computes running totals it never displays, unless an
+  option that may read them is given: `--amount` or `--display-amount`
+  (which `-V`, `-X`, `-G` and `--unround` set), `--revalued` (which `-B`
+  sets), `--display`, `--only`, `--forecast`, `--average`, `--deviation` or
+  `--percent`.  A journal with more than about 32,000 lots valued by one
+  `value` expression no longer aborts.
+
+- Two costs remain: creating a lot still examines the lots that share its
+  day, or like it have none, one by one, so many such lots of one commodity
+  take time quadratic in their number; and a report that visits every lot
+  of the running total at every posting still takes time proportional to
+  postings times lots: one that revalues the total (`-V`, `-X`, `-G`, and
+  `--unrealized` with them), `--invert`, `--round`, `--unround`,
   `--average`, `--deviation`, `--average-lot-prices`, `top_amount()`, and
   `register --lots`, `--lot-prices`, `--lot-dates` and `xml`, whose output
-  lists them.  A benchmark and profiling kit lives in tools/bench and a `perf`
-  development shell in flake.nix.
+  lists them.  A benchmark and profiling kit lives in tools/bench and a
+  `perf` development shell in flake.nix.
 
-  Output is unchanged, with these exceptions.  XML balances, `top_amount()`
-  (whose documented meaning this is), the commodity list in a basket
-  commodity's value expression, and a Python `Balance`'s indexing and iteration
-  list components in commodity order rather than in an accidental one (each
-  index sorts the balance, iteration and `reversed()` sort it once, and indices
-  down to -len work), and lots that differ only in their value expression sort
-  by the expression's text.  An amount merged from several components (lots
-  stripped to their commodity, components valued in one currency, units
-  reduced, lots averaged by `--average-lot-prices`) keeps full precision when
-  any of its parts did, where it used to depend on their order, so `--unround`
-  and `--gain` can show more digits, and an `--unround` report can show a
-  residue where a total used to be zero, a register also gaining or losing an
-  `<Adjustment>` row; comparing a balance with an amount in a commodity that
-  one of its components is not in is an error whichever component comes first,
-  in Python's `>` and `<=` too (and with an Amount on the left), which used to
-  answer there (a plain number among the components compares with any amount,
-  as it always has; a component that netted to zero in another commodity is
-  left out, a balance of nothing else comparing as zero and an empty balance
-  false either way, as before; against a plain number every component takes
-  part, as it always has, and `<` or `>=` never fails; `>` and `<=` in a value
-  expression are unchanged and still need the balance to be a single amount);
-  and an error that names a component, or a pair of commodities, names the one
-  the display order lists first.  Ledger no longer edits lot annotations in
-  place behind the pool's index (a `value` expression still applies to every
-  holder of its lot; the Python `Annotation` setters still edit in place, and a
-  lot so edited no longer merges in a balance with a lot of the same
-  annotation): a fixated cost, `@ =price`, fixates the lot it creates, as
-  `{=price}` would, and never a lot the posting names, so `-10 AAPL {$5} @ =$6`
-  sells from the `{$5}` lot instead of fixating it for every holder (and a
-  later sale from that lot at a cost records the cost as a market price, as a
-  sale from any floating lot does; none was recorded once the lot had been
-  fixated), `10 AAPL {$5} @ =$5` buys into that lot, and a lot bought with
-  `@ =price` is `{=price} [date]`, the lot a later posting must name to post to
-  it (`{$5}` and `{=$5}` are two lots, #1454); `--lot-prices` and
-  `--lots-actual` keep a lot's `=` marker, so lots bought at `{$5}` and at
-  `{=$5}` stay apart in those reports as they do under `--lots`; a typed
-  fixated lot price merges with a computed one it rounds to (#524's matching)
-  when the computed lot came first, as does a typed lot written with the
-  valuation its account's `value` gives it; `--average-lot-prices` fixates the
-  average of lots that were all fixated, and only then (it used to depend on
-  whether a lot with the averaged price and the earliest date happened to be
-  fixated); and `--anon` renders each lot's price commodity once instead of
-  re-anonymizing it for every posting, and no longer fails on a lot that has
-  only a tag.  Time amounts shown with `--time-colon` at eighteen or more
-  decimal places (as with `--unround`) no longer overflow their minutes, and
-  values shown with more than about 230 decimal places print their exact
-  digits.
+- This work leaves report output unchanged except where an entry in the
+  sections below says otherwise: lots and fixated costs, merged precision
+  and component order, balance comparisons, `--time-colon`, and Python's
+  `Balance`.
 
 ### Code Modernization
 
@@ -146,15 +125,19 @@ components with their standard-library equivalents.
 
 - Boost dependencies are slimmed down.  `boost::filesystem`, `boost::any`, and
   `boost::variant` are replaced with their `std::` equivalents, and
-  `boost::shared_ptr` use is reduced significantly across the core code.
+  `boost::shared_ptr` is gone from the core code (the Python `Journal` is
+  held by `std::shared_ptr`).
   `find_package(Boost ...)`  now requires only `date_time`, `iostreams`, and
   `regex`, with optional `python`, `nowide`, and `unit_test_framework`.  The
   minimum Boost version (1.72.0) is unchanged
 
-- Embedders should note that most public headers now traffic in
-  `std::optional`, `std::any`, and `std::variant` rather than their `boost::`
-  counterparts; downstream code that named the Boost types explicitly will
-  need a one-line typedef or search-and-replace
+- Embedders should note that public headers now traffic only in
+  `std::optional` (unqualified `optional` inside `namespace ledger` is
+  `std::optional`; optional references became pointers, as in
+  `balance_t::commodity_amount(const commodity_t*)` and
+  `account_t::amount(bool, expr_t*)`), `std::any`, and `std::variant` rather
+  than their `boost::` counterparts; downstream code that named the Boost
+  types explicitly will need a one-line typedef or search-and-replace
 
 - Adopt C++17 idioms throughout: structured bindings, if-statement
   initializers, `if constexpr`, compact nested namespaces, `inline static
@@ -184,9 +167,11 @@ components with their standard-library equivalents.
   without a commodity (150) rather than in the lot's own (`C$150.00`), as
   `--basis`, `--price` and the `cost` and `price` value expressions report it
 
-- Implement automatic FIFO/LIFO commodity lot matching (issue #164): selling a
-  commodity without an explicit `{cost}` annotation can now pair the sale with
-  open lots automatically and compute gain/loss from the matched basis
+- Implement automatic FIFO/LIFO commodity lot matching (issue #164): with
+  `--lot-matching fifo` or `--lot-matching lifo`, selling a commodity without
+  an explicit `{cost}` annotation pairs the sale with open lots and computes
+  gain/loss from the matched basis.  Without `--lot-matching` (the default,
+  `none`) such a sale is not matched, as before
 
 - Add `--lots-fifo` and `--lots-lifo` options (which imply `--lot-prices` and
   `--lot-dates`) to display lots in chronological order
@@ -242,10 +227,8 @@ components with their standard-library equivalents.
   `--plopen`, reports with an `--amount` expression of their own or with an
   `-X` that names more than one commodity, reports that copy each posting into
   a transaction of its own (under `--account`, `--date`, `--inject`,
-  `--payee`, `--pivot` or `--pivot-only`, or for a journal with
-  `account-rewrite` or `payee-rewrite` directives), budget and forecast
-  reports, and reports grouped by period, weekday or payee keep the earlier
-  revaluation
+  `--payee`, `--pivot` or `--pivot-only`), budget and forecast reports, and
+  reports grouped by period, weekday or payee keep the earlier revaluation
 
 - Set commodity precision from price records and let later transactions widen,
   but not narrow, the recorded precision (#1190, #2481)
@@ -263,15 +246,15 @@ components with their standard-library equivalents.
   crash-when-empty-commodity in `getquote` (#1869)
 
 - Add `--decimal-places` to limit display precision (#797), accept an optional
-  precision argument in `round()` (#628), and add a `--round` option that
-  rounds each posting before aggregation (#781) plus a `--round` option that
-  complements `--unround`
+  precision argument in `round()` (#628), and add `--round`, the counterpart
+  of `--unround`, which rounds each posting to its commodity's precision
+  before aggregation (#781)
 
-- Allow parenthesized expression prices in `P` directives (#1101), emit
-  pricedb entries in both directions (#779), filter built-in commodities from
-  pricemap output (#738), report all priced commodities in `prices`/`pricedb`
-  (#739), report errors for self-referential price directives, and add
-  `--latest` to `prices`/`pricedb`
+- Allow parenthesized expression prices in `P` directives (#1101), add
+  `--both-directions` to emit each `pricedb` entry in both directions (#779),
+  filter built-in commodities from pricemap output (#738), report all priced
+  commodities in `prices`/`pricedb` (#739), report errors for
+  self-referential price directives, and add `--latest` to `prices`/`pricedb`
 
 - Fix `prices` and `pricedb` leaking the postings they synthesize from the
   price history (#3293).  The postings stayed in the account named after each
@@ -281,6 +264,13 @@ components with their standard-library equivalents.
 - Fix the `D` directive to lock the commodity display format (#1197), apply
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
+
+- Report an amount whose comma only its digits make a decimal comma, such as
+  `$0,075` or `$1,5`, as an error ("Ambiguous decimal comma") once the
+  commodity has been written with a decimal period.  Such an amount used to
+  switch the commodity to the decimal comma for the rest of the journal.  A
+  `format` sub-directive or `D` directive still declares the decimal comma,
+  and a cost or price still reads the comma locally
 
 - Accept a `commodity` block's own symbol unquoted in its `format`
   sub-directive (#3312): `commodity N1` declares the commodity that amounts
@@ -331,6 +321,7 @@ components with their standard-library equivalents.
   `($1.00) * 3` must now be enclosed whole: `(($1.00) * 3)`
 
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
+  `--getquote PATH` to choose the script that fetches quotes; add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
 
@@ -344,6 +335,39 @@ components with their standard-library equivalents.
 - Read the init file named by `-i FILE` or `--init-file=FILE`, which were
   silently ignored: only `--init-file FILE` was looked for before the init
   file is read
+
+- Record a lot price written in a third commodity, as in `100 A {3 C}` paid
+  with `-200 B`, in the price history, so that `--exchange C` can value the
+  `B` leg through `A` (#3232); and keep the cost of a commodity swap whose
+  legs carry lot prices in one base currency in that currency even when the
+  swap has no gain or loss, so that `--basis` reports `100 BTC {$100}` traded
+  for `200 ETH {$50}` at `$10,000.00` rather than `200 ETH` (#3227)
+
+- A fixated cost, `@ =price`, fixates the lot it creates, as `{=price}`
+  would, and never a lot the posting names: `-10 AAPL {$5} @ =$6` sells from
+  the `{$5}` lot instead of fixating it for every holder (and a later sale
+  from that lot at a cost records the cost as a market price, as a sale from
+  any floating lot does; none was recorded once the lot had been fixated),
+  `10 AAPL {$5} @ =$5` buys into that lot, and a lot bought with `@ =price`
+  is `{=price} [date]`, the lot a later posting must name to post to it
+  (`{$5}` and `{=$5}` are two lots, #1454).  Ledger no longer edits lot
+  annotations in place behind the pool's index: a `value` expression still
+  applies to every holder of its lot, and the Python `Annotation` setters
+  still edit in place, but a lot so edited no longer merges in a balance
+  with a lot of the same annotation
+
+- `--lot-prices` and `--lots-actual` keep a lot's `=` marker, so lots bought
+  at `{$5}` and at `{=$5}` stay apart in those reports as they do under
+  `--lots`; `--average-lot-prices` fixates the average of lots that were all
+  fixated, and only then (it used to depend on whether a lot with the
+  averaged price and the earliest date happened to be fixated); and `--anon`
+  renders each lot's price commodity once instead of re-anonymizing it for
+  every posting, and no longer fails on a lot that has only a tag
+
+- A typed fixated lot price merges with a computed one it rounds to (#524's
+  matching) when the computed lot came first, as does a typed lot written
+  with the valuation its account's `value` gives it; and lots that differ
+  only in their value expression sort by the expression's text
 
 ### Balance, Assertions, and Assignments
 
@@ -385,7 +409,46 @@ components with their standard-library equivalents.
   in balance assertions (#2071); and use fixated price annotations for
   multi-commodity balance checking
 
+- `eval EXPR` inside a regular transaction is now an expression line, as it
+  already was inside an automated transaction and as its synonym `expr` is
+  in both; it was read as a posting to an account named `eval ...`
+
 ### Reporting and Display Improvements
+
+- An amount exactly halfway between two figures at its display precision
+  now prints rounded half away from zero, as `--round`, `roundto()` and the
+  `<Adjustment>` postings already rounded it: `$1.00/8` prints `$0.13`, where
+  the printer, which rounded a binary approximation of each tie, showed
+  `$0.12`.  A transaction may leave exactly half a unit over at any precision
+  and still balance; at seven or more decimals such a residual used to be
+  rejected
+
+- `accounts` lists accounts in the byte order of their full names, so `Foo`
+  now precedes `Foo Bar`, `Foo-Baz` and `Foo:Sub`.
+
+- `prices` and `pricedb` with `--latest` report each commodity's newest
+  price, and with `--monthly` (or any `--period` interval) the newest price of
+  each period, also for a commodity quoted in several currencies;
+  `--both-directions` now adds the inverted prices to interval reports too.
+
+- The `xml` report now writes `<balance-assertion>` for a posting written
+  `AMOUNT = BALANCE` and `<balance-assignment>` for one written `= BALANCE`;
+  it used to swap the two labels.
+
+- Parsing a journal that declares no account aliases no longer copies each
+  posting's account name twice.
+
+- `--strict` and `--pedantic` check the account of every posting in an
+  ordinary transaction, even one whose name contains `$name` or `%(`; only
+  automated and periodic transactions may use such template names unchecked.
+
+- `xact.any()` and `xact.all()` now honor an optional second argument of
+  `false`, which leaves the current posting out of the test, as `any()` and
+  `all()` already did.
+
+- A transaction that misses balancing by less than one unit of a cost
+  commodity whose display precision is still 0 now reports its remainder at
+  the precision of the costs instead of as `0`.
 
 - `--flat` now lists each account with its own amount rather than the total
   of the account and its sub-accounts (#1987), which changes the output of
@@ -403,12 +466,6 @@ components with their standard-library equivalents.
   means what it means in the balance report but is undefined in posting
   scope (#3345); both now run, and `--flat` still leaves posting reports'
   figures unchanged.
-
-- Optimize the `register` command for a 46% speedup on large journals (≈50K
-  postings: 6.0s → 3.3s on the benchmark) by short-circuiting the trivial
-  `amount` expression, exploiting `strip(A+B) = strip(A)+strip(B)` to maintain
-  a stripped running total, and early-returning from
-  `balance_t::strip_annotations` when nothing carries annotations
 
 - Route the `accounts`, `payees`, `tags`, and `commodities` listing commands
   through the `stats` fast path (#3202).  These commands only iterate the
@@ -439,7 +496,7 @@ components with their standard-library equivalents.
   be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
   reports an unknown color as an error instead of leaving the text uncolored
 
-- Fix percentage amounts to act as fractions in arithmetic; fix `width`
+- Fix percentage amounts to act as fractions in value expressions; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
   function to work with amounts in value expressions; expose
   `find_accounts_re()` for full regex-matched account lookup
@@ -450,9 +507,9 @@ components with their standard-library equivalents.
   (#742) and use an inclusive day count for single-day journals (#740);
   exclude future-dated postings from recency statistics (#741); fix bad
   pricedb info under `--anon` (#756); fix `--anon` balance accumulation
-  (#617); add `--csv-separator` for `convert`; add `--no-group-by` to cancel
-  `--group-by`; fix the misaligned separator dashes in the `cleared` report
-  (#729) and the bold formatting for uncleared posts under `--payee` (#865)
+  (#617); add `--no-group-by` to cancel `--group-by`; fix the misaligned
+  separator dashes in the `cleared` report (#729) and the bold formatting for
+  uncleared posts under `--payee` (#865)
 
 - Add the `--append-format` option (#1740); add `--ignore-diacritics` for
   accent-insensitive search; add `--pivot-only` to replace the account name
@@ -460,10 +517,60 @@ components with their standard-library equivalents.
   boundaries (#954); add `--group-by-cumulative` for balance sheets
   accumulating over time
 
-### Filtering, Queries, and Aggregation
+- Run the pager named by `--pager`, `LEDGER_PAGER` or `PAGER` through
+  `/bin/sh -c`, as 3.4.1 did and as git and man do, so a pager command with
+  quoted arguments, a variable assignment or a pipe works; a blank pager now
+  means no pager instead of discarding the report
 
-- Rewrite the query parser as a documented recursive-descent parser with a
-  published EBNF grammar in the header
+- Make `--output` to a file that cannot be opened an error (exit status 1) that
+  names the file, instead of silently discarding the report; close the
+  `--output` file on Windows too
+
+- Make the `--trace` timing lines count the time a timer accumulated before it
+  was last restarted, instead of only the final running stretch
+
+- Add `--display-account EXPR` to transform the account name that formats
+  show through `display_account`, with the `account_prefix`,
+  `account_suffix`, `account_skip_prefix` and `account_skip_suffix` functions
+  to pick out its colon-separated components (#3211)
+
+- Add `--collapse-if EXPR` to collapse, in a balance report, each account
+  for which EXPR is true into one line with its subtotal, where `--collapse`
+  folds the whole report (#3222)
+
+- In period reports (`--daily`, `--monthly` and the like) and in `select`,
+  the payee column, which shows the period's range, now defaults to the
+  width of that range plus one space instead of about a quarter of the
+  terminal, giving the rest to the account column (#3216)
+
+- Fix `balance --group-by` printing nothing when combined with `--payee`,
+  `--account` or `--date` (#3207)
+
+- `--no-revalued` now cancels the revaluation that `-V`, `-B`, `-G` and the
+  options implying them turn on, wherever it appears on the command line;
+  given before them, it was turned back on (#3196)
+
+- Keep the commodity of a zero amount in `print` output: `$0.00` was
+  printed as `0` (#3233)
+
+- Reset the cached totals and display flags that a failed REPL command
+  leaves in the journal, so that the next command's report starts clean
+  (#3273)
+
+- An amount merged from several components (lots stripped to their
+  commodity, components valued in one currency, units reduced, lots averaged
+  by `--average-lot-prices`) keeps full precision when any of its parts did,
+  where it used to depend on their order, so `--unround` and `--gain` can
+  show more digits, and an `--unround` report can show a residue where a
+  total used to be zero, a register also gaining or losing an `<Adjustment>`
+  row
+
+- XML balances, `top_amount()` (whose documented meaning this is), and the
+  commodity list in a basket commodity's value expression list a balance's
+  components in commodity order rather than in an accidental one; and values
+  shown with more than about 230 decimal places print their exact digits
+
+### Filtering, Queries, and Aggregation
 
 - Show declared-but-unused accounts with `--empty` (#1204) and in the
   `accounts` listing, filtered by the account terms of the query/`--limit`
@@ -481,6 +588,18 @@ components with their standard-library equivalents.
   arguments to function".  As a result, a comma can no longer begin a
   quantity in a value expression outside a braced amount literal, including
   in a parenthesized posting amount: write `($0,50 * 2)`, not `($,50 * 2)`.
+
+- Comparing a balance with an amount in a commodity that one of its
+  components is not in is an error whichever component comes first, in
+  Python's `>` and `<=` too (and with an Amount on the left), which used to
+  answer there.  A plain number among the components compares with any
+  amount, as it always has; a component that netted to zero in another
+  commodity is left out, a balance of nothing else comparing as zero and an
+  empty balance false either way, as before; against a plain number every
+  component takes part, as it always has, and `<` or `>=` never fails; `>`
+  and `<=` in a value expression are unchanged and still need the balance
+  to be a single amount.  An error that names a component, or a pair of
+  commodities, names the one the display order lists first
 
 - Expand account aliases in CLI query arguments; fix `--pivot` with
   command-line account queries (#1154), with built-in properties (#1048), and
@@ -500,15 +619,41 @@ components with their standard-library equivalents.
   commodity against a string now follows the bare symbol, as ordering two
   commodities does
 
+- A query term holding `<`, `<=`, `>` or `>=` that reads as a comparison (or
+  as an `and`/`or` with a comparison as an operand, or a `not` of one, as in
+  `'amount>20 and amount<100'`) is a value expression whatever the
+  operator's spelling: `amount>20` now filters by amount as `amount>=20`
+  already did, instead of being the account regex /amount>20/, and the same
+  holds after `@`, `#` and `=` (`@Foo>Bar` was the payee regex /Foo>Bar/); a
+  `%tag>=value` metadata term keeps its meaning. Quote such a term
+  (`"'a>b'"`) to match it as a pattern. A term that fails to parse as an
+  expression still falls back to a pattern. The one form that is no longer a
+  comparison is an operator ending one command-line argument with its
+  right-hand side in the next (`reg 'amount>=' 25`,
+  `query 'd>=' '[2004/06/01]'`); write it as one argument (`'amount>=25'`).
+  In an automated-transaction predicate, whitespace after `<`, `>`, `<=` or
+  `>=` no longer ends the term (`= amount>= 20` still filters by amount, and
+  `= amount> 25` now does too). A value expression must now use up its whole
+  input: `eval '1 2'`, `--limit ') junk'` and `assert 1 2` are parse errors
+  instead of silently dropping the leftover text.
+
 ### Date, Period, and Time Handling
 
 - Accept a time component for `--begin`/`--end`/`--now` (#1696): the parser
   detects datetime structurally and accepts `@` as a date/time separator
 
+- Match weekday, month, and relative-date names ignoring case, so that
+  `--start-of-week Monday` and `--start-of-week Mon` take effect, and report
+  a `--start-of-week` value that names no weekday as an error instead of
+  starting weeks on Sunday (#3268)
+
+- A bracketed date after a colon in a comment, such as the value of
+  `; key:: [2020-01-01]`, no longer sets the posting's date; a `[date]` or
+  `[=date]` before any colon in the comment still does (#3192, #3252)
+
 - Add `%m-%d` as a built-in short date format (#566); accept relative date
   expressions (`yesterday`, `tomorrow`, `tday`, `yday`, `tmrw`, plus the full
-  period grammar via `on <expr>`) in the `xact` command (#647); recognize
-  `aux`/`aux_date`/`auxdate` aliases for the CSV posted column
+  period grammar via `on <expr>`) in the `xact` command (#647)
 
 - Accept duration units (`s`, `m`, `h`, `d`, `w`) in `--price-exp` /
   `--leeway` / `-Z` (#607); document that `--price-exp` is in hours by default
@@ -523,8 +668,7 @@ components with their standard-library equivalents.
   with `xact`; fix the `--current` option being overridden by `--end`; pin
   evaluation dates in time-sensitive tests for reproducibility
 
-- Fix `-V -M` revaluations in periods without transactions (#2131); fix
-  `--monthly` prices to show the last price per period (#583); restore the
+- Fix `--monthly` prices to show the last price per period (#583); restore the
   `year_directive_year` when ending an `apply year` directive (#2413); year
   directive no longer leaks into `xact`/`entry` commands (#707); fix the year
   directive interaction with price history (#1748); restore year/epoch state
@@ -541,14 +685,7 @@ components with their standard-library equivalents.
   on current-period dates (closes #591, #1044, #1113, #1141, #1148, #1155,
   #1161, #1576, #1605, plus crash #2043)
 
-- Add `payee-rewrite` and `account-rewrite` directives (with matching
-  `--payee-rewrite` and `--account-rewrite` CLI flags) that apply regex
-  substitutions to payee and account names at report time without modifying
-  the journal
-
-- Add directives to enable and disable automatic transactions
-
-- Allow `$expr` in automated-transaction account names in addition to
+- Allow `$name` in automated-transaction account names in addition to
   `$account`; honor effective dates in automated transactions; fix payee-based
   `Unknown` account resolution; fix date comparison operators in
   automated-transaction predicates; include auto-transaction postings in
@@ -560,10 +697,14 @@ components with their standard-library equivalents.
   monthly budget periods with a `from` clause; honor start dates for weekly
   periodic transactions
 
-- Apply payee UUID mappings during CSV import; balance timeclock transactions
-  against the bucket account; pre-register built-in metadata tags so
-  `--strict` no longer warns about them; suppress the spurious `--strict`
-  warning for `$account` in automated transactions (#545)
+- Pre-register built-in metadata tags so `--strict` no longer warns about
+  them; suppress the spurious `--strict` warning for `$account` in automated
+  transactions (#545)
+
+- Apply automated transactions, their `check`/`assert` expressions and
+  `account` check directives to transactions added after parsing -- the
+  `xact` command's draft and Python's `Journal.add_xact` -- which silently
+  skipped them
 
 ### CSV Conversion and Imports
 
@@ -578,7 +719,9 @@ components with their standard-library equivalents.
 
 ### Timelog and Time-based Reporting
 
-- Add `--time-round` to round timelog durations to the nearest unit (#1608)
+- Add `--time-round` to round timelog durations up to the next multiple of N
+  minutes (#1608); under `--day-break` each day's part of a session is
+  rounded separately
 
 - Fix the `datetime` field to include the time portion for timelog postings
   (#2264); fix payee sub-directive application to timelog entries (#1211); fix
@@ -587,6 +730,9 @@ components with their standard-library equivalents.
 
 - Correct `--time-colon` arithmetic in budget and other computed reports; fix
   `-X` to convert time values across scale units (#1177)
+
+- Time amounts shown with `--time-colon` at eighteen or more decimal places
+  (as with `--unround`) no longer overflow their minutes
 
 ### Python Bindings
 
@@ -603,21 +749,70 @@ components with their standard-library equivalents.
   `Session.read_journal()` to accept a string path; reset journal state before
   re-reading from Python; expose `price_point_t` to the Python bindings
 
+- A Python `Balance`'s indexing and iteration list its components in
+  commodity order rather than in an accidental one: each index sorts the
+  balance, iteration and `reversed()` sort it once, and indices down to -len
+  work
+
 - Fix Python bindings for virtual posting flag detection (#2169) by binding to
   the correct `supports_flags<uint_least16_t>` instantiation; fix Python
-  `TypeError` when accessing `boost::optional` fields like `note`; use checked
-  utfcpp functions for Python string conversion; restore terminal settings
-  after `ledger python` exits (#774)
+  `TypeError` when accessing optional fields like `note`; use checked utfcpp
+  functions for Python string conversion; restore terminal settings after
+  `ledger python` exits (#774)
+
+- Make `Commodity.flags` and the `AccountXData` flag methods work (both raised
+  `ArgumentError`): every class's flag methods are now bound through the flags
+  base it really derives from, checked when the bindings compile
+
+- Make `bool()` of an `Expr`, `Annotation` or `Commodity` follow its C++ truth
+  value; the bindings registered it only as Python 2's `__nonzero__`, which
+  Python 3 ignores, so it was always `True`.  The `__nonzero__` attribute is
+  gone from `Amount`, `Balance`, `Value`, `Expr`, `Annotation` and `Commodity`;
+  use `bool(x)` or `x.is_nonzero()`
+
+- Make `ledger.commodities` iterable over its symbols, like a dict, and make
+  `ledger.commodities.iteritems()` yield `(symbol, Commodity)` pairs; both
+  raised `TypeError`
+
+- Remove the `POST_EXT_MATCHES` posting flag and its Python constant: no part
+  of Ledger has read it since the forecast overhaul, and the `--limit`,
+  `--display` and `--only` filters no longer set it on every posting they
+  pass.  A script that names `ledger.POST_EXT_MATCHES` now fails with
+  `AttributeError`
+
+- `ledger.commodities` now names the new commodity pool as soon as
+  `Amount.initialize()` creates one, instead of after the next
+  `close_journal_files()`
+
+- Remove the Python 2 `__unicode__` methods from `Account`, `Amount`,
+  `Balance`, `Commodity` and `Value`; Python 3's `str()` calls `__str__`,
+  which returns the same text
 
 ### New Commands and Directives
 
-- Add `payee-rewrite` and `account-rewrite` directives for report-time
-  transformation
+- Add `payee-rewrite` and `account-rewrite` directives (with matching
+  `--payee-rewrite` and `--account-rewrite` CLI flags) that, at report time,
+  replace the whole payee or account name of postings whose payee or account
+  matches the rule's regex, without modifying the journal
 
 - Add directives to enable and disable automatic transactions
 
+- Add `--strict-commodity` and `--pedantic-commodity`, which check only that
+  commodities are declared and accept undeclared accounts, payees, and tags
+  (#3200)
+
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
+
+- Accept comment lines, with or without a space after the comment
+  character, beneath `account`, `commodity`, `payee` and `tag` directives.
+  Beneath `commodity` or `payee`, `;text` or a bare `;` was rejected as a
+  sub-directive missing its argument (#3260).
+
+- Report an unrecognized keyword beneath an `account`, `commodity`, `payee`
+  or `tag` directive, or after `apply`, as an error.  A misspelled
+  sub-directive such as `formt $1,000.00` or `chek amount > 0` was ignored
+  without a word, even under `--pedantic` (#3260).
 
 - End the account name on an `account` directive line at a `;` that follows
   a hard separator (two or more spaces, or a tab), as a payee ends on a
@@ -629,7 +824,12 @@ components with their standard-library equivalents.
   `check` and `assert` lines beneath it applied to the misnamed account.  A
   `;` after a single space is still part of the name, as it is in a posting
 
-- Return regex capture-group text from the `=~` operator (extending #664)
+- Add the `==~` operator for regex capture-group extraction (#664): without
+  capture groups it yields the entire match as a string; with capture groups
+  it yields a sequence whose first element is the entire match followed by
+  every captured group (so a pattern with *N* groups yields a sequence of
+  length *N* + 1); on no match it yields `false`.  The `=~` operator still
+  yields a boolean
 
 - Treat every character of an `include` file name other than `*`, `?` and a
   `[...]` set literally, including `$`, `^`, a character escaped with a
@@ -645,8 +845,8 @@ components with their standard-library equivalents.
   a full language reference and runnable doctests (#804); document
   `display_amount`, `display_total`, and `value_date`; expand the value
   expression reference with previously-undocumented keywords; document the
-  expression engine, time, and query layer (Session 3); document the core data
-  model, journal model, and build infrastructure; document the filter pipeline
+  expression engine, time, and query layer; document the core data model,
+  journal model, and build infrastructure; document the filter pipeline
 
 - Add real-world examples for tax year grouping with `--pivot`, recording
   stock dividends, sales-tax automated transactions, and tag-filtering in the
@@ -689,17 +889,27 @@ components with their standard-library equivalents.
   15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
   `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
 
+- Install `types.h` with the other headers; the installed `account.h`,
+  `journal.h` and `xact.h` include it, so the installed header tree could not
+  be compiled
+
+- Strip the empty entries from the installed Python module's RPATH, which
+  ELF loaders read as the current directory, so that importing `ledger` no
+  longer searches the working directory for shared libraries (#3229)
+
 ### Testing and Coverage
 
-- Add 419 new regression tests, raising source-code coverage to 89.6%, and
-  lift the CI coverage gate to 90% (#2832, #2728); add regression tests for
-  153 previously-uncovered open issues (#3011)
+- Add 419 new regression tests (#2832, #2728) and regression tests for 153
+  previously-uncovered open issues (#3011); measure CI coverage with LLVM
+  source-based instrumentation over the `ledger` executable, libledger and
+  the C++ unit-test binaries while the whole test suite runs, and fail the
+  build below 91% of lines or 88% of functions (#2836)
 
 - Add a libFuzzer harness for the journal parser, run nightly in CI; add an
   ASan/UBSan sanitizer build to the CI matrix; add Clang-based performance
-  regression checks; add gcov/lcov code coverage reporting; free disk space
-  and shrink coverage profraw footprint to keep the coverage job within runner
-  limits
+  regression checks; add a `coverage` build target with gcov (`USE_GCOV`) or
+  LLVM (`USE_LLVM_COV`) instrumentation; free disk space and shrink coverage
+  profraw footprint to keep the coverage job within runner limits
 
 - Add a snapshot behavioral testing tool; harden the Python test harness for
   Python 3 correctness; remove the 4096-byte line length limit in the parser
@@ -711,7 +921,7 @@ components with their standard-library equivalents.
   `textual_internal.h`
 
 - Rewrite the query parser as a documented recursive-descent parser with
-  structured control flow
+  structured control flow and a published EBNF grammar in its header
 
 - Apply `clang-format` to the entire C++ codebase; enforce formatting in CI
   (#2499); reformat several header files for readability
@@ -753,22 +963,11 @@ components with their standard-library equivalents.
 
 - Add commodity swaps feature over a base commodity
 
-- Add `==~` operator for regex capture group extraction (issue #664).
-  Without capture groups the operator yields the entire match as a
-  string; with capture groups it yields a sequence whose first element
-  is the entire match followed by every captured group (so a pattern
-  with *N* groups yields a sequence of length *N* + 1).  Returns
-  `false` on non-match.
-
 - Add --align-intervals option for reporting
 
 - Add --lisp-date-format option for lisp output (bug #1206)
 
 - Add yday shortcut for "yesterday"
-
-- Allow nested `account` sub-directives inside an `account` block so a
-  parent account can declare its children without repeating the full
-  colon-separated path (issue #877)
 
 ### File Handling
 

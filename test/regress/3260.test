@@ -1,0 +1,48 @@
+; A misspelled keyword beneath a commodity or account directive is an
+; error, whether or not the line carries an argument and whatever the
+; checking level (issue #3260).  A misspelling that carried an argument
+; used to be discarded without a word, so the intended format or check
+; never took effect, while the same misspelling without one was reported
+; as a known directive missing its argument.
+
+commodity $
+    formt  $1,000.00
+    nomarket
+
+commodity EUR
+    formt
+
+account Assets:Cash
+    nte     Petty cash
+    chek    amount > 0
+
+account Expenses:Food
+    chek    amount > 0
+
+2024-01-01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 4
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Unrecognized commodity directive 'formt'
+While parsing file "$FILE", line 13:
+Error: Unrecognized commodity directive 'formt'
+While parsing file "$FILE", line 16:
+Error: Unrecognized account directive 'nte'
+While parsing file "$FILE", line 20:
+Error: Unrecognized account directive 'chek'
+end test
+
+test --pedantic bal -> 4
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Unrecognized commodity directive 'formt'
+While parsing file "$FILE", line 13:
+Error: Unrecognized commodity directive 'formt'
+While parsing file "$FILE", line 16:
+Error: Unrecognized account directive 'nte'
+While parsing file "$FILE", line 20:
+Error: Unrecognized account directive 'chek'
+end test

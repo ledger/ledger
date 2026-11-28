@@ -1,4 +1,4 @@
-; Test --group-by with balance report (exercises report.cc accounts_title_printer and accounts_flusher)
+; Test --group-by with balance report (exercises report.cc accounts_report's group-title printer and accounts_flusher)
 
 2024/01/15 * Grocery Store
     Expenses:Food              $50.00

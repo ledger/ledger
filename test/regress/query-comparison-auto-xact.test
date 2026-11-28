@@ -1,0 +1,45 @@
+; An automated-transaction predicate is read without multiple arguments,
+; where whitespace ends a term.  Whitespace after a comparison operator
+; does not, however many blanks follow: "amount>= 20", "amount<=  -25" and
+; "amount> 25" are comparisons, as "amount>=20" is.
+
+= amount>= 20
+    Big:AtLeast20                 1
+    Equity:Adjust                -1
+
+= amount> 25
+    Big:Over25                    1
+    Equity:Adjust                -1
+
+= amount<=  -25
+    Big:AtMostMinus25             1
+    Equity:Adjust                -1
+
+2024/01/05 Grocer
+    Expenses:Food                 $15.00
+    Assets:Cash
+
+2024/01/10 Bookshop
+    Expenses:Books                $25.00
+    Assets:Cash
+
+2024/01/20 Landlord
+    Expenses:Rent                $500.00
+    Assets:Cash
+
+; Passes on the base: the lexer ended the term at "amount>", and the
+; parser glued the "=" and the "20" back on.
+test bal Big:AtLeast20 --flat
+             $525.00  Big:AtLeast20
+end test
+
+; Passes on the base too (two blanks after the operator).
+test bal Big:AtMostMinus25 --flat
+            $-525.00  Big:AtMostMinus25
+end test
+
+; Fails on the base: "amount>" followed by a space was the account
+; pattern /amount>/ and the pattern /25/.
+test bal Big:Over25 --flat
+             $500.00  Big:Over25
+end test

@@ -151,7 +151,8 @@ void global_scope_t::parse_init(const path& init_file) {
   parsing_context.get_current().scope = &report();
 
   if (session().journal->read(parsing_context, NO_HASHES) > 0 ||
-      session().journal->auto_xacts.size() > 0 || session().journal->period_xacts.size() > 0) {
+      session().journal->auto_xacts.size() > 0 || !session().journal->account_check_xacts.empty() ||
+      session().journal->period_xacts.size() > 0) {
     throw_(parse_error, _f("Transactions found in initialization file '%1%'") % init_file);
   }
 
@@ -235,12 +236,17 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   }
 
   strings_list::iterator arg = args.begin();
-  const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  const string verb = *arg++;
 
-  // Phase 2: Look for a precommand first, which is defined as any defined
-  // function whose name starts with "ledger_precmd_".  The difference
-  // between a precommand and a regular command is that precommands ignore
-  // the journal data file completely, nor is the user's init file read.
+  // Phase 2: Look for a precommand first: any symbol the bound global and
+  // report scopes define under symbol_t::PRECOMMAND (look_for_precommand).
+  // In batch mode execute_command reads the journal data files in Phase 3,
+  // which a precommand skips, so it runs without them (at the REPL and
+  // under --script main() has already read them); a precommand that needs
+  // the journal in batch mode (source) reads it itself.  The environment
+  // and the user's init file were already processed by the global_scope_t
+  // constructor (unless --args-only was given), so they apply to
+  // precommands too.
   //
   // Here are some examples of pre-commands:
   //
@@ -267,7 +273,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
       // Set use_aux_date before reading journal files so that balance
       // assertions respect effective date ordering when --effective is used
       // (fixes #2071).
-      item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
+      item_t::use_aux_date = report().wants_aux_date();
       session().read_journal_files();
     }
 
@@ -315,10 +321,13 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
 
 int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
   int status = 1;
+  epoch_scope_t clock; // A --now given to this command ends with it.
 
   try {
-    if (at_repl)
+    if (at_repl) {
       push_report();
+      report().apply_option_globals();
+    }
     execute_command(std::move(args), at_repl);
     if (at_repl)
       pop_report();
@@ -431,7 +440,7 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
   }
 
   // If you're wondering how symbols from report() will be found, it's
-  // because of the bind_scope_t object in execute_command() below.
+  // because of the bind_scope_t object in execute_command().
   return nullptr;
 }
 
@@ -446,7 +455,6 @@ void global_scope_t::read_environment_settings(char* envp[]) {
   process_environment(const_cast<const char**>(envp), "LEDGER_", *this);
   process_environment(const_cast<const char**>(envp), "LEDGER_", report());
 
-#if 1
   // These are here for backwards compatibility, but are deprecated.
 
   if (const char* p = std::getenv("LEDGER")) {
@@ -465,7 +473,6 @@ void global_scope_t::read_environment_settings(char* envp[]) {
     if (!std::getenv("LEDGER_PRICE_EXP"))
       process_option("environ", "price-exp", report(), p, "PRICE_EXP");
   }
-#endif
 
   TRACE_FINISH(environment, 1);
 }
@@ -475,26 +482,23 @@ void global_scope_t::read_environment_settings(char* envp[]) {
 strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list args) {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
-  // Pre-scan for --now so that date-relative options (--begin, --end) that
-  // appear earlier on the command line resolve against the correct epoch.
-  // The --now handler is idempotent, so processing it again during the
-  // normal pass is harmless.
+  // Apply --now before the other options, so that date-relative options
+  // (--begin, --end) appearing earlier on the command line resolve against
+  // it.  This only finds the value: the --now option itself interprets it,
+  // and the normal pass below applies it again, which is harmless.  Like
+  // that pass, stop at "--", after which every argument is a query term.
   for (auto i = args.begin(); i != args.end(); ++i) {
-    if ((*i)[0] != '-' || (*i)[1] != '-')
-      continue;
-    const char* arg = (*i).c_str() + 2;
+    if (*i == "--")
+      break;
     const char* value = nullptr;
-    if (std::strcmp(arg, "now") == 0) {
-      auto next = std::next(i);
-      if (next != args.end())
-        value = (*next).c_str();
-    } else if (std::strncmp(arg, "now=", 4) == 0) {
-      value = arg + 4;
+    if (*i == "--now") {
+      if (std::next(i) != args.end())
+        value = std::next(i)->c_str();
+    } else if (i->compare(0, 6, "--now=") == 0) {
+      value = i->c_str() + 6;
     }
     if (value) {
-      date_interval_t interval(value);
-      if (optional<date_t> begin = interval.begin())
-        ledger::epoch = datetime_t(*begin);
+      process_option("--now", "now", scope, value, "--now");
       break;
     }
   }
@@ -504,14 +508,6 @@ strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list
   TRACE_FINISH(arguments, 1);
 
   return remaining;
-}
-
-void global_scope_t::normalize_session_options() {
-  INFO("Initialization file is " << HANDLER(init_file_).str());
-  INFO("Price database is " << session().HANDLER(price_db_).str());
-
-  for (const path& pathname : session().HANDLER(file_).data_files)
-    INFO("Journal file is " << pathname.string());
 }
 
 /*--- Command Verb Resolution ---*/

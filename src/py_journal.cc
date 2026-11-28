@@ -62,80 +62,9 @@ using namespace boost::python;
 
 namespace {
 
-#if 0
-  account_t& py_account_master(journal_t& journal) {
-    return *journal.master;
-  }
-#endif
-
 long xacts_len(journal_t& journal) {
   return static_cast<long>(journal.xacts.size());
 }
-
-#if 0
-  xact_t& xacts_getitem(journal_t& journal, long i)
-  {
-    static long last_index = 0;
-    static journal_t * last_journal = NULL;
-    static xacts_list::iterator elem;
-
-    long len = static_cast<long>(journal.xacts.size());
-
-    if (labs(i) >= len) {
-      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-      throw_error_already_set();
-    }
-
-    if (&journal == last_journal && i == last_index + 1) {
-      last_index = i;
-      return **++elem;
-    }
-
-    long x = i < 0 ? len + i : i;
-    elem = journal.xacts.begin();
-    while (--x >= 0)
-      elem++;
-
-    last_journal = &journal;
-    last_index   = i;
-
-    return **elem;
-  }
-
-  long accounts_len(account_t& account)
-  {
-    return static_cast<long>(account.accounts.size());
-  }
-
-  account_t& accounts_getitem(account_t& account, long i)
-  {
-    static long last_index = 0;
-    static account_t * last_account = NULL;
-    static accounts_map::iterator elem;
-
-    long len = static_cast<long>(account.accounts.size());
-
-    if (labs(i) >= len) {
-      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-      throw_error_already_set();
-    }
-
-    if (&account == last_account && i == last_index + 1) {
-      last_index = i;
-      return *(*++elem).second;
-    }
-
-    long x = i < 0 ? len + i : i;
-    elem = account.accounts.begin();
-    while (--x >= 0)
-      elem++;
-
-    last_account = &account;
-    last_index   = i;
-
-    return *(*elem).second;
-  }
-#endif
 
 /*--- Account Lookup Wrappers ---*/
 
@@ -151,50 +80,97 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
   return journal.register_account(name, post, journal.master);
 }
 
-#if 0
-  std::size_t py_read(journal_t& journal, const string& pathname)
-  {
-    return journal.read(context_stack);
-  }
-#endif
-
 /*--- Query Result Collection ---*/
 
-/// Wraps a report_t and a collect_posts filter to hold query results.
-/// Owns the full filter chain (handler_chain) so that any synthetic posts
-/// created by interval or period filters remain valid while Python iterates.
+/// The chain a grouped Journal.query() flushes each --group-by group
+/// through.  post_splitter clears its chain after every group; here that
+/// retires the group's chain, still alive with the postings it collected
+/// and the synthetic postings its filters own, and starts the next group
+/// on a fresh chain.  Chains are released newest first.
+class group_chains : public item_handler<post_t> {
+  std::function<post_handler_ptr()> make_chain;
+  std::vector<post_handler_ptr> retired;
+
+public:
+  explicit group_chains(std::function<post_handler_ptr()> _make_chain)
+      : item_handler<post_t>(_make_chain()), make_chain(std::move(_make_chain)) {}
+
+  /// A later group's chain adopts the temporary accounts (--account,
+  /// --inject) that an earlier chain registered under journal->master and
+  /// owns, and each chain's ~temporaries_t reads its postings' accounts.
+  /// Release the newest chain first so that no chain outlives the chain
+  /// whose accounts it points into; destroying a std::vector's elements
+  /// is left to the library's own order (front to back with libstdc++).
+  ~group_chains() override {
+    handler.reset();
+    while (!retired.empty())
+      retired.pop_back();
+  }
+
+  void clear() override {
+    retired.push_back(std::move(handler));
+    handler = make_chain();
+  }
+};
+
+/// A collect_posts that also records each posting's display amount: the
+/// report's --display-amount expression, which carries -X/-V exchange and
+/// other display transforms (#2158).  It is evaluated as the posting
+/// arrives, while the chain's xdata for it is intact; an error raises, as
+/// it does in every other report.
+class collect_display_posts : public collect_posts {
+  report_t& report;
+
+public:
+  std::vector<value_t> display_amounts; ///< Display amount of each entry of posts.
+
+  explicit collect_display_posts(report_t& _report) : report(_report) {
+    TRACE_CTOR(collect_display_posts, "report_t&");
+  }
+  ~collect_display_posts() override { TRACE_DTOR(collect_display_posts); }
+
+  void operator()(post_t& post) override {
+    bind_scope_t bound_scope(report, post);
+    display_amounts.push_back(report.HANDLER(display_amount_).expr.calc(bound_scope));
+    collect_posts::operator()(post);
+  }
+
+  void clear() override {
+    display_amounts.clear();
+    collect_posts::clear();
+  }
+};
+
+/// Wraps a report_t and a collect_display_posts filter to hold query
+/// results: the collected postings and their display amounts.  Owns the
+/// full filter chain (handler_chain) so that any synthetic posts created by
+/// interval or period filters remain valid while Python iterates.
 struct collector_wrapper {
-  boost::shared_ptr<journal_t> journal_sp;
+  std::shared_ptr<journal_t> journal_sp;
   report_t report;
   post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
-  post_handler_ptr posts_collector;
-  std::vector<value_t> display_amounts; ///< Report-converted amount for each collected posting.
+  std::shared_ptr<collect_display_posts> posts_collector;
 
-  collector_wrapper(boost::shared_ptr<journal_t> _journal_sp, report_t& base)
-      : journal_sp(std::move(_journal_sp)), report(base), posts_collector(new collect_posts) {
-    TRACE_CTOR(collector_wrapper, "boost::shared_ptr<journal_t>, report_t&");
+  collector_wrapper(std::shared_ptr<journal_t> _journal_sp, report_t& base)
+      : journal_sp(std::move(_journal_sp)), report(base),
+        posts_collector(std::make_shared<collect_display_posts>(report)) {
+    TRACE_CTOR(collector_wrapper, "std::shared_ptr<journal_t>, report_t&");
   }
   ~collector_wrapper() {
     TRACE_DTOR(collector_wrapper);
     journal_sp->clear_xdata();
   }
 
-  std::size_t length() const {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->length();
-  }
+  std::size_t length() const { return posts_collector->length(); }
 
-  std::vector<post_t*>::iterator begin() {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->begin();
-  }
-  std::vector<post_t*>::iterator end() {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->end();
-  }
+  std::vector<post_t*>::iterator begin() { return posts_collector->begin(); }
+  std::vector<post_t*>::iterator end() { return posts_collector->end(); }
 };
 
 /// Runs a Ledger query string against the journal, building the full
 /// report filter chain and collecting matching posts into a
 /// PostCollectorWrapper that Python can iterate over.
-shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
+std::shared_ptr<collector_wrapper> py_query(std::shared_ptr<journal_t> journal_sp,
                                        const string& query) {
   journal_t& journal = *journal_sp;
   if (journal.has_xdata()) {
@@ -203,12 +179,16 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
   }
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
+  std::shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
+  epoch_scope_t clock; // A --now given to this Journal.query ends with it.
 
-  boost::shared_ptr<journal_t> save_journal = coll->report.session.journal;
+  std::shared_ptr<journal_t> save_journal = coll->report.session.journal;
   coll->report.session.journal = journal_sp;
 
   try {
+    // Parse this query's options under the globals of the report it copies,
+    // not those the previous query's options left.
+    coll->report.apply_option_globals();
     strings_list remaining = process_arguments(split_arguments(query.c_str()), coll->report);
     coll->report.normalize_options("register");
 
@@ -217,45 +197,16 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
-    // Build the full filter chain and store it in handler_chain.
-    // This is essential: filters like interval_posts create synthetic posts
-    // stored in their temporaries_t. By keeping handler_chain alive in
-    // collector_wrapper, we ensure those synthetic posts remain valid while
-    // Python iterates the collected results.
-    coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
-
-    if (coll->report.HANDLED(group_by_)) {
-      unique_ptr<post_splitter> splitter(new post_splitter(coll->handler_chain, coll->report,
-                                                           coll->report.HANDLER(group_by_).expr));
-      splitter->set_postflush_func([journal_sp](const value_t&) { journal_sp->clear_xdata(); });
-      coll->handler_chain = post_handler_ptr(splitter.release());
-    }
-
-    coll->handler_chain = chain_pre_post_handlers(coll->handler_chain, coll->report);
-
-    journal_posts_iterator walker(*coll->report.session.journal.get());
-    pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
-
-    // Evaluate the report's display_amount_ expression for each collected
-    // posting while xdata is still intact.  This captures any commodity
-    // exchange (-X), market valuation (-V), or other display transformations
-    // so that Python callers can access the report-converted amounts rather
-    // than just the raw journal amounts (issue #2158).
-    {
-      expr_t& display_amount_expr(coll->report.HANDLER(display_amount_).expr);
-      collect_posts* collector = dynamic_cast<collect_posts*>(coll->posts_collector.get());
-      for (post_t* post : collector->posts) {
-        bind_scope_t bound_scope(coll->report, *post);
-        try {
-          coll->display_amounts.push_back(display_amount_expr.calc(bound_scope));
-        } catch (...) {
-          coll->display_amounts.push_back(value_t(post->amount));
-        }
-      }
-    }
-
-    if (!coll->report.HANDLED(group_by_))
-      coll->report.session.journal->clear_xdata();
+    // handler_chain keeps every filter alive, and with them every
+    // synthetic posting (interval_posts, changed_value_posts, ...) the
+    // collector points at, while Python iterates.  group_chains gives
+    // each --group-by group a chain of its own and keeps the finished
+    // ones; without --group-by it holds the one chain.  walk_posts
+    // clears the journal's xdata between groups (unless cumulative) and
+    // when the walk ends.
+    collector_wrapper* c = coll.get();
+    coll->handler_chain = coll->report.walk_posts(std::make_shared<group_chains>(
+        [c] { return chain_post_handlers(c->posts_collector, c->report); }));
   } catch (...) {
     coll->report.session.journal = save_journal;
     throw;
@@ -266,16 +217,15 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
 }
 
 post_t* posts_getitem(collector_wrapper& collector, long i) {
-  return dynamic_cast<collect_posts*>(collector.posts_collector.get())
-      ->posts[static_cast<std::size_t>(i)];
+  std::vector<post_t*>& posts = collector.posts_collector->posts;
+  return posts[python::py_sequence_index(i, posts.size())];
 }
 
 /// Convert the display_amounts vector to a Python list of Value objects.
 boost::python::object py_collector_display_amounts(collector_wrapper& coll) {
-  boost::python::list result;
-  for (const value_t& v : coll.display_amounts)
-    result.append(v);
-  return result;
+  return python::to_py_list(coll.posts_collector->display_amounts.begin(),
+                            coll.posts_collector->display_amounts.end(),
+                            [](const value_t& v) -> const value_t& { return v; });
 }
 
 /*--- FileInfo Property Wrappers ---*/
@@ -290,7 +240,7 @@ object py_fileinfo_filename(const journal_t::fileinfo_t& fi) {
 
 void py_fileinfo_set_filename(journal_t::fileinfo_t& fi, const object& obj) {
   if (obj.is_none())
-    fi.filename = none;
+    fi.filename = std::nullopt;
   else
     fi.filename = path(extract<std::string>(obj)());
 }
@@ -309,26 +259,18 @@ void py_fileinfo_set_modtime(journal_t::fileinfo_t& fi, const object& obj) {
 }
 
 boost::python::list py_find_accounts_re(journal_t& journal, const string& regexp) {
-  boost::python::list result;
-  for (account_t* a : journal.find_accounts_re(regexp))
-    result.append(boost::python::ptr(a));
-  return result;
+  auto accounts = journal.find_accounts_re(regexp);
+  return python::to_py_list(accounts.begin(), accounts.end(),
+                            [](account_t* a) { return boost::python::ptr(a); });
 }
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_RuntimeError, err.what());                                               \
-  }
-
-EXC_TRANSLATOR(parse_error)
-EXC_TRANSLATOR(error_count)
-
 void export_journal() {
-  class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
+  class_<item_handler<post_t>, std::shared_ptr<item_handler<post_t>>, boost::noncopyable>(
+      "PostHandler");
 
-  class_<collector_wrapper, shared_ptr<collector_wrapper>, boost::noncopyable>(
+  class_<collector_wrapper, std::shared_ptr<collector_wrapper>, boost::noncopyable>(
       "PostCollectorWrapper", no_init)
       .def("__len__", &collector_wrapper::length)
       .def("__getitem__", posts_getitem, return_internal_reference<>())
@@ -346,11 +288,7 @@ void export_journal() {
       .add_property("from_stream", make_getter(&journal_t::fileinfo_t::from_stream),
                     make_setter(&journal_t::fileinfo_t::from_stream));
 
-  class_<journal_t, boost::shared_ptr<journal_t>, boost::noncopyable>("Journal")
-#if 0
-    .def(init<path>())
-    .def(init<string>())
-#endif
+  class_<journal_t, std::shared_ptr<journal_t>, boost::noncopyable>("Journal")
       .add_property(
           "master",
           make_getter(&journal_t::master,
@@ -383,11 +321,6 @@ void export_journal() {
       .def("remove_xact", &journal_t::remove_xact)
 
       .def("__len__", xacts_len)
-#if 0
-    .def("__getitem__", xacts_getitem,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
-#endif
 
       .def("__iter__", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
                                                                          &journal_t::xacts_end))
@@ -400,9 +333,6 @@ void export_journal() {
                         &journal_t::period_xacts_begin, &journal_t::period_xacts_end))
       .add_property("sources", boost::python::range<return_internal_reference<>>(
                                    &journal_t::sources_begin, &journal_t::sources_end))
-#if 0
-    .def("read", py_read)
-#endif
       .def("has_xdata", &journal_t::has_xdata)
       .def("clear_xdata", &journal_t::clear_xdata)
 
@@ -410,10 +340,8 @@ void export_journal() {
 
       .def("valid", &journal_t::valid);
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(parse_error);
-  EXC_TRANSLATE(error_count);
+  python::register_error_translator<parse_error>(PyExc_RuntimeError);
+  python::register_error_translator<error_count>(PyExc_RuntimeError);
 }
 
 } // namespace ledger

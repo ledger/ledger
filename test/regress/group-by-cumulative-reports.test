@@ -1,0 +1,149 @@
+; Under --group-by-cumulative one filter chain is flushed once per group
+; with no clear() in between, so every filter must come out of a flush
+; ready for the next group: each group reports its own postings once, as
+; under plain --group-by, and only the running total (reg) or the account
+; totals (bal) carry over.  Filters that kept a group's state broke the
+; later groups:
+;
+; - -Y: interval_posts kept the first group's postings, so the Grocer
+;   group's year re-added Electric Company's $105.00 and 10 EUR.
+; - print and equity: print_xacts kept the transactions it had printed,
+;   so each later group printed the earlier groups' transactions again.
+; - -P: by_payee_posts freed the subtotal postings it had reported while
+;   calc_posts and the register still pointed at them, so the Grocer
+;   group printed a bogus <Adjustment> row and ledger crashed (SIGSEGV).
+;   bal -P printed nothing at all, grouped or not: the postings were gone
+;   before it read the accounts' totals.
+; - -r -S: sort_posts cached its sort keys on the postings, so a posting
+;   a later group related again got a second set appended to the first,
+;   and the Expenses:Utilities group's sort failed an assertion.
+;   (group-by-cumulative-related.test pins the other -r cases.)
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/03 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Electric Company
+    Expenses:Utilities          10 EUR
+    Assets:Checking
+
+test reg --group-by payee --group-by-cumulative -Y Expenses
+Electric Company
+12-Jan-01 - 12-Dec-31  Expenses:Utilities            $105.00
+                                                      10 EUR      $105.00
+                                                                   10 EUR
+
+Grocer
+12-Jan-01 - 12-Dec-31  Expenses:Food                  $20.00      $125.00
+                                                                   10 EUR
+                       Expenses:Utilities              $5.00      $130.00
+                                                                   10 EUR
+end test
+
+test print --group-by payee --group-by-cumulative Expenses
+2012/01/15 Electric Company
+    Expenses:Utilities                        $50.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities                        $55.00
+    Assets:Checking
+
+2012/02/20 Electric Company
+    Expenses:Utilities                        10 EUR
+    Assets:Checking
+
+2012/02/03 Grocer
+    Expenses:Food                             $20.00
+    Expenses:Utilities                         $5.00
+    Assets:Checking
+end test
+
+test equity --group-by payee --group-by-cumulative Expenses
+2012/02/20 Opening Balances
+    Expenses:Utilities                       $105.00
+    Expenses:Utilities                        10 EUR
+    Equity:Opening Balances                 $-105.00
+    Equity:Opening Balances                  -10 EUR
+
+2012/02/03 Opening Balances
+    Expenses:Food                             $20.00
+    Expenses:Utilities                         $5.00
+    Equity:Opening Balances                  $-25.00
+end test
+
+test reg --group-by payee --group-by-cumulative -P Expenses
+Electric Company
+12-Jan-15 Electric Company      Expenses:Utilities          $105.00
+                                                             10 EUR      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+end test
+
+test bal --group-by payee --group-by-cumulative -P Expenses
+Electric Company
+             $105.00
+              10 EUR  Expenses:Utilities
+
+Grocer
+             $130.00
+              10 EUR  Expenses
+              $20.00    Food
+             $110.00
+              10 EUR    Utilities
+--------------------
+             $130.00
+              10 EUR
+end test
+
+test bal -P Expenses
+             $130.00
+              10 EUR  Expenses
+              $20.00    Food
+             $110.00
+              10 EUR    Utilities
+--------------------
+             $130.00
+              10 EUR
+end test
+
+test reg --group-by account --group-by-cumulative -r -S payee
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Electric Company      Expenses:Utilities           10 EUR      $105.00
+                                                                          10 EUR
+12-Feb-03 Grocer                Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+
+Expenses:Food
+12-Feb-03 Grocer                Expenses:Utilities            $5.00      $135.00
+                                                                          10 EUR
+                                Assets:Checking             $-25.00      $110.00
+                                                                          10 EUR
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+                                                                          10 EUR
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+                                                                          10 EUR
+12-Feb-20 Electric Company      Assets:Checking             -10 EUR        $5.00
+12-Feb-03 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

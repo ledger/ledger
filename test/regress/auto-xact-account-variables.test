@@ -1,0 +1,52 @@
+; Each `$name` in an automated posting's account is replaced by its own
+; value, evaluated against the matched posting's account.  A name that
+; is not a known identifier ($Jar, $accounts), or whose value is not a
+; string ($total), stays as written.  So does a `$` not followed by a
+; letter or `_` ($1).  A substituted value is never rescanned for
+; further `$name`s ($Snacks).  `%(expr)` and `$name` may be mixed.
+
+= /^Expenses:Food/
+    (Budget:$account_base:$account)    1
+    (Plain:$account)                   1
+    (Savings:$Jar)                     1
+    (Total:$total)                     1
+    (Word:$accounts)                   1
+    (Payee:%(payee):$account_base)     1
+    (Tip:$1:$account_base)             1
+    (Cat:$account_base$account_base)   1
+
+2024/01/01 KFC
+    Expenses:Food:Dining    $10.00
+    Assets:Cash
+
+2024/01/02 Corner Shop
+    Expenses:Food:$Snacks    $5.00
+    Assets:Cash
+
+test bal --flat
+             $-15.00  Assets:Cash
+               $5.00  Budget:$Snacks:Expenses:Food:$Snacks
+              $10.00  Budget:Dining:Expenses:Food:Dining
+               $5.00  Cat:$Snacks$Snacks
+              $10.00  Cat:DiningDining
+               $5.00  Expenses:Food:$Snacks
+              $10.00  Expenses:Food:Dining
+               $5.00  Payee:Corner Shop:$Snacks
+              $10.00  Payee:KFC:Dining
+               $5.00  Plain:Expenses:Food:$Snacks
+              $10.00  Plain:Expenses:Food:Dining
+              $15.00  Savings:$Jar
+               $5.00  Tip:$1:$Snacks
+              $10.00  Tip:$1:Dining
+              $15.00  Total:$total
+              $15.00  Word:$accounts
+--------------------
+             $120.00
+end test
+
+test reg Budget Payee
+24-Jan-01 KFC                   (B:Di:Expe:Foo:Dining)       $10.00       $10.00
+                                (Payee:KFC:Dining)           $10.00       $20.00
+24-Jan-02 Corner Shop           (B:$S:Exp:Foo:$Snacks)        $5.00       $25.00
+                                (P:Corner Sho:$Snacks)        $5.00       $30.00
+end test

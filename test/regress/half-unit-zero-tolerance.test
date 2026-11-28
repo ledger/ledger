@@ -1,0 +1,30 @@
+; An amount within half a unit of zero at its commodity's display
+; precision, an exact half included, counts as zero at every precision:
+; a transaction may leave that much over and still balance, and the
+; value prints as 0.
+
+2024/01/01 Setup
+    Assets:Cash                         $1.00
+    Assets:Wallet                       1.00000000 BTC
+    Equity
+
+; Leaves exactly half a unit (0.000000005 BTC) at BTC's eight decimals.
+2024/01/03 Half satoshi
+    Assets:Chips                        1 Q @ 0.000000015 BTC
+    Assets:Wallet                      -0.00000001 BTC
+
+test bal --flat Wallet
+      0.99999999 BTC  Assets:Wallet
+end test
+
+test eval '1.00000000 BTC / 200000000'
+0
+end test
+
+test eval '$1.00/200'
+0
+end test
+
+test eval '$-1.00/200'
+0
+end test

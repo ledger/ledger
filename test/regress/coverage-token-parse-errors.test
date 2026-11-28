@@ -1,5 +1,4 @@
 ; Test token.cc parse error paths
-; Exercises unexpected(char)
 ; expected(kind_t)
 ; operator<<(ostream, kind_t) various branches
 ; operator<<(ostream, token_t)
@@ -15,7 +14,7 @@ While parsing value expression:
 Error: Invalid token '<end of input>' (wanted ')')
 end test
 
-; Expression with + not followed by argument triggers unexpected()
+; Expression with + not followed by argument
 test eval "5 + +" -> 1
 __ERROR__
 While parsing value expression:

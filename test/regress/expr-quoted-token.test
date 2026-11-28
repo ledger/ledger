@@ -1,0 +1,21 @@
+; A double-quoted token in a value expression is an amount when a quantity
+; follows the quoted commodity (#2172), and a string otherwise.  The quantity
+; may carry a minus sign, with or without a space before it, as in a journal;
+; a plus sign or comma after the closing quote is an operator (#3251).  The
+; error cases are in expr-quoted-token-errors.test.
+
+test eval '"ab"-1'
+ab-1
+end test
+
+test eval '"ab" -1'
+ab -1
+end test
+
+test eval '"ab"+1'
+ab1
+end test
+
+test eval '"ab"'
+ab
+end test

@@ -1,7 +1,8 @@
 # lefthook.yml
 #
-# Single source of truth for build/test checks. Used both locally
-# (pre-commit) and in GitHub Actions (`lefthook run <hook-name>`).
+# Defines the build/test checks run locally (pre-commit) and by the CI
+# jobs that call `lefthook run <hook-name>`: cmake.yml's build, doxygen
+# and manual jobs and nix-flake.yml's build job.
 #
 # Set $cmakeFlags to control CMake configuration. The Nix dev shell
 # (`nix develop`) sets this automatically; CI overrides it per job.
@@ -13,8 +14,9 @@
 # Excluded (nightly/manual only):
 #   - Fuzz testing                               (fuzz.yml)
 #
-# Managed separately (CI-specific post-processing):
+# Managed separately (CI jobs that call cmake directly):
 #   - Coverage analysis       (cmake.yml: coverage job)
+#   - Windows, libc++, CPack  (cmake.yml: build-windows, build-libcxx, packaging)
 
 # ---------------------------------------------------------------------------
 # CI hooks — invoke individually with `lefthook run <name>`
@@ -32,7 +34,7 @@ cmake-build-and-test:
     - name: build
       run: cmake --build build
     - name: test
-      run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+      run: cd build && ctest --output-on-failure
 
 cmake-doxygen:
   piped: true
@@ -76,7 +78,7 @@ pre-commit:
           - name: build
             run: cmake --build build --parallel
           - name: test
-            run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+            run: cd build && ctest --output-on-failure
           - name: doxygen
             run: cmake --build build --target doc.doxygen
           - name: manual

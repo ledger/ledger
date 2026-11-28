@@ -1,0 +1,22 @@
+; A balance assertion is checked while the journal is parsed, so it counts
+; only postings that appear before it in the file.  Date order then drops
+; the later-dated ones; it never adds an earlier-dated posting that the
+; file places after the assertion.  The manual (Balance verification)
+; documents both halves.
+
+2024/07/10 Rent
+    Expenses:Rent               $500.00
+    Assets:Checking            $-500.00 = $500.00
+
+2024/07/01 Paycheck
+    Assets:Checking            $1000.00
+    Income:Salary
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Assets:Checking            $-500.00 = $500.00
+                                        ^^^^^^^
+Error: Balance assertion off by $1000.00 (expected to see $-500.00)
+end test

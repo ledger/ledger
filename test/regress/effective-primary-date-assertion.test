@@ -1,0 +1,58 @@
+; --primary-date overrides --effective (--aux-date) while the journal is
+; read, as it does in the report: balance assertions are then checked in
+; primary-date order.  The assertion on the "top up" posting holds in
+; primary-date order (10 - 5 + 1 = 6) but not in effective-date order,
+; where the -5 posting is dated 2021-06-01 and falls after it; see
+; effective-assertion-date-order.test for the --effective failure.
+
+2021-01-01 opening
+    acc1               10 r
+    income:opening
+
+2021-02-01 spend
+    expenses            5 r
+    acc1               -5 r  ; [=2021-06-01]
+
+2021-04-01 top up
+    acc1                1 r = 6 r  ; [=2021-04-01]
+    income:opening
+
+test bal
+                 6 r  acc1
+                 5 r  expenses
+               -11 r  income:opening
+--------------------
+                   0
+end test
+
+test bal --effective --primary-date
+                 6 r  acc1
+                 5 r  expenses
+               -11 r  income:opening
+--------------------
+                   0
+end test
+
+test bal --primary-date --effective
+                 6 r  acc1
+                 5 r  expenses
+               -11 r  income:opening
+--------------------
+                   0
+end test
+
+test bal --aux-date --primary-date
+                 6 r  acc1
+                 5 r  expenses
+               -11 r  income:opening
+--------------------
+                   0
+end test
+
+test bal --actual-dates --effective
+                 6 r  acc1
+                 5 r  expenses
+               -11 r  income:opening
+--------------------
+                   0
+end test

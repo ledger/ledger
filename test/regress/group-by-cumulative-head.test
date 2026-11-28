@@ -1,0 +1,48 @@
+; Under --group-by-cumulative one filter chain is flushed once per group
+; with no clear() in between.  truncate_xacts kept its transaction count
+; and its "enough seen" flag after a flush, so with --head N the first
+; group used up the allowance and every later group printed nothing, not
+; even its title.  Each group gets its own first N transactions, as
+; without --group-by-cumulative, and the running total carries over.
+
+2024/01/05 Alice
+    Expenses:Food              $10.00
+    Assets:Checking
+
+2024/01/20 Bob
+    Expenses:Rent             $100.00
+    Assets:Checking
+
+2024/02/05 Bob
+    Expenses:Rent             $100.00
+    Assets:Checking
+
+2024/02/10 Alice
+    Expenses:Food              $20.00
+    Assets:Checking
+
+test reg --group-by payee --group-by-cumulative --dow --head 1 Expenses
+Alice
+24-Jan-05 Fridays               Expenses:Food                $10.00       $10.00
+
+Bob
+24-Feb-05 Mondays               Expenses:Rent               $100.00      $130.00
+end test
+
+test reg --group-by payee --group-by-cumulative --dow --head 2 Expenses
+Alice
+24-Jan-05 Fridays               Expenses:Food                $10.00       $10.00
+24-Feb-10 Saturdays             Expenses:Food                $20.00       $30.00
+
+Bob
+24-Feb-05 Mondays               Expenses:Rent               $100.00      $130.00
+24-Jan-20 Saturdays             Expenses:Rent               $100.00      $230.00
+end test
+
+test reg --group-by payee --group-by-cumulative --dow --tail 1 Expenses
+Alice
+24-Feb-10 Saturdays             Expenses:Food                $20.00       $30.00
+
+Bob
+24-Jan-20 Saturdays             Expenses:Rent               $100.00      $230.00
+end test

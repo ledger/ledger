@@ -1,0 +1,46 @@
+; Pins temporaries_t storage: a filter that never creates a temporary
+; (empty lists at clear()), clear() between --group-by groups, and the
+; budget, by-payee and anonymize temporaries released with the chain.
+
+~ Monthly
+    Expenses:Food            $100.00
+    Assets:Cash
+
+2024/01/05 Grocer
+    Expenses:Food             $40.00
+    Assets:Cash
+
+2024/02/07 Grocer
+    Expenses:Food             $70.00
+    Assets:Cash
+
+2024/02/09 Diner
+    Expenses:Food             $15.00
+    Assets:Cash
+
+test reg Nothing --subtotal
+end test
+
+test reg Food --subtotal --group-by payee
+Diner
+24-Feb-09 - 24-Feb-09           Expenses:Food                $15.00       $15.00
+
+Grocer
+24-Jan-05 - 24-Feb-07           Expenses:Food               $110.00      $110.00
+end test
+
+test reg Food --budget --monthly --end 2024/03/01
+24-Jan-01 - 24-Jan-31  Expenses:Food                 $-60.00      $-60.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                 $-15.00      $-75.00
+end test
+
+test reg Food --by-payee
+24-Feb-09 Diner                 Expenses:Food                $15.00       $15.00
+24-Jan-05 Grocer                Expenses:Food               $110.00      $125.00
+end test
+
+test reg --anon Food --format '%(display_amount) %(display_total)\n'
+A40.00 A40.00
+A70.00 A110.00
+A15.00 A125.00
+end test

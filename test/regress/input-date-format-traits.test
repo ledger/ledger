@@ -1,0 +1,32 @@
+; A custom --input-date-format says which date parts it carries by its
+; conversion specifiers, read case-sensitively: %D (= %m/%d/%y) carries
+; a year, so the parsed year must be kept.  Month names compare without
+; regard to case, and formatted dates are never cut at 127 bytes.
+
+2020/01/10 Before
+    Expenses:Food    $10
+    Assets:Cash
+
+2020/01/20 After
+    Expenses:Food    $20
+    Assets:Cash
+
+test reg --input-date-format '%D' --now 2024/06/15 -b 01/15/20
+20-Jan-20 After                 Expenses:Food                   $20          $20
+                                Assets:Cash                    $-20            0
+end test
+
+test reg --input-date-format '%d-%b-%Y' -b 15-jan-2020
+20-Jan-20 After                 Expenses:Food                   $20          $20
+                                Assets:Cash                    $-20            0
+end test
+
+test reg --input-date-format '%d-%b-%Y' -b 15-JAN-2020
+20-Jan-20 After                 Expenses:Food                   $20          $20
+                                Assets:Cash                    $-20            0
+end test
+
+test reg Food --format '[%(format_date(date, "%Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d %Y-%m-%d "))]\n'
+[2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 2020-01-10 ]
+[2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 2020-01-20 ]
+end test

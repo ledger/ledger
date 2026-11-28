@@ -43,12 +43,12 @@
  * may hold a mix of dollars, euros, shares of stock, and so on; balance_t
  * is the container that aggregates them.
  *
- * Internally the amounts are stored in an unordered map keyed by commodity
- * pointer.  Arithmetic operators delegate to the per-commodity amount_t
- * operations, so all precision and rounding rules of amount_t are
- * preserved.  Multiplication and division are intentionally restricted:
- * you can scale every component by a plain number, but multiplying two
- * multi-commodity balances is undefined.
+ * Internally the amounts are stored in a persistent (immer) hash map keyed
+ * by commodity pointer.  Arithmetic operators delegate to the per-commodity
+ * amount_t operations, so all precision and rounding rules of amount_t are
+ * preserved.  Multiplication and division take a plain number, which
+ * scales every component, or an amount in the commodity of a balance's
+ * single component; see operator*=() for the other cases.
  *
  * balance_t sits between amount_t (single commodity) and value_t (the
  * polymorphic variant that also carries strings, dates, and sequences).
@@ -116,8 +116,8 @@ balance_t& balance_t::operator+=(const balance_t& bal) {
 /// holds exactly one commodity_t per distinct symbol and per distinct
 /// (symbol, annotation) pair (commodity_pool_t::annotated_commodities), so
 /// two amounts of the same lot -- say @c AAPL {$120} [2024/01/02] -- share
-/// a pointer, and a hash lookup replaces the former linear scan by name
-/// (which made balances holding K lots cost O(K) per addition).  Lots the
+/// a pointer, and a hash lookup finds the component, so an addition costs
+/// O(log K) rather than a scan of every lot.  Lots the
 /// pool has had to give equal annotations are the exception, handled by
 /// component_key(); a lot whose annotation the Python bindings edit in
 /// place stays a component of its own.  Amounts that are precisely zero
@@ -131,29 +131,28 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  // When this balance owns its map outright, immer hands the lambda the
-  // stored component itself (as an rvalue) and the addition happens in
-  // place; a component of a shared map arrives const and is copied first.
-  // amount_t has no move constructor, so a by-value parameter would copy
-  // either way and force operator+= to duplicate the bigint every time.
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
-  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
-    found = true;
-    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-      amount_t sum(current);
-      sum += amt;
-      return sum;
-    } else {
-      current += amt;
-      return current;
-    }
-  });
-  if (!found)
+  if (!update_component(comm, [&amt](amount_t& current) { current += amt; }))
     amounts = std::move(amounts).set(comm, amt);
 
   return *this;
 }
+
+namespace {
+
+/// amount_t::operator+= keeps the left operand's precision flags, so the
+/// part that keeps full precision is made the left operand.
+void add_keeping_precision(amount_t& sum, const amount_t& part) {
+  if (part.keep_precision() && !sum.keep_precision()) {
+    amount_t total(part);
+    total += sum;
+    sum = total;
+  } else {
+    sum += part;
+  }
+}
+
+} // namespace
 
 /// @brief Add @p amt onto any existing component of its commodity, keeping
 /// full precision if either part has it (see the declaration).
@@ -170,24 +169,7 @@ balance_t& balance_t::merge(const amount_t& amt) {
     return *this;
 
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
-  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
-    found = true;
-    if (amt.keep_precision() && !current.keep_precision()) {
-      amount_t sum(amt);
-      sum += current;
-      return sum;
-    }
-    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-      amount_t sum(current);
-      sum += amt;
-      return sum;
-    } else {
-      current += amt;
-      return current;
-    }
-  });
-  if (!found)
+  if (!update_component(comm, [&amt](amount_t& current) { add_keeping_precision(current, amt); }))
     amounts = std::move(amounts).set(comm, amt);
 
   return *this;
@@ -224,25 +206,12 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  // In place when the map is uniquely owned, as in operator+=.
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
   bool zero = false;
-  amounts =
-      std::move(amounts).update_if_exists(comm, [&amt, &found, &zero](auto&& current) -> amount_t {
-        found = true;
-        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-          amount_t difference(current);
-          difference -= amt;
-          zero = difference.is_realzero();
-          return difference;
-        } else {
-          current -= amt;
-          zero = current.is_realzero();
-          return current;
-        }
-      });
-  if (!found)
+  if (!update_component(comm, [&amt, &zero](amount_t& current) {
+        current -= amt;
+        zero = current.is_realzero();
+      }))
     amounts = std::move(amounts).set(comm, amt.negated());
   else if (zero)
     amounts = std::move(amounts).erase(comm);
@@ -346,10 +315,10 @@ namespace {
 ///
 /// value() and strip_annotations() may map several components onto one
 /// commodity (lots stripped to their base, or valued in one currency);
-/// balance_t::merge() makes the result of such a collapse independent of
-/// the order the components are visited in (a cost kept at full precision
-/// and a lot of the same commodity in a register's --gain total used to
-/// print with either one's precision from one run to the next), and
+/// balance_t::merge() makes the result of such a collapse, precision
+/// included, independent of the order the components are visited in (a
+/// cost kept at full precision and a lot of the same commodity in a
+/// register's --gain total print at full precision on every run), and
 /// balance_t::visit_components() makes the error of a failed valuation
 /// name the same component on every run.
 template <typename Fn>
@@ -378,7 +347,7 @@ void merge_components(balance_t& into, const balance_t& from, Fn&& transform) {
 /// @param in_terms_of  Optional target commodity for conversion (e.g.,
 ///                     the user's preferred reporting currency).
 ///
-/// @return A new balance with repriced amounts, or boost::none if no
+/// @return A new balance with repriced amounts, or std::nullopt if no
 ///         commodity could be repriced (i.e., no price data exists).
 optional<balance_t> balance_t::value(const datetime_t& moment,
                                      const commodity_t* in_terms_of) const {
@@ -406,7 +375,7 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
 /// equal annotations (commodity_pool_t::duplicate_lots): then the member of
 /// that class this balance already holds, else the lot that carried the
 /// annotation first, so that the class is one component, found by
-/// annotation equality as every lot used to be.  The lookup costs one hash
+/// annotation equality.  The lookup costs one hash
 /// probe for any other lot, and one per member of the class for these.
 commodity_t* balance_t::component_key(const commodity_t& comm) const {
   commodity_t* key = const_cast<commodity_t*>(&comm);
@@ -428,6 +397,22 @@ commodity_t* balance_t::component_key(const commodity_t& comm) const {
 /*  Single-commodity extraction                                         */
 /*----------------------------------------------------------------------*/
 
+/// @brief The one amount the balance comes to, if there is one (see the
+/// declaration).
+const amount_t* balance_t::sole_amount() const {
+  const amount_t* sole = nullptr;
+  for (const amounts_map::value_type& pair : amounts) {
+    if (pair.second.is_realzero())
+      continue;
+    if (sole)
+      return nullptr;
+    sole = &pair.second;
+  }
+  if (!sole && amounts.size() == 1)
+    sole = &amounts.begin()->second;
+  return sole;
+}
+
 /// @brief Extract the amount for a specific commodity from the balance.
 ///
 /// If no commodity is specified and the balance contains exactly one
@@ -439,16 +424,15 @@ commodity_t* balance_t::component_key(const commodity_t& comm) const {
 /// This is commonly used when a value expression needs a single amount_t
 /// from what might be a multi-commodity balance.
 ///
-/// @param commodity  The commodity to look up.  If boost::none, returns
+/// @param commodity  The commodity to look up.  If nullptr, returns
 ///                   the sole commodity or throws on ambiguity.
 ///
-/// @return The matching amount, or boost::none if the commodity is not
+/// @return The matching amount, or std::nullopt if the commodity is not
 ///         present in the balance.
 ///
 /// @throws amount_error if no commodity is specified and the balance
 ///         contains multiple distinct commodities after annotation stripping.
-optional<amount_t>
-balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const {
+optional<amount_t> balance_t::commodity_amount(const commodity_t* commodity) const {
   if (!commodity) {
     if (amounts.size() == 1) {
       return amounts.begin()->second;
@@ -465,7 +449,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
     if (const amount_t* found = amounts.find(component_key(*commodity)))
       return *found;
   }
-  return none;
+  return std::nullopt;
 }
 
 /*----------------------------------------------------------------------*/
@@ -492,7 +476,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const {
   // Fast path: if no amounts have annotations that need stripping,
   // return *this directly to avoid the expensive GMP arithmetic of
-  // rebuilding the balance via operator+=.
+  // rebuilding the balance via merge().
   for (const amounts_map::value_type& pair : amounts) {
     if (!what_to_keep.keep_all(pair.second.commodity())) {
       // At least one amount needs stripping; fall through to rebuild.
@@ -567,11 +551,11 @@ bool sorts_before(const amount_t* left, const amount_t* right, balance_t::lot_so
 ///   is what users see with a plain @c ledger @c bal.
 ///
 /// - @c fifo: lots of the same commodity are ordered oldest-first by
-///   their annotation date.  Used by @c --lot-dates @c --lots to show
-///   positions in acquisition order.
+///   their annotation date.  Set by @c --lots-fifo (the @c fifo_lots()
+///   function) to show positions in acquisition order.
 ///
-/// - @c lifo: lots ordered newest-first.  Used for last-in-first-out
-///   cost-basis reporting.
+/// - @c lifo: lots ordered newest-first.  Set by @c --lots-lifo (the
+///   @c lifo_lots() function).
 ///
 /// Within each mode, unannotated amounts sort before annotated ones,
 /// and a secondary sort by commodity_t::compare_by_commodity provides
@@ -599,29 +583,6 @@ const amount_t* balance_t::first_sorted_amount() const {
     if (!pair.second.is_null() && (!top || sorts_before(&pair.second, top, sort_order)))
       top = &pair.second;
   return top;
-}
-
-/// @brief Visit each amount in sorted commodity order via a callback.
-///
-/// This is a convenience wrapper around sorted_amounts() that handles
-/// the common single-amount fast path (no sorting needed) and then
-/// invokes @p fn for each amount.  It is the primary iteration
-/// primitive used by print() and the report formatters.
-///
-/// @param fn  A callable invoked once per non-null amount, in sorted order.
-void balance_t::map_sorted_amounts(const function<void(const amount_t&)>& fn) const {
-  if (!amounts.empty()) {
-    if (amounts.size() == 1) {
-      const amount_t& amount((*amounts.begin()).second);
-      if (!amount.is_null())
-        fn(amount);
-    } else {
-      amounts_array sorted;
-      sorted_amounts(sorted);
-      for (const amount_t* amount : sorted)
-        fn(*amount);
-    }
-  }
 }
 
 /*----------------------------------------------------------------------*/
@@ -654,11 +615,6 @@ struct print_amount_from_balance {
       : out(_out), first(_first), fwidth(_fwidth), lwidth(_lwidth), flags(_flags),
         negative_color(_negative_color) {
     TRACE_CTOR(print_amount_from_balance, "ostream&, int, int, uint_least8_t, const string&");
-  }
-  print_amount_from_balance(const print_amount_from_balance& other)
-      : out(other.out), first(other.first), fwidth(other.fwidth), lwidth(other.lwidth),
-        flags(other.flags), negative_color(other.negative_color) {
-    TRACE_CTOR(print_amount_from_balance, "copy");
   }
   ~print_amount_from_balance() noexcept { TRACE_DTOR(print_amount_from_balance); }
 
@@ -701,9 +657,12 @@ struct print_amount_from_balance {
 /// line; @p latter_width controls subsequent lines, which is useful when
 /// the balance appears in a right-aligned column of a register report.
 ///
-/// If any commodity's rendered form is wider than the requested column,
-/// the column is widened uniformly to fit the widest amount so that all
-/// lines of the balance remain right-aligned with each other (issue #1795).
+/// When @p flags holds both AMOUNT_PRINT_RIGHT_JUSTIFY and
+/// AMOUNT_PRINT_FIT_TO_WIDEST (set by justify()'s sixth argument, which
+/// the balance report's format passes) and @p first_width is positive,
+/// a commodity whose rendered form is wider than the column widens it
+/// uniformly, so that all lines of the balance remain right-aligned with
+/// each other (issue #1795).
 ///
 /// If the balance is empty or all amounts are zero, a single "0" is
 /// printed, justified to @p first_width.
@@ -711,7 +670,7 @@ struct print_amount_from_balance {
 /// @param out           The output stream.
 /// @param first_width   Column width for the first commodity line.
 /// @param latter_width  Column width for subsequent lines (defaults to
-///                      first_width if set to 1).
+///                      first_width if negative).
 /// @param flags         Formatting flags (right-justify, colorize, etc.).
 /// @param negative_color  The ANSI escape sequence with which
 ///                      AMOUNT_PRINT_COLORIZE renders negative amounts;
@@ -733,12 +692,14 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
   if (first_width > 0 && (flags & AMOUNT_PRINT_RIGHT_JUSTIFY) &&
       (flags & AMOUNT_PRINT_FIT_TO_WIDEST)) {
     int widest = 0;
-    map_sorted_amounts([&widest, flags](const amount_t& amount) {
+    std::ostringstream buf;
+    map_sorted_amounts([&widest, &buf, flags](const amount_t& amount) {
       if (amount.is_zero())
         return;
-      std::ostringstream buf;
+      buf.str(string());
+      buf.clear();
       amount.print(buf, flags);
-      const int w = static_cast<int>(unistring(strip_ansi_escapes(buf.str())).width());
+      const int w = static_cast<int>(display_width(buf.str()));
       if (w > widest)
         widest = w;
     });
@@ -763,13 +724,12 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
 /*  Serialization                                                       */
 /*----------------------------------------------------------------------*/
 
-/// @brief Serialize a balance into a Boost property tree for XML/JSON output.
+/// @brief Serialize a balance into a Boost property tree for the xml report.
 ///
-/// Each component amount is added as a child "amount" node, enabling
-/// structured output via @c ledger @c xml or @c ledger @c json.  Amounts
-/// are emitted in the same order balance_t::print() uses (see
-/// sorted_amounts()), so the output does not depend on the hash order of
-/// the component map.
+/// Each component amount is added as a child "amount" node of the
+/// structured output of @c ledger @c xml.  Amounts are emitted in the same
+/// order balance_t::print() uses (see sorted_amounts()), so the output does
+/// not depend on the hash order of the component map.
 ///
 /// @param st   The property tree node to populate.
 /// @param bal  The balance to serialize.
@@ -805,8 +765,7 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 /// @return A new balance with at most one entry per base commodity, annotated
 ///         with the weighted average price and the earliest acquisition date.
 balance_t average_lot_prices(const balance_t& bal) {
-  // First, we split the balance into multiple balances by underlying
-  // commodity.
+  // Group the lots by commodity symbol (the symbol without its annotation).
   struct group_t {
     amount_t quantity;
     annotation_t ann;
@@ -815,20 +774,7 @@ balance_t average_lot_prices(const balance_t& bal) {
   typedef std::map<optional<std::string>, group_t> balance_map;
   balance_map bycomm;
 
-  // Add @p part into @p sum, keeping full precision if either has it (as
-  // balance_t::merge()): amount_t's addition keeps the left operand's flags,
-  // so a part that keeps precision is added the other way round.
-  auto accumulate = [](amount_t& sum, const amount_t& part) {
-    if (part.keep_precision() && !sum.keep_precision()) {
-      amount_t total(part);
-      total += sum;
-      sum = total;
-    } else {
-      sum += part;
-    }
-  };
-
-  auto add = [&bycomm, &accumulate](const amount_t& amount) {
+  auto add = [&bycomm](const amount_t& amount) {
     commodity_t& comm(amount.commodity());
     optional<std::string> sym(comm.symbol());
     amount_t quant(amount.strip_annotations(keep_details_t()));
@@ -837,14 +783,14 @@ balance_t average_lot_prices(const balance_t& bal) {
         bycomm.insert(balance_map::value_type(sym, group_t{quant, annotation_t()}));
     group_t& group(i->second);
     if (!inserted)
-      accumulate(group.quantity, quant);
+      add_keeping_precision(group.quantity, quant);
 
     const annotated_commodity_t* acomm =
         comm.has_annotation() ? &static_cast<const annotated_commodity_t&>(comm) : nullptr;
     if (acomm && acomm->details.price) {
       amount_t cost(*acomm->details.price * quant);
       if (group.ann.price)
-        accumulate(*group.ann.price, cost);
+        add_keeping_precision(*group.ann.price, cost);
       else
         group.ann.price = cost;
       if (!acomm->details.has_flags(ANNOTATION_PRICE_FIXATED) && !quant.is_realzero())
@@ -853,7 +799,7 @@ balance_t average_lot_prices(const balance_t& bal) {
       // Units without a price dilute the average; a fixated average would
       // value them at nothing.  (A component that netted to zero is no
       // holding: it still counts for the date, the precision and the price's
-      // commodity, as it always has, but not against the fixation.)
+      // commodity, but not against the fixation.)
       group.all_fixated = false;
     }
 
@@ -873,10 +819,7 @@ balance_t average_lot_prices(const balance_t& bal) {
       add(pair.second);
   } catch (...) {
     bycomm.clear();
-    balance_t::amounts_array sorted;
-    bal.sorted_amounts(sorted);
-    for (const amount_t* amount : sorted)
-      add(*amount);
+    bal.map_sorted_amounts(add);
     throw;
   }
 
@@ -908,8 +851,8 @@ balance_t average_lot_prices(const balance_t& bal) {
 /// @brief Return a copy of the balance with FIFO (first-in, first-out) lot ordering.
 ///
 /// Sets the sort_order to @c fifo so that sorted_amounts() will arrange
-/// lots from earliest to latest acquisition date.  Used by the
-/// @c --lot-dates display option to show the oldest positions first.
+/// lots from earliest to latest acquisition date.  Used by @c --lots-fifo
+/// (the @c fifo_lots() function) to show the oldest positions first.
 ///
 /// @param bal  The input balance.
 /// @return A copy with lot_sort_order::fifo.
@@ -922,7 +865,8 @@ balance_t fifo_lot_prices(const balance_t& bal) {
 /// @brief Return a copy of the balance with LIFO (last-in, first-out) lot ordering.
 ///
 /// Sets the sort_order to @c lifo so that sorted_amounts() will arrange
-/// lots from latest to earliest acquisition date.
+/// lots from latest to earliest acquisition date.  Used by @c --lots-lifo
+/// (the @c lifo_lots() function) to show the newest positions first.
 ///
 /// @param bal  The input balance.
 /// @return A copy with lot_sort_order::lifo.
